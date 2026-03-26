@@ -16,6 +16,7 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npm run build
+      - run: cp dist/index.html dist/404.html
       - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
