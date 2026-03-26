@@ -1,0 +1,89 @@
+:root {
+  /* Blue */
+  --blue-hover: #091144;
+  --blue-100: #121E6C;
+  --blue-80: #1F2A74;
+  --blue-60: #3E4983;
+  --blue-50: #6C759F;
+  --blue-40: #969BBD;
+  --blue-30: #BABDD3;
+  --blue-20: #D2D4E1;
+  --blue-10: #F1F2F6;
+
+  /* Coral */
+  --coral-hover: #E4102E;
+  --coral-100: #FF2947;
+  --coral-60: #F48990;
+  --coral-30: #FCDFE2;
+  --coral-10: #FEF1F3;
+
+  /* Black */
+  --black-100: #1E1E1E;
+  --black-60: #606060;
+  --black-40: #969696;
+  --black-10: #F3F3F3;
+  --black-0: #FFFFFF;
+
+  /* Background */
+  --background-page: #F7F8FB;
+
+  /* Feedback — Error */
+  --feedback-error-200: #610017;
+  --feedback-error-150: #910022;
+  --feedback-error-100: #C31A2F;
+  --feedback-error-10: #FBF3F5;
+
+  /* Feedback — Warning */
+  --feedback-warning-200: #5B3100;
+  --feedback-warning-150: #A16B00;
+  --feedback-warning-100: #FFC217;
+  --feedback-warning-10: #FFF3D1;
+
+  /* Feedback — Success */
+  --feedback-success-200: #0B3B26;
+  --feedback-success-150: #1B8959;
+  --feedback-success-100: #6CDCAB;
+  --feedback-success-10: #F4FDF9;
+
+  /* Feedback — Informative */
+  --feedback-informative-200: #052D65;
+  --feedback-informative-150: #0A53A5;
+  --feedback-informative-100: #227AD1;
+  --feedback-informative-10: #F1F9FF;
+
+  /* Gradients */
+  --gradient-horizontal: linear-gradient(to right, #121E6C, #FF2947);
+  --gradient-vertical: linear-gradient(to bottom, #FF2947, #121E6C);
+
+  /* Spacing */
+  --spacing-2: 2px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-56: 56px;
+  --spacing-64: 64px;
+  --spacing-72: 72px;
+  --spacing-80: 80px;
+  --spacing-96: 96px;
+
+  /* Border Radius */
+  --radius-2: 2px;
+  --radius-4: 4px;
+  --radius-8: 8px;
+  --radius-12: 12px;
+  --radius-16: 16px;
+  --radius-20: 20px;
+  --radius-24: 24px;
+  --radius-32: 32px;
+
+  /* Shadows */
+  --shadow-2: 0px 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-4: 0px 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-8: 0px 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-12: 0px 6px 12px rgba(0, 0, 0, 0.08);
+}

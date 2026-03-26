@@ -1,0 +1,40 @@
+CONTEXTO: Este es Bold POS Restaurantes V1. Las cards de categorías en el sidebar izquierdo y las cards de productos con imagen no están usando los colores oficiales del sistema de diseño Merlin de Bold. Además, la tipografía de los nombres de categorías y productos necesita ajustes para mejorar la legibilidad. Los colores actuales son arbitrarios y el texto es difícil de leer en algunos casos.
+OBJETIVO: Ajustar los colores de las cards de categorías y la línea inferior de las cards de productos con imagen para que usen la paleta oficial de Merlin. Mejorar la tipografía de los nombres aumentando ligeramente el tamaño y garantizando buen contraste.
+NO MODIFICAR: La estructura y tamaño de las cards. El panel lateral derecho de detalle de orden. El TopBar y NavBar. Los precios de los productos. La vista de Gestionar mesas.
+CAMBIOS A REALIZAR:
+Cambio 1 - Colores de cards de categorías en sidebar izquierdo:
+Actualizar los colores de cada categoría usando la paleta Merlin con fondos claros (/10) y textos oscuros (/150 o /200) para garantizar alto contraste y legibilidad.
+Categoría Entradas Frías: Fondo Informative/10 hexadecimal F1F9FF, texto nombre Informative/200 hexadecimal 052D65, texto cantidad productos Informative/150 hexadecimal 0A53A5 con 80% opacidad.
+Categoría Entradas Calientes: Fondo Coral/10 hexadecimal FEF1F3, texto nombre Coral/Hover hexadecimal E4102E, texto cantidad productos Coral/100 hexadecimal FF2947 con 80% opacidad.
+Categoría Pastas y Risottos: Fondo Warning/10 hexadecimal FFF3D1, texto nombre Warning/200 hexadecimal 5B3100, texto cantidad productos Warning/150 hexadecimal A16B00 con 80% opacidad.
+Categoría Carnes: Fondo Error/10 hexadecimal FBF3F5, texto nombre Error/200 hexadecimal 610017, texto cantidad productos Error/150 hexadecimal 910022 con 80% opacidad.
+Categoría Pescados: Fondo Informative/10 hexadecimal F1F9FF, texto nombre Informative/150 hexadecimal 0A53A5, texto cantidad productos Informative/100 hexadecimal 227AD1 con 80% opacidad.
+Categoría Postres: Fondo Coral/30 hexadecimal FCDFE2, texto nombre Coral/Hover hexadecimal E4102E, texto cantidad productos Coral/100 hexadecimal FF2947 con 80% opacidad.
+Categoría Bebidas: Fondo Success/10 hexadecimal F4FDF9, texto nombre Success/200 hexadecimal 0B3B26, texto cantidad productos Success/150 hexadecimal 1B8959 con 80% opacidad.
+Cambio 2 - Tipografía de cards de categorías:
+Ajustar la tipografía de las cards de categorías en el sidebar izquierdo.
+Nombre de la categoría: Tipografía Montserrat, peso Semibold, tamaño 15px, line-height 20px. Este es un aumento de aproximadamente 1-2px respecto al tamaño actual para mejorar legibilidad.
+Cantidad de productos: Tipografía Montserrat, peso Regular, tamaño 12px, line-height 16px. Mantener debajo del nombre con separación de 4px.
+Cambio 3 - Colores de línea inferior en cards de productos con imagen:
+Las cards de productos con imagen tienen una línea de color en la parte inferior que identifica la categoría. Actualizar estos colores para que coincidan con la paleta Merlin.
+Línea de Entradas Frías: Color Informative/100 hexadecimal 227AD1.
+Línea de Entradas Calientes: Color Coral/100 hexadecimal FF2947.
+Línea de Pastas y Risottos: Color Warning/100 hexadecimal FFC217.
+Línea de Carnes: Color Error/100 hexadecimal C31A2F.
+Línea de Pescados: Color Informative/150 hexadecimal 0A53A5.
+Línea de Postres: Color Coral/60 hexadecimal F48990.
+Línea de Bebidas: Color Success/100 hexadecimal 6CDCAB.
+Cambio 4 - Tipografía de cards de productos con imagen:
+Ajustar la tipografía de los nombres de productos en las cards con imagen.
+Nombre del producto: Tipografía Montserrat, peso Medium, tamaño 14px, line-height 18px. Este es un aumento de aproximadamente 1px respecto al tamaño actual. Color Blue/100 hexadecimal 121E6C para todos los nombres, sin usar colores de categoría en el texto.
+Precio del producto: Mantener tipografía actual, color Blue/80 hexadecimal 1F2A74.
+Cambio 5 - Tipografía de cards de productos sin imagen (vista por categorías):
+En la vista sin imagen donde los productos se muestran como cards de texto dentro de la grilla central.
+Nombre del producto: Tipografía Montserrat, peso Medium, tamaño 15px, line-height 20px. Color Blue/100 hexadecimal 121E6C.
+Precio del producto: Tipografía Montserrat, peso Semibold, tamaño 14px, line-height 18px. Color Blue/80 hexadecimal 1F2A74.
+Cambio 6 - Aplicar en todas las vistas de venta:
+Estos cambios de colores y tipografía deben aplicarse consistentemente en:
+Vista de Mostrador con el catálogo de productos.
+Vista de Mesas cuando se está agregando productos a una mesa.
+Tanto en la vista con imagen como en la vista sin imagen (toggle de vista en la grilla).
+RESUMEN: Actualizar colores de categorías a la paleta oficial de Merlin usando fondos claros (/10) y textos oscuros (/150 o /200) para alto contraste. Actualizar colores de línea inferior en cards con imagen. Aumentar ligeramente el tamaño de tipografía de nombres de categorías a 15px Semibold y nombres de productos a 14-15px Medium. Aplicar en todas las vistas de venta de Mesas y Mostrador.

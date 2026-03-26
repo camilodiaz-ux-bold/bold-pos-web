@@ -1,0 +1,33 @@
+CONTEXTO: Este es Bold POS Restaurantes V1. En el mapa de mesas, cuando el usuario hace hover sobre una mesa ocupada o con cuenta solicitada, aparecen botones de acción rápida (Agregar, Pedir cuenta). Actualmente estos botones tienen colores relacionados con los estados de las mesas, pero en Bold solo usamos un estilo específico de botones. El usuario adjunta los estilos de botones oficiales de Bold.
+OBJETIVO: Ajustar los botones que aparecen en el hover de las mesas para que usen los estilos oficiales de botones de Bold, sin colores de estados, y que sean legibles a diferentes niveles de zoom.
+NO MODIFICAR: Los colores de fondo de las mesas que indican el estado. Las convenciones de la parte inferior. El panel lateral derecho. La información que se muestra dentro de cada mesa.
+CAMBIOS A REALIZAR:
+Cambio 1 - Ajustar botones del hover en mesas:
+Cuando el usuario hace hover sobre una mesa que tiene acciones disponibles, los botones deben usar los estilos oficiales de Bold:
+Botón primario (acción principal): Fondo coral hexadecimal FF2947, texto blanco, border-radius completo tipo pill.
+Botón secundario (acción secundaria): Fondo blanco, borde de 1px coral hexadecimal FF2947, texto coral hexadecimal FF2947, border-radius completo tipo pill.
+No usar colores verdes, amarillos ni otros colores de estados en los botones del hover.
+Cambio 2 - Definir jerarquía de botones en hover:
+Para mesa ocupada, el hover muestra:
+
+Botón primario: Agregar (para agregar más productos)
+Botón secundario: Pedir cuenta (para solicitar la cuenta)
+
+Para mesa con cuenta solicitada, el hover muestra:
+
+Botón primario: Cobrar (para proceder al pago)
+Botón secundario: Agregar (para agregar más productos si es necesario)
+
+Para mesa disponible, no se muestran botones en hover ya que la acción es simplemente hacer click para abrir la mesa.
+Cambio 3 - Tamaño y espaciado de botones:
+Los botones del hover deben ser compactos para no cubrir demasiada información de la mesa.
+Tamaño pequeño con padding horizontal de 12px y padding vertical de 6px.
+Texto en tamaño 12px o 13px, peso medium.
+Separación entre botones de 8px.
+Los botones deben estar centrados horizontalmente dentro de la mesa o posicionados en la parte inferior de la mesa.
+Cambio 4 - Legibilidad según nivel de zoom:
+Los botones del hover deben mantener un tamaño mínimo legible independientemente del nivel de zoom del mapa.
+Cuando el zoom del mapa es bajo (por ejemplo 50% o 75%), los botones deben mantener un tamaño absoluto que permita leer el texto y hacer click fácilmente. Esto significa que los botones no se escalan proporcionalmente con el zoom del mapa, sino que mantienen un tamaño fijo mínimo.
+Como alternativa, si los botones se escalan con el zoom, el tamaño mínimo del texto debe ser 11px y el área clickeable mínima debe ser de 32px de alto para garantizar usabilidad.
+Si el espacio dentro de la mesa es insuficiente para mostrar los botones legibles a cierto nivel de zoom, los botones pueden mostrarse como un tooltip flotante que aparece al lado de la mesa en lugar de dentro de ella.
+RESUMEN: Cambiar los botones del hover en las mesas para que usen los estilos oficiales de botones de Bold con coral como color principal. Botón primario con fondo coral y texto blanco, botón secundario con fondo blanco, borde coral y texto coral. Eliminar los colores de estados de los botones. Garantizar que los botones sean legibles y usables a diferentes niveles de zoom del mapa, manteniendo un tamaño mínimo o mostrándose como tooltip flotante si es necesario.

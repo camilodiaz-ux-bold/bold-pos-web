@@ -1,0 +1,33 @@
+CONTEXTO: Este es Bold POS Restaurantes V1. En el mapa de mesas de la VISTA DE VENTA (no en Gestionar mesas), actualmente usamos verde para mesas disponibles y un sombreado azul para mesas seleccionadas. El verde genera demasiada carga visual para un estado neutro que no requiere atención, y el estado seleccionado no se distingue claramente. Queremos simplificar la paleta de colores para reducir la carga cognitiva. IMPORTANTE: Estos cambios aplican ÚNICAMENTE a la vista de venta con mesas, que es la vista operativa donde el mesero ve el mapa para gestionar pedidos.
+OBJETIVO: Cambiar el color de mesas disponibles a un tono neutro azul claro de Bold, y mejorar el estado seleccionado con un borde prominente azul Bold en lugar del sombreado actual. Solo en la vista de venta con mesas.
+NO MODIFICAR: La vista de Gestionar mesas que se accede desde el botón Gestionar mesas en la esquina superior derecha, esta vista debe mantener todos sus colores y estilos actuales sin cambios. Los colores de Ocupada (coral) y Cuenta solicitada (amarillo) que ya están correctos en la vista de venta. La estructura del mapa de mesas. El panel lateral derecho. La información dentro de cada mesa.
+CAMBIOS A REALIZAR:
+Cambio 1 - Estado Disponible en vista de venta con mesas:
+Cambiar el color de las mesas disponibles de verde a azul muy claro de la paleta Bold.
+Fondo de mesa: Azul claro hexadecimal F1F2F6 que es Blue/10, o hexadecimal D2D4E1 que es Blue/20.
+Borde de mesa: Azul medio hexadecimal BABDD3 que es Blue/30, o hexadecimal 969BBD que es Blue/40.
+Este color neutro permite que las mesas disponibles queden en segundo plano visual, sin competir con los estados que sí requieren atención como ocupada y cuenta solicitada.
+Este cambio aplica solo en la vista de venta con mesas, no en Gestionar mesas.
+Cambio 2 - Estado Seleccionado en vista de venta con mesas:
+Cuando una mesa está seleccionada (el usuario hizo click y está viendo el detalle en el panel lateral), debe distinguirse claramente de las demás mesas sin perder el color de su estado.
+Aplicar borde grueso de 3px con color azul Bold hexadecimal 121E6C que es Blue/100.
+Agregar sombra sutil para dar efecto de elevación, por ejemplo 0px 4px 12px rgba 18 30 108 0.2.
+El borde de selección se aplica por encima del color de estado, es decir:
+
+Mesa disponible seleccionada: fondo azul claro + borde azul Bold grueso
+Mesa ocupada seleccionada: fondo coral + borde azul Bold grueso
+Mesa cuenta solicitada seleccionada: fondo amarillo + borde azul Bold grueso
+
+Esto permite identificar claramente cuál mesa está activa sin perder la información del estado.
+Este cambio aplica solo en la vista de venta con mesas, no en Gestionar mesas.
+Cambio 3 - Actualizar convenciones en la parte inferior de vista de venta:
+Actualizar el tag de Disponible en las convenciones para que use los nuevos colores azul claro.
+Tag Disponible: Fondo azul muy claro hexadecimal F1F2F6, borde azul medio hexadecimal 969BBD, texto azul oscuro hexadecimal 3E4983.
+Mantener los tags de Ocupada y Cuenta solicitada con sus colores actuales coral y amarillo.
+Este cambio aplica solo a las convenciones de la vista de venta con mesas.
+Cambio 4 - Actualizar indicador de conteo en vista de venta:
+En el conteo de la parte inferior derecha, cambiar el punto de Disponibles de verde a azul.
+Disponibles: Punto azul hexadecimal 3E4983 que es Blue/60, seguido del número.
+Activas: Mantener punto coral hexadecimal FF2947 seguido del número.
+Este cambio aplica solo en la vista de venta con mesas.
+RESUMEN: SOLO EN LA VISTA DE VENTA CON MESAS, cambiar mesas disponibles de verde a azul claro neutro (Blue/10 o Blue/20) para reducir carga visual. Cambiar estado seleccionado de sombreado azul a borde grueso de 3px azul Bold (Blue/100 #121E6C) con sombra sutil. Actualizar convenciones y conteo con los nuevos colores. NO modificar la vista de Gestionar mesas que debe mantener su diseño actual.

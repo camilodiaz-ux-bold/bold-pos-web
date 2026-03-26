@@ -1,0 +1,48 @@
+:root {
+  --font-family: 'Montserrat', sans-serif;
+  --font-size-header: 48px;
+  --line-height-header: 52px;
+  --font-size-title: 28px;
+  --line-height-title: 32px;
+  --font-size-subtitle: 16px;
+  --line-height-subtitle: 24px;
+  --font-size-body: 16px;
+  --line-height-body: 24px;
+  --font-size-caption: 12px;
+  --line-height-caption: 16px;
+}
+
+.text-header {
+  font-family: var(--font-family);
+  font-size: var(--font-size-header);
+  line-height: var(--line-height-header);
+  font-weight: 500;
+}
+
+.text-title {
+  font-family: var(--font-family);
+  font-size: var(--font-size-title);
+  line-height: var(--line-height-title);
+  font-weight: 400;
+}
+
+.text-subtitle {
+  font-family: var(--font-family);
+  font-size: var(--font-size-subtitle);
+  line-height: var(--line-height-subtitle);
+  font-weight: 600;
+}
+
+.text-body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  font-weight: 400;
+}
+
+.text-caption {
+  font-family: var(--font-family);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  font-weight: 700;
+}

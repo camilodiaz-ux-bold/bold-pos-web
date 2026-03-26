@@ -1,0 +1,30 @@
+CONTEXTO: Este es el prototipo de Bold POS Restaurantes V1. En la vista de catálogo con cards de productos que tienen imagen, actualmente el precio de cada producto tiene el color de la categoría a la que pertenece. Por ejemplo, los precios de Entradas Frías están en azul, los de Carnes en rojo, etc. Necesitamos cambiar esto para que los precios sean de un color neutro y en su lugar usar una línea sutil en la parte inferior de la card como identificador de categoría.
+OBJETIVO: Cambiar el color de los precios en las cards con imagen a un color neutro. Agregar una línea horizontal en la parte inferior de cada card con el color de la categoría como identificador visual sutil.
+NO MODIFICAR: Las imágenes de los productos. Los nombres de los productos. El ícono de favorito (estrella). El botón de agregar (+). El tamaño y estructura general de las cards. Las cards de la vista por categorías sin imagen que están en el sidebar izquierdo. El panel de Detalle de orden.
+CAMBIOS A REALIZAR:
+Cambio 1 - Cambiar color de precios a neutro:
+En todas las cards de productos con imagen, cambiar el color del precio de los colores de categoría actuales a un color neutro.
+El nuevo color del precio debe ser gris oscuro hexadecimal 374151 o azul oscuro hexadecimal 0F1729 para mantener buena legibilidad.
+El peso y tamaño del texto del precio se mantienen igual, solo cambia el color.
+Este cambio aplica a todos los productos: Carpaccio de Wagyu, Ceviche de Corvina Real, Risotto de Trufa Blanca, Solomillo Wellington, Tomahawk, Lubina en Sal de Mar, Tiramisú de Autor, Limonada de Lavanda, y todos los demás productos que se muestren en cards con imagen.
+Cambio 2 - Agregar línea inferior de categoría:
+En cada card de producto con imagen, agregar una línea horizontal en la parte inferior de la card como identificador de la categoría.
+La línea debe estar posicionada en el borde inferior de la card, ocupando todo el ancho de la card.
+La altura de la línea debe ser de 3px o 4px, lo suficientemente visible pero sutil.
+El color de la línea debe corresponder al color sólido de la categoría del producto:
+
+Entradas Frías: azul hexadecimal 3B82F6
+Entradas Calientes: naranja hexadecimal F97316
+Pastas y Risottos: amarillo hexadecimal EAB308
+Carnes: rojo hexadecimal EF4444
+Pescados: celeste hexadecimal 0EA5E9
+Postres: rosa hexadecimal EC4899
+Bebidas: verde hexadecimal 10B981
+
+La línea debe tener border-radius en las esquinas inferiores que coincida con el border-radius de la card, para que se integre visualmente sin bordes rectos que sobresalgan.
+Cambio 3 - Aplicar en ambas vistas:
+Este cambio debe aplicarse consistentemente en todas las vistas donde aparecen cards de productos con imagen:
+En la vista de Mostrador, en la grilla de productos cuando se selecciona la vista con imágenes usando el toggle de vista grid.
+En la vista de Mesas, cuando se está agregando productos a una mesa y se muestra el catálogo con cards de productos con imagen.
+En cualquier otra vista donde aparezcan estas cards de productos con imagen y precio.
+RESUMEN: Cambiar el color de todos los precios en las cards con imagen de los colores de categoría a un color neutro gris oscuro o azul oscuro. Agregar una línea horizontal de 3-4px de alto en el borde inferior de cada card con el color de la categoría correspondiente como identificador visual sutil. Aplicar en todas las vistas de Mesas y Mostrador donde aparezcan cards de productos con imagen.

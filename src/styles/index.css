@@ -1,0 +1,8 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+body {
+  background-color: #F7F8FB;
+  font-family: 'Montserrat', sans-serif;
+}
