@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router';
 import {
   ChevronRight,
   LockKeyhole,
@@ -106,13 +107,15 @@ const CATEGORIES: ReportCategory[] = [
 function ReportRow({
   item,
   isLast,
+  onClick,
 }: {
   item: ReportItem;
   isLast: boolean;
+  onClick: () => void;
 }) {
   return (
     <button
-      onClick={() => toast.info(item.label)}
+      onClick={onClick}
       style={{
         width: '100%',
         display: 'flex',
@@ -151,7 +154,9 @@ function ReportRow({
   );
 }
 
-function CategoryCard({ category }: { category: ReportCategory }) {
+function CategoryCard({ category, isRestaurantes }: { category: ReportCategory; isRestaurantes?: boolean }) {
+  const navigate = useNavigate();
+
   return (
     <div style={{
       backgroundColor: '#fff',
@@ -183,6 +188,10 @@ function CategoryCard({ category }: { category: ReportCategory }) {
             key={item.id}
             item={item}
             isLast={idx === category.items.length - 1}
+            onClick={isRestaurantes
+              ? () => navigate('/reportes/restaurantes/' + item.id)
+              : () => toast.info(item.label)
+            }
           />
         ))}
       </div>
@@ -231,7 +240,7 @@ export function ReportesPanel() {
         {/* Fila 2: Documentos electrónicos | Restaurantes */}
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           <CategoryCard category={CATEGORIES[2]} /> {/* Documentos electrónicos */}
-          <CategoryCard category={CATEGORIES[3]} /> {/* Restaurantes (nuevo) */}
+          <CategoryCard category={CATEGORIES[3]} isRestaurantes /> {/* Restaurantes (nuevo) */}
         </div>
 
       </div>
