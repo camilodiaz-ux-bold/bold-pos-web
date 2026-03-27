@@ -4,8 +4,9 @@ import {
   ArrowLeft, Save, Plus, Trash2, ChevronUp, ChevronDown,
   LayoutGrid, Layers, SlidersHorizontal, Search, X, Copy,
   Info, MapPin, Users, ZoomIn, ZoomOut, RotateCcw, Maximize2,
-  Move, TriangleAlert, Circle, Square,
+  Move, TriangleAlert, Circle, Square, Map,
 } from 'lucide-react';
+import { GestionarMesasGrid } from './GestionarMesasGrid';
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -275,7 +276,8 @@ export function GestionarMesasView({ onBack }: Props) {
   const { mesasConfig, setMesasConfig, zonesConfig, setZonesConfig } = useMesasStore();
 
   // ── Navigation ────────────────────────────────────────────────────────────────
-  const [section, setSection] = useState<SectionId>('mapa');
+  const [section,  setSection]  = useState<SectionId>('mapa');
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   // ── Data — se inicializa desde el store (única fuente de verdad) ──────────────
   const [tables, setTables] = useState<CTable[]>(() => mesasConfig as unknown as CTable[]);
@@ -589,7 +591,39 @@ export function GestionarMesasView({ onBack }: Props) {
         </button>
         <div className="h-5 w-px" style={{ background: 'var(--black-10)' }} />
         <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>Gestionar mesas</span>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          {/* Toggle Grid / Mapa (visible cuando section === 'mapa') */}
+          {section === 'mapa' && (
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              background: '#F1F2F6', borderRadius: 8, padding: 2, gap: 2,
+            }}>
+              <button
+                onClick={() => setViewMode('grid')}
+                title="Vista grid"
+                style={{
+                  width: 32, height: 32, borderRadius: 6, border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: viewMode === 'grid' ? 'var(--blue-100)' : '#ffffff',
+                  cursor: 'pointer', transition: 'background 0.15s',
+                }}
+              >
+                <LayoutGrid size={15} color={viewMode === 'grid' ? '#ffffff' : 'var(--black-40)'} />
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                title="Vista mapa"
+                style={{
+                  width: 32, height: 32, borderRadius: 6, border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: viewMode === 'map' ? 'var(--blue-100)' : '#ffffff',
+                  cursor: 'pointer', transition: 'background 0.15s',
+                }}
+              >
+                <Map size={15} color={viewMode === 'map' ? '#ffffff' : 'var(--black-40)'} />
+              </button>
+            </div>
+          )}
           <button onClick={save} className="btn btn-primary btn--sm flex items-center gap-2">
             <Save size={14} /> Guardar cambios
           </button>
@@ -625,6 +659,11 @@ export function GestionarMesasView({ onBack }: Props) {
 
         {/* ── MAIN CONTENT ── */}
         {section === 'mapa' ? (
+
+          viewMode === 'grid' ? (
+            /* ── GRID: gestión con panel lateral ── */
+            <GestionarMesasGrid />
+          ) : (
 
           /* ── MAPA: canvas + right panel ── */
           <div className="flex flex-1 min-h-0 min-w-0">
@@ -1001,6 +1040,8 @@ export function GestionarMesasView({ onBack }: Props) {
               )}
             </div>
           </div>
+
+          ) /* fin viewMode === 'map' */
 
         ) : (
           /* ── SECCIONES TEXTO ── */

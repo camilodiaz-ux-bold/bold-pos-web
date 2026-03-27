@@ -8,6 +8,7 @@
 import React from 'react';
 import { Users, Clock } from 'lucide-react';
 import type { MesaTable, TableStatus } from './MesasView';
+import { useMesas } from '../hooks/useMesas';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -218,7 +219,19 @@ interface MesasGridViewProps {
 }
 
 export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGridViewProps) {
-  if (!tables.length) {
+  const { mesas } = useMesas();
+
+  // Build a gridIndex lookup keyed by mesa id; fall back to original array index.
+  const gridIndexOf = (id: string, fallback: number): number => {
+    const m = mesas.find(m => m.id === id);
+    return m ? m.gridIndex : fallback;
+  };
+
+  const sortedTables = [...tables].sort(
+    (a, b) => gridIndexOf(a.id, tables.indexOf(a)) - gridIndexOf(b.id, tables.indexOf(b)),
+  );
+
+  if (!sortedTables.length) {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -237,7 +250,7 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
       gap:                   12,
       paddingBottom:         8,
     }}>
-      {tables.map(table => (
+      {sortedTables.map(table => (
         <MesaCard
           key={table.id}
           table={table}
