@@ -2462,9 +2462,6 @@ export function MesasView() {
                     <button onClick={() => setShowCheckout(true)} className="btn btn-primary btn-primary--full" style={{ justifyContent: 'center', fontSize: 15, fontWeight: 700 }}>
                       Cobrar mesa
                     </button>
-                    <button onClick={() => setShowPrecuentaModal(true)} className="btn btn-ghost btn-secondary--full" style={{ justifyContent: 'center', border: '1px solid var(--black-10)' }}>
-                      <Printer size={13} /> Imprimir pre-cuenta
-                    </button>
                   </>
                 )}
 

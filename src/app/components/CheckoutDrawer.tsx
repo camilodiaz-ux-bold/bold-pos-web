@@ -41,7 +41,7 @@ export interface CheckoutDrawerProps {
 // ─── Internal types ───────────────────────────────────────────────────────────
 
 type Phase         = 'checkout' | 'completed';
-type SplitMode     = 'equal' | 'items' | 'custom';
+type SplitMode     = 'equal' | 'custom';
 type TipMode       = '0' | '10' | 'manual';
 type PaymentMethod = 'cash' | 'card' | 'transfer' | 'mixed';
 
@@ -102,11 +102,9 @@ export function CheckoutDrawer({
   const [comandaSentAfterPay, setComandaSentAfterPay] = useState(false);
 
   // ── B. Dividir cuenta ─────────────────────────────────────────────────────
-  const [splitBill,       setSplitBill]       = useState(false);
-  const [splitMode,       setSplitMode]       = useState<SplitMode>('equal');
-  const [splitPersons,    setSplitPersons]    = useState(2);
-  const [numAccounts,     setNumAccounts]     = useState(2);
-  const [itemAssignments, setItemAssignments] = useState<Record<string, number>>({});
+  const [splitBill,    setSplitBill]    = useState(false);
+  const [splitMode,    setSplitMode]    = useState<SplitMode>('equal');
+  const [splitPersons, setSplitPersons] = useState(2);
 
   // ── E. Montos personalizados ──────────────────────────────────────────────
   const [customAmounts, setCustomAmounts] = useState<number[]>([0, 0]);
@@ -153,43 +151,12 @@ export function CheckoutDrawer({
   const amountForPerson    = (i: number) => // 0-based
     i === splitPersons - 1 ? perPersonFloor + perPersonRemainder : perPersonFloor;
 
-  // ── Computed: split (by items) ─────────────────────────────────────────────
-
-  const accountItemSubtotals = useMemo(() => {
-    const t: Record<number, number> = {};
-    items.forEach(item => {
-      const a = itemAssignments[item.id];
-      if (a) t[a] = (t[a] ?? 0) + item.price * item.quantity;
-    });
-    return t;
-  }, [items, itemAssignments]);
-
-  const assignedSubtotal = useMemo(
-    () => Object.values(accountItemSubtotals).reduce((a, b) => a + b, 0),
-    [accountItemSubtotals],
-  );
-
-  const unassignedAmount = subtotal - assignedSubtotal;
-  const allItemsAssigned = unassignedAmount <= 0;
-
-  // Per-account grand total: item subtotal + proportional tax + proportional tip
-  const accountGrandTotals = useMemo(() => {
-    const totals: Record<number, number> = {};
-    Object.entries(accountItemSubtotals).forEach(([acct, itemSub]) => {
-      const ratio = subtotal > 0 ? itemSub / subtotal : 0;
-      totals[Number(acct)] = Math.round(itemSub + tax * ratio + tipAmount * ratio);
-    });
-    return totals;
-  }, [accountItemSubtotals, subtotal, tax, tipAmount]);
-
   // ── Computed: split progress ───────────────────────────────────────────────
 
-  const totalSplits = splitMode === 'equal' || splitMode === 'custom' ? splitPersons : numAccounts;
+  const totalSplits = splitPersons;
 
   const amountForAccount = (idx: number) => // 1-based
-    splitMode === 'equal'  ? amountForPerson(idx - 1) :
-    splitMode === 'custom' ? (customAmounts[idx - 1] ?? 0) :
-    (accountGrandTotals[idx] ?? 0);
+    splitMode === 'equal' ? amountForPerson(idx - 1) : (customAmounts[idx - 1] ?? 0);
 
   const paidTotal = useMemo(() => {
     let total = 0;
@@ -231,12 +198,11 @@ export function CheckoutDrawer({
 
   const canConfirmCurrentPayment = useMemo(() => {
     if (splitBill && splitMode === 'custom' && !customValid) return false;
-    if (splitBill && splitMode === 'items' && !allItemsAssigned) return false;
     if (paymentMethod === 'cash')     return cashNum >= currentAmountToPay;
     if (paymentMethod === 'transfer') return transferConfirmed;
     if (paymentMethod === 'mixed')    return totalMixedPaid >= currentAmountToPay;
     return true; // card
-  }, [splitBill, splitMode, customValid, allItemsAssigned, paymentMethod, cashNum, currentAmountToPay, transferConfirmed, totalMixedPaid]);
+  }, [splitBill, splitMode, customValid, paymentMethod, cashNum, currentAmountToPay, transferConfirmed, totalMixedPaid]);
 
   // Button is active when: payment valid OR all accounts already paid
   const btnEnabled = canConfirmCurrentPayment || allAccountsPaid;
@@ -274,22 +240,6 @@ export function CheckoutDrawer({
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  const toggleAssign = (itemId: string, acct: number) => {
-    setItemAssignments(prev => ({ ...prev, [itemId]: prev[itemId] === acct ? 0 : acct }));
-  };
-
-  const changeNumAccounts = (n: number) => {
-    const clamped = Math.max(2, Math.min(6, n));
-    if (clamped < numAccounts) {
-      setItemAssignments(prev => {
-        const next = { ...prev };
-        Object.keys(next).forEach(id => { if (next[id] > clamped) next[id] = 0; });
-        return next;
-      });
-    }
-    setNumAccounts(clamped);
-  };
-
   const confirmOneAccount = () => {
     const updated = new Set(paidAccounts);
     updated.add(currentAccount);
@@ -320,8 +270,6 @@ export function CheckoutDrawer({
 
   const disabledReason = useMemo((): string | null => {
     if (allAccountsPaid) return null;
-    if (splitBill && splitMode === 'items' && !allItemsAssigned)
-      return 'Asigna todos los ítems antes de continuar';
     if (paymentMethod === 'cash' && cashNum === 0)
       return 'Ingresa el monto recibido';
     if (paymentMethod === 'cash' && cashNum < currentAmountToPay)
@@ -331,16 +279,14 @@ export function CheckoutDrawer({
     if (paymentMethod === 'mixed' && totalMixedPaid < currentAmountToPay)
       return `Faltan $${mixRemaining.toLocaleString()} por cubrir en pago mixto`;
     return null;
-  }, [allAccountsPaid, splitBill, splitMode, allItemsAssigned, paymentMethod, cashNum, currentAmountToPay, transferConfirmed, totalMixedPaid, mixRemaining]);
+  }, [allAccountsPaid, paymentMethod, cashNum, currentAmountToPay, transferConfirmed, totalMixedPaid, mixRemaining]);
 
   // ── Display strings ────────────────────────────────────────────────────────
 
-  const splitLabel = splitMode === 'equal'
-    ? `Persona ${currentAccount}`
-    : `Cta. ${currentAccount}`;
+  const splitLabel = `Persona ${currentAccount}`;
 
   const paymentDisplay = splitBill
-    ? `Dividido · ${totalSplits} ${splitMode === 'equal' ? 'personas' : 'cuentas'}`
+    ? `Dividido · ${totalSplits} personas`
     : METHOD_LABEL[paymentMethod];
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -546,7 +492,7 @@ export function CheckoutDrawer({
               <SectionLabel label="¿Dividir cuenta?"
                 hint={splitBill ? (
                   <span className="text-[10px] font-bold text-[var(--blue-100)] bg-[var(--blue-10)] border border-[var(--black-10)] px-2 py-0.5 rounded-full">
-                    {splitMode === 'equal' ? `${splitPersons} personas` : allItemsAssigned ? 'Asignado ✓' : 'Pendiente'}
+                    {splitPersons} personas
                   </span>
                 ) : undefined}
               />
@@ -576,7 +522,7 @@ export function CheckoutDrawer({
                 <div className="flex flex-col gap-4">
                   {/* Mode tabs */}
                   <div className="flex gap-2">
-                    {([['equal', 'Partes iguales'], ['items', 'Por ítems'], ['custom', 'Personalizado']] as [SplitMode, string][]).map(([m, l]) => (
+                    {([['equal', 'Partes iguales'], ['custom', 'Personalizado']] as [SplitMode, string][]).map(([m, l]) => (
                       <button key={m}
                         onClick={() => setSplitMode(m)}
                         className={cn('flex-1 py-2.5 rounded-[var(--radius-12)] border-2 text-xs font-semibold transition-all',
@@ -641,93 +587,6 @@ export function CheckoutDrawer({
                         <p className="text-[10px] text-[var(--feedback-warning-100)] font-bold text-center">
                           * Ajuste por redondeo: Persona {splitPersons} paga ${(perPersonFloor + perPersonRemainder).toLocaleString()}
                         </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* ── Por ítems ── */}
-                  {splitMode === 'items' && (
-                    <div className="flex flex-col gap-3">
-                      {/* Account legend + count control */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {Array.from({ length: numAccounts }).map((_, i) => {
-                            const idx    = i + 1;
-                            const isPaid = paidAccounts.has(idx);
-                            const c      = ACCT[i];
-                            return (
-                              <button key={i}
-                                onClick={() => !isPaid && setCurrentAccount(idx)}
-                                className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black border transition-all',
-                                  isPaid ? 'bg-[var(--feedback-success-10)] text-[var(--feedback-success-200)] border-[var(--feedback-success-100)]' :
-                                  currentAccount === idx ? c.active + ' scale-105' : c.badge)}
-                              >
-                                {isPaid ? <Check size={9} /> : <div className={cn('w-1.5 h-1.5 rounded-full shrink-0', c.dot)} />}
-                                Cta. {idx}
-                                {accountGrandTotals[idx] != null && (
-                                  <span className="opacity-70">${accountGrandTotals[idx].toLocaleString()}</span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {[[-1, numAccounts <= 2], [1, numAccounts >= 6]].map(([delta, disabled]) => (
-                            <button key={delta}
-                              onClick={() => changeNumAccounts(numAccounts + (delta as number))}
-                              disabled={disabled as boolean}
-                              className={cn('w-6 h-6 rounded-[var(--radius-8)] border text-[10px] font-black flex items-center justify-center transition-all',
-                                !(disabled as boolean) ? 'border-[var(--black-10)] text-[var(--black-60)] hover:border-[var(--black-40)]' : 'border-[var(--black-10)] text-[var(--black-40)] cursor-not-allowed')}
-                            >
-                              {(delta as number) > 0 ? <Plus size={10} /> : <Minus size={10} />}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Items assignment table */}
-                      <div className="flex flex-col bg-[var(--blue-10)] rounded-[var(--radius-12)] border border-[var(--black-10)] overflow-hidden">
-                        {items.map((item, idx) => {
-                          const assigned  = itemAssignments[item.id] ?? 0;
-                          const acctColor = assigned > 0 ? ACCT[assigned - 1] : null;
-                          return (
-                            <div key={item.id}
-                              className={cn('flex items-center gap-3 px-4 py-3', idx < items.length - 1 && 'border-b border-[var(--black-10)]')}
-                            >
-                              <div className={cn('w-1.5 h-1.5 rounded-full shrink-0 transition-all', acctColor ? acctColor.dot : 'bg-[var(--black-10)]')} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold text-[var(--black-100)] truncate">{item.quantity}× {item.name}</p>
-                                <p className="text-[10px] text-[var(--black-40)]">${(item.price * item.quantity).toLocaleString()}</p>
-                              </div>
-                              <div className="flex items-center gap-1 shrink-0">
-                                {Array.from({ length: numAccounts }).map((_, i) => {
-                                  const acct = i + 1;
-                                  const c    = ACCT[i];
-                                  return (
-                                    <button key={acct}
-                                      onClick={() => toggleAssign(item.id, acct)}
-                                      className={cn('w-7 h-7 rounded-[var(--radius-12)] text-[10px] font-black border-2 transition-all',
-                                        assigned === acct ? c.active : c.idle)}
-                                    >{acct}</button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Validation */}
-                      {allItemsAssigned ? (
-                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-[var(--radius-16)] bg-[var(--feedback-success-10)] border border-[var(--feedback-success-100)] text-xs font-bold text-[var(--feedback-success-200)]">
-                          <CheckCircle2 size={13} />
-                          Todos los ítems asignados · ${assignedSubtotal.toLocaleString()} (sin impuestos)
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between px-3 py-2.5 rounded-[var(--radius-16)] bg-[var(--feedback-warning-10)] border border-[var(--feedback-warning-10)] text-xs font-bold text-[var(--feedback-warning-150)]">
-                          <div className="flex items-center gap-1.5"><AlertTriangle size={13} /> Faltan ítems por asignar</div>
-                          <span className="text-[10px] opacity-80">${assignedSubtotal.toLocaleString()} / ${subtotal.toLocaleString()}</span>
-                        </div>
                       )}
                     </div>
                   )}
@@ -865,8 +724,7 @@ export function CheckoutDrawer({
                       const isPaid    = paidAccounts.has(idx);
                       const isCurrent = !isPaid && currentAccount === idx;
                       const amount    = amountForAccount(idx);
-                      const c         = splitMode === 'items' ? ACCT[i] : undefined;
-                      const label     = splitMode === 'equal' ? `Persona ${idx}` : `Cta. ${idx}`;
+                      const label     = `Persona ${idx}`;
 
                       return (
                         <button key={idx}
@@ -888,8 +746,7 @@ export function CheckoutDrawer({
                               <span className="text-[9px] font-black">→</span>
                             </div>
                           ) : (
-                            <div className={cn('w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 bg-white',
-                              c ? c.dot.replace('bg-', 'border-') : 'border-[var(--black-10)]')} />
+                            <div className="w-5 h-5 rounded-full border-2 border-[var(--black-10)] flex items-center justify-center shrink-0 bg-white" />
                           )}
 
                           <div className="flex-1">
