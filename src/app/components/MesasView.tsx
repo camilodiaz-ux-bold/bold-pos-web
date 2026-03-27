@@ -1037,6 +1037,105 @@ function EditNoteModal({
   );
 }
 
+// ─── Panel button helpers ─────────────────────────────────────────────────────
+
+const MFONT = 'var(--font-family, Montserrat, sans-serif)';
+
+function PanelOutlineBtn({
+  children, onClick, textColor, hoverBorderColor, icon,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  textColor: string;
+  hoverBorderColor: string;
+  icon: React.ReactNode;
+}) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        flex: 1, height: 40, borderRadius: 8, background: '#fff', cursor: 'pointer',
+        border: `1.5px solid ${hov ? hoverBorderColor : '#C7CBE0'}`,
+        color: textColor, fontSize: 14, fontWeight: 600, fontFamily: MFONT,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        transition: 'border-color 150ms',
+      }}
+    >
+      {icon}{children}
+    </button>
+  );
+}
+
+function PanelNavyBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        width: '100%', height: 40, borderRadius: 8, border: 'none', cursor: 'pointer',
+        background: hov ? '#0D1550' : '#121E6C',
+        color: '#fff', fontSize: 14, fontWeight: 600, fontFamily: MFONT,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        transition: 'background 150ms',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PanelCoralBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        width: '100%', height: 48, borderRadius: 8, border: 'none', cursor: 'pointer',
+        background: hov ? '#D91E34' : '#FF2947',
+        color: '#fff', fontSize: 15, fontWeight: 700, fontFamily: MFONT,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        transition: 'background 150ms',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PanelBillBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        width: '100%', height: 48, borderRadius: 8, cursor: 'pointer',
+        border: `1.5px solid ${hov ? '#121E6C' : '#C7CBE0'}`,
+        background: '#fff',
+        color: hov ? '#121E6C' : '#1E1E1E',
+        fontSize: 15, fontWeight: 600, fontFamily: MFONT,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        transition: 'border-color 150ms, color 150ms',
+      }}
+    >
+      {/* Receipt icon color follows text color via CSS doesn't work for SVG — re-render on hover */}
+      {React.Children.map(children, (child, i) =>
+        i === 0 && React.isValidElement(child)
+          ? React.cloneElement(child as React.ReactElement<{ color?: string }>, { color: hov ? '#121E6C' : '#1E1E1E' })
+          : child
+      )}
+    </button>
+  );
+}
+
 // ─── MesasView ────────────────────────────────────────────────────────────────
 
 export function MesasView() {
@@ -1067,6 +1166,8 @@ export function MesasView() {
   const [showKitchenPreview,    setShowKitchenPreview]     = useState(false);
   const [showGestionarMesas, setShowGestionarMesas] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [editingPriceId,  setEditingPriceId]  = useState<string | null>(null);
+  const [editingPriceVal, setEditingPriceVal] = useState<string>('');
 
   // ── Viewport: zoom + pan ──────────────────────────────────────────────────
   const ZOOM_STEPS = [0.75, 1, 1.25] as const;
@@ -1270,6 +1371,19 @@ export function MesasView() {
         t.id !== selectedTableId ? t : {
           ...t,
           items: t.items.filter(i => i.id !== itemId),
+          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+        },
+      ),
+    );
+  };
+
+  const updateItemPrice = (itemId: string, newPrice: number) => {
+    if (!selectedTableId) return;
+    setTables(prev =>
+      prev.map(t =>
+        t.id !== selectedTableId ? t : {
+          ...t,
+          items: t.items.map(i => i.id === itemId ? { ...i, price: Math.max(0, newPrice) } : i),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
         },
       ),
@@ -2056,22 +2170,45 @@ export function MesasView() {
                 <p className="panel-meta" style={{ marginTop: 6 }}>Mesa no disponible para servicio</p>
               )}
 
-              {/* Acciones de mesa — link style, gap 16px */}
+              {/* Acciones de mesa — Fila 1: outline × 2 | Fila 2: navy full-width */}
               {(selectedTable.status === 'OCUPADA' || selectedTable.status === 'CUENTA_SOLICITADA') && (
-                <div style={{ marginTop: 16, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {/* Fila 1 */}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {selectedTable.status === 'OCUPADA' ? (
+                      <PanelOutlineBtn
+                        onClick={() => setShowChangeMesa(true)}
+                        textColor="#1E1E1E"
+                        hoverBorderColor="#121E6C"
+                        icon={<ArrowLeftRight size={16} color="#1E1E1E" />}
+                      >
+                        Cambiar mesa
+                      </PanelOutlineBtn>
+                    ) : (
+                      <PanelOutlineBtn
+                        onClick={revertToOcupada}
+                        textColor="#1E1E1E"
+                        hoverBorderColor="#121E6C"
+                        icon={<RotateCcw size={16} color="#1E1E1E" />}
+                      >
+                        Volver a Ocupada
+                      </PanelOutlineBtn>
+                    )}
+                    <PanelOutlineBtn
+                      onClick={() => setShowCancelModal(true)}
+                      textColor="#FF2947"
+                      hoverBorderColor="#FF2947"
+                      icon={<X size={16} color="#FF2947" />}
+                    >
+                      Cancelar y liberar
+                    </PanelOutlineBtn>
+                  </div>
+                  {/* Fila 2: Agregar productos (solo OCUPADA) */}
                   {selectedTable.status === 'OCUPADA' && (
-                    <button onClick={() => setShowChangeMesa(true)} className="link-blue" style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <ArrowLeftRight size={12} /> Cambiar mesa
-                    </button>
+                    <PanelNavyBtn onClick={() => setShowProductSelector(true)}>
+                      <Plus size={16} color="#fff" /> Agregar productos
+                    </PanelNavyBtn>
                   )}
-                  {selectedTable.status === 'CUENTA_SOLICITADA' && (
-                    <button onClick={revertToOcupada} className="link-blue" style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <RotateCcw size={12} /> Volver a Ocupada
-                    </button>
-                  )}
-                  <button onClick={() => setShowCancelModal(true)} className="link-coral" style={{ fontSize: 13 }}>
-                    Cancelar y liberar
-                  </button>
                 </div>
               )}
               {selectedTable.status === 'INHABILITADA' && (
@@ -2184,9 +2321,53 @@ export function MesasView() {
                         <div key={item.id} className="panel-item">
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <p className="panel-item-name">{item.name}</p>
-                            <p className="panel-item-price" style={{ marginTop: 2 }}>
-                              ${(item.price * item.quantity).toLocaleString()}
-                            </p>
+                            {editingPriceId === item.id ? (
+                              <input
+                                type="number"
+                                autoFocus
+                                value={editingPriceVal}
+                                onChange={e => setEditingPriceVal(e.target.value)}
+                                onBlur={() => {
+                                  const n = parseInt(editingPriceVal);
+                                  if (!isNaN(n) && n > 0) updateItemPrice(item.id, n);
+                                  setEditingPriceId(null);
+                                }}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    const n = parseInt(editingPriceVal);
+                                    if (!isNaN(n) && n > 0) updateItemPrice(item.id, n);
+                                    setEditingPriceId(null);
+                                  }
+                                  if (e.key === 'Escape') setEditingPriceId(null);
+                                }}
+                                style={{
+                                  marginTop: 2, width: 90, border: 'none',
+                                  borderBottom: '2px solid #121E6C', outline: 'none',
+                                  background: 'transparent', padding: '0 0 2px',
+                                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                                  fontSize: 14, fontWeight: 700, color: '#121E6C',
+                                }}
+                              />
+                            ) : selectedTable.status === 'OCUPADA' ? (
+                              <button
+                                onClick={() => {
+                                  setEditingPriceId(item.id);
+                                  setEditingPriceVal(String(item.price));
+                                }}
+                                style={{
+                                  display: 'block', marginTop: 2, background: 'none', border: 'none',
+                                  cursor: 'pointer', padding: 0, textDecoration: 'underline',
+                                  color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                                  fontSize: 14, fontWeight: 700,
+                                }}
+                              >
+                                ${(item.price * item.quantity).toLocaleString()}
+                              </button>
+                            ) : (
+                              <p className="panel-item-price" style={{ marginTop: 2 }}>
+                                ${(item.price * item.quantity).toLocaleString()}
+                              </p>
+                            )}
                             {item.note ? (
                               <button
                                 onClick={() => selectedTable.status === 'OCUPADA' && setEditNoteTarget({ itemId: item.id, itemName: item.name, note: item.note ?? '' })}
@@ -2250,7 +2431,8 @@ export function MesasView() {
                       <span>IVA 19%</span><span>${Math.round(tax).toLocaleString()}</span>
                     </div>
                     <div className="panel-grand-total">
-                      <span>Total</span><span>${Math.round(total).toLocaleString()}</span>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: '#1E1E1E' }}>Total</span>
+                      <span style={{ fontSize: 20, fontWeight: 700, color: '#1E1E1E' }}>${Math.round(total).toLocaleString()}</span>
                     </div>
                   </div>
                 )}
@@ -2260,13 +2442,13 @@ export function MesasView() {
                   <>
                     {selectedTable.items.length > 0 && (
                       hasPendingChanges ? (
-                        <button onClick={() => setShowKitchenPreview(true)} className="btn btn-primary btn-primary--full" style={{ justifyContent: 'center' }}>
-                          <RotateCcw size={16} /> Reenviar comanda
-                        </button>
+                        <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
+                          <RotateCcw size={18} color="#fff" /> Reenviar comanda
+                        </PanelCoralBtn>
                       ) : !isComandaSent ? (
-                        <button onClick={() => setShowKitchenPreview(true)} className="btn btn-primary btn-primary--full" style={{ justifyContent: 'center' }}>
-                          <Send size={16} /> Enviar comanda
-                        </button>
+                        <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
+                          <Send size={18} color="#fff" /> Enviar comanda
+                        </PanelCoralBtn>
                       ) : (
                         <div style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -2281,9 +2463,9 @@ export function MesasView() {
                       )
                     )}
                     {selectedTable.items.length > 0 && (
-                      <button onClick={requestBill} className="btn btn-secondary btn-secondary--full" style={{ justifyContent: 'center' }}>
-                        <Receipt size={15} /> Solicitar cuenta
-                      </button>
+                      <PanelBillBtn onClick={requestBill}>
+                        <Receipt size={18} color="#1E1E1E" /> Solicitar cuenta
+                      </PanelBillBtn>
                     )}
                   </>
                 )}
