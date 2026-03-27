@@ -220,7 +220,7 @@ export function CheckoutDrawer({
   useEffect(() => {
     setPaidAccounts(new Set());
     setCurrentAccount(1);
-  }, [splitBill, splitMode, splitPersons, numAccounts]);
+  }, [splitBill, splitMode, splitPersons]);
 
   // Reset customAmounts to zero when switching TO custom mode
   useEffect(() => {
