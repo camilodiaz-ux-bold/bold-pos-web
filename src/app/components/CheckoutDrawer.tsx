@@ -163,7 +163,7 @@ export function CheckoutDrawer({
     paidAccounts.forEach(idx => { total += amountForAccount(idx); });
     return total;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paidAccounts, splitMode, splitPersons, grandTotal, accountGrandTotals]);
+  }, [paidAccounts, splitMode, splitPersons, grandTotal, customAmounts]);
 
   const remainingAfterPaid = grandTotal - paidTotal;
   const allAccountsPaid    = paidAccounts.size >= totalSplits;
