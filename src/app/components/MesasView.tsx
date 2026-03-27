@@ -2196,9 +2196,9 @@ export function MesasView() {
                     )}
                     <PanelOutlineBtn
                       onClick={() => setShowCancelModal(true)}
-                      textColor="#FF2947"
-                      hoverBorderColor="#FF2947"
-                      icon={<X size={16} color="#FF2947" />}
+                      textColor="#1E1E1E"
+                      hoverBorderColor="#121E6C"
+                      icon={<X size={16} color="#1E1E1E" />}
                     >
                       Cancelar y liberar
                     </PanelOutlineBtn>
@@ -2268,19 +2268,10 @@ export function MesasView() {
                 <>
                   {/* Section: PEDIDO */}
                   <div className="panel-section">
-                    <div className="flex items-center justify-between" style={{ marginBottom: 4 }}>
+                    <div style={{ marginBottom: 4 }}>
                       <span className="panel-section-label" style={{ marginBottom: 0 }}>
                         Pedido · {totalItems} ítem{totalItems !== 1 ? 's' : ''}
                       </span>
-                      {selectedTable.status === 'OCUPADA' && (
-                        <button
-                          onClick={() => setShowProductSelector(true)}
-                          className="btn btn-primary btn--sm"
-                          style={{ padding: '6px 12px', fontSize: 12 }}
-                        >
-                          <Plus size={12} /> Agregar productos
-                        </button>
-                      )}
                     </div>
 
                     {/* Banner cambios pendientes */}
@@ -2309,11 +2300,6 @@ export function MesasView() {
                       </div>
                       <p className="empty-state__title">Sin ítems en el pedido</p>
                       <p className="empty-state__body">Agrega productos para comenzar</p>
-                      {selectedTable.status === 'OCUPADA' && (
-                        <button onClick={() => setShowProductSelector(true)} className="btn btn-primary" style={{ marginTop: 4, padding: '8px 16px', fontSize: 13 }}>
-                          <Plus size={14} /> Agregar productos
-                        </button>
-                      )}
                     </div>
                   ) : (
                     <div style={{ padding: '0 24px' }}>
