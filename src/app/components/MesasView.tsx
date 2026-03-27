@@ -7,7 +7,9 @@ import {
   Trash2, MapPin, Receipt, ArrowLeftRight,
   CheckCircle2, Minus, RotateCcw, Pencil, AlertTriangle,
   MessageSquare, Timer, Printer, ZoomIn, ZoomOut, Maximize2, Info,
+  LayoutGrid, Map,
 } from 'lucide-react';
+import { MesasGridView } from './MesasGridView';
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -1064,6 +1066,7 @@ export function MesasView() {
   const [showCheckout,          setShowCheckout]           = useState(false);
   const [showKitchenPreview,    setShowKitchenPreview]     = useState(false);
   const [showGestionarMesas, setShowGestionarMesas] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   // ── Viewport: zoom + pan ──────────────────────────────────────────────────
   const ZOOM_STEPS = [0.75, 1, 1.25] as const;
@@ -1679,16 +1682,70 @@ export function MesasView() {
             );
           })}
 
-          <button
-            onClick={() => setShowGestionarMesas(true)}
-            className="link-blue ml-auto flex items-center gap-1.5"
-            style={{ fontSize: 13 }}
-          >
-            <Settings size={13} /> Gestionar mesas
-          </button>
+          {/* ── Toggle Grid / Mapa ── */}
+          <div className="ml-auto flex items-center gap-3">
+            <div style={{
+              display: 'flex',
+              border: '1px solid var(--blue-20)',
+              borderRadius: 6,
+              overflow: 'hidden',
+              flexShrink: 0,
+            }}>
+              <button
+                onClick={() => setViewMode('grid')}
+                title="Vista Grid"
+                style={{
+                  width: 32, height: 32,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: viewMode === 'grid' ? 'var(--blue-100)' : '#ffffff',
+                  border: 'none',
+                  borderRight: '1px solid var(--blue-20)',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s',
+                }}
+              >
+                <LayoutGrid size={15} color={viewMode === 'grid' ? '#ffffff' : 'var(--black-40)'} />
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                title="Vista Mapa"
+                style={{
+                  width: 32, height: 32,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: viewMode === 'map' ? 'var(--blue-100)' : '#ffffff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s',
+                }}
+              >
+                <Map size={15} color={viewMode === 'map' ? '#ffffff' : 'var(--black-40)'} />
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowGestionarMesas(true)}
+              className="link-blue flex items-center gap-1.5"
+              style={{ fontSize: 13 }}
+            >
+              <Settings size={13} /> Gestionar mesas
+            </button>
+          </div>
         </div>
 
+        {/* ── Vista Grid (por defecto) ── */}
+        {viewMode === 'grid' && (
+          <div className="flex-1 min-h-0 overflow-y-auto p-5">
+            <MesasGridView
+              tables={filteredTables}
+              selectedTableId={selectedTableId}
+              onSelectMesa={(id) => setSelectedTableId(id)}
+            />
+          </div>
+        )}
+
         {/* ── CanvasMesasVenta: mapa libre de solo lectura ── */}
+        {viewMode === 'map' && (
+        <>
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-5">
 
           {/* Zone header + controles de zoom */}
@@ -1889,6 +1946,7 @@ export function MesasView() {
             )}
           </div>
         </div>
+        </> )} {/* fin viewMode === 'map' */}
       </div>
 
       {/* ════════════════════════════════════════════════════
