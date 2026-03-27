@@ -998,7 +998,7 @@ function EditNoteModal({
         </div>
         <p className="text-[12px] text-[var(--black-60)] mb-4">{itemName}</p>
         <textarea
-          className="w-full resize-none rounded-[var(--radius-12)] border border-[var(--black-10)] bg-[var(--blue-10)] px-3 py-2.5 text-sm text-[var(--black-100)] placeholder:text-[var(--black-40)] focus:outline-none focus:ring-2 focus:ring-[var(--blue-100)]/20 focus:border-[var(--blue-100)] transition-all"
+          className="merlin-input resize-none"
           rows={3}
           placeholder="Nota del ítem (opcional)"
           value={note}

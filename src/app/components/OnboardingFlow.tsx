@@ -445,7 +445,7 @@ function MerlinInput({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
       {label && (
-        <label style={{ fontFamily: 'Montserrat, Inter, sans-serif', fontSize: 14, fontWeight: 600, color: 'var(--blue-100)' }}>
+        <label style={{ fontFamily: 'Montserrat, Inter, sans-serif', fontSize: 11, fontWeight: 700, color: '#121E6C', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
           {label}{required && <span style={{ color: 'var(--coral-100)' }}> *</span>}
         </label>
       )}
@@ -458,12 +458,13 @@ function MerlinInput({
         onBlur={() => setFocused(false)}
         autoFocus={autoFocus}
         style={{
-          height: 40, width: '100%', backgroundColor: '#fff',
-          border: `1px solid ${focused ? 'var(--blue-100)' : 'var(--black-10)'}`,
-          borderRadius: 12, padding: '0 12px',
-          fontSize: 14, color: 'var(--black-100)', outline: 'none',
+          width: '100%', backgroundColor: 'transparent',
+          border: 'none',
+          borderBottom: `2px solid ${focused ? '#121E6C' : '#C7CBE0'}`,
+          borderRadius: 0, padding: '0 0 6px 0',
+          fontSize: 15, color: '#1E1E1E', outline: 'none',
           boxSizing: 'border-box', fontFamily: 'Montserrat, Inter, sans-serif',
-          transition: 'border-color 0.15s',
+          transition: 'border-color 200ms ease',
         }}
       />
     </div>

@@ -108,29 +108,28 @@ export function LoginScreen({ onLogin, onGoToSignup }: LoginScreenProps) {
   // ── Merlin input style ─────────────────────────────────────────────────────
   const merlinInput: React.CSSProperties = {
     width: '100%',
-    backgroundColor: '#fff',
-    border: '1.5px solid var(--black-10)',
-    borderRadius: 'var(--radius-8)',
-    padding: '10px 14px',
-    fontSize: 14, color: 'var(--black-100)',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderBottom: '2px solid #C7CBE0',
+    borderRadius: 0,
+    padding: '0 0 6px 0',
+    fontSize: 15, color: '#1E1E1E',
     outline: 'none',
     boxSizing: 'border-box',
     fontFamily: "'Montserrat', sans-serif",
-    transition: 'border-color 150ms ease, box-shadow 150ms ease',
+    transition: 'border-color 200ms ease',
   };
   const merlinLabel: React.CSSProperties = {
     display: 'block', marginBottom: 6,
-    fontSize: 11, fontWeight: 700, color: 'var(--black-60)',
-    textTransform: 'uppercase', letterSpacing: '0.06em',
+    fontSize: 11, fontWeight: 700, color: '#121E6C',
+    textTransform: 'uppercase', letterSpacing: '0.8px',
     fontFamily: "'Montserrat', sans-serif",
   };
   const onFocusMerlin = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = 'var(--blue-100)';
-    e.target.style.boxShadow = '0 0 0 3px var(--blue-10)';
+    e.target.style.borderBottomColor = '#121E6C';
   };
   const onBlurMerlin = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = 'var(--black-10)';
-    e.target.style.boxShadow = 'none';
+    e.target.style.borderBottomColor = '#C7CBE0';
   };
 
   return (

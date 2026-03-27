@@ -381,6 +381,45 @@ button, a, [role="button"] { cursor: pointer; transition: all 150ms ease; }
   display: block;
 }
 
+/* ─── MERLin form classes ────────────────────────────────────────────────── */
+
+.merlin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.merlin-label {
+  font-family: var(--font-family, 'Montserrat', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  color: #121E6C;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: block;
+}
+
+.merlin-input {
+  font-family: var(--font-family, 'Montserrat', sans-serif);
+  font-size: 15px;
+  font-weight: 400;
+  color: #1E1E1E;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #C7CBE0;
+  border-radius: 0;
+  padding: 0 0 6px 0;
+  outline: none;
+  width: 100%;
+  transition: border-color 200ms ease;
+}
+.merlin-input::placeholder {
+  color: #C7CBE0;
+}
+.merlin-input:focus {
+  border-bottom-color: #121E6C;
+}
+
 /* ─── Sidebar izquierdo ──────────────────────────────────────────────────── */
 
 .nav-sidebar {

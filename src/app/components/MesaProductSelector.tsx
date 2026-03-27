@@ -400,12 +400,12 @@ export function MesaProductSelector({
                 </div>
               )}
 
-              <div>
-                <label className="pos-label">
-                  Nota para cocina <span className="font-medium">(opcional)</span>
+              <div className="merlin-field">
+                <label className="merlin-label">
+                  Nota para cocina <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>(opcional)</span>
                 </label>
                 <textarea
-                  className="pos-input resize-none"
+                  className="merlin-input resize-none"
                   rows={2}
                   placeholder="Ej: Sin cebolla, extra picante..."
                   value={modalState.note}

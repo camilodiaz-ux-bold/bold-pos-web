@@ -779,24 +779,22 @@ export function GestionarMesasView({ onBack }: Props) {
                   <div className="flex flex-col overflow-y-auto flex-1" style={{ gap: 16, padding: 24 }}>
 
                     {/* Name */}
-                    <div>
-                      <label className="pos-label">Nombre</label>
+                    <div className="merlin-field">
+                      <label className="merlin-label">Nombre</label>
                       <input
                         value={selTable.name}
                         onChange={e => upd('name', e.target.value)}
-                        className="pos-input"
-                        style={{ fontSize: 14 }}
+                        className="merlin-input"
                       />
                     </div>
 
                     {/* Zona */}
-                    <div>
-                      <label className="pos-label">Zona</label>
+                    <div className="merlin-field">
+                      <label className="merlin-label">Zona</label>
                       <select
                         value={selTable.zone}
                         onChange={e => upd('zone', e.target.value)}
-                        className="pos-input"
-                        style={{ fontSize: 14 }}
+                        className="merlin-input"
                       >
                         {zonas.map(z => <option key={z.id} value={z.name}>{z.name}</option>)}
                       </select>
@@ -809,7 +807,7 @@ export function GestionarMesasView({ onBack }: Props) {
 
                     {/* Categoría */}
                     <div>
-                      <label className="pos-label">Categoría</label>
+                      <label className="merlin-label">Categoría</label>
                       <div className="flex gap-2">
                         {(['Mesa', 'Barra'] as Category[]).map(cat => (
                           <button
@@ -834,7 +832,7 @@ export function GestionarMesasView({ onBack }: Props) {
                     {/* Forma (solo si Mesa) */}
                     {selTable.category === 'Mesa' && (
                       <div>
-                        <label className="pos-label">Forma</label>
+                        <label className="merlin-label">Forma</label>
                         <div className="flex gap-2">
                           {(['Rectangular', 'Redonda'] as Shape[]).map(sh => (
                             <button
@@ -863,7 +861,7 @@ export function GestionarMesasView({ onBack }: Props) {
 
                     {/* Capacidad */}
                     <div>
-                      <label className="pos-label">Capacidad</label>
+                      <label className="merlin-label">Capacidad</label>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => upd('capacity', Math.max(1, selTable.capacity - 1))}
@@ -880,7 +878,7 @@ export function GestionarMesasView({ onBack }: Props) {
 
                     {/* Estado */}
                     <div>
-                      <label className="pos-label">Estado operativo</label>
+                      <label className="merlin-label">Estado operativo</label>
                       <select
                         value={selTable.status}
                         onChange={e => upd('status', e.target.value)}
@@ -898,7 +896,7 @@ export function GestionarMesasView({ onBack }: Props) {
 
                     {/* Orientación */}
                     <div>
-                      <label className="pos-label">Orientación</label>
+                      <label className="merlin-label">Orientación</label>
 
                       {selTable.category === 'Mesa' && selTable.shape === 'Redonda' ? (
                         /* Redonda: no aplica */
@@ -1316,27 +1314,27 @@ export function GestionarMesasView({ onBack }: Props) {
             <div className="flex flex-col gap-4">
 
               {/* Nombre */}
-              <div>
-                <label className="pos-label">Nombre / ID</label>
+              <div className="merlin-field">
+                <label className="merlin-label">Nombre / ID</label>
                 <input
                   value={newM.name} onChange={e => setNewM(p => ({...p, name:e.target.value}))}
                   placeholder="Ej. A5, T3, BAR2…" autoFocus
-                  className="pos-input"
+                  className="merlin-input"
                 />
               </div>
 
               {/* Zona */}
-              <div>
-                <label className="pos-label">Zona</label>
+              <div className="merlin-field">
+                <label className="merlin-label">Zona</label>
                 <select value={newM.zone} onChange={e => setNewM(p => ({...p, zone:e.target.value}))}
-                  className="pos-input">
+                  className="merlin-input">
                   {zonas.map(z => <option key={z.id} value={z.name}>{z.name}</option>)}
                 </select>
               </div>
 
               {/* Categoría */}
               <div>
-                <label className="pos-label">Categoría</label>
+                <label className="merlin-label">Categoría</label>
                 <div className="flex gap-2">
                   {(['Mesa', 'Barra'] as Category[]).map(cat => (
                     <button key={cat} onClick={() => setNewM(p => ({...p, category:cat}))}
@@ -1357,7 +1355,7 @@ export function GestionarMesasView({ onBack }: Props) {
               {/* Forma (solo Mesa) */}
               {newM.category === 'Mesa' && (
                 <div>
-                  <label className="pos-label">Forma</label>
+                  <label className="merlin-label">Forma</label>
                   <div className="flex gap-2">
                     {(['Rectangular', 'Redonda'] as Shape[]).map(sh => (
                       <button key={sh} onClick={() => setNewM(p => ({...p, shape:sh}))}
@@ -1380,7 +1378,7 @@ export function GestionarMesasView({ onBack }: Props) {
 
               {/* Capacidad */}
               <div>
-                <label className="pos-label">Capacidad</label>
+                <label className="merlin-label">Capacidad</label>
                 <div className="flex items-center gap-3">
                   <button onClick={() => setNewM(p => ({...p, capacity:Math.max(1,p.capacity-1)}))}
                     className="w-9 h-9 rounded-[var(--radius-12)] border border-[var(--black-10)] flex items-center justify-center text-[var(--black-60)] hover:bg-[var(--blue-10)] transition-all"><ChevronDown size={16}/></button>
@@ -1397,7 +1395,7 @@ export function GestionarMesasView({ onBack }: Props) {
 
               {/* Estado */}
               <div>
-                <label className="pos-label">Estado operativo</label>
+                <label className="merlin-label">Estado operativo</label>
                 <select value={newM.status} onChange={e => setNewM(p => ({...p, status:e.target.value as TableStatus}))}
                   className={cn(
                     'w-full px-3 py-2.5 text-sm font-medium border rounded-[var(--radius-12)] focus:outline-none transition-all',

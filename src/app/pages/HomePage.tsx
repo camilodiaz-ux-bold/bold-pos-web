@@ -200,12 +200,12 @@ function AddProductModal({
           </div>
 
           {/* Note */}
-          <div>
-            <label className="text-xs font-bold text-[var(--black-40)] mb-1.5 block">
-              Notas <span className="font-medium text-[var(--black-40)]">(opcional)</span>
+          <div className="merlin-field">
+            <label className="merlin-label">
+              Notas <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>(opcional)</span>
             </label>
             <textarea
-              className="w-full resize-none rounded-[var(--radius-16)] border border-[var(--black-10)] bg-[var(--blue-10)] px-3 py-2.5 text-sm text-[var(--black-100)] placeholder-[var(--black-40)] focus:outline-none focus:ring-2 focus:ring-[var(--blue-100)]/20 focus:border-[var(--blue-100)] transition-all"
+              className="merlin-input resize-none"
               rows={2}
               placeholder="Ej: Sin cebolla, término medio..."
               value={note}
@@ -270,7 +270,7 @@ function EditNoteModal({
         </div>
         <p className="text-xs text-[var(--black-40)] mb-4">{itemName}</p>
         <textarea
-          className="w-full resize-none rounded-[var(--radius-16)] border border-[var(--black-10)] bg-[var(--blue-10)] px-3 py-2.5 text-sm text-[var(--black-100)] placeholder-[var(--black-40)] focus:outline-none focus:ring-2 focus:ring-[var(--blue-100)]/20 focus:border-[var(--blue-100)] transition-all"
+          className="merlin-input resize-none"
           rows={3}
           placeholder="Nota para cocina (opcional)"
           value={note}
@@ -613,11 +613,11 @@ export function HomePage() {
           <div className="relative bg-white rounded-[var(--radius-20)] shadow-2xl p-6 w-full max-w-sm animate-in zoom-in duration-200">
             <h3 className="text-lg font-bold text-[var(--black-100)] mb-4">Editar nombre</h3>
             <div className="mb-6">
-              <label className="block text-xs font-bold text-[var(--black-40)] uppercase mb-2">Nombre de la orden</label>
+              <label className="merlin-label" style={{ marginBottom: 8 }}>Nombre de la orden</label>
               <input
                 type="text"
                 autoFocus
-                className="w-full px-4 py-3 bg-[var(--blue-10)] border border-[var(--black-10)] rounded-[var(--radius-16)] focus:outline-none focus:ring-2 focus:ring-[var(--blue-100)] focus:bg-white transition-all text-sm font-semibold"
+                className="merlin-input"
                 placeholder={`Orden #${orders.find(o => o.id === editingOrderId)?.number}`}
                 value={editNameValue}
                 onChange={e => setEditNameValue(e.target.value)}
