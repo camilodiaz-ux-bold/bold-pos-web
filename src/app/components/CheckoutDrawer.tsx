@@ -78,7 +78,6 @@ function SectionLabel({ label, hint }: { label: string; hint?: React.ReactNode }
 function MoneyInput({
   value, onChange, placeholder, autoFocus,
 }: { value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean }) {
-  const [focused, setFocused] = React.useState(false);
   return (
     <div style={{ position: 'relative' }}>
       <span style={{
@@ -91,20 +90,9 @@ function MoneyInput({
         placeholder={placeholder ?? '0'}
         value={value}
         onChange={e => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
         autoFocus={autoFocus}
-        style={{
-          width: '100%', height: 40,
-          background: 'transparent',
-          border: 'none',
-          borderBottom: focused ? '2px solid #121E6C' : '2px solid #C7CBE0',
-          paddingLeft: 16, paddingRight: 0,
-          fontSize: 15, fontWeight: 600, color: '#1E1E1E',
-          fontFamily: 'Montserrat, sans-serif',
-          outline: 'none',
-          transition: 'border-color 150ms ease',
-        }}
+        className="merlin-input"
+        style={{ paddingLeft: 16, paddingRight: 0, fontWeight: 600, height: 40 }}
       />
     </div>
   );
@@ -803,7 +791,8 @@ export function CheckoutDrawer({
               </div>
 
               {tipMode === 'manual' && (
-                <div style={{ marginBottom: 12 }}>
+                <div className="merlin-field" style={{ marginBottom: 12 }}>
+                  <label className="merlin-label">Monto</label>
                   <MoneyInput value={tipManual} onChange={setTipManual} placeholder="0" autoFocus />
                 </div>
               )}
@@ -935,13 +924,8 @@ export function CheckoutDrawer({
                   {/* ── Efectivo ── */}
                   {paymentMethod === 'cash' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <div>
-                        <label style={{
-                          display: 'block', marginBottom: 6,
-                          fontSize: 11, fontWeight: 700, color: '#606060',
-                          textTransform: 'uppercase', letterSpacing: '0.8px',
-                          fontFamily: 'Montserrat, sans-serif',
-                        }}>Monto recibido</label>
+                      <div className="merlin-field">
+                        <label className="merlin-label">Monto recibido</label>
                         <MoneyInput value={cashReceived} onChange={setCashReceived} placeholder={currentAmountToPay.toLocaleString()} autoFocus />
                       </div>
                       <div style={{
@@ -1015,13 +999,8 @@ export function CheckoutDrawer({
                           [<CreditCard size={13} />,     'Tarjeta',       mixCard,     setMixCard],
                           [<ArrowLeftRight size={13} />, 'Transferencia', mixTransfer, setMixTransfer],
                         ] as [React.ReactNode, string, string, (v: string) => void][]).map(([icon, label, value, setter]) => (
-                          <div key={label}>
-                            <label style={{
-                              display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4,
-                              fontSize: 11, fontWeight: 700, color: '#606060',
-                              textTransform: 'uppercase', letterSpacing: '0.8px',
-                              fontFamily: 'Montserrat, sans-serif',
-                            }}>{icon} {label}</label>
+                          <div key={label} className="merlin-field">
+                            <label className="merlin-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{icon} {label}</label>
                             <MoneyInput value={value} onChange={setter} />
                           </div>
                         ))}
@@ -1197,7 +1176,6 @@ export function CheckoutDrawer({
 // ─── Custom person amount row ─────────────────────────────────────────────────
 
 function CustomPersonRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
-  const [focused, setFocused] = React.useState(false);
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
       <span style={{ fontSize: 13, color: '#606060', fontWeight: 400, fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
@@ -1212,20 +1190,8 @@ function CustomPersonRow({ label, value, onChange }: { label: string; value: num
           value={value || ''}
           placeholder="0"
           onChange={e => onChange(parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          style={{
-            width: '100%', height: 36,
-            background: 'transparent',
-            border: 'none',
-            borderBottom: focused ? '2px solid #121E6C' : '2px solid #C7CBE0',
-            paddingLeft: 16, paddingRight: 0,
-            textAlign: 'right',
-            fontSize: 15, fontWeight: 600, color: '#1E1E1E',
-            outline: 'none',
-            fontFamily: 'Montserrat, sans-serif',
-            transition: 'border-color 150ms ease',
-          }}
+          className="merlin-input"
+          style={{ paddingLeft: 16, paddingRight: 0, textAlign: 'right', fontWeight: 600, height: 36 }}
         />
       </div>
     </div>
