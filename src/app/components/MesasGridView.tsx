@@ -1,9 +1,8 @@
 /**
  * MesasGridView
  * ─────────────────────────────────────────────────────────────────────────────
- * Vista alternativa de mesas en grid (4 columnas). Muestra las mismas mesas
- * con sus estados usando los mismos colores del mapa, sin sillas ni formas.
- * Se monta dentro de MesasView cuando viewMode === 'grid'.
+ * Vista alternativa de mesas en grid (4 columnas). Fondos tenues con bordes
+ * de color, contenido centrado, nombre grande como elemento principal.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import React from 'react';
@@ -24,49 +23,64 @@ function formatElapsed(openedAtTimestamp: number, frozenElapsedMs?: number): str
   return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
-// ─── Card styles per status ───────────────────────────────────────────────────
+function calcTotal(items: MesaTable['items']): number {
+  return items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+}
+
+function formatCOP(n: number): string {
+  return '$' + n.toLocaleString('es-CO');
+}
+
+// ─── Card style config per status ─────────────────────────────────────────────
 
 const STATUS_STYLE: Record<TableStatus, {
-  bg: string;
-  border: string;
-  nameColor: string;
-  zoneColor: string;
-  iconColor: string;
-  infoColor: string;
+  bg:          string;
+  border:      string;
+  nameColor:   string;
+  infoColor:   string;
+  iconColor:   string;
+  opacity:     number;
+  cursor:      string;
 }> = {
   DISPONIBLE: {
-    bg:        'var(--blue-10)',
-    border:    '1px solid var(--blue-20)',
-    nameColor: 'var(--black-100)',
-    zoneColor: 'var(--black-40)',
-    iconColor: 'var(--black-40)',
-    infoColor: 'var(--blue-60)',
+    bg:        '#F1F2F6',
+    border:    '1.5px solid #C7CBE0',
+    nameColor: '#1E1E1E',
+    infoColor: '#606060',
+    iconColor: '#606060',
+    opacity:   1,
+    cursor:    'pointer',
   },
   OCUPADA: {
-    bg:        'var(--coral-100)',
-    border:    '1px solid var(--coral-100)',
-    nameColor: '#ffffff',
-    zoneColor: 'rgba(255,255,255,0.75)',
-    iconColor: 'rgba(255,255,255,0.85)',
-    infoColor: '#ffffff',
+    bg:        '#FFF0F2',
+    border:    '1.5px solid #FF2947',
+    nameColor: '#FF2947',
+    infoColor: '#FF2947',
+    iconColor: '#FF2947',
+    opacity:   1,
+    cursor:    'pointer',
   },
   CUENTA_SOLICITADA: {
-    bg:        'var(--feedback-warning-100)',
-    border:    '1px solid var(--feedback-warning-100)',
-    nameColor: 'var(--black-100)',
-    zoneColor: 'var(--black-60)',
-    iconColor: 'var(--black-60)',
-    infoColor: 'var(--black-80)',
+    bg:        '#FFFBF0',
+    border:    '1.5px solid #FFC217',
+    nameColor: '#B38900',
+    infoColor: '#B38900',
+    iconColor: '#B38900',
+    opacity:   1,
+    cursor:    'pointer',
   },
   INHABILITADA: {
-    bg:        'var(--black-10)',
-    border:    '1px dashed var(--black-20, #c8c8c8)',
-    nameColor: 'var(--black-40)',
-    zoneColor: 'var(--black-20, #c8c8c8)',
-    iconColor: 'var(--black-20, #c8c8c8)',
-    infoColor: 'var(--black-40)',
+    bg:        '#F5F5F5',
+    border:    '1.5px dashed #C0C0C0',
+    nameColor: '#AAAAAA',
+    infoColor: '#AAAAAA',
+    iconColor: '#AAAAAA',
+    opacity:   0.7,
+    cursor:    'default',
   },
 };
+
+const FONT = 'var(--font-family, Montserrat, sans-serif)';
 
 // ─── MesaCard ─────────────────────────────────────────────────────────────────
 
@@ -75,116 +89,118 @@ function MesaCard({
   isSelected,
   onClick,
 }: {
-  table: MesaTable;
+  table:      MesaTable;
   isSelected: boolean;
-  onClick: () => void;
+  onClick:    () => void;
 }) {
-  const s = STATUS_STYLE[table.status];
+  const s        = STATUS_STYLE[table.status];
   const isActive = table.status === 'OCUPADA' || table.status === 'CUENTA_SOLICITADA';
+  const disabled = table.status === 'INHABILITADA';
 
   const elapsed = isActive && table.openedAtTimestamp
     ? formatElapsed(table.openedAtTimestamp, table.frozenElapsedMs)
     : null;
 
+  const total = isActive && table.items.length > 0 ? calcTotal(table.items) : null;
+
+  const selectedBorder = '3px solid #121E6C';
+  const selectedShadow = '0 0 0 1px #121E6C';
+
   return (
     <button
       onClick={onClick}
       style={{
-        display:       'flex',
-        flexDirection: 'column',
-        justifyContent:'space-between',
-        height:        100,
-        padding:       12,
-        borderRadius:  10,
-        background:    s.bg,
-        border:        isSelected ? '3px solid var(--blue-100)' : s.border,
-        cursor:        table.status === 'INHABILITADA' ? 'default' : 'pointer',
-        textAlign:     'left',
-        transition:    'box-shadow 0.15s, border-color 0.15s',
-        boxShadow:     isSelected ? '0 0 0 1px var(--blue-100)' : '0 1px 4px rgba(0,0,0,0.06)',
+        display:        'flex',
+        flexDirection:  'column',
+        alignItems:     'center',
+        justifyContent: 'center',
+        textAlign:      'center',
+        height:         110,
+        padding:        12,
+        borderRadius:   12,
+        background:     s.bg,
+        border:         isSelected ? selectedBorder : s.border,
+        boxShadow:      isSelected ? selectedShadow : '0 1px 3px rgba(0,0,0,0.04)',
+        cursor:         s.cursor,
+        opacity:        s.opacity,
+        transition:     'box-shadow 0.15s ease, transform 0.15s ease',
+        gap:            4,
       }}
-      onMouseOver={e => {
-        if (!isSelected && table.status !== 'INHABILITADA')
-          (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.14)';
+      onMouseEnter={e => {
+        if (!disabled) {
+          (e.currentTarget as HTMLButtonElement).style.boxShadow =
+            isSelected ? selectedShadow : '0 2px 8px rgba(0,0,0,0.10)';
+          (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
+        }
       }}
-      onMouseOut={e => {
-        if (!isSelected)
-          (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)';
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLButtonElement).style.boxShadow =
+          isSelected ? selectedShadow : '0 1px 3px rgba(0,0,0,0.04)';
+        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
       }}
     >
-      {/* ── Row 1: nombre + zona ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 4 }}>
-        <span style={{
-          fontSize: 14, fontWeight: 700, lineHeight: '18px',
-          color: s.nameColor,
-          fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-        }}>
-          {table.name}
-        </span>
-        <span style={{
-          fontSize: 10, fontWeight: 500, lineHeight: '14px',
-          color: s.zoneColor,
-          fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-          whiteSpace: 'nowrap', flexShrink: 0,
-          marginTop: 2,
-        }}>
-          {table.zone}
-        </span>
-      </div>
+      {/* ── Nombre de mesa — elemento principal ── */}
+      <span style={{
+        fontSize:   18,
+        fontWeight: 700,
+        lineHeight: '22px',
+        color:      s.nameColor,
+        fontFamily: FONT,
+        marginBottom: 4,
+      }}>
+        {table.name}
+      </span>
 
-      {/* ── Row 2: info de estado ── */}
-      {isActive ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Comensales */}
-          {table.guests != null && (
-            <span style={{
-              display: 'flex', alignItems: 'center', gap: 3,
-              fontSize: 11, fontWeight: 600,
-              color: s.infoColor,
-              fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-            }}>
-              <Users size={12} color={s.iconColor} />
-              {table.guests}
-            </span>
-          )}
-          {/* Tiempo */}
-          {elapsed && (
-            <span style={{
-              display: 'flex', alignItems: 'center', gap: 3,
-              fontSize: 11, fontWeight: 600,
-              color: s.infoColor,
-              fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-            }}>
-              <Clock size={12} color={s.iconColor} />
-              {elapsed}
-            </span>
-          )}
-          {/* Total items en cuenta */}
-          {table.items.length > 0 && (
-            <span style={{
-              marginLeft: 'auto',
-              fontSize: 10, fontWeight: 600,
-              color: s.infoColor, opacity: 0.8,
-              fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-            }}>
-              {table.items.reduce((s, i) => s + i.quantity, 0)} ítem{table.items.reduce((s, i) => s + i.quantity, 0) !== 1 ? 's' : ''}
-            </span>
-          )}
-        </div>
-      ) : table.status === 'DISPONIBLE' ? (
+      {/* ── Info secundaria según estado ── */}
+
+      {/* DISPONIBLE: capacidad */}
+      {table.status === 'DISPONIBLE' && (
         <span style={{
-          fontSize: 11, fontWeight: 500,
-          color: s.infoColor,
-          fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+          fontSize: 12, color: s.infoColor, fontFamily: FONT,
         }}>
-          Disponible
+          <Users size={12} color={s.iconColor} />
+          {table.capacity}
         </span>
-      ) : (
+      )}
+
+      {/* OCUPADA / CUENTA_SOLICITADA: personas + tiempo, luego total */}
+      {isActive && (
+        <>
+          <span style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            fontSize: 12, color: s.infoColor, fontFamily: FONT,
+          }}>
+            {table.guests != null && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Users size={12} color={s.iconColor} />
+                {table.guests}
+              </span>
+            )}
+            {elapsed && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Clock size={12} color={s.iconColor} />
+                {elapsed}
+              </span>
+            )}
+          </span>
+          {total !== null && (
+            <span style={{
+              fontSize: 13, fontWeight: 600,
+              color: s.infoColor, fontFamily: FONT,
+            }}>
+              {formatCOP(total)}
+            </span>
+          )}
+        </>
+      )}
+
+      {/* INHABILITADA */}
+      {disabled && (
         <span style={{
-          fontSize: 11, fontWeight: 500,
-          color: s.infoColor,
-          fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+          fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
+          color: s.infoColor, fontFamily: FONT,
+          textTransform: 'uppercase',
         }}>
           Inhabilitada
         </span>
@@ -196,9 +212,9 @@ function MesaCard({
 // ─── MesasGridView ────────────────────────────────────────────────────────────
 
 interface MesasGridViewProps {
-  tables:         MesaTable[];
+  tables:          MesaTable[];
   selectedTableId: string | null;
-  onSelectMesa:   (id: string) => void;
+  onSelectMesa:    (id: string) => void;
 }
 
 export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGridViewProps) {
@@ -207,7 +223,7 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         height: 200, color: 'var(--black-40)',
-        fontSize: 13, fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+        fontSize: 13, fontFamily: FONT,
       }}>
         No hay mesas en esta zona.
       </div>
@@ -216,10 +232,10 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
 
   return (
     <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      gap: 12,
-      paddingBottom: 8,
+      display:               'grid',
+      gridTemplateColumns:   'repeat(4, 1fr)',
+      gap:                   12,
+      paddingBottom:         8,
     }}>
       {tables.map(table => (
         <MesaCard
