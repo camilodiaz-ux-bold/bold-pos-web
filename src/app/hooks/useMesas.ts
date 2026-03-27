@@ -13,7 +13,7 @@ const LS_KEY = 'bold-pos-mesas';
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
-function buildDefault(): Mesa[] {
+export function buildDefaultMesas(): Mesa[] {
   return INITIAL_MESAS_CONFIG.map((mc, i) => ({
     id:              mc.id,
     nombre:          mc.name,
@@ -29,15 +29,15 @@ function buildDefault(): Mesa[] {
 
 // ─── Persistence helpers ──────────────────────────────────────────────────────
 
-function load(): Mesa[] {
+function loadFromStorage(): Mesa[] {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (raw) return JSON.parse(raw) as Mesa[];
   } catch { /* ignore */ }
-  return buildDefault();
+  return buildDefaultMesas();
 }
 
-function persist(mesas: Mesa[]): void {
+function saveToStorage(mesas: Mesa[]): void {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(mesas));
   } catch { /* ignore */ }
@@ -46,9 +46,13 @@ function persist(mesas: Mesa[]): void {
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useMesas() {
-  const [mesas, setMesas] = useState<Mesa[]>(load);
+  // Lazy initializer: reads localStorage once on mount, falls back to defaults.
+  const [mesas, setMesas] = useState<Mesa[]>(() => {
+    const saved = localStorage.getItem(LS_KEY);
+    return saved ? (JSON.parse(saved) as Mesa[]) : buildDefaultMesas();
+  });
 
-  // Sync across browser tabs
+  // Sync across browser tabs via storage event.
   useEffect(() => {
     const handler = (e: StorageEvent) => {
       if (e.key === LS_KEY && e.newValue) {
@@ -59,12 +63,12 @@ export function useMesas() {
     return () => window.removeEventListener('storage', handler);
   }, []);
 
-  // ── Mutations ────────────────────────────────────────────────────────────
+  // ── Mutations — each writes to localStorage THEN updates React state ───────
 
   const updateMesa = (id: string, changes: Partial<Omit<Mesa, 'id'>>) => {
     setMesas(prev => {
       const next = prev.map(m => m.id === id ? { ...m, ...changes } : m);
-      persist(next);
+      saveToStorage(next);
       return next;
     });
   };
@@ -74,7 +78,7 @@ export function useMesas() {
       const maxIndex = prev.reduce((mx, m) => Math.max(mx, m.gridIndex), -1);
       const newMesa: Mesa = { ...mesa, gridIndex: maxIndex + 1 };
       const next = [...prev, newMesa];
-      persist(next);
+      saveToStorage(next);
       return next;
     });
   };
@@ -82,7 +86,7 @@ export function useMesas() {
   const deleteMesa = (id: string) => {
     setMesas(prev => {
       const next = prev.filter(m => m.id !== id);
-      persist(next);
+      saveToStorage(next);
       return next;
     });
   };
@@ -98,10 +102,17 @@ export function useMesas() {
         if (m.id === idDest)   return { ...m, gridIndex: origin.gridIndex };
         return m;
       });
-      persist(next);
+      saveToStorage(next);
       return next;
     });
   };
 
-  return { mesas, updateMesa, addMesa, deleteMesa, reorderMesas };
+  /** Borra localStorage y restaura los datos por defecto. Útil para debug. */
+  const resetMesas = () => {
+    const defaults = buildDefaultMesas();
+    saveToStorage(defaults);
+    setMesas(defaults);
+  };
+
+  return { mesas, updateMesa, addMesa, deleteMesa, reorderMesas, resetMesas };
 }

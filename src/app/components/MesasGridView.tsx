@@ -221,15 +221,12 @@ interface MesasGridViewProps {
 export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGridViewProps) {
   const { mesas } = useMesas();
 
-  // Build a gridIndex lookup keyed by mesa id; fall back to original array index.
-  const gridIndexOf = (id: string, fallback: number): number => {
-    const m = mesas.find(m => m.id === id);
-    return m ? m.gridIndex : fallback;
-  };
-
-  const sortedTables = [...tables].sort(
-    (a, b) => gridIndexOf(a.id, tables.indexOf(a)) - gridIndexOf(b.id, tables.indexOf(b)),
-  );
+  // Sort by gridIndex from useMesas; fall back to original array position.
+  const sortedTables = [...tables].sort((a, b) => {
+    const ai = mesas.find(m => m.id === a.id)?.gridIndex ?? tables.indexOf(a);
+    const bi = mesas.find(m => m.id === b.id)?.gridIndex ?? tables.indexOf(b);
+    return ai - bi;
+  });
 
   if (!sortedTables.length) {
     return (
@@ -245,19 +242,30 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
 
   return (
     <div style={{
-      display:               'grid',
-      gridTemplateColumns:   'repeat(4, 1fr)',
-      gap:                   12,
-      paddingBottom:         8,
+      display:             'grid',
+      gridTemplateColumns: 'repeat(4, 1fr)',
+      gap:                 12,
+      paddingBottom:       8,
     }}>
-      {sortedTables.map(table => (
-        <MesaCard
-          key={table.id}
-          table={table}
-          isSelected={table.id === selectedTableId}
-          onClick={() => onSelectMesa(table.id)}
-        />
-      ))}
+      {sortedTables.map(table => {
+        // Merge useMesas config: name, capacity, and habilitada override operational state.
+        const cfg = mesas.find(m => m.id === table.id);
+        const merged: MesaTable = {
+          ...table,
+          name:     cfg?.nombre    ?? table.name,
+          capacity: cfg?.capacidad ?? table.capacity,
+          // If marked disabled in config, force INHABILITADA regardless of operational status.
+          status:   (cfg && !cfg.habilitada) ? 'INHABILITADA' : table.status,
+        };
+        return (
+          <MesaCard
+            key={table.id}
+            table={merged}
+            isSelected={table.id === selectedTableId}
+            onClick={() => onSelectMesa(table.id)}
+          />
+        );
+      })}
     </div>
   );
 }

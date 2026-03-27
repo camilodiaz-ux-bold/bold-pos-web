@@ -1,20 +1,25 @@
 /**
  * GestionarMesasGrid
  * ─────────────────────────────────────────────────────────────────────────────
- * Vista grid de gestión de mesas. 4 columnas, estilo config (sin colores de
- * estado operativo). Drag & drop nativo para reordenar. Panel lateral para
- * editar/crear/eliminar mesas.
+ * Vista grid de gestión de mesas. 4 columnas, estilo config. Drag & drop nativo.
+ * Panel lateral con estilos MERLin: inputs con fondo #F7F8FB / border-radius 12px,
+ * labels estáticas en 14px/600/navy, botones pill, toggle custom.
  */
 import React, { useState, useRef } from 'react';
-import { Plus, Pencil, Users, X, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Users, X, Trash2, ChevronDown } from 'lucide-react';
 import { useMesas } from '../hooks/useMesas';
 import type { Mesa } from '../types/mesa';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Design tokens ────────────────────────────────────────────────────────────
 
-const FONT  = 'var(--font-family, Montserrat, sans-serif)';
-const NAVY  = '#121E6C';
-const CORAL = '#FF2947';
+const FONT        = 'Montserrat, var(--font-family, sans-serif)';
+const NAVY        = '#121E6C';
+const CORAL       = '#FF2947';
+const INPUT_BG    = '#F7F8FB';
+const LABEL_COLOR = '#121E6C';
+const GRAY_60     = '#606060';
+const BORDER_LIGHT = '#C7CBE0';
+
 const AVAILABLE_ZONES = ['Salón', 'Terraza', 'Barra'];
 
 // ─── Edit panel state ─────────────────────────────────────────────────────────
@@ -27,17 +32,156 @@ interface EditState {
   capacidad:     number;
   habilitada:    boolean;
   confirmDelete: boolean;
+  errors:        { nombre?: boolean; capacidad?: boolean };
 }
 
 function blankEdit(): EditState {
-  return { mode: 'new', id: null, nombre: '', zona: 'Salón', capacidad: 4, habilitada: true, confirmDelete: false };
+  return {
+    mode: 'new', id: null, nombre: '', zona: 'Salón',
+    capacidad: 4, habilitada: true, confirmDelete: false, errors: {},
+  };
 }
 
 function editFromMesa(mesa: Mesa): EditState {
   return {
     mode: 'edit', id: mesa.id, nombre: mesa.nombre, zona: mesa.zona,
-    capacidad: mesa.capacidad, habilitada: mesa.habilitada, confirmDelete: false,
+    capacidad: mesa.capacidad, habilitada: mesa.habilitada,
+    confirmDelete: false, errors: {},
   };
+}
+
+// ─── Sub-components: MERLin-style field ───────────────────────────────────────
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      display: 'block', marginBottom: 4,
+      fontSize: 14, fontWeight: 600, fontFamily: FONT,
+      color: LABEL_COLOR, lineHeight: '20px',
+    }}>{children}</span>
+  );
+}
+
+function TextInput({
+  value, onChange, placeholder, hasError,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  hasError?: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={{
+        width: '100%', height: 40, boxSizing: 'border-box',
+        borderRadius: 12, border: hasError
+          ? `1.5px solid ${CORAL}`
+          : focused ? `1.5px solid ${NAVY}` : `1.5px solid ${BORDER_LIGHT}`,
+        background: INPUT_BG, fontFamily: FONT, fontSize: 14,
+        color: '#1E1E1E', padding: '0 12px', outline: 'none',
+        transition: 'border-color 200ms',
+      }}
+    />
+  );
+}
+
+function NumberInput({
+  value, onChange, min, max, hasError,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  hasError?: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      type="number"
+      min={min}
+      max={max}
+      value={value}
+      onChange={e => onChange(Math.max(min, Math.min(max, parseInt(e.target.value) || min)))}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={{
+        width: '100%', height: 40, boxSizing: 'border-box',
+        borderRadius: 12, border: hasError
+          ? `1.5px solid ${CORAL}`
+          : focused ? `1.5px solid ${NAVY}` : `1.5px solid ${BORDER_LIGHT}`,
+        background: INPUT_BG, fontFamily: FONT, fontSize: 14,
+        color: '#1E1E1E', padding: '0 12px', outline: 'none',
+        transition: 'border-color 200ms',
+      }}
+    />
+  );
+}
+
+function SelectInput({
+  value, onChange, options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ position: 'relative' }}>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: '100%', height: 40, boxSizing: 'border-box',
+          borderRadius: 12, border: focused ? `1.5px solid ${NAVY}` : `1.5px solid ${BORDER_LIGHT}`,
+          background: INPUT_BG, fontFamily: FONT, fontSize: 14,
+          color: '#1E1E1E', padding: '0 36px 0 12px',
+          outline: 'none', appearance: 'none', cursor: 'pointer',
+          transition: 'border-color 200ms',
+        }}
+      >
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+      <ChevronDown
+        size={16} color={GRAY_60}
+        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+      />
+    </div>
+  );
+}
+
+function ToggleSwitch({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{
+          width: 40, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+          background: on ? NAVY : BORDER_LIGHT,
+          position: 'relative', transition: 'background 200ms', flexShrink: 0, padding: 0,
+        }}
+      >
+        <span style={{
+          position: 'absolute', top: 2, width: 20, height: 20, borderRadius: '50%',
+          background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+          transition: 'left 200ms',
+          left: on ? 18 : 2,
+        }} />
+      </button>
+      <span style={{ fontSize: 14, color: GRAY_60, fontFamily: FONT }}>
+        {on ? 'Habilitada' : 'Deshabilitada'}
+      </span>
+    </div>
+  );
 }
 
 // ─── GestionarMesasGrid ───────────────────────────────────────────────────────
@@ -45,9 +189,7 @@ function editFromMesa(mesa: Mesa): EditState {
 export function GestionarMesasGrid() {
   const { mesas, updateMesa, addMesa, deleteMesa, reorderMesas } = useMesas();
 
-  // Derive unique zones from mesas (preserves insertion order + adds 'Todas')
   const zones = ['Todas', ...new Set(mesas.map(m => m.zona))];
-
   const [activeZone, setActiveZone] = useState<string>('Todas');
   const [editPanel,  setEditPanel]  = useState<EditState | null>(null);
   const dragId = useRef<string | null>(null);
@@ -57,7 +199,6 @@ export function GestionarMesasGrid() {
     .sort((a, b) => a.gridIndex - b.gridIndex);
 
   // ── Drag & drop ────────────────────────────────────────────────────────────
-
   const handleDragStart = (id: string) => { dragId.current = id; };
   const handleDragOver  = (e: React.DragEvent) => { e.preventDefault(); };
   const handleDrop      = (targetId: string) => {
@@ -67,10 +208,16 @@ export function GestionarMesasGrid() {
     dragId.current = null;
   };
 
-  // ── Save / Delete ──────────────────────────────────────────────────────────
-
+  // ── Save ───────────────────────────────────────────────────────────────────
   const handleSave = () => {
-    if (!editPanel || !editPanel.nombre.trim()) return;
+    if (!editPanel) return;
+    const errors: EditState['errors'] = {};
+    if (!editPanel.nombre.trim()) errors.nombre = true;
+    if (editPanel.capacidad < 1)  errors.capacidad = true;
+    if (Object.keys(errors).length) {
+      setEditPanel(p => p ? { ...p, errors } : p);
+      return;
+    }
     if (editPanel.mode === 'new') {
       addMesa({
         id:              `m${Date.now()}`,
@@ -100,11 +247,10 @@ export function GestionarMesasGrid() {
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative', background: '#fff' }}>
 
-      {/* ── Toolbar: zone tabs + agregar ── */}
+      {/* ── Toolbar ── */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
         padding: '8px 20px', borderBottom: '1px solid var(--black-10)', background: '#fff',
@@ -157,139 +303,127 @@ export function GestionarMesasGrid() {
         )}
       </div>
 
-      {/* ── Edit panel (overlay + slide-in) ── */}
+      {/* ── Edit panel ── */}
       {editPanel && (
         <>
           {/* Overlay */}
           <div
             onClick={() => setEditPanel(null)}
-            style={{
-              position: 'fixed', inset: 0,
-              background: 'rgba(0,0,0,0.4)', zIndex: 200,
-            }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.32)', zIndex: 999 }}
           />
-          {/* Panel */}
+
+          {/* Panel — MERLin lateral panel style */}
           <div style={{
-            position: 'fixed', top: 0, right: 0, bottom: 0, width: 320,
-            background: '#fff', zIndex: 201,
+            position: 'fixed', top: 0, right: 0, bottom: 0, width: 360,
+            background: '#fff', zIndex: 1000,
             display: 'flex', flexDirection: 'column',
+            borderRadius: '20px 0 0 20px',
             boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
+            animation: 'slideInRight 250ms ease-out',
           }}>
 
-            {/* Header */}
+            {/* ── Header ── */}
             <div style={{
+              height: 56, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '20px 24px', borderBottom: '1px solid var(--black-10)', flexShrink: 0,
+              padding: '0 20px',
+              borderBottom: '1px solid #E8E8E8',
             }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', fontFamily: FONT }}>
+              <span style={{
+                fontSize: 16, fontWeight: 600, fontFamily: FONT, color: '#1E1E1E', lineHeight: '20px',
+              }}>
                 {editPanel.mode === 'new' ? 'Nueva mesa' : 'Editar mesa'}
               </span>
-              <button onClick={() => setEditPanel(null)} style={{
-                background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex',
-              }}>
-                <X size={18} color="var(--black-60)" />
+              <button
+                onClick={() => setEditPanel(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', borderRadius: 6 }}
+              >
+                <X size={20} color={GRAY_60} />
               </button>
             </div>
 
-            {/* Form */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* ── Body (scrollable) ── */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
               {/* Nombre */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--black-60)', display: 'block', marginBottom: 6, fontFamily: FONT }}>
-                  Nombre de la mesa
-                </label>
-                <input
-                  type="text"
+                <FieldLabel>Nombre de la mesa</FieldLabel>
+                <TextInput
                   value={editPanel.nombre}
-                  onChange={e => setEditPanel(p => p ? { ...p, nombre: e.target.value } : p)}
+                  onChange={v => setEditPanel(p => p ? { ...p, nombre: v, errors: { ...p.errors, nombre: false } } : p)}
                   placeholder="Ej: Mesa 1"
-                  style={{
-                    width: '100%', height: 40, borderRadius: 8, border: '1.5px solid var(--black-20)',
-                    padding: '0 12px', fontSize: 14, fontFamily: FONT, outline: 'none', boxSizing: 'border-box',
-                  }}
+                  hasError={editPanel.errors.nombre}
                 />
+                {editPanel.errors.nombre && (
+                  <span style={{ fontSize: 12, color: CORAL, fontFamily: FONT, marginTop: 4, display: 'block' }}>
+                    El nombre es requerido.
+                  </span>
+                )}
               </div>
 
               {/* Zona */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--black-60)', display: 'block', marginBottom: 6, fontFamily: FONT }}>
-                  Zona
-                </label>
-                <select
+                <FieldLabel>Zona</FieldLabel>
+                <SelectInput
                   value={editPanel.zona}
-                  onChange={e => setEditPanel(p => p ? { ...p, zona: e.target.value } : p)}
-                  style={{
-                    width: '100%', height: 40, borderRadius: 8, border: '1.5px solid var(--black-20)',
-                    padding: '0 12px', fontSize: 14, fontFamily: FONT, outline: 'none',
-                    background: '#fff', boxSizing: 'border-box', cursor: 'pointer',
-                  }}
-                >
-                  {AVAILABLE_ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-                </select>
+                  onChange={v => setEditPanel(p => p ? { ...p, zona: v } : p)}
+                  options={AVAILABLE_ZONES}
+                />
               </div>
 
               {/* Capacidad */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--black-60)', display: 'block', marginBottom: 6, fontFamily: FONT }}>
-                  Capacidad
-                </label>
-                <input
-                  type="number"
+                <FieldLabel>Capacidad</FieldLabel>
+                <NumberInput
+                  value={editPanel.capacidad}
+                  onChange={v => setEditPanel(p => p ? { ...p, capacidad: v, errors: { ...p.errors, capacidad: false } } : p)}
                   min={1}
                   max={20}
-                  value={editPanel.capacidad}
-                  onChange={e => setEditPanel(p => p ? {
-                    ...p,
-                    capacidad: Math.max(1, Math.min(20, parseInt(e.target.value) || 1)),
-                  } : p)}
-                  style={{
-                    width: '100%', height: 40, borderRadius: 8, border: '1.5px solid var(--black-20)',
-                    padding: '0 12px', fontSize: 14, fontFamily: FONT, outline: 'none', boxSizing: 'border-box',
-                  }}
+                  hasError={editPanel.errors.capacidad}
                 />
+                {editPanel.errors.capacidad && (
+                  <span style={{ fontSize: 12, color: CORAL, fontFamily: FONT, marginTop: 4, display: 'block' }}>
+                    La capacidad mínima es 1.
+                  </span>
+                )}
               </div>
 
-              {/* Habilitada toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 14, color: 'var(--black-80)', fontFamily: FONT }}>Mesa habilitada</span>
-                <button
-                  onClick={() => setEditPanel(p => p ? { ...p, habilitada: !p.habilitada } : p)}
-                  style={{
-                    width: 40, height: 20, borderRadius: 10, border: 'none', cursor: 'pointer',
-                    background: editPanel.habilitada ? NAVY : 'var(--black-40)',
-                    position: 'relative', transition: 'background 0.2s', flexShrink: 0,
-                  }}
-                >
-                  <span style={{
-                    position: 'absolute', top: 2, width: 16, height: 16, borderRadius: '50%',
-                    background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    transition: 'left 0.2s',
-                    left: editPanel.habilitada ? 22 : 2,
-                  }} />
-                </button>
+              {/* Estado / Toggle */}
+              <div>
+                <FieldLabel>Estado de la mesa</FieldLabel>
+                <ToggleSwitch
+                  on={editPanel.habilitada}
+                  onToggle={() => setEditPanel(p => p ? { ...p, habilitada: !p.habilitada } : p)}
+                  label={editPanel.habilitada ? 'Habilitada' : 'Deshabilitada'}
+                />
               </div>
 
               {/* Delete (edit mode only) */}
               {editPanel.mode === 'edit' && (
                 <>
-                  <div style={{ height: 1, background: 'var(--black-10)' }} />
+                  <div style={{ height: 1, background: '#F0F0F0', margin: '0 0' }} />
                   {editPanel.confirmDelete ? (
-                    <div>
-                      <p style={{ fontSize: 13, color: 'var(--black-60)', marginBottom: 10, fontFamily: FONT, margin: '0 0 10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <span style={{ fontSize: 13, color: GRAY_60, fontFamily: FONT }}>
                         ¿Confirmar eliminación?
-                      </p>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={handleDelete} style={{
-                          flex: 1, height: 36, borderRadius: 8, border: 'none',
-                          background: CORAL, color: '#fff', fontSize: 13, fontWeight: 600,
-                          cursor: 'pointer', fontFamily: FONT,
-                        }}>Sí, eliminar</button>
-                        <button onClick={() => setEditPanel(p => p ? { ...p, confirmDelete: false } : p)} style={{
-                          flex: 1, height: 36, borderRadius: 8, border: '1.5px solid var(--black-20)',
-                          background: '#fff', color: 'var(--black-60)', fontSize: 13,
-                          cursor: 'pointer', fontFamily: FONT,
-                        }}>Cancelar</button>
+                      </span>
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        <button
+                          onClick={handleDelete}
+                          style={{
+                            flex: 1, height: 36, borderRadius: 8, border: 'none',
+                            background: CORAL, color: '#fff', fontSize: 13, fontWeight: 700,
+                            cursor: 'pointer', fontFamily: FONT,
+                          }}
+                        >Sí, eliminar</button>
+                        <button
+                          onClick={() => setEditPanel(p => p ? { ...p, confirmDelete: false } : p)}
+                          style={{
+                            flex: 1, height: 36, borderRadius: 8, border: `1.5px solid ${BORDER_LIGHT}`,
+                            background: '#fff', color: GRAY_60, fontSize: 13,
+                            cursor: 'pointer', fontFamily: FONT,
+                          }}
+                        >Cancelar</button>
                       </div>
                     </div>
                   ) : (
@@ -298,35 +432,58 @@ export function GestionarMesasGrid() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 8,
                         background: 'none', border: 'none', cursor: 'pointer',
-                        color: CORAL, fontSize: 14, fontWeight: 600, fontFamily: FONT, padding: 0,
+                        color: CORAL, fontSize: 14, fontWeight: 600, fontFamily: FONT,
+                        padding: '8px 0',
                       }}
+                      onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                      onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                     >
-                      <Trash2 size={14} /> Eliminar mesa
+                      <Trash2 size={16} /> Eliminar mesa
                     </button>
                   )}
                 </>
               )}
             </div>
 
-            {/* Footer */}
+            {/* ── Footer ── */}
             <div style={{
-              padding: '16px 24px', borderTop: '1px solid var(--black-10)', flexShrink: 0,
-              display: 'flex', gap: 12,
+              height: 72, flexShrink: 0,
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '0 20px',
+              borderTop: '1px solid #E8E8E8', background: '#fff',
             }}>
-              <button onClick={() => setEditPanel(null)} style={{
-                flex: 1, height: 44, borderRadius: 10, border: '1.5px solid var(--black-20)',
-                background: '#fff', color: 'var(--black-60)', fontSize: 14, fontWeight: 600,
-                cursor: 'pointer', fontFamily: FONT,
-              }}>Cancelar</button>
-              <button onClick={handleSave} style={{
-                flex: 1, height: 44, borderRadius: 10, border: 'none',
-                background: NAVY, color: '#fff', fontSize: 14, fontWeight: 600,
-                cursor: 'pointer', fontFamily: FONT,
-              }}>
+              <button
+                onClick={() => setEditPanel(null)}
+                style={{
+                  flex: 1, height: 40, borderRadius: 32,
+                  border: `1.5px solid ${BORDER_LIGHT}`, background: '#fff',
+                  color: GRAY_60, fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: FONT,
+                }}
+              >Cancelar</button>
+              <button
+                onClick={handleSave}
+                style={{
+                  flex: 1, height: 40, borderRadius: 32, border: 'none',
+                  background: NAVY, color: '#fff', fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: FONT,
+                  transition: 'background 150ms',
+                }}
+                onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = '#0D1550')}
+                onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = NAVY)}
+              >
                 {editPanel.mode === 'new' ? 'Crear mesa' : 'Guardar cambios'}
               </button>
             </div>
           </div>
+
+          {/* Keyframe animation */}
+          <style>{`
+            @keyframes slideInRight {
+              from { transform: translateX(360px); }
+              to   { transform: translateX(0); }
+            }
+          `}</style>
         </>
       )}
     </div>
@@ -362,26 +519,17 @@ function MesaConfigCard({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position:       'relative',
-        display:        'flex',
-        flexDirection:  'column',
-        alignItems:     'center',
-        justifyContent: 'center',
-        textAlign:      'center',
-        height:         110,
-        padding:        12,
-        borderRadius:   12,
-        background:     bg,
-        border,
-        cursor:         'pointer',
-        opacity:        dragging ? 0.5 : (mesa.habilitada ? 1 : 0.7),
-        transition:     'box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease',
-        boxShadow:      hovered && !dragging ? '0 2px 8px rgba(0,0,0,0.10)' : '0 1px 3px rgba(0,0,0,0.04)',
-        transform:      hovered && !dragging ? 'translateY(-1px)' : 'translateY(0)',
-        gap:            4,
+        position: 'relative', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+        height: 110, padding: 12, borderRadius: 12, background: bg, border,
+        cursor: 'pointer',
+        opacity:    dragging ? 0.5 : (mesa.habilitada ? 1 : 0.7),
+        transition: 'box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease',
+        boxShadow:  hovered && !dragging ? '0 2px 8px rgba(0,0,0,0.10)' : '0 1px 3px rgba(0,0,0,0.04)',
+        transform:  hovered && !dragging ? 'translateY(-1px)' : 'translateY(0)',
+        gap: 4,
       }}
     >
-      {/* Pencil icon on hover */}
       {hovered && !dragging && (
         <div style={{
           position: 'absolute', top: 8, right: 8,
@@ -389,35 +537,19 @@ function MesaConfigCard({
           background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Pencil size={12} color="var(--black-60)" />
+          <Pencil size={12} color={GRAY_60} />
         </div>
       )}
-
-      {/* Name */}
-      <span style={{
-        fontSize: 18, fontWeight: 700, color: nameColor,
-        fontFamily: FONT, lineHeight: '22px', marginBottom: 4,
-      }}>
+      <span style={{ fontSize: 18, fontWeight: 700, color: nameColor, fontFamily: FONT, lineHeight: '22px', marginBottom: 4 }}>
         {mesa.nombre}
       </span>
-
-      {/* Capacity (enabled only) */}
       {mesa.habilitada && (
-        <span style={{
-          display: 'flex', alignItems: 'center', gap: 4,
-          fontSize: 12, color: '#606060', fontFamily: FONT,
-        }}>
-          <Users size={12} color="#606060" />
-          {mesa.capacidad}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#606060', fontFamily: FONT }}>
+          <Users size={12} color="#606060" />{mesa.capacidad}
         </span>
       )}
-
-      {/* Disabled label */}
       {!mesa.habilitada && (
-        <span style={{
-          fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
-          color: '#AAAAAA', fontFamily: FONT, textTransform: 'uppercase',
-        }}>
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.5px', color: '#AAAAAA', fontFamily: FONT, textTransform: 'uppercase' }}>
           Inhabilitada
         </span>
       )}
