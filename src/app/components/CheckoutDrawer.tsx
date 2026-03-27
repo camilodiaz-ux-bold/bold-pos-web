@@ -64,8 +64,12 @@ const METHOD_LABEL: Record<PaymentMethod, string> = {
 
 function SectionLabel({ label, hint }: { label: string; hint?: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 mb-[14px]">
-      <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--black-40)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+      <p style={{
+        fontSize: 11, fontWeight: 700, color: '#606060',
+        textTransform: 'uppercase', letterSpacing: '0.8px',
+        fontFamily: 'Montserrat, sans-serif', margin: 0,
+      }}>{label}</p>
       {hint}
     </div>
   );
@@ -74,16 +78,33 @@ function SectionLabel({ label, hint }: { label: string; hint?: React.ReactNode }
 function MoneyInput({
   value, onChange, placeholder, autoFocus,
 }: { value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean }) {
+  const [focused, setFocused] = React.useState(false);
   return (
-    <div className="relative">
-      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--black-40)] pointer-events-none">$</span>
+    <div style={{ position: 'relative' }}>
+      <span style={{
+        position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+        color: '#606060', fontSize: 14, fontWeight: 500, pointerEvents: 'none',
+        fontFamily: 'Montserrat, sans-serif',
+      }}>$</span>
       <input
         type="number" min={0}
         placeholder={placeholder ?? '0'}
         value={value}
         onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         autoFocus={autoFocus}
-        className="pos-input pl-8 font-semibold"
+        style={{
+          width: '100%', height: 40,
+          background: 'transparent',
+          border: 'none',
+          borderBottom: focused ? '2px solid #121E6C' : '2px solid #C7CBE0',
+          paddingLeft: 16, paddingRight: 0,
+          fontSize: 15, fontWeight: 600, color: '#1E1E1E',
+          fontFamily: 'Montserrat, sans-serif',
+          outline: 'none',
+          transition: 'border-color 150ms ease',
+        }}
       />
     </div>
   );
@@ -307,27 +328,47 @@ export function CheckoutDrawer({
         {/* ─────────────────────────────────────────────────────
             HEADER — sticky
             ───────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between shrink-0" style={{ padding: '20px 24px', borderBottom: '1px solid var(--black-10)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+          flexShrink: 0, padding: '20px 24px', borderBottom: '1px solid #F0F0F0',
+        }}>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--black-40)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Checkout</p>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--black-100)', lineHeight: 1.1 }}>{title}</h2>
+            <p style={{
+              fontSize: 11, fontWeight: 700, color: '#606060',
+              textTransform: 'uppercase', letterSpacing: '0.8px',
+              fontFamily: 'Montserrat, sans-serif', marginBottom: 4,
+            }}>Checkout</p>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#1E1E1E', lineHeight: 1.2, fontFamily: 'Montserrat, sans-serif' }}>{title}</h2>
             {(subtitle || meta) && (
-              <p style={{ fontSize: 13, color: 'var(--black-60)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <p style={{ fontSize: 13, color: '#606060', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Montserrat, sans-serif' }}>
                 {subtitle && <span>{subtitle}</span>}
-                {subtitle && meta && <span style={{ color: 'var(--black-40)' }}>·</span>}
+                {subtitle && meta && <span style={{ color: '#C7CBE0' }}>·</span>}
                 {meta && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Users size={11} /> {meta}</span>}
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2 shrink-0" style={{ marginTop: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginTop: 2 }}>
             <button
               onClick={() => toast.info('Documento enviado a impresora')}
-              className="btn btn-secondary btn--sm"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                height: 32, padding: '0 12px', borderRadius: 6,
+                border: '1.5px solid #C7CBE0', background: '#fff',
+                fontSize: 12, fontWeight: 600, color: '#606060',
+                fontFamily: 'Montserrat, sans-serif', cursor: 'pointer',
+              }}
             >
-              <Printer size={12} /> Imprimir pre-cuenta
+              <Printer size={12} color="#606060" /> Pre-cuenta
             </button>
-            <button onClick={onClose} className="btn btn--icon" style={{ color: 'var(--black-40)' }}>
-              <X size={18} />
+            <button
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: 6, border: '1.5px solid #F0F0F0',
+                background: '#fff', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', cursor: 'pointer',
+              }}
+            >
+              <X size={16} color="#606060" />
             </button>
           </div>
         </div>
@@ -444,22 +485,35 @@ export function CheckoutDrawer({
                ═══════════════════════════════════════════════════ */
             <>
               {/* ─── 1. RESUMEN DEL PEDIDO ─── */}
-              <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--black-10)' }}>
-                <SectionLabel label="Resumen del pedido"
-                  hint={<span style={{ fontSize: 10, fontWeight: 700, color: 'var(--black-40)', background: 'var(--blue-10)', padding: '2px 8px', borderRadius: 10 }}>{items.length} ítem{items.length !== 1 ? 's' : ''}</span>}
+              <div style={{ padding: '16px 24px' }}>
+                <SectionLabel
+                  label="Resumen del pedido"
+                  hint={<span style={{
+                    background: '#F1F2F6', color: '#606060', borderRadius: 4,
+                    padding: '1px 6px', fontSize: 11, fontWeight: 600,
+                    fontFamily: 'Montserrat, sans-serif',
+                  }}>{items.length} ítem{items.length !== 1 ? 's' : ''}</span>}
                 />
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                  {items.map(item => (
-                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {items.map((item, idx) => (
+                    <div key={item.id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      paddingTop: 6, paddingBottom: 6,
+                      borderBottom: idx < items.length - 1 ? '1px solid #F0F0F0' : 'none',
+                    }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                          <span style={{ fontSize: 14, color: 'var(--black-100)' }}>{item.name}</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--black-40)' }}>× {item.quantity}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 14, fontWeight: 400, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>{item.name}</span>
+                          <span style={{
+                            fontSize: 10, fontWeight: 600, color: '#909090',
+                            background: '#F1F2F6', borderRadius: 3, padding: '1px 5px',
+                            fontFamily: 'Montserrat, sans-serif',
+                          }}>×{item.quantity}</span>
                         </div>
-                        {item.note && <p style={{ fontSize: 10, color: 'var(--black-60)', fontStyle: 'italic', marginTop: 2 }}>{item.note}</p>}
+                        {item.note && <p style={{ fontSize: 11, color: '#909090', fontStyle: 'italic', marginTop: 2, fontFamily: 'Montserrat, sans-serif' }}>{item.note}</p>}
                       </div>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)', flexShrink: 0 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#1E1E1E', flexShrink: 0, fontFamily: 'Montserrat, sans-serif' }}>
                         ${(item.price * item.quantity).toLocaleString()}
                       </span>
                     </div>
@@ -467,124 +521,166 @@ export function CheckoutDrawer({
                 </div>
 
                 {/* Totals */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--black-60)' }}>
-                    <span>Subtotal</span><span>${subtotal.toLocaleString()}</span>
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 13, fontWeight: 400, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>Subtotal</span>
+                    <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>${subtotal.toLocaleString()}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--black-60)' }}>
-                    <span>IVA 19%</span><span>${tax.toLocaleString()}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 13, fontWeight: 400, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>IVA 19%</span>
+                    <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>${tax.toLocaleString()}</span>
                   </div>
                   {tipAmount > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--blue-100)', fontWeight: 600 }}>
-                      <span>Propina {tipMode === '10' ? '(10%)' : '(Manual)'}</span>
-                      <span>+${tipAmount.toLocaleString()}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: '#121E6C', fontFamily: 'Montserrat, sans-serif' }}>Propina {tipMode === '10' ? '(10%)' : '(Manual)'}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif' }}>+${tipAmount.toLocaleString()}</span>
                     </div>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 12, marginTop: 4, borderTop: '2px solid var(--black-100)' }}>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--black-100)' }}>Total</span>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--black-100)' }}>${grandTotal.toLocaleString()}</span>
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+                    paddingTop: 10, marginTop: 4, borderTop: '1px solid #F0F0F0',
+                  }}>
+                    <span style={{ fontSize: 17, fontWeight: 700, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>Total</span>
+                    <span style={{ fontSize: 17, fontWeight: 700, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>${grandTotal.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
               {/* ─── 2. DIVIDIR CUENTA ─── */}
-              <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--black-10)' }}>
-              <SectionLabel label="¿Dividir cuenta?"
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
+              <SectionLabel
+                label="¿Dividir cuenta?"
                 hint={splitBill ? (
-                  <span className="text-[10px] font-bold text-[var(--blue-100)] bg-[var(--blue-10)] border border-[var(--black-10)] px-2 py-0.5 rounded-full">
-                    {splitPersons} personas
-                  </span>
+                  <span style={{
+                    background: '#F1F2F6', color: '#606060', borderRadius: 4,
+                    padding: '1px 6px', fontSize: 11, fontWeight: 600,
+                    fontFamily: 'Montserrat, sans-serif',
+                  }}>{splitPersons} personas</span>
                 ) : undefined}
               />
 
-              {/* Toggle */}
-              <div className="flex items-center gap-2 mb-5">
+              {/* Toggle No/Sí */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
                 {(['No', 'Sí'] as const).map(opt => (
                   <button key={opt}
                     onClick={() => setSplitBill(opt === 'Sí')}
                     style={{
-                      padding: '8px 24px',
-                      borderRadius: 'var(--radius-8)',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      border: '1.5px solid',
-                      transition: 'all 150ms ease',
+                      height: 32, padding: '0 16px', borderRadius: 20,
+                      fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                      border: 'none', transition: 'all 150ms ease',
+                      fontFamily: 'Montserrat, sans-serif',
                       ...((opt === 'No') === !splitBill
-                        ? { background: 'var(--blue-100)', color: '#fff', borderColor: 'var(--blue-100)' }
-                        : { background: '#fff', color: 'var(--black-60)', borderColor: 'var(--black-10)' })
+                        ? { background: '#121E6C', color: '#fff' }
+                        : { background: '#F1F2F6', color: '#606060' })
                     }}
                   >{opt}</button>
                 ))}
               </div>
 
               {splitBill && (
-                <div className="flex flex-col gap-4">
-                  {/* Mode tabs */}
-                  <div className="flex gap-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {/* Mode tabs — underline style */}
+                  <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid #F0F0F0', paddingBottom: 0 }}>
                     {([['equal', 'Partes iguales'], ['custom', 'Personalizado']] as [SplitMode, string][]).map(([m, l]) => (
                       <button key={m}
                         onClick={() => setSplitMode(m)}
-                        className={cn('flex-1 py-2.5 rounded-[var(--radius-12)] border-2 text-xs font-semibold transition-all',
-                          splitMode === m ? 'border-[var(--blue-100)] bg-[var(--blue-10)] text-[var(--blue-100)]' : 'border-[var(--black-10)] text-[var(--black-60)] hover:border-[var(--blue-100)]')}
+                        style={{
+                          background: 'none', border: 'none',
+                          borderBottom: splitMode === m ? '2px solid #121E6C' : '2px solid transparent',
+                          paddingBottom: 8, marginBottom: -1,
+                          fontSize: 14, fontWeight: splitMode === m ? 700 : 400,
+                          color: splitMode === m ? '#121E6C' : '#606060',
+                          cursor: 'pointer', transition: 'all 150ms ease',
+                          fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap',
+                        }}
                       >{l}</button>
                     ))}
                   </div>
 
                   {/* ── Partes iguales ── */}
                   {splitMode === 'equal' && (
-                    <div className="flex flex-col gap-3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
                       {/* Stepper */}
-                      <div className="flex items-center justify-between bg-[var(--blue-10)] rounded-[var(--radius-16)] px-4 py-3 border border-[var(--black-10)]">
-                        <span className="text-xs font-bold text-[var(--black-60)]">Número de personas</span>
-                        <div className="flex items-center gap-3">
-                          <button onClick={() => setSplitPersons(p => Math.max(2, p - 1))} disabled={splitPersons <= 2}
-                            className={cn('w-7 h-7 rounded-full border flex items-center justify-center transition-all',
-                              splitPersons > 2 ? 'border-[var(--black-10)] hover:border-[var(--blue-100)] hover:text-[var(--blue-100)]' : 'border-[var(--black-10)] text-[var(--black-40)] cursor-not-allowed')}>
-                            <Minus size={12} />
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '10px 14px', borderRadius: 8, background: '#F8F8F8',
+                      }}>
+                        <span style={{ fontSize: 13, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>Número de personas</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <button
+                            onClick={() => setSplitPersons(p => Math.max(2, p - 1))}
+                            disabled={splitPersons <= 2}
+                            style={{
+                              width: 24, height: 24, borderRadius: '50%',
+                              background: '#F1F2F6', border: 'none',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: splitPersons <= 2 ? 'not-allowed' : 'pointer',
+                              opacity: splitPersons <= 2 ? 0.4 : 1,
+                            }}>
+                            <Minus size={11} color="#1E1E1E" />
                           </button>
-                          <span className="w-6 text-center text-sm font-black text-[var(--black-100)]">{splitPersons}</span>
-                          <button onClick={() => setSplitPersons(p => p + 1)}
-                            className="w-7 h-7 rounded-full border border-[var(--black-10)] flex items-center justify-center hover:border-[var(--blue-100)] hover:text-[var(--blue-100)] transition-all">
-                            <Plus size={12} />
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#1E1E1E', minWidth: 20, textAlign: 'center', fontFamily: 'Montserrat, sans-serif' }}>{splitPersons}</span>
+                          <button
+                            onClick={() => setSplitPersons(p => p + 1)}
+                            style={{
+                              width: 24, height: 24, borderRadius: '50%',
+                              background: '#F1F2F6', border: 'none',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                            }}>
+                            <Plus size={11} color="#1E1E1E" />
                           </button>
                         </div>
                       </div>
 
-                      {/* Person cards — show payment status */}
-                      <div className="grid grid-cols-2 gap-2">
+                      {/* Person cards */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                         {Array.from({ length: Math.min(splitPersons, 8) }).map((_, i) => {
-                          const idx     = i + 1;
-                          const isPaid  = paidAccounts.has(idx);
+                          const idx       = i + 1;
+                          const isPaid    = paidAccounts.has(idx);
                           const isCurrent = !isPaid && currentAccount === idx;
                           return (
                             <button key={i}
                               onClick={() => !isPaid && setCurrentAccount(idx)}
-                              className={cn('p-3 rounded-[var(--radius-16)] border-2 text-center transition-all',
-                                isPaid      ? 'bg-[var(--feedback-success-10)] border-[var(--feedback-success-100)] cursor-default' :
-                                isCurrent   ? 'bg-[var(--blue-10)] border-blue-400 ring-2 ring-blue-200 ring-offset-1' :
-                                              'bg-[var(--blue-10)] border-[var(--black-10)] hover:border-[var(--black-10)] cursor-pointer')}
-                            >
-                              <p className={cn('text-[9px] font-black uppercase tracking-widest mb-1',
-                                isPaid ? 'text-[var(--feedback-success-150)]' : isCurrent ? 'text-[var(--blue-100)]' : 'text-[var(--black-40)]')}>
-                                {isPaid ? '✓ Pagada' : isCurrent ? '→ Cobrando' : `Persona ${idx}`}
+                              style={{
+                                padding: '10px 12px', borderRadius: 8, textAlign: 'center',
+                                border: isCurrent ? '1.5px solid #121E6C' : isPaid ? '1.5px solid #C7CBE0' : '1.5px solid #C7CBE0',
+                                background: isCurrent ? '#F1F2F6' : isPaid ? '#F8FFF8' : '#fff',
+                                cursor: isPaid ? 'default' : 'pointer',
+                                transition: 'all 150ms ease',
+                              }}>
+                              <p style={{
+                                fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                                letterSpacing: '0.5px', marginBottom: 4,
+                                color: isPaid ? '#059669' : isCurrent ? '#121E6C' : '#606060',
+                                fontFamily: 'Montserrat, sans-serif',
+                              }}>
+                                {isPaid ? '✓ Pagada' : isCurrent ? '→ COBRANDO' : `Persona ${idx}`}
                               </p>
-                              <p className={cn('text-sm font-black',
-                                isPaid ? 'text-[var(--feedback-success-200)] line-through opacity-60' : isCurrent ? 'text-[var(--blue-100)]' : 'text-[var(--black-100)]')}>
+                              <p style={{
+                                fontSize: 13, fontWeight: 700,
+                                color: isPaid ? '#059669' : isCurrent ? '#121E6C' : '#1E1E1E',
+                                textDecoration: isPaid ? 'line-through' : 'none',
+                                opacity: isPaid ? 0.6 : 1,
+                                fontFamily: 'Montserrat, sans-serif',
+                              }}>
                                 ${amountForPerson(i).toLocaleString()}
                               </p>
                             </button>
                           );
                         })}
                         {splitPersons > 8 && (
-                          <div className="col-span-2 text-center text-[11px] font-bold text-[var(--black-40)] py-1">
+                          <div style={{
+                            gridColumn: '1 / -1', textAlign: 'center',
+                            fontSize: 11, color: '#909090', padding: '4px 0',
+                            fontFamily: 'Montserrat, sans-serif',
+                          }}>
                             + {splitPersons - 8} personas más · ${perPersonFloor.toLocaleString()} c/u
                           </div>
                         )}
                       </div>
 
                       {perPersonRemainder > 0 && (
-                        <p className="text-[10px] text-[var(--feedback-warning-100)] font-bold text-center">
+                        <p style={{ fontSize: 11, color: '#909090', fontStyle: 'italic', textAlign: 'center', fontFamily: 'Montserrat, sans-serif' }}>
                           * Ajuste por redondeo: Persona {splitPersons} paga ${(perPersonFloor + perPersonRemainder).toLocaleString()}
                         </p>
                       )}
@@ -593,28 +689,43 @@ export function CheckoutDrawer({
 
                   {/* ── Personalizado ── */}
                   {splitMode === 'custom' && (
-                    <div className="flex flex-col gap-3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
                       {/* Stepper */}
-                      <div className="flex items-center justify-between bg-[var(--blue-10)] rounded-[var(--radius-16)] px-4 py-3 border border-[var(--black-10)]">
-                        <span className="text-xs font-bold text-[var(--black-60)]">Número de personas</span>
-                        <div className="flex items-center gap-3">
-                          <button onClick={() => setSplitPersons(p => Math.max(2, p - 1))} disabled={splitPersons <= 2}
-                            className={cn('w-7 h-7 rounded-full border flex items-center justify-center transition-all',
-                              splitPersons > 2 ? 'border-[var(--black-10)] hover:border-[var(--blue-100)] hover:text-[var(--blue-100)]' : 'border-[var(--black-10)] text-[var(--black-40)] cursor-not-allowed')}>
-                            <Minus size={12} />
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '10px 14px', borderRadius: 8, background: '#F8F8F8',
+                      }}>
+                        <span style={{ fontSize: 13, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>Número de personas</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <button
+                            onClick={() => setSplitPersons(p => Math.max(2, p - 1))}
+                            disabled={splitPersons <= 2}
+                            style={{
+                              width: 24, height: 24, borderRadius: '50%',
+                              background: '#F1F2F6', border: 'none',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: splitPersons <= 2 ? 'not-allowed' : 'pointer',
+                              opacity: splitPersons <= 2 ? 0.4 : 1,
+                            }}>
+                            <Minus size={11} color="#1E1E1E" />
                           </button>
-                          <span className="w-6 text-center text-sm font-black text-[var(--black-100)]">{splitPersons}</span>
-                          <button onClick={() => setSplitPersons(p => Math.min(8, p + 1))}
-                            className="w-7 h-7 rounded-full border border-[var(--black-10)] flex items-center justify-center hover:border-[var(--blue-100)] hover:text-[var(--blue-100)] transition-all">
-                            <Plus size={12} />
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#1E1E1E', minWidth: 20, textAlign: 'center', fontFamily: 'Montserrat, sans-serif' }}>{splitPersons}</span>
+                          <button
+                            onClick={() => setSplitPersons(p => Math.min(8, p + 1))}
+                            style={{
+                              width: 24, height: 24, borderRadius: '50%',
+                              background: '#F1F2F6', border: 'none',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                            }}>
+                            <Plus size={11} color="#1E1E1E" />
                           </button>
                         </div>
                       </div>
 
-                      {/* Person rows with custom amount inputs */}
-                      <div className="flex flex-col" style={{ gap: 12 }}>
+                      {/* Person rows */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {Array.from({ length: splitPersons }).map((_, i) => {
-                          const idx = i + 1;
+                          const idx    = i + 1;
                           const amount = customAmounts[i] ?? 0;
                           return (
                             <CustomPersonRow
@@ -632,19 +743,22 @@ export function CheckoutDrawer({
                       </div>
 
                       {/* Validation row */}
-                      <div style={{ marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--black-10)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 14, color: 'var(--black-60)' }}>
-                          Total asignado: <strong>${customTotal.toLocaleString()}</strong>
+                      <div style={{
+                        paddingTop: 10, borderTop: '1px solid #F0F0F0',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      }}>
+                        <span style={{ fontSize: 13, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>
+                          Total asignado: <strong style={{ color: '#1E1E1E' }}>${customTotal.toLocaleString()}</strong>
                         </span>
                         {customDiff === 0 ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#059669' }}>
-                            <CheckCircle2 size={14} />
-                            <span style={{ fontSize: 13, fontWeight: 600 }}>Correcto</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#059669' }}>
+                            <CheckCircle2 size={13} />
+                            <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'Montserrat, sans-serif' }}>Correcto</span>
                           </div>
                         ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--coral-100)' }}>
-                            <AlertTriangle size={14} />
-                            <span style={{ fontSize: 13, fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#FF2947' }}>
+                            <AlertTriangle size={13} />
+                            <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'Montserrat, sans-serif' }}>
                               {customDiff > 0
                                 ? `Falta: $${customDiff.toLocaleString()}`
                                 : `Excede: $${Math.abs(customDiff).toLocaleString()}`}
@@ -659,66 +773,70 @@ export function CheckoutDrawer({
               </div>{/* end dividir section */}
 
               {/* ─── 3. PROPINA ─── */}
-              <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--black-10)' }}>
-              <SectionLabel label="Propina"
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
+              <SectionLabel
+                label="Propina"
                 hint={tipAmount > 0 ? (
-                  <span className="text-[10px] font-bold text-[var(--blue-100)] bg-[var(--blue-10)] border border-[var(--black-10)] px-2 py-0.5 rounded-full">
-                    +${tipAmount.toLocaleString()}
-                  </span>
+                  <span style={{
+                    background: '#121E6C', color: '#fff', borderRadius: 4,
+                    padding: '2px 8px', fontSize: 11, fontWeight: 600,
+                    fontFamily: 'Montserrat, sans-serif',
+                  }}>+${tipAmount.toLocaleString()}</span>
                 ) : undefined}
               />
 
-              <div className="flex gap-6 mb-3">
+              <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
                 {([['0', '0%'], ['10', 'Sugerida 10%'], ['manual', 'Manual']] as [TipMode, string][]).map(([m, l]) => (
                   <button key={m}
                     onClick={() => setTipMode(m)}
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      borderBottom: tipMode === m ? '2px solid var(--blue-100)' : '2px solid transparent',
+                      background: 'none', border: 'none',
+                      borderBottom: tipMode === m ? '2px solid #121E6C' : '2px solid transparent',
                       paddingBottom: 4,
-                      fontSize: 14,
-                      fontWeight: tipMode === m ? 700 : 400,
-                      color: tipMode === m ? 'var(--blue-100)' : 'var(--black-60)',
-                      cursor: 'pointer',
-                      transition: 'all 150ms ease',
-                      whiteSpace: 'nowrap',
+                      fontSize: 14, fontWeight: tipMode === m ? 700 : 400,
+                      color: tipMode === m ? '#121E6C' : '#606060',
+                      cursor: 'pointer', transition: 'all 150ms ease',
+                      whiteSpace: 'nowrap', fontFamily: 'Montserrat, sans-serif',
                     }}
                   >{l}</button>
                 ))}
               </div>
 
               {tipMode === 'manual' && (
-                <div className="mb-3">
+                <div style={{ marginBottom: 12 }}>
                   <MoneyInput value={tipManual} onChange={setTipManual} placeholder="0" autoFocus />
                 </div>
               )}
 
-              <p style={{ fontSize: 10, color: 'var(--black-40)', display: 'flex', alignItems: 'flex-start', gap: 4 }}>
-                <span style={{ flexShrink: 0, marginTop: 1 }}>ℹ</span>
+              <p style={{
+                fontSize: 11, fontWeight: 400, color: '#909090',
+                display: 'flex', alignItems: 'flex-start', gap: 4, marginTop: 8,
+                fontFamily: 'Montserrat, sans-serif',
+              }}>
+                <span style={{ flexShrink: 0 }}>ℹ</span>
                 La propina no afecta la base del IVA. Se suma directamente al total.
               </p>
               </div>{/* end propina section */}
 
               {/* ─── 4. MÉTODO DE PAGO ─── */}
-              <div style={{ padding: '20px 24px' }}>
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
               <SectionLabel label="Método de pago" />
 
-              {/* Split progress tracker (when split is active) */}
+              {/* Split progress — fila de estado */}
               {splitBill && (
-                <div className="mb-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-black text-[var(--black-60)] uppercase tracking-wide">
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: '#606060', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: 'Montserrat, sans-serif' }}>
                       Pagadas: {paidAccounts.size} de {totalSplits}
                     </p>
                     {!allAccountsPaid && (
-                      <p className="text-[10px] font-bold text-[var(--black-60)]">
-                        Restante por cobrar: ${remainingAfterPaid.toLocaleString()}
+                      <p style={{ fontSize: 11, fontWeight: 400, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>
+                        Restante: ${remainingAfterPaid.toLocaleString()}
                       </p>
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {Array.from({ length: totalSplits }).map((_, i) => {
                       const idx       = i + 1;
                       const isPaid    = paidAccounts.has(idx);
@@ -730,42 +848,46 @@ export function CheckoutDrawer({
                         <button key={idx}
                           onClick={() => !isPaid && setCurrentAccount(idx)}
                           disabled={isPaid}
-                          className={cn(
-                            'flex items-center gap-3 px-4 py-2.5 rounded-[var(--radius-16)] border-2 transition-all text-left',
-                            isPaid    ? 'border-[var(--feedback-success-100)] bg-[var(--feedback-success-10)] cursor-default' :
-                            isCurrent ? 'border-blue-400 bg-[var(--blue-10)] ring-2 ring-blue-200 ring-offset-1' :
-                                        'border-[var(--black-10)] bg-[var(--blue-10)] hover:border-[var(--black-10)] hover:bg-[var(--blue-10)]/50 cursor-pointer',
-                          )}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '10px 14px', borderRadius: 8, textAlign: 'left',
+                            cursor: isPaid ? 'default' : 'pointer',
+                            background: isCurrent ? '#F1F2F6' : '#F8F8F8',
+                            borderLeft: isCurrent ? '3px solid #121E6C' : isPaid ? '3px solid #059669' : '3px solid transparent',
+                            border: isPaid ? '1px solid #C7CBE0' : isCurrent ? '1px solid #C7CBE0' : '1px solid transparent',
+                            transition: 'all 150ms ease',
+                          }}
                         >
-                          {isPaid ? (
-                            <div className="w-5 h-5 rounded-full bg-[var(--feedback-success-150)] flex items-center justify-center shrink-0">
-                              <Check size={11} className="text-white" strokeWidth={3} />
-                            </div>
-                          ) : isCurrent ? (
-                            <div className="w-5 h-5 rounded-full bg-[var(--blue-100)] flex items-center justify-center shrink-0 text-white">
-                              <span className="text-[9px] font-black">→</span>
-                            </div>
-                          ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-[var(--black-10)] flex items-center justify-center shrink-0 bg-white" />
-                          )}
-
-                          <div className="flex-1">
-                            <p className={cn('text-xs font-bold',
-                              isPaid ? 'text-[var(--feedback-success-200)] line-through' : isCurrent ? 'text-[var(--blue-100)]' : 'text-[var(--black-60)]')}>
-                              {label}
-                            </p>
+                          {/* Radio dot */}
+                          <div style={{
+                            width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+                            border: `2px solid ${isPaid ? '#059669' : isCurrent ? '#121E6C' : '#C7CBE0'}`,
+                            background: isPaid ? '#059669' : isCurrent ? '#121E6C' : '#fff',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            {(isPaid || isCurrent) && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
                           </div>
 
-                          <div className="text-right shrink-0">
-                            <p className={cn('text-sm font-black',
-                              isPaid ? 'text-[var(--feedback-success-150)]' : isCurrent ? 'text-[var(--blue-100)]' : 'text-[var(--black-60)]')}>
-                              ${amount.toLocaleString()}
-                            </p>
-                            <p className={cn('text-[9px] font-bold',
-                              isPaid ? 'text-[var(--feedback-success-100)]' : isCurrent ? 'text-[var(--blue-100)]' : 'text-[var(--black-40)]')}>
+                          <div style={{ flex: 1 }}>
+                            <p style={{
+                              fontSize: 13, fontWeight: 600, fontFamily: 'Montserrat, sans-serif',
+                              color: isPaid ? '#059669' : isCurrent ? '#121E6C' : '#1E1E1E',
+                              textDecoration: isPaid ? 'line-through' : 'none',
+                            }}>{label}</p>
+                            <p style={{
+                              fontSize: 11, fontWeight: isPaid ? 400 : isCurrent ? 500 : 400,
+                              color: isPaid ? '#059669' : isCurrent ? '#121E6C' : '#909090',
+                              fontFamily: 'Montserrat, sans-serif',
+                            }}>
                               {isPaid ? 'Pagada' : isCurrent ? 'Cobrando ahora' : 'Pendiente'}
                             </p>
                           </div>
+
+                          <span style={{
+                            fontSize: 14, fontWeight: 700, flexShrink: 0,
+                            color: isPaid ? '#059669' : isCurrent ? '#121E6C' : '#1E1E1E',
+                            fontFamily: 'Montserrat, sans-serif',
+                          }}>${amount.toLocaleString()}</span>
                         </button>
                       );
                     })}
@@ -777,46 +899,68 @@ export function CheckoutDrawer({
               {(!splitBill || !allAccountsPaid) && (
                 <>
                   {splitBill && (
-                    <p className="text-[10px] font-black text-[var(--black-40)] uppercase tracking-wide mb-3">
-                      Método para {splitLabel}
-                    </p>
+                    <SectionLabel label={`Método para ${splitLabel}`} />
                   )}
 
-                  {/* Method selector cards */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
+                  {/* Grid 2×2 de métodos */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
                     {([
-                      ['cash',     <Banknote size={15} />,       'Efectivo'],
-                      ['card',     <CreditCard size={15} />,     'Tarjeta'],
-                      ['transfer', <ArrowLeftRight size={15} />, 'Transferencia'],
-                      ['mixed',    <Layers size={15} />,         'Mixto'],
-                    ] as [PaymentMethod, React.ReactNode, string][]).map(([m, icon, label]) => (
-                      <button key={m}
-                        onClick={() => setPaymentMethod(m)}
-                        className={cn('flex items-center gap-2 px-4 py-3 rounded-[var(--radius-12)] border-[1.5px] text-sm font-semibold transition-all',
-                          paymentMethod === m ? 'border-[var(--blue-100)] bg-[var(--blue-10)] text-[var(--blue-100)]' : 'border-[var(--black-10)] text-[var(--black-60)] hover:border-[var(--blue-100)] hover:bg-[var(--blue-10)]')}
-                      >
-                        {icon} {label}
-                      </button>
-                    ))}
+                      ['cash',     <Banknote size={14} />,       'Efectivo'],
+                      ['card',     <CreditCard size={14} />,     'Tarjeta'],
+                      ['transfer', <ArrowLeftRight size={14} />, 'Transferencia'],
+                      ['mixed',    <Layers size={14} />,         'Mixto'],
+                    ] as [PaymentMethod, React.ReactNode, string][]).map(([m, icon, label]) => {
+                      const isActive = paymentMethod === m;
+                      return (
+                        <button key={m}
+                          onClick={() => setPaymentMethod(m)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '10px 12px', borderRadius: 8,
+                            border: isActive ? '1.5px solid #121E6C' : '1.5px solid #C7CBE0',
+                            background: isActive ? '#F1F2F6' : '#fff',
+                            fontSize: 13, fontWeight: 500,
+                            color: isActive ? '#121E6C' : '#1E1E1E',
+                            fontFamily: 'Montserrat, sans-serif',
+                            cursor: 'pointer', transition: 'all 150ms ease',
+                          }}
+                        >
+                          <span style={{ color: isActive ? '#121E6C' : '#606060', display: 'flex' }}>{icon}</span>
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* ── Efectivo ── */}
                   {paymentMethod === 'cash' && (
-                    <div className="flex flex-col gap-3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <div>
-                        <label className="text-[10px] font-black text-[var(--black-40)] uppercase tracking-wide block mb-2">Monto recibido</label>
+                        <label style={{
+                          display: 'block', marginBottom: 6,
+                          fontSize: 11, fontWeight: 700, color: '#606060',
+                          textTransform: 'uppercase', letterSpacing: '0.8px',
+                          fontFamily: 'Montserrat, sans-serif',
+                        }}>Monto recibido</label>
                         <MoneyInput value={cashReceived} onChange={setCashReceived} placeholder={currentAmountToPay.toLocaleString()} autoFocus />
                       </div>
-                      <div className={cn('flex items-center justify-between px-4 py-3 rounded-[var(--radius-16)] border-2 transition-all',
-                        cashNum >= currentAmountToPay && cashNum > 0 ? 'bg-[var(--feedback-success-10)] border-[var(--feedback-success-100)]' :
-                        cashNum > 0 ? 'bg-[var(--coral-10)] border-red-300' : 'bg-[var(--blue-10)] border-[var(--black-10)]')}
-                      >
-                        <span className={cn('text-xs font-black uppercase tracking-wide',
-                          cashNum >= currentAmountToPay && cashNum > 0 ? 'text-[var(--feedback-success-200)]' : cashNum > 0 ? 'text-[var(--coral-100)]' : 'text-[var(--black-40)]')}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '10px 14px', borderRadius: 8,
+                        background: cashNum >= currentAmountToPay && cashNum > 0 ? '#F0FFF4' : cashNum > 0 ? '#FFF0F2' : '#F1F2F6',
+                      }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px',
+                          color: cashNum >= currentAmountToPay && cashNum > 0 ? '#059669' : cashNum > 0 ? '#FF2947' : '#606060',
+                          fontFamily: 'Montserrat, sans-serif',
+                        }}>
                           {cashNum >= currentAmountToPay && cashNum > 0 ? 'Cambio' : cashNum > 0 ? 'Faltan' : 'Cambio'}
                         </span>
-                        <span className={cn('text-xl font-black',
-                          cashNum >= currentAmountToPay && cashNum > 0 ? 'text-[var(--feedback-success-200)]' : cashNum > 0 ? 'text-[var(--coral-100)]' : 'text-[var(--black-40)]')}>
+                        <span style={{
+                          fontSize: 18, fontWeight: 700,
+                          color: cashNum >= currentAmountToPay && cashNum > 0 ? '#059669' : cashNum > 0 ? '#FF2947' : '#909090',
+                          fontFamily: 'Montserrat, sans-serif',
+                        }}>
                           ${cashNum > 0 ? Math.abs(cashChange).toLocaleString() : '—'}
                         </span>
                       </div>
@@ -825,75 +969,111 @@ export function CheckoutDrawer({
 
                   {/* ── Tarjeta ── */}
                   {paymentMethod === 'card' && (
-                    <div className="payment-option payment-option--active w-full" style={{ justifyContent: 'center', gap: 8 }}>
-                      <CreditCard size={16} className="shrink-0" /> Terminal conectada (simulado)
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      padding: '12px 16px', borderRadius: 8, background: '#F1F2F6',
+                      fontSize: 13, fontWeight: 500, color: '#606060', fontFamily: 'Montserrat, sans-serif',
+                    }}>
+                      <CreditCard size={15} color="#606060" /> Terminal conectada (simulado)
                     </div>
                   )}
 
                   {/* ── Transferencia ── */}
                   {paymentMethod === 'transfer' && (
-                    <div className="flex flex-col gap-3">
-                      <div className="payment-option payment-option--active w-full" style={{ justifyContent: 'center', gap: 8 }}>
-                        <ArrowLeftRight size={16} className="shrink-0" /> Confirma la recepción antes de proceder
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        padding: '12px 16px', borderRadius: 8, background: '#F1F2F6',
+                        fontSize: 13, fontWeight: 500, color: '#606060', fontFamily: 'Montserrat, sans-serif',
+                      }}>
+                        <ArrowLeftRight size={15} color="#606060" /> Confirma la recepción antes de proceder
                       </div>
-                      <label className="flex items-center gap-3 cursor-pointer group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                         <div
                           onClick={() => setTransferConfirmed(!transferConfirmed)}
-                          className={cn('w-5 h-5 rounded-[var(--radius-8)] border-2 flex items-center justify-center transition-all shrink-0',
-                            transferConfirmed ? 'bg-[var(--feedback-success-150)] border-[var(--feedback-success-150)]' : 'border-[var(--black-10)] group-hover:border-[var(--feedback-success-150)]')}
+                          style={{
+                            width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                            border: `2px solid ${transferConfirmed ? '#059669' : '#C7CBE0'}`,
+                            background: transferConfirmed ? '#059669' : '#fff',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', transition: 'all 150ms ease',
+                          }}
                         >
-                          {transferConfirmed && <Check size={12} className="text-white" strokeWidth={3} />}
+                          {transferConfirmed && <Check size={11} color="#fff" strokeWidth={3} />}
                         </div>
-                        <span className="text-sm font-bold text-[var(--black-60)]">Transferencia confirmada</span>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>Transferencia confirmada</span>
                       </label>
                     </div>
                   )}
 
                   {/* ── Mixto ── */}
                   {paymentMethod === 'mixed' && (
-                    <div className="flex flex-col gap-4">
-                      <div className="flex flex-col gap-3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                         {([
-                          [<Banknote size={14} />,       'Efectivo',      mixCash,     setMixCash],
-                          [<CreditCard size={14} />,     'Tarjeta',       mixCard,     setMixCard],
-                          [<ArrowLeftRight size={14} />, 'Transferencia', mixTransfer, setMixTransfer],
+                          [<Banknote size={13} />,       'Efectivo',      mixCash,     setMixCash],
+                          [<CreditCard size={13} />,     'Tarjeta',       mixCard,     setMixCard],
+                          [<ArrowLeftRight size={13} />, 'Transferencia', mixTransfer, setMixTransfer],
                         ] as [React.ReactNode, string, string, (v: string) => void][]).map(([icon, label, value, setter]) => (
                           <div key={label}>
-                            <label className="flex items-center gap-1.5 text-[10px] font-black text-[var(--black-40)] uppercase tracking-wide mb-1.5">{icon} {label}</label>
+                            <label style={{
+                              display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4,
+                              fontSize: 11, fontWeight: 700, color: '#606060',
+                              textTransform: 'uppercase', letterSpacing: '0.8px',
+                              fontFamily: 'Montserrat, sans-serif',
+                            }}>{icon} {label}</label>
                             <MoneyInput value={value} onChange={setter} />
                           </div>
                         ))}
                       </div>
 
-                      {/* Summary bar */}
-                      <div className="bg-[var(--blue-10)] rounded-[var(--radius-16)] border border-[var(--black-10)] overflow-hidden">
-                        <div className="grid grid-cols-3 divide-x divide-[var(--black-10)]">
-                          {[
-                            { l: 'Total',  v: currentAmountToPay, cls: 'text-[var(--black-100)]' },
-                            { l: 'Pagado', v: totalMixedPaid, cls: totalMixedPaid >= currentAmountToPay ? 'text-[var(--feedback-success-200)]' : 'text-[var(--black-100)]' },
-                            { l: mixRemaining > 0 ? 'Falta' : 'Cambio', v: Math.abs(mixRemaining > 0 ? mixRemaining : mixChange), cls: mixRemaining > 0 ? 'text-[var(--coral-100)]' : 'text-[var(--feedback-success-200)]' },
-                          ].map(({ l, v, cls }) => (
-                            <div key={l} className="p-3 text-center">
-                              <p className="text-[9px] font-black text-[var(--black-40)] uppercase tracking-wider mb-1">{l}</p>
-                              <p className={cn('text-sm font-black', cls)}>${v.toLocaleString()}</p>
+                      {/* Barra resumen mixto */}
+                      <div style={{
+                        background: '#F1F2F6', borderRadius: 8, padding: '12px 0',
+                        display: 'grid', gridTemplateColumns: '1fr 1px 1fr 1px 1fr',
+                      }}>
+                        {[
+                          { l: 'Total',  v: currentAmountToPay, color: '#1E1E1E' },
+                          null,
+                          { l: 'Pagado', v: totalMixedPaid, color: totalMixedPaid >= currentAmountToPay ? '#059669' : '#1E1E1E' },
+                          null,
+                          { l: mixRemaining > 0 ? 'Falta' : 'Cambio', v: Math.abs(mixRemaining > 0 ? mixRemaining : mixChange), color: mixRemaining > 0 ? '#FF2947' : '#059669' },
+                        ].map((col, idx) =>
+                          col === null ? (
+                            <div key={idx} style={{ background: '#C7CBE0', width: 1 }} />
+                          ) : (
+                            <div key={col.l} style={{ textAlign: 'center', padding: '0 8px' }}>
+                              <p style={{
+                                fontSize: 10, fontWeight: 700, color: '#606060',
+                                textTransform: 'uppercase', letterSpacing: '0.8px',
+                                marginBottom: 4, fontFamily: 'Montserrat, sans-serif',
+                              }}>{col.l}</p>
+                              <p style={{ fontSize: 15, fontWeight: 700, color: col.color, fontFamily: 'Montserrat, sans-serif' }}>
+                                ${col.v.toLocaleString()}
+                              </p>
                             </div>
-                          ))}
-                        </div>
-                        <div className="h-1 bg-[var(--black-10)]">
-                          <div className={cn('h-full transition-all duration-300', totalMixedPaid >= currentAmountToPay ? 'bg-[var(--feedback-success-150)]' : 'bg-[var(--blue-100)]')}
-                            style={{ width: `${Math.min(100, (totalMixedPaid / Math.max(1, currentAmountToPay)) * 100)}%` }}
-                          />
-                        </div>
+                          )
+                        )}
                       </div>
 
                       {totalMixedPaid > currentAmountToPay && mixCashNum === 0 && (
-                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-[var(--radius-16)] bg-[var(--feedback-warning-10)] border border-[var(--feedback-warning-10)] text-xs font-bold text-[var(--feedback-warning-150)]">
-                          <AlertTriangle size={13} /> El cambio requiere efectivo
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          padding: '8px 12px', borderRadius: 8,
+                          background: '#FFFBF0', fontSize: 12, fontWeight: 600,
+                          color: '#B38900', fontFamily: 'Montserrat, sans-serif',
+                        }}>
+                          <AlertTriangle size={13} color="#B38900" /> El cambio requiere efectivo
                         </div>
                       )}
                       {totalMixedPaid > currentAmountToPay && mixCashNum > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-[var(--radius-16)] bg-[var(--feedback-success-10)] border border-[var(--feedback-success-100)] text-xs font-bold text-[var(--feedback-success-200)]">
-                          <CheckCircle2 size={13} /> Cambio en efectivo: ${mixChange.toLocaleString()}
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          padding: '8px 12px', borderRadius: 8,
+                          background: '#F0FFF4', fontSize: 12, fontWeight: 600,
+                          color: '#059669', fontFamily: 'Montserrat, sans-serif',
+                        }}>
+                          <CheckCircle2 size={13} color="#059669" /> Cambio en efectivo: ${mixChange.toLocaleString()}
                         </div>
                       )}
                     </div>
@@ -901,8 +1081,7 @@ export function CheckoutDrawer({
                 </>
               )}
 
-              {/* Bottom spacer */}
-              <div className="h-4" />
+              <div style={{ height: 8 }} />
               </div>{/* end payment section */}
             </>
           )}
@@ -911,61 +1090,84 @@ export function CheckoutDrawer({
         {/* ─────────────────────────────────────────────────────
             FOOTER — sticky
             ───────────────────────────────────────────────────── */}
-        <div className="bg-white shrink-0 flex flex-col" style={{ padding: '16px 24px', borderTop: '1px solid var(--black-10)', gap: 8 }}>
+        <div style={{
+          background: '#fff', flexShrink: 0,
+          display: 'flex', flexDirection: 'column', gap: 8,
+          padding: '16px 24px', borderTop: '1px solid #F0F0F0',
+        }}>
 
           {phase === 'completed' ? (
-            <button onClick={onClose} className="btn btn-primary" style={{ width: '100%', padding: 14, fontSize: 16, fontWeight: 700 }}>
+            <button
+              onClick={onClose}
+              style={{
+                width: '100%', height: 48, borderRadius: 8,
+                background: '#121E6C', color: '#fff', border: 'none',
+                fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'Montserrat, sans-serif',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
               Cerrar y volver
             </button>
           ) : (
             <>
-              {/* Total a cobrar row */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              {/* Total a cobrar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   {splitBill && !allAccountsPaid ? (
                     <>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--black-40)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{splitLabel}</p>
-                      <p style={{ fontSize: 11, color: 'var(--black-40)' }}>Pagadas {paidAccounts.size} de {totalSplits}</p>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#606060', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: 'Montserrat, sans-serif' }}>{splitLabel}</p>
+                      <p style={{ fontSize: 11, color: '#909090', fontFamily: 'Montserrat, sans-serif' }}>Pagadas {paidAccounts.size} de {totalSplits}</p>
                     </>
                   ) : splitBill && allAccountsPaid ? (
                     <>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.06em' }}>✓ Todas las cuentas pagadas</p>
-                      <p style={{ fontSize: 11, color: 'var(--black-40)' }}>Listo para finalizar</p>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: 'Montserrat, sans-serif' }}>✓ Todas pagadas</p>
+                      <p style={{ fontSize: 11, color: '#909090', fontFamily: 'Montserrat, sans-serif' }}>Listo para finalizar</p>
                     </>
                   ) : (
                     <>
-                      <p style={{ fontSize: 13, color: 'var(--black-60)' }}>Total a cobrar</p>
-                      {tipAmount > 0 && <p style={{ fontSize: 11, color: 'var(--black-40)' }}>Inc. propina ${tipAmount.toLocaleString()}</p>}
+                      <p style={{ fontSize: 13, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>Total a cobrar</p>
+                      {tipAmount > 0 && <p style={{ fontSize: 11, color: '#909090', fontFamily: 'Montserrat, sans-serif' }}>Inc. propina ${tipAmount.toLocaleString()}</p>}
                     </>
                   )}
                 </div>
-                <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--black-100)' }}>
+                <span style={{ fontSize: 20, fontWeight: 700, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>
                   ${(splitBill && !allAccountsPaid ? currentAmountToPay : grandTotal).toLocaleString()}
                 </span>
               </div>
 
-              {/* Disabled reason */}
+              {/* Razón de deshabilitado */}
               {!btnEnabled && disabledReason && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-16)] bg-[var(--feedback-warning-10)] border border-[var(--feedback-warning-10)] text-xs font-bold text-[var(--feedback-warning-150)]">
-                  <AlertTriangle size={12} /> {disabledReason}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '8px 12px', borderRadius: 8,
+                  background: '#FFFBF0', fontSize: 12, fontWeight: 500,
+                  color: '#B38900', fontFamily: 'Montserrat, sans-serif',
+                }}>
+                  <AlertTriangle size={12} color="#B38900" /> {disabledReason}
                 </div>
               )}
 
-              {/* Confirm button */}
+              {/* Botón confirmar */}
               <button
                 onClick={handleConfirm}
                 disabled={!btnEnabled}
-                className={cn(
-                  'btn w-full',
-                  btnEnabled
-                    ? allAccountsPaid && splitBill
-                      ? 'bg-[var(--feedback-success-150)] text-white hover:opacity-90'
-                      : 'btn-primary'
-                    : 'btn-primary opacity-50 cursor-not-allowed',
-                )}
-                style={{ padding: 14, fontSize: 16, fontWeight: 700, borderRadius: 'var(--radius-8)' }}
+                style={{
+                  width: '100%', height: 48, borderRadius: 8, border: 'none',
+                  background: !btnEnabled
+                    ? '#FFB3BE'
+                    : allAccountsPaid && splitBill
+                      ? '#059669'
+                      : '#FF2947',
+                  color: '#fff',
+                  fontSize: 15, fontWeight: 700,
+                  cursor: !btnEnabled ? 'not-allowed' : 'pointer',
+                  fontFamily: 'Montserrat, sans-serif',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  transition: 'background 150ms ease',
+                }}
               >
-                <CheckCircle2 size={18} />
+                <CheckCircle2 size={18} color="#fff" />
                 {allAccountsPaid && splitBill
                   ? 'Finalizar pago'
                   : splitBill
@@ -973,8 +1175,15 @@ export function CheckoutDrawer({
                     : 'Confirmar pago'}
               </button>
 
-              {/* Cancel ghost */}
-              <button onClick={onClose} className="btn btn-ghost w-full" style={{ padding: 10, color: 'var(--black-60)' }}>
+              {/* Cancelar */}
+              <button
+                onClick={onClose}
+                style={{
+                  width: '100%', height: 36, background: 'transparent', border: 'none',
+                  fontSize: 14, fontWeight: 400, color: '#606060',
+                  cursor: 'pointer', fontFamily: 'Montserrat, sans-serif',
+                }}
+              >
                 Cancelar
               </button>
             </>
@@ -990,12 +1199,13 @@ export function CheckoutDrawer({
 function CustomPersonRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   const [focused, setFocused] = React.useState(false);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: 14, color: 'var(--black-60)', fontWeight: 500 }}>{label}</span>
-      <div style={{ position: 'relative', width: 140 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      <span style={{ fontSize: 13, color: '#606060', fontWeight: 400, fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ position: 'relative', width: 140, flexShrink: 0 }}>
         <span style={{
-          position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-          color: 'var(--black-40)', pointerEvents: 'none', fontSize: 14, fontWeight: 500,
+          position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+          color: '#606060', pointerEvents: 'none', fontSize: 14, fontWeight: 500,
+          fontFamily: 'Montserrat, sans-serif',
         }}>$</span>
         <input
           type="number" min={0}
@@ -1005,17 +1215,16 @@ function CustomPersonRow({ label, value, onChange }: { label: string; value: num
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           style={{
-            width: '100%', height: 44,
-            backgroundColor: '#fff',
-            border: focused ? '1.5px solid var(--blue-100)' : '1.5px solid var(--black-10)',
-            boxShadow: focused ? '0 0 0 3px var(--blue-10)' : 'none',
-            borderRadius: 'var(--radius-8)',
-            paddingLeft: 28, paddingRight: 12,
+            width: '100%', height: 36,
+            background: 'transparent',
+            border: 'none',
+            borderBottom: focused ? '2px solid #121E6C' : '2px solid #C7CBE0',
+            paddingLeft: 16, paddingRight: 0,
             textAlign: 'right',
-            fontSize: 16, fontWeight: 600, color: 'var(--black-100)',
+            fontSize: 15, fontWeight: 600, color: '#1E1E1E',
             outline: 'none',
-            fontFamily: "'Montserrat', sans-serif",
-            transition: 'border 150ms ease, box-shadow 150ms ease',
+            fontFamily: 'Montserrat, sans-serif',
+            transition: 'border-color 150ms ease',
           }}
         />
       </div>
