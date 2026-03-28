@@ -2490,7 +2490,7 @@ export function MesasView() {
       {/* ════════════════════════════════════════════���═══════
           Columna derecha: Panel detalle de mesa
           ════════════════════════════════════════════════════ */}
-      <div className="panel-right w-[400px] shrink-0">
+      <div className="panel-right w-[400px] shrink-0" style={{ overflow: 'hidden' }}>
 
         {/* ── Sin selección ── */}
         {!selectedTable && (
