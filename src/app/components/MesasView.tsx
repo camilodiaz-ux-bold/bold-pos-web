@@ -1136,6 +1136,46 @@ function PanelBillBtn({ children, onClick }: { children: React.ReactNode; onClic
   );
 }
 
+function SmallOutlineBtn({ children, onClick, icon }: { children: React.ReactNode; onClick: () => void; icon?: React.ReactNode }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        flex: 1, height: 36, borderRadius: 8, background: '#fff', cursor: 'pointer',
+        border: `1.5px solid ${hov ? '#121E6C' : '#C7CBE0'}`,
+        color: '#1E1E1E', fontSize: 13, fontWeight: 500, fontFamily: MFONT,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        transition: 'border-color 150ms',
+      }}
+    >
+      {icon}{children}
+    </button>
+  );
+}
+
+function SolicitarLink({ onClick }: { onClick: () => void }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+        cursor: 'pointer', padding: '6px 0',
+        fontSize: 13, fontWeight: 400, fontFamily: MFONT,
+        color: hov ? '#121E6C' : '#606060',
+        transition: 'color 150ms', userSelect: 'none',
+      }}
+    >
+      <Receipt size={13} color={hov ? '#121E6C' : '#606060'} /> Solicitar cuenta
+    </div>
+  );
+}
+
 function ReenviarLink({ sent, onClick }: { sent: boolean; onClick: () => void }) {
   const [hov, setHov] = React.useState(false);
   return (
@@ -2529,88 +2569,69 @@ export function MesasView() {
           <>
             {/* ── Panel header ── */}
             <div className="panel-header">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h2 className="panel-title">Mesa {selectedTable.name}</h2>
-                  <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
-                    <span className={(STATUS_CFG[selectedTable.status] ?? STATUS_CFG['DISPONIBLE']).badgeClass}>
-                      {(STATUS_CFG[selectedTable.status] ?? STATUS_CFG['DISPONIBLE']).label}
+              {/* Título + badge inline */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1E1E1E', fontFamily: MFONT, margin: 0 }}>
+                  Mesa {selectedTable.name}
+                </h2>
+                <span className={(STATUS_CFG[selectedTable.status] ?? STATUS_CFG['DISPONIBLE']).badgeClass}>
+                  {(STATUS_CFG[selectedTable.status] ?? STATUS_CFG['DISPONIBLE']).label}
+                </span>
+              </div>
+
+              {/* Meta info — grid 2 cols */}
+              {(selectedTable.status === 'OCUPADA' || selectedTable.status === 'CUENTA_SOLICITADA') && (
+                <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 8px' }}>
+                  {/* Row 1 */}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#606060', fontFamily: MFONT }}>
+                    <Utensils size={11} color="#606060" /> {selectedTable.zone} · Mesa para {selectedTable.capacity}
+                  </span>
+                  {selectedTable.guests != null && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#606060', fontFamily: MFONT }}>
+                      <Users size={11} color="#606060" /> {selectedTable.guests} personas en mesa
                     </span>
-                  </div>
+                  )}
+                  {/* Row 2 */}
+                  {selectedTable.openedAtTimestamp && (
+                    <>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#606060', fontFamily: MFONT }}>
+                        <Clock size={11} color="#606060" /> Abierta a las {formatOpenTime(selectedTable.openedAtTimestamp)}
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#606060', fontFamily: MFONT }}>
+                        <Timer size={11} color="#606060" /> {formatElapsed(selectedTable.openedAtTimestamp)}
+                      </span>
+                    </>
+                  )}
                 </div>
-              </div>
+              )}
 
-              {/* Meta info */}
-              <div className="panel-meta" style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-                <span>{selectedTable.zone}</span>
-                <span style={{ color: 'var(--black-10)' }}>·</span>
-                <span>Mesa para {selectedTable.capacity}</span>
-                {(selectedTable.status === 'OCUPADA' || selectedTable.status === 'CUENTA_SOLICITADA') && selectedTable.guests != null && (
-                  <>
-                    <span style={{ color: 'var(--black-10)' }}>·</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <Users size={11} /> {selectedTable.guests} en mesa
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Timer */}
-              {selectedTable.openedAtTimestamp && (
-                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <span className="panel-meta" style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 0 }}>
-                    <Clock size={11} /> Abierta a las {formatOpenTime(selectedTable.openedAtTimestamp)}
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--black-100)', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                    <Timer size={11} /> {formatElapsed(selectedTable.openedAtTimestamp)}
-                  </span>
+              {/* Meta compacta para estados sin timer */}
+              {(selectedTable.status === 'DISPONIBLE') && (
+                <div style={{ marginTop: 6, display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, color: '#606060', fontFamily: MFONT }}>
+                  <Utensils size={11} color="#606060" /> {selectedTable.zone} · Mesa para {selectedTable.capacity}
                 </div>
               )}
 
               {/* Estado inhabilitada */}
               {selectedTable.status === 'INHABILITADA' && (
-                <p className="panel-meta" style={{ marginTop: 6 }}>Mesa no disponible para servicio</p>
+                <p style={{ marginTop: 6, fontSize: 12, color: '#606060', fontFamily: MFONT }}>Mesa no disponible para servicio</p>
               )}
 
-              {/* Acciones de mesa — Fila 1: outline × 2 | Fila 2: navy full-width */}
+              {/* Acciones de mesa — solo 2 botones outline */}
               {(selectedTable.status === 'OCUPADA' || selectedTable.status === 'CUENTA_SOLICITADA') && (
-                <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {/* Fila 1 */}
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {selectedTable.status === 'OCUPADA' ? (
-                      <PanelOutlineBtn
-                        onClick={() => setShowChangeMesa(true)}
-                        textColor="#1E1E1E"
-                        hoverBorderColor="#121E6C"
-                        icon={<ArrowLeftRight size={16} color="#1E1E1E" />}
-                      >
-                        Cambiar mesa
-                      </PanelOutlineBtn>
-                    ) : (
-                      <PanelOutlineBtn
-                        onClick={revertToOcupada}
-                        textColor="#1E1E1E"
-                        hoverBorderColor="#121E6C"
-                        icon={<RotateCcw size={16} color="#1E1E1E" />}
-                      >
-                        Volver a Ocupada
-                      </PanelOutlineBtn>
-                    )}
-                    <PanelOutlineBtn
-                      onClick={() => setShowCancelModal(true)}
-                      textColor="#1E1E1E"
-                      hoverBorderColor="#121E6C"
-                      icon={<X size={16} color="#1E1E1E" />}
-                    >
-                      Cancelar y liberar
-                    </PanelOutlineBtn>
-                  </div>
-                  {/* Fila 2: Agregar productos (solo OCUPADA) */}
-                  {selectedTable.status === 'OCUPADA' && (
-                    <PanelNavyBtn onClick={() => setShowProductSelector(true)}>
-                      <Plus size={16} color="#fff" /> Agregar productos
-                    </PanelNavyBtn>
+                <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                  {selectedTable.status === 'OCUPADA' ? (
+                    <SmallOutlineBtn onClick={() => setShowChangeMesa(true)} icon={<ArrowLeftRight size={13} />}>
+                      Cambiar mesa
+                    </SmallOutlineBtn>
+                  ) : (
+                    <SmallOutlineBtn onClick={revertToOcupada} icon={<RotateCcw size={13} />}>
+                      Volver a Ocupada
+                    </SmallOutlineBtn>
                   )}
+                  <SmallOutlineBtn onClick={() => setShowCancelModal(true)} icon={<X size={13} />}>
+                    Cancelar y liberar
+                  </SmallOutlineBtn>
                 </div>
               )}
               {selectedTable.status === 'INHABILITADA' && (
@@ -2668,30 +2689,32 @@ export function MesasView() {
               {(selectedTable.status === 'OCUPADA'
                 || selectedTable.status === 'CUENTA_SOLICITADA') && (
                 <>
-                  {/* Section: PEDIDO */}
-                  <div className="panel-section">
-                    <div style={{ marginBottom: 4 }}>
-                      <span className="panel-section-label" style={{ marginBottom: 0 }}>
-                        Pedido · {totalItems} ítem{totalItems !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-
-                    {/* Banner cambios pendientes */}
-                    {selectedTable.status === 'OCUPADA' && isComandaSent && hasPendingChanges && (
-                      <div style={{
-                        marginTop: 10,
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '8px 12px',
-                        borderRadius: 8,
-                        background: 'var(--feedback-warning-10)',
-                        border: '1px solid var(--feedback-warning-100)',
-                        fontSize: 12, fontWeight: 600,
-                        color: 'var(--feedback-warning-150)',
-                        fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                      }}>
-                        <AlertTriangle size={13} style={{ flexShrink: 0 }} /> Cambios pendientes de cocina
+                  {/* Section: PEDIDO — label inline con botón Agregar */}
+                  <div className="panel-section" style={{ paddingBottom: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {/* Dot indicador de cambios pendientes */}
+                        {selectedTable.status === 'OCUPADA' && isComandaSent && hasPendingChanges && (
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FFC217', display: 'inline-block', flexShrink: 0 }} />
+                        )}
+                        <span className="panel-section-label" style={{ marginBottom: 0 }}>
+                          Pedido · {totalItems} ítem{totalItems !== 1 ? 's' : ''}
+                        </span>
                       </div>
-                    )}
+                      {selectedTable.status === 'OCUPADA' && (
+                        <button
+                          onClick={() => setShowProductSelector(true)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 5,
+                            height: 32, padding: '0 12px', borderRadius: 6, border: 'none',
+                            background: '#121E6C', color: '#fff',
+                            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: MFONT,
+                          }}
+                        >
+                          <Plus size={12} color="#fff" /> Agregar productos
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Lista de ítems */}
@@ -2818,27 +2841,24 @@ export function MesasView() {
                 {/* ── OCUPADA ── */}
                 {selectedTable.status === 'OCUPADA' && selectedTable.items.length > 0 && (
                   <>
-                    {/* Fila 1: Enviar / Reenviar comanda (coral) — solo si hay ítems nuevos */}
-                    {(hasPendingChanges || !isComandaSent) && (
-                      <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
-                        {hasPendingChanges
-                          ? <><RotateCcw size={18} color="#fff" /> Reenviar comanda</>
-                          : <><Send size={18} color="#fff" /> Enviar comanda</>
-                        }
-                      </PanelCoralBtn>
-                    )}
-
-                    {/* Fila 2: Solicitar cuenta (outline) */}
-                    <PanelBillBtn onClick={requestBill}>
-                      <Receipt size={16} color="#1E1E1E" /> Solicitar cuenta
-                    </PanelBillBtn>
-
-                    {/* Fila 3: Reenviar comanda — link de texto, solo cuando ya fue enviada */}
-                    {isComandaSent && selectedTable.items.some(i => i.isSent) && (
-                      <ReenviarLink
-                        sent={reenviarSent}
-                        onClick={handleReenviarComanda}
-                      />
+                    {/* Estado A: comanda no enviada o hay cambios pendientes → Enviar comanda (coral) + link Solicitar */}
+                    {(!isComandaSent || hasPendingChanges) ? (
+                      <>
+                        <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
+                          <Send size={16} color="#fff" /> Enviar comanda
+                        </PanelCoralBtn>
+                        <SolicitarLink onClick={requestBill} />
+                      </>
+                    ) : (
+                      /* Estado B: comanda ya enviada, sin cambios → Solicitar cuenta (outline) + link Reenviar */
+                      <>
+                        <PanelBillBtn onClick={requestBill}>
+                          <Receipt size={16} color="#1E1E1E" /> Solicitar cuenta
+                        </PanelBillBtn>
+                        {selectedTable.items.some(i => i.isSent) && (
+                          <ReenviarLink sent={reenviarSent} onClick={handleReenviarComanda} />
+                        )}
+                      </>
                     )}
                   </>
                 )}
