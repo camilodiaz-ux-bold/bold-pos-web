@@ -2505,7 +2505,7 @@ export function MesasView() {
 
         {/* ── Con mesa seleccionada ── */}
         {selectedTable && (
-          <>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
             {/* ── Panel header ── */}
             <div className="panel-header">
               {/* Título + badge inline */}
@@ -2581,7 +2581,7 @@ export function MesasView() {
             </div>
 
             {/* ── Contenido scrollable ── */}
-            <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
 
               {/* ── INHABILITADA ── */}
               {selectedTable.status === 'INHABILITADA' && (
@@ -2713,7 +2713,7 @@ export function MesasView() {
                                 }}
                               >
                                 <p className="panel-item-name">{item.name}</p>
-                                <p style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                <p style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
                                   ${(item.price * item.quantity).toLocaleString()}
                                 </p>
                               </div>
@@ -2778,7 +2778,7 @@ export function MesasView() {
                           ) : (
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p className="panel-item-name">{item.name}</p>
-                              <p className="panel-item-price" style={{ marginTop: 2 }}>
+                              <p style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
                                 ${(item.price * item.quantity).toLocaleString()}
                               </p>
                               {item.note && (
@@ -2827,7 +2827,7 @@ export function MesasView() {
                 Footer: totales + CTAs
                 ════════════════════════════════════════════════════ */}
             {selectedTable.status !== 'DISPONIBLE' && selectedTable.status !== 'INHABILITADA' && (
-              <div className="panel-footer" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ flexShrink: 0, borderTop: '1px solid #F0F0F0', padding: '12px 16px', backgroundColor: 'white', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
                 {/* Totales */}
                 {selectedTable.items.length > 0 && (
@@ -2884,7 +2884,7 @@ export function MesasView() {
 
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </>
