@@ -357,7 +357,8 @@ export function MostradorCatalog({
                   <div
                     key={p.id}
                     onClick={() => onAddProduct(toMostradorProduct(p, def))}
-                    className="bg-white rounded-[var(--radius-12)] border border-[var(--black-10)] p-2 flex flex-col gap-1.5 hover:shadow-md transition-all relative cursor-pointer hover:border-[var(--blue-100)] active:scale-[0.97] overflow-hidden"
+                    className="hover:shadow-md transition-all relative cursor-pointer hover:border-[var(--blue-100)] active:scale-[0.97]"
+                    style={{ height: '160px', display: 'flex', flexDirection: 'column', borderRadius: '10px', overflow: 'hidden' }}
                   >
                     <div className="relative h-[76px] rounded-[var(--radius-12)] overflow-hidden bg-[var(--blue-10)]">
                       {p.image ? (
@@ -395,13 +396,21 @@ export function MostradorCatalog({
                         </div>
                       )}
                     </div>
-                    <div>
+                    <div style={{
+                      flexShrink: 0,
+                      padding: '8px 10px 10px 10px',
+                      backgroundColor: 'rgba(255,255,255,0.85)',
+                      borderTop: '1px solid rgba(0,0,0,0.06)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px'
+                    }}>
+                      <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#1E1E1E', lineHeight: '1.2', fontFamily: 'Montserrat, sans-serif', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                        {p.name}
+                      </h3>
                       <p style={{ color: 'var(--blue-100)', fontSize: '11px', fontWeight: 600, lineHeight: '16px' }}>
                         ${p.price.toLocaleString()}
                       </p>
-                      <h3 style={{ color: 'var(--black-100)', fontSize: '14px', fontWeight: 600, lineHeight: '20px' }} className="line-clamp-2">
-                        {p.name}
-                      </h3>
                     </div>
                     {/* Línea inferior de categoría — color Merlin */}
                     <div
