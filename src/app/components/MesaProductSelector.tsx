@@ -754,14 +754,16 @@ export function MesaProductSelector({
                         </div>
 
                         {/* Info inferior */}
-                        <div style={{ flexShrink: 0, padding: '8px 10px' }}>
-                          <h3 style={{
-                            fontSize: 13, fontWeight: 600, color: '#1E1E1E',
-                            lineHeight: '18px', fontFamily: 'Montserrat, sans-serif',
-                            display: '-webkit-box', WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                            marginBottom: 2,
-                          }}>
+                        <div style={{
+                          flexShrink: 0,
+                          padding: '8px 10px 10px 10px',
+                          backgroundColor: 'rgba(255,255,255,0.85)',
+                          borderTop: '1px solid rgba(0,0,0,0.06)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '2px'
+                        }}>
+                          <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#1E1E1E', lineHeight: '1.2', fontFamily: 'Montserrat, sans-serif', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                             {product.name}
                           </h3>
                           <p style={{ fontSize: 13, fontWeight: 700, color: def.darkColor, fontFamily: 'Montserrat, sans-serif' }}>
