@@ -2656,6 +2656,23 @@ export function MesasView() {
                     </div>
                   </div>
 
+                  {/* Indicador de estado de comanda — compacto (igual que MesaProductSelector) */}
+                  {selectedTable.items.length > 0 && isComandaSent && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '6px 16px',
+                      fontFamily: MFONT,
+                      ...(hasPendingChanges
+                        ? { background: '#FFFBF0', color: '#B38900' }
+                        : { background: '#F0FDF4', color: '#059669' }),
+                    }}>
+                      {hasPendingChanges
+                        ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de envío</span></>
+                        : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
+                      }
+                    </div>
+                  )}
+
                   {/* Lista de ítems */}
                   {selectedTable.items.length === 0 ? (
                     <div className="empty-state" style={{ padding: '24px' }}>

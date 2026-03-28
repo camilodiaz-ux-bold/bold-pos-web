@@ -703,7 +703,7 @@ export function MesaProductSelector({
                             : '0 1px 3px rgba(0,0,0,0.06)',
                           transition: 'box-shadow 150ms',
                         }}
-                        onMouseEnter={e => { if (!isFlashing) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'; }}
+                        onMouseEnter={e => { if (!isFlashing) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; }}
                         onMouseLeave={e => { if (!isFlashing) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; }}
                       >
                         {/* Imagen — 2/3 superiores */}
@@ -753,7 +753,7 @@ export function MesaProductSelector({
                         </div>
 
                         {/* Info inferior */}
-                        <div style={{ padding: 8 }}>
+                        <div style={{ padding: '8px 10px' }}>
                           <h3 style={{
                             fontSize: 13, fontWeight: 600, color: '#1E1E1E',
                             lineHeight: '18px', fontFamily: 'Montserrat, sans-serif',
