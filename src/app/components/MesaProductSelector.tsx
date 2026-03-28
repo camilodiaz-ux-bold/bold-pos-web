@@ -11,7 +11,7 @@ import React, { useState, useMemo } from 'react';
 import {
   Search, LayoutGrid, Plus, ChevronLeft, ChevronRight,
   Trash2, Receipt, Send, Users, Clock,
-  Utensils, CheckCircle2, RotateCcw, Minus, X, Star,
+  Utensils, CheckCircle2, RefreshCw, Minus, X, Star,
   MessageSquare, Pencil, ShoppingBag,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -992,54 +992,59 @@ export function MesaProductSelector({
             {/* CTAs */}
             {table.items.length > 0 && (
               <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {hasPendingChanges ? (
-                  <button
-                    onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
-                    style={{
-                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
-                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
-                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', gap: 8,
-                    }}
-                  >
-                    <RotateCcw size={16} /> Reenviar comanda
-                  </button>
-                ) : !isComandaSent ? (
-                  <button
-                    onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
-                    style={{
-                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
-                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
-                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', gap: 8,
-                    }}
-                  >
-                    <Send size={16} /> Enviar comanda
-                  </button>
+                {(!isComandaSent || hasPendingChanges) ? (
+                  <>
+                    {/* Estado A: comanda no enviada o hay cambios pendientes → Enviar comanda + link Solicitar */}
+                    <button
+                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                      style={{
+                        width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 8,
+                      }}
+                    >
+                      <Send size={16} /> Enviar comanda
+                    </button>
+                    <button
+                      onClick={requestBill}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 13, fontWeight: 500, color: '#FF2947',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                      }}
+                    >
+                      <Receipt size={14} color="#FF2947" /> Solicitar cuenta
+                    </button>
+                  </>
                 ) : (
-                  <div style={{
-                    width: '100%', padding: '10px 0', borderRadius: 8,
-                    border: '1px solid #86EFAC', background: '#F0FDF4',
-                    fontSize: 13, fontWeight: 600, color: '#059669',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    fontFamily: 'Montserrat, sans-serif',
-                  }}>
-                    <CheckCircle2 size={15} /> Comanda enviada
-                  </div>
+                  <>
+                    {/* Estado B: comanda enviada sin cambios → Solicitar cuenta (coral) + link Reenviar */}
+                    <button
+                      onClick={requestBill}
+                      style={{
+                        width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 8,
+                      }}
+                    >
+                      <Receipt size={16} /> Solicitar cuenta
+                    </button>
+                    <button
+                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 13, fontWeight: 500, color: '#FF2947',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                      }}
+                    >
+                      <RefreshCw size={13} color="#FF2947" /> Reenviar comanda
+                    </button>
+                  </>
                 )}
-
-                {/* Solicitar cuenta — texto coral sin borde */}
-                <button
-                  onClick={requestBill}
-                  style={{
-                    width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 500, color: '#FF2947',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
-                  }}
-                >
-                  <Receipt size={14} color="#FF2947" /> Solicitar cuenta
-                </button>
               </div>
             )}
           </div>
