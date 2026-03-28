@@ -196,7 +196,7 @@ export function KitchenTicketPreviewModal({
         {/* ── Subtítulo ── */}
         <p className="px-6 pb-5 shrink-0" style={{ fontSize: 14, color: 'var(--black-60)' }}>
           {subtitle ?? (isResend
-            ? 'Se imprimirán solo los productos nuevos o modificados'
+            ? 'Se reimprimirá el pedido completo en cocina'
             : 'Se imprimirá el siguiente ticket en cocina')}
         </p>
 
@@ -223,7 +223,7 @@ export function KitchenTicketPreviewModal({
                   textAlign: 'center',
                 }}
               >
-                <span style={{ ...TXT.bold, fontSize: 14 }}>COMANDA ADICIONAL</span>
+                <span style={{ ...TXT.bold, fontSize: 14 }}>COMANDA COMPLETA</span>
               </div>
             ) : (
               <p style={{ ...TXT.bold, fontSize: 14, textAlign: 'center', marginBottom: 4, paddingInline: 16 }}>
@@ -269,65 +269,25 @@ export function KitchenTicketPreviewModal({
             {/* ─ Productos ─ */}
             <div style={{ paddingInline: 16 }}>
               {isResend ? (
-                hasNothingNew ? (
+                printItems.length === 0 ? (
                   <p style={{ ...TXT.small, textAlign: 'center', marginBottom: 10 }}>
-                    (sin productos nuevos)
+                    (sin productos)
                   </p>
                 ) : (
-                  <>
-                    {/* ── Nuevos / cantidad adicional ── */}
-                    {diffItems.length > 0 && (
-                      <>
-                        <p style={{ ...TXT.bold, fontSize: 11, marginBottom: 6, letterSpacing: 1 }}>
-                          NUEVOS:
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+                    {printItems.map(item => (
+                      <div key={item.id}>
+                        <p style={{ ...TXT.bold, fontWeight: 600 }}>
+                          {String(item.quantity).padEnd(3, ' ')} {item.name}
                         </p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: modifiedItems.length > 0 ? 12 : 10 }}>
-                          {diffItems.map(({ item, isNew, delta }) => {
-                            const qtyLabel = isNew ? String(item.quantity) : `+${delta}`;
-                            return (
-                              <div key={item.id}>
-                                <p style={{ ...TXT.bold, fontWeight: 600 }}>
-                                  {qtyLabel.padEnd(3, ' ')} {item.name}
-                                </p>
-                                {item.note && item.note.trim() && (
-                                  <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
-                                    {'    '}&#x2192;{'  '}{item.note}
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-
-                    {/* ── Modificaciones de nota ── */}
-                    {modifiedItems.length > 0 && (
-                      <>
-                        {/* separador entre secciones */}
-                        {diffItems.length > 0 && (
-                          <p style={{ ...TXT.sep, marginBottom: 8 }}>
-                            {'- - - - - - - - - -'}
+                        {item.note && item.note.trim() && (
+                          <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
+                            {'    '}&#x2192;{'  '}{item.note}
                           </p>
                         )}
-                        <p style={{ ...TXT.bold, fontSize: 11, marginBottom: 6, letterSpacing: 1 }}>
-                          MODIFICACIONES:
-                        </p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
-                          {modifiedItems.map(({ item }) => (
-                            <div key={item.id}>
-                              <p style={{ ...TXT.bold, fontWeight: 600 }}>
-                                * {item.name}
-                              </p>
-                              <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
-                                {'    '}Nota: {item.note}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </>
+                      </div>
+                    ))}
+                  </div>
                 )
               ) : (
                 printItems.length === 0 ? (
