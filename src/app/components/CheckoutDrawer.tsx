@@ -78,10 +78,11 @@ function SectionLabel({ label, hint }: { label: string; hint?: React.ReactNode }
 function MoneyInput({
   value, onChange, placeholder, autoFocus,
 }: { value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean }) {
+  const [focused, setFocused] = React.useState(false);
   return (
     <div style={{ position: 'relative' }}>
       <span style={{
-        position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+        position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
         color: '#606060', fontSize: 14, fontWeight: 500, pointerEvents: 'none',
         fontFamily: 'Montserrat, sans-serif',
       }}>$</span>
@@ -90,9 +91,20 @@ function MoneyInput({
         placeholder={placeholder ?? '0'}
         value={value}
         onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         autoFocus={autoFocus}
-        className="merlin-input"
-        style={{ paddingLeft: 16, paddingRight: 0, fontWeight: 600, height: 40 }}
+        style={{
+          width: '100%', height: 40, boxSizing: 'border-box',
+          borderRadius: 12,
+          border: focused ? '1.5px solid #121E6C' : '1.5px solid #C7CBE0',
+          background: '#F7F8FB',
+          fontFamily: 'Montserrat, sans-serif', fontSize: 14,
+          fontWeight: 600, color: '#1E1E1E',
+          padding: '0 12px 0 28px',
+          outline: 'none',
+          transition: 'border-color 200ms',
+        }}
       />
     </div>
   );
@@ -791,8 +803,8 @@ export function CheckoutDrawer({
               </div>
 
               {tipMode === 'manual' && (
-                <div className="merlin-field" style={{ marginBottom: 12 }}>
-                  <label className="merlin-label">Monto</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+                  <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', lineHeight: '20px' }}>Monto</span>
                   <MoneyInput value={tipManual} onChange={setTipManual} placeholder="0" autoFocus />
                 </div>
               )}
@@ -924,8 +936,8 @@ export function CheckoutDrawer({
                   {/* ── Efectivo ── */}
                   {paymentMethod === 'cash' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <div className="merlin-field">
-                        <label className="merlin-label">Monto recibido</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', lineHeight: '20px' }}>Monto recibido</span>
                         <MoneyInput value={cashReceived} onChange={setCashReceived} placeholder={currentAmountToPay.toLocaleString()} autoFocus />
                       </div>
                       <div style={{
@@ -999,8 +1011,8 @@ export function CheckoutDrawer({
                           [<CreditCard size={13} />,     'Tarjeta',       mixCard,     setMixCard],
                           [<ArrowLeftRight size={13} />, 'Transferencia', mixTransfer, setMixTransfer],
                         ] as [React.ReactNode, string, string, (v: string) => void][]).map(([icon, label, value, setter]) => (
-                          <div key={label} className="merlin-field">
-                            <label className="merlin-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{icon} {label}</label>
+                          <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', lineHeight: '20px' }}>{icon} {label}</span>
                             <MoneyInput value={value} onChange={setter} />
                           </div>
                         ))}
@@ -1176,12 +1188,13 @@ export function CheckoutDrawer({
 // ─── Custom person amount row ─────────────────────────────────────────────────
 
 function CustomPersonRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  const [focused, setFocused] = React.useState(false);
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-      <span style={{ fontSize: 13, color: '#606060', fontWeight: 400, fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
       <div style={{ position: 'relative', width: 140, flexShrink: 0 }}>
         <span style={{
-          position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+          position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
           color: '#606060', pointerEvents: 'none', fontSize: 14, fontWeight: 500,
           fontFamily: 'Montserrat, sans-serif',
         }}>$</span>
@@ -1190,8 +1203,19 @@ function CustomPersonRow({ label, value, onChange }: { label: string; value: num
           value={value || ''}
           placeholder="0"
           onChange={e => onChange(parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0)}
-          className="merlin-input"
-          style={{ paddingLeft: 16, paddingRight: 0, textAlign: 'right', fontWeight: 600, height: 36 }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            width: '100%', height: 36, boxSizing: 'border-box',
+            borderRadius: 12,
+            border: focused ? '1.5px solid #121E6C' : '1.5px solid #C7CBE0',
+            background: '#F7F8FB',
+            fontFamily: 'Montserrat, sans-serif', fontSize: 14,
+            fontWeight: 600, color: '#1E1E1E',
+            padding: '0 12px 0 28px', textAlign: 'right',
+            outline: 'none',
+            transition: 'border-color 200ms',
+          }}
         />
       </div>
     </div>
