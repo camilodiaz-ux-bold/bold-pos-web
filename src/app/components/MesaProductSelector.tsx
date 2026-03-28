@@ -10,9 +10,9 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search, LayoutGrid, Plus, ChevronLeft, ChevronRight,
-  Trash2, Receipt, Send, ArrowLeft, Users, Clock,
+  Trash2, Receipt, Send, Users, Clock,
   Utensils, CheckCircle2, RotateCcw, Minus, X, Star,
-  MessageSquare, Pencil,
+  MessageSquare, Pencil, ShoppingBag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
@@ -302,35 +302,6 @@ export function MesaProductSelector({
     ? new Date(table.openedAtTimestamp).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
     : null;
 
-  // ── Estilos del banner según estado de la mesa ─────────────────────────────
-  const bannerStyle = table.status === 'CUENTA_SOLICITADA'
-    ? {
-        bg:         '#FFF3D1',
-        border:     '#FFC217',
-        backColor:  '#A16B00',
-        divider:    '#F0D98A',
-        pillBg:     '#FDE89A',
-        pillBorder: '#FFC217',
-        dotColor:   '#A16B00',
-        nameColor:  '#5C3D00',
-        zoneColor:  '#A16B00',
-        metaColor:  '#8A6200',
-        clockColor: '#A16B00',
-      }
-    : {
-        // OCUPADA (y cualquier otro estado — fallback coral)
-        bg:         '#FEF1F3',
-        border:     '#FCDFE2',
-        backColor:  'var(--coral-100)',
-        divider:    '#FCDFE2',
-        pillBg:     '#FCDFE2',
-        pillBorder: '#F48990',
-        dotColor:   'var(--coral-100)',
-        nameColor:  '#7A0A1C',
-        zoneColor:  '#E4102E',
-        metaColor:  '#C0364A',
-        clockColor: '#E4102E',
-      };
 
   const subtotal   = table.items.reduce((a, i) => a + i.price * i.quantity, 0);
   const tax        = subtotal * 0.19;
@@ -445,43 +416,65 @@ export function MesaProductSelector({
         </div>
       )}
 
-      {/* ══════════ BANNER DE CONTEXTO ═════════════════════════════════════════ */}
+      {/* ══════════ BARRA DE CONTEXTO ══════════════════════════════════════════ */}
       <div
-        className="flex items-center gap-3 px-6 h-11 shrink-0"
-        style={{ backgroundColor: bannerStyle.bg, borderBottom: `1px solid ${bannerStyle.border}` }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          height: 44, padding: '0 16px', flexShrink: 0,
+          background: '#fff', borderBottom: '1px solid #F0F0F0',
+          fontFamily: 'Montserrat, sans-serif',
+        }}
       >
+        {/* ← Volver a Mesas */}
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-xs font-bold hover:opacity-75 transition-opacity whitespace-nowrap"
-          style={{ color: bannerStyle.backColor }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontSize: 13, fontWeight: 500, color: '#121E6C',
+            whiteSpace: 'nowrap', fontFamily: 'Montserrat, sans-serif',
+          }}
         >
-          <ArrowLeft size={14} /> Volver a Mesas
+          <ChevronLeft size={14} /> Volver a Mesas
         </button>
-        <div className="w-px h-4 shrink-0" style={{ backgroundColor: bannerStyle.divider }} />
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium" style={{ color: bannerStyle.metaColor }}>Agregando a</span>
-          <div
-            className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border"
-            style={{ backgroundColor: bannerStyle.pillBg, borderColor: bannerStyle.pillBorder }}
-          >
-            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: bannerStyle.dotColor }} />
-            <span className="text-xs font-semibold" style={{ color: bannerStyle.nameColor }}>Mesa {table.name}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: bannerStyle.zoneColor }}>· {table.zone}</span>
-          </div>
-          {openTimeLabel && (
-            <span className="text-[11px] flex items-center gap-1" style={{ color: bannerStyle.clockColor }}>
-              <Clock size={10} /> {openTimeLabel}
-            </span>
-          )}
+
+        {/* Separador */}
+        <span style={{ color: '#C7CBE0', fontSize: 13, userSelect: 'none' }}>·</span>
+
+        {/* "Agregando a" */}
+        <span style={{ fontSize: 13, fontWeight: 400, color: '#606060' }}>Agregando a</span>
+
+        {/* Badge mesa */}
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: '#FF2947', borderRadius: 4, padding: '2px 8px',
+          }}
+        >
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', flexShrink: 0 }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', fontFamily: 'Montserrat, sans-serif' }}>
+            Mesa {table.name}
+          </span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase' }}>
+            · {table.zone}
+          </span>
         </div>
+
+        {/* Hora */}
+        {openTimeLabel && (
+          <span style={{ fontSize: 12, fontWeight: 400, color: '#606060' }}>{openTimeLabel}</span>
+        )}
+
+        {/* Badge ítems en pedido */}
         {totalItems > 0 && (
-          <div className="ml-auto flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-white border border-orange-200 px-2.5 py-1 rounded-full shadow-sm">
-              <CheckCircle2 size={12} className="text-orange-500" />
-              <span className="text-[11px] font-bold text-orange-700">
-                {totalItems} ítem{totalItems !== 1 ? 's' : ''} en pedido
-              </span>
-            </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5,
+            background: '#FFF0F2', border: '1px solid #FF2947', borderRadius: 10,
+            padding: '1px 8px',
+          }}>
+            <ShoppingBag size={11} color="#FF2947" />
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#FF2947', fontFamily: 'Montserrat, sans-serif' }}>
+              {totalItems} ítem{totalItems !== 1 ? 's' : ''}
+            </span>
           </div>
         )}
       </div>
@@ -702,65 +695,81 @@ export function MesaProductSelector({
                       <div
                         key={product.id}
                         onClick={() => openAddModal(product)}
-                        className={cn(
-                          'bg-white rounded-[var(--radius-12)] border p-2 flex flex-col gap-1.5 transition-all relative cursor-pointer active:scale-[0.97] overflow-hidden',
-                          isFlashing
-                            ? 'border-[var(--feedback-success-100)] shadow-lg shadow-emerald-100 scale-[1.02]'
-                            : 'border-[var(--black-10)] hover:shadow-md hover:border-[var(--blue-100)]',
-                        )}
+                        style={{
+                          borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+                          background: '#fff', position: 'relative',
+                          boxShadow: isFlashing
+                            ? '0 4px 12px rgba(16,185,129,0.20)'
+                            : '0 1px 3px rgba(0,0,0,0.06)',
+                          transition: 'box-shadow 150ms',
+                        }}
+                        onMouseEnter={e => { if (!isFlashing) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'; }}
+                        onMouseLeave={e => { if (!isFlashing) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; }}
                       >
-                        <div className="relative h-[76px] rounded-[var(--radius-12)] overflow-hidden bg-[var(--blue-10)]">
+                        {/* Imagen — 2/3 superiores */}
+                        <div style={{ position: 'relative', height: 76, overflow: 'hidden', background: `${def.color}15` }}>
                           {product.image ? (
                             <ImageWithFallback src={product.image} alt={product.name} className="object-cover w-full h-full" />
                           ) : (
                             <ImagePlaceholderMesa catColor={def.color} />
                           )}
 
-                          {/* Indicador visual "+" */}
-                          <div
-                            className={cn(
-                              'absolute bottom-1.5 right-1.5 rounded-full p-1 shadow-sm border transition-all',
-                              isFlashing
-                                ? 'bg-[var(--feedback-success-150)] border-emerald-500 text-white'
-                                : 'bg-white border-[var(--black-10)] text-[var(--blue-100)]',
-                            )}
-                          >
-                            <Plus size={12} />
-                          </div>
-
-                          {/* Estrella — toggle favorito (touch target independiente) */}
+                          {/* Estrella favorito — círculo blanco con sombra */}
                           <button
                             onClick={(e) => toggleFavorite(product.id, e)}
-                            className="absolute top-1.5 right-1.5 rounded-full p-1 bg-black/20 backdrop-blur-sm hover:bg-black/30 transition-all hover:scale-110 active:scale-95"
+                            style={{
+                              position: 'absolute', top: 6, right: 6,
+                              width: 24, height: 24, borderRadius: '50%',
+                              background: '#fff',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              border: 'none', cursor: 'pointer', transition: 'transform 150ms',
+                            }}
                             title={favoriteIds.has(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                           >
                             <Star
-                              size={11}
-                              className={favoriteIds.has(product.id) ? 'fill-[var(--feedback-warning-100)] text-[var(--feedback-warning-100)]' : 'fill-transparent text-white'}
-                              strokeWidth={favoriteIds.has(product.id) ? 1.5 : 2}
+                              size={12}
+                              strokeWidth={1.5}
+                              style={{
+                                color: favoriteIds.has(product.id) ? '#F59E0B' : '#9CA3AF',
+                                fill: favoriteIds.has(product.id) ? '#F59E0B' : 'none',
+                              }}
                             />
                           </button>
 
+                          {/* Badge cantidad en pedido — esquina inferior derecha de imagen */}
                           {qtyInOrder > 0 && (
-                            <div className="absolute top-1.5 left-1.5 min-w-[18px] h-4 px-1 bg-orange-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                            <div style={{
+                              position: 'absolute', bottom: 5, right: 5,
+                              minWidth: 18, height: 18,
+                              background: '#FF2947', borderRadius: '50%',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 10, fontWeight: 700, color: '#fff',
+                              fontFamily: 'Montserrat, sans-serif',
+                            }}>
                               {qtyInOrder}
                             </div>
                           )}
                         </div>
 
-                        <div>
-                          <p style={{ color: 'var(--blue-100)', fontSize: '11px', fontWeight: 600, lineHeight: '16px' }}>
-                            ${product.price.toLocaleString()}
-                          </p>
-                          <h3 style={{ color: 'var(--black-100)', fontSize: '14px', fontWeight: 600, lineHeight: '20px' }} className="line-clamp-2">
+                        {/* Info inferior */}
+                        <div style={{ padding: 8 }}>
+                          <h3 style={{
+                            fontSize: 13, fontWeight: 600, color: '#1E1E1E',
+                            lineHeight: '18px', fontFamily: 'Montserrat, sans-serif',
+                            display: '-webkit-box', WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                            marginBottom: 2,
+                          }}>
                             {product.name}
                           </h3>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: def.darkColor, fontFamily: 'Montserrat, sans-serif' }}>
+                            ${product.price.toLocaleString()}
+                          </p>
                         </div>
-                        {/* Línea inferior de categoría — color Merlin */}
-                        <div
-                          className="absolute bottom-0 left-0 right-0 h-[3px]"
-                          style={{ backgroundColor: def.lineColor }}
-                        />
+
+                        {/* Línea inferior de categoría */}
+                        <div style={{ height: 3, background: def.lineColor }} />
                       </div>
                     );
                   })}
@@ -809,144 +818,148 @@ export function MesaProductSelector({
         </div>
 
         {/* ── Panel derecho: Pedido Mesa X ────────────────────────────────── */}
-        <div className="w-[400px] bg-white border-l border-[var(--black-10)] flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.02)] shrink-0">
+        <div style={{ width: 380, background: '#fff', borderLeft: '1px solid #F0F0F0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
 
-          <div className="p-6 border-b border-[var(--black-10)] shrink-0">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-[18px] font-bold text-[var(--black-100)]">Pedido Mesa {table.name}</h2>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-xs text-[var(--black-60)]">{table.zone}</span>
-                  <span className="text-xs text-[var(--black-40)]">·</span>
-                  <span className="text-xs text-[var(--black-60)]">Mesa para {table.capacity}</span>
-                  {table.guests != null && (
-                    <>
-                      <span className="text-xs text-[var(--black-40)]">·</span>
-                      <span className="text-xs flex items-center gap-1 text-[var(--black-60)]">
-                        <Users size={11} /> {table.guests} en mesa
-                      </span>
-                    </>
-                  )}
-                  {openTimeLabel && (
-                    <>
-                      <span className="text-[var(--black-10)]">·</span>
-                      <span className="text-xs text-[var(--black-40)] flex items-center gap-1">
-                        <Clock size={11} /> {openTimeLabel}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-              {/* Badge de estado — refleja el status real de la mesa */}
+          {/* Header del panel */}
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid #F0F0F0', flexShrink: 0, fontFamily: 'Montserrat, sans-serif' }}>
+            {/* Fila 1: título + badge estado */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: '#1E1E1E', margin: 0 }}>
+                Pedido Mesa {table.name}
+              </h2>
               {table.status === 'OCUPADA' && (
-                <span
-                  className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap shrink-0"
-                  style={{ backgroundColor: '#FEF1F3', color: 'var(--coral-100)', borderColor: 'var(--coral-100)' }}
-                >
-                  OCUPADA
-                </span>
+                <span style={{
+                  background: '#FFF0F2', border: '1px solid #FF2947', color: '#FF2947',
+                  borderRadius: 4, padding: '2px 6px', fontSize: 11, fontWeight: 700,
+                  whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'Montserrat, sans-serif',
+                }}>OCUPADA</span>
               )}
               {table.status === 'CUENTA_SOLICITADA' && (
-                <span
-                  className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap shrink-0"
-                  style={{ backgroundColor: '#FFF3D1', color: '#A16B00', borderColor: '#FFC217' }}
-                >
-                  CUENTA SOLICITADA
-                </span>
+                <span style={{
+                  background: '#FFF3D1', border: '1px solid #FFC217', color: '#A16B00',
+                  borderRadius: 4, padding: '2px 6px', fontSize: 11, fontWeight: 700,
+                  whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'Montserrat, sans-serif',
+                }}>CUENTA SOLICITADA</span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 mt-4">
-              <button
-                onClick={onBack}
-                className="btn btn-ghost btn--sm flex items-center gap-1.5"
-              >
-                <ArrowLeft size={12} /> Volver al mapa
-              </button>
-            </div>
+            {/* Fila 2: meta en una línea */}
+            <p style={{ fontSize: 12, fontWeight: 400, color: '#606060', margin: '4px 0 0 0', lineHeight: '18px' }}>
+              {[
+                table.zone,
+                `Mesa para ${table.capacity}`,
+                table.guests != null ? `${table.guests} en mesa` : null,
+                openTimeLabel ?? null,
+              ].filter(Boolean).join(' · ')}
+            </p>
 
-            {table.items.length > 0 && isComandaSent && (
-              <div className={cn(
-                'flex items-center gap-1.5 mt-3 px-2.5 py-1.5 rounded-[var(--radius-12)] border text-[11px] font-bold',
-                hasPendingChanges
-                  ? 'bg-[var(--feedback-warning-10)] border-[var(--feedback-warning-10)] text-[var(--feedback-warning-150)]'
-                  : 'bg-[var(--feedback-success-10)] border-[var(--feedback-success-100)] text-[var(--feedback-success-200)]',
-              )}>
-                {hasPendingChanges
-                  ? <><RotateCcw size={11} /> Cambios pendientes de cocina</>
-                  : <><CheckCircle2 size={11} /> Todos los ítems enviados a cocina</>
-                }
-              </div>
-            )}
+            {/* Fila 3: Volver al mapa */}
+            <button
+              onClick={onBack}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                fontSize: 12, fontWeight: 500, color: '#121E6C', marginTop: 6,
+                fontFamily: 'Montserrat, sans-serif',
+              }}
+            >
+              <ChevronLeft size={12} /> Volver al mapa
+            </button>
+
           </div>
 
+          {/* Indicador de estado de comanda — compacto, fuera del header */}
+          {table.items.length > 0 && isComandaSent && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '6px 16px', flexShrink: 0,
+              fontFamily: 'Montserrat, sans-serif',
+              ...(hasPendingChanges
+                ? { background: '#FFFBF0', color: '#B38900' }
+                : { background: '#F0FDF4', color: '#059669' }),
+            }}>
+              {hasPendingChanges
+                ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de envío</span></>
+                : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
+              }
+            </div>
+          )}
+
           {/* Lista de ítems */}
-          <div className="flex-1 overflow-y-auto p-5">
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             {table.items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full gap-4 text-[var(--black-40)] pb-10">
-                <div className="w-16 h-16 rounded-[var(--radius-20)] bg-[var(--blue-10)] flex items-center justify-center">
-                  <Utensils size={28} className="opacity-20" />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16, color: '#C7CBE0', paddingBottom: 40 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: '#F1F2F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Utensils size={24} style={{ opacity: 0.3 }} />
                 </div>
-                <div className="text-center">
-                  <p className="text-[14px] font-semibold text-[var(--black-60)]">Pedido vacío</p>
-                  <p className="text-xs mt-1 text-[var(--black-40)]">Selecciona productos del catálogo</p>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>Pedido vacío</p>
+                  <p style={{ fontSize: 12, color: '#C7CBE0', marginTop: 4, fontFamily: 'Montserrat, sans-serif' }}>Selecciona productos del catálogo</p>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-0.5">
+              <div>
                 {table.items.map(item => (
-                  <div key={item.id} className="py-3 border-b border-[var(--black-10)] last:border-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-semibold text-[var(--black-100)] truncate">{item.name}</p>
-                        <p className="text-xs text-[var(--blue-100)] font-bold mt-0.5">
+                  <div key={item.id} style={{ padding: '10px 16px', borderBottom: '1px solid #F0F0F0', fontFamily: 'Montserrat, sans-serif' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#1E1E1E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+                          {item.name}
+                        </p>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: '#FF2947', marginTop: 2 }}>
                           ${(item.price * item.quantity).toLocaleString()}
                         </p>
 
-                        {/* ── Nota: Estado B (con nota) o Estado A (sin nota) ── */}
+                        {/* Nota */}
                         {item.note ? (
-                          /* Estado B — nota visible, clickeable para editar */
                           <button
                             onClick={() => setModalState({ mode: 'edit', itemId: item.id, itemName: item.name, note: item.note ?? '' })}
-                            className="flex items-center gap-1 mt-1.5 w-full text-left group"
-                            title="Toca para editar la nota"
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                           >
-                            <MessageSquare
-                              size={11}
-                              style={{ color: 'var(--black-60)', flexShrink: 0, marginTop: 1 }}
-                            />
-                            <span
-                              className="truncate group-hover:underline"
-                              style={{ fontSize: 14, color: 'var(--black-60)', lineHeight: '20px' }}
-                            >
+                            <Pencil size={11} style={{ color: '#606060', flexShrink: 0 }} />
+                            <span style={{ fontSize: 11, fontStyle: 'italic', color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>
                               {item.note}
                             </span>
                           </button>
                         ) : (
-                          /* Estado A — link para agregar nota */
                           <button
                             onClick={() => setModalState({ mode: 'edit', itemId: item.id, itemName: item.name, note: '' })}
-                            className="flex items-center gap-1 mt-1.5 transition-opacity hover:opacity-70"
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                           >
-                            <Pencil size={10} style={{ color: 'var(--blue-100)' }} />
-                            <span style={{ fontSize: 13, color: 'var(--blue-100)', fontWeight: 600 }}>
+                            <Pencil size={11} style={{ color: '#606060' }} />
+                            <span style={{ fontSize: 11, fontWeight: 400, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>
                               + Agregar nota
                             </span>
                           </button>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex items-center bg-[var(--blue-10)] rounded-[var(--radius-12)] border border-[var(--black-10)]">
-                          <button onClick={() => updateQty(item.id, -1)} className="p-1.5 text-[var(--black-60)] hover:text-[var(--blue-100)] transition-colors">
-                            <ChevronLeft size={14} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                        {/* Qty controls */}
+                        <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #F0F0F0', borderRadius: 6, height: 28, overflow: 'hidden' }}>
+                          <button
+                            onClick={() => updateQty(item.id, -1)}
+                            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#606060' }}
+                          >
+                            <ChevronLeft size={13} />
                           </button>
-                          <span className="w-6 text-center text-xs font-semibold text-[var(--black-60)]">{item.quantity}</span>
-                          <button onClick={() => updateQty(item.id, 1)} className="p-1.5 text-[var(--black-60)] hover:text-[var(--blue-100)] transition-colors">
-                            <ChevronRight size={14} />
+                          <span style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 600, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQty(item.id, 1)}
+                            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#606060' }}
+                          >
+                            <ChevronRight size={13} />
                           </button>
                         </div>
-                        <button onClick={() => removeItem(item.id)} className="text-[var(--black-40)] hover:text-[var(--coral-100)] transition-colors">
+                        {/* Trash */}
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#C7CBE0', transition: 'color 150ms', marginLeft: 2 }}
+                          onMouseEnter={e => (e.currentTarget.style.color = '#FF2947')}
+                          onMouseLeave={e => (e.currentTarget.style.color = '#C7CBE0')}
+                        >
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -957,51 +970,77 @@ export function MesaProductSelector({
             )}
           </div>
 
-          {/* Footer */}
-          <div className="p-6 border-t border-[var(--black-10)] bg-[var(--blue-10)] flex flex-col gap-4 shrink-0">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between text-[11px] font-semibold text-[var(--black-40)] uppercase tracking-wide">
-                <span>Subtotal</span><span>${subtotal.toLocaleString()}</span>
+          {/* Footer: totales + CTAs */}
+          <div style={{ borderTop: '1px solid #F0F0F0', flexShrink: 0, fontFamily: 'Montserrat, sans-serif' }}>
+            {/* Totales */}
+            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, fontWeight: 400, color: '#606060' }}>Subtotal</span>
+                <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E' }}>${subtotal.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-[11px] font-semibold text-[var(--black-40)] uppercase tracking-wide">
-                <span>IVA 19%</span><span>${Math.round(tax).toLocaleString()}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, fontWeight: 400, color: '#606060' }}>IVA 19%</span>
+                <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E' }}>${Math.round(tax).toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-[24px] font-extrabold text-[var(--black-100)] mt-1 pt-2 border-t border-[var(--black-10)]">
-                <span>TOTAL</span><span>${Math.round(total).toLocaleString()}</span>
+              <div style={{ height: 1, background: '#F0F0F0', margin: '4px 0' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: '#1E1E1E' }}>Total</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#1E1E1E' }}>${Math.round(total).toLocaleString()}</span>
               </div>
             </div>
 
-            {/* Primario: Enviar / Reenviar comanda → abre preview modal */}
+            {/* CTAs */}
             {table.items.length > 0 && (
-              hasPendingChanges ? (
-                <button
-                  onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
-                  className="btn btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  <RotateCcw size={18} /> Reenviar comanda
-                </button>
-              ) : !isComandaSent ? (
-                <button
-                  onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
-                  className="btn btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  <Send size={18} /> Enviar comanda
-                </button>
-              ) : (
-                <div className="w-full py-3 rounded-[var(--radius-12)] border border-[var(--feedback-success-100)] bg-[var(--feedback-success-10)] text-sm font-semibold text-[var(--feedback-success-200)] flex items-center justify-center gap-2">
-                  <CheckCircle2 size={16} /> Comanda enviada
-                </div>
-              )
-            )}
+              <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {hasPendingChanges ? (
+                  <button
+                    onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                    style={{
+                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    <RotateCcw size={16} /> Reenviar comanda
+                  </button>
+                ) : !isComandaSent ? (
+                  <button
+                    onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                    style={{
+                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    <Send size={16} /> Enviar comanda
+                  </button>
+                ) : (
+                  <div style={{
+                    width: '100%', padding: '10px 0', borderRadius: 8,
+                    border: '1px solid #86EFAC', background: '#F0FDF4',
+                    fontSize: 13, fontWeight: 600, color: '#059669',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    fontFamily: 'Montserrat, sans-serif',
+                  }}>
+                    <CheckCircle2 size={15} /> Comanda enviada
+                  </div>
+                )}
 
-            {/* Secundario: Solicitar cuenta */}
-            {table.items.length > 0 && (
-              <button
-                onClick={requestBill}
-                className="btn btn-ghost w-full flex items-center justify-center gap-1.5"
-              >
-                <Receipt size={15} /> Solicitar cuenta
-              </button>
+                {/* Solicitar cuenta — texto coral sin borde */}
+                <button
+                  onClick={requestBill}
+                  style={{
+                    width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 500, color: '#FF2947',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                  }}
+                >
+                  <Receipt size={14} color="#FF2947" /> Solicitar cuenta
+                </button>
+              </div>
             )}
           </div>
         </div>
