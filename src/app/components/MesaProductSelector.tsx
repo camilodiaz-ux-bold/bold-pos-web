@@ -9,7 +9,7 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Search, LayoutGrid, Plus, ChevronLeft, ChevronRight,
+  Search, Plus, ChevronLeft, ChevronRight,
   Trash2, Receipt, Send, Users, Clock,
   Utensils, CheckCircle2, RefreshCw, Minus, X, Star,
   MessageSquare, Pencil, ShoppingBag,
@@ -17,7 +17,6 @@ import {
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 import type { MesaTable } from './MesasView';
 import { CAT_DEFS, CAT_PRODUCTS, ALL_CATALOG_PRODUCTS, FAVORITE_PRODUCTS } from '../data/productCatalog';
 import type { CatalogProduct } from '../data/productCatalog';
@@ -27,24 +26,6 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// ─── Icono Grid 3×3 ──────────────────────────────────────────────────────────
-
-function Grid3Icon({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
-      <rect x="1"  y="1"  width="4" height="4" rx="0.8" fill="currentColor" />
-      <rect x="6"  y="1"  width="4" height="4" rx="0.8" fill="currentColor" />
-      <rect x="11" y="1"  width="4" height="4" rx="0.8" fill="currentColor" />
-      <rect x="1"  y="6"  width="4" height="4" rx="0.8" fill="currentColor" />
-      <rect x="6"  y="6"  width="4" height="4" rx="0.8" fill="currentColor" />
-      <rect x="11" y="6"  width="4" height="4" rx="0.8" fill="currentColor" />
-      <rect x="1"  y="11" width="4" height="4" rx="0.8" fill="currentColor" />
-      <rect x="6"  y="11" width="4" height="4" rx="0.8" fill="currentColor" />
-      <rect x="11" y="11" width="4" height="4" rx="0.8" fill="currentColor" />
-    </svg>
-  );
-}
-
 // ─── Catálogo — usa fuente compartida de 56 productos ────────────────────────
 
 type Product = CatalogProduct & { image: string; category: string };
@@ -52,21 +33,6 @@ type Product = CatalogProduct & { image: string; category: string };
 function toProduct(p: CatalogProduct): Product {
   const def = CAT_DEFS.find(c => c.id === p.catId)!;
   return { ...p, image: p.image ?? '', category: def.name };
-}
-
-// Placeholder gris cuando el producto no tiene imagen
-function ImagePlaceholderMesa({ catColor }: { catColor: string }) {
-  return (
-    <div
-      className="w-full h-full flex items-center justify-center"
-      style={{ backgroundColor: `${catColor}15` }}
-    >
-      <div
-        className="w-8 h-8 rounded-full opacity-30"
-        style={{ backgroundColor: catColor }}
-      />
-    </div>
-  );
 }
 
 // ─── Note chips ───────────────────────────────────────────────────────────────
@@ -99,14 +65,10 @@ export function MesaProductSelector({
   tableId, tables, setTables, onBack, onOpenKitchenPreview,
 }: MesaProductSelectorProps) {
   const [searchQuery,      setSearchQuery]      = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('Favoritos');
-  const [addedFlash,       setAddedFlash]       = useState<number | null>(null);
   const [modalState,       setModalState]       = useState<ModalState>(null);
 
   const { favoriteIds, toggleFavorite } = useFavorites();
 
-  // ── Vista toggle — default: Categorías ────────────────────────────────────
-  const [mesaView,      setMesaView]      = useState<'categories' | 'grid'>('categories');
   const [activeCatMesa, setActiveCatMesa] = useState<string>('favoritos');
 
   // Mesa en vivo desde el estado compartido
@@ -136,21 +98,6 @@ export function MesaProductSelector({
     }
     return base;
   }, [activeCatMesa, searchQuery, isSearchingMesa, favoriteIds]);
-
-  // Productos Vista Grid (filtro por categoría + búsqueda)
-  const filteredProducts = useMemo(() => {
-    const base = selectedCategory === 'Favoritos'
-      ? ALL_CATALOG_PRODUCTS.filter(p => favoriteIds.has(p.id))
-      : ALL_CATALOG_PRODUCTS.filter(p => p.catId === selectedCategory);
-    const sorted = [
-      ...base.filter(p => favoriteIds.has(p.id)),
-      ...base.filter(p => !favoriteIds.has(p.id)),
-    ];
-    return sorted
-      .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      .map(toProduct);
-  },
-  [selectedCategory, searchQuery, favoriteIds]);
 
   // ── Acciones ──────────────────────────────────────────────────────────────
 
@@ -189,8 +136,6 @@ export function MesaProductSelector({
         };
       }),
     );
-    setAddedFlash(product.id);
-    setTimeout(() => setAddedFlash(null), 700);
   };
 
   const updateQty = (itemId: string, delta: number) => {
@@ -485,7 +430,7 @@ export function MesaProductSelector({
         {/* ── Columna izquierda: catálogo de productos ────────────────────── */}
         <div className="flex-1 flex flex-col overflow-hidden bg-[var(--blue-10)]">
 
-          {/* Buscador + Toggle de vista */}
+          {/* Buscador */}
           <div className="flex items-center h-14 px-6 gap-4 bg-white border-b border-[var(--black-10)] shrink-0">
             <div className="relative flex-1 max-w-lg">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--black-40)]" size={18} />
@@ -497,36 +442,12 @@ export function MesaProductSelector({
                 onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
-            {/* Toggle Vista Categorías / Vista Grid */}
-            <div className="ml-auto flex items-center gap-1 p-1 bg-[var(--blue-10)] rounded-[var(--radius-12)]">
-              <button
-                onClick={() => setMesaView('categories')}
-                title="Vista Categorías"
-                className={cn(
-                  'p-1.5 rounded-[var(--radius-8)] transition-all',
-                  mesaView === 'categories' ? 'bg-white shadow-sm text-[var(--blue-100)]' : 'text-[var(--black-40)] hover:text-[var(--black-60)]',
-                )}
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                onClick={() => setMesaView('grid')}
-                title="Vista Grid (con fotos)"
-                className={cn(
-                  'p-1.5 rounded-[var(--radius-8)] transition-all',
-                  mesaView === 'grid' ? 'bg-white shadow-sm text-[var(--blue-100)]' : 'text-[var(--black-40)] hover:text-[var(--black-60)]',
-                )}
-              >
-                <Grid3Icon size={16} />
-              </button>
-            </div>
           </div>
 
           {/* ══════════════════════════════════════════════════════════════════
-              VISTA CATEGORÍAS — dos columnas: sidebar + bloques sin imagen
+              Vista categorías — sidebar + bloques sin imagen
               ══════════════════════════════════════════════════════════════ */}
-          {mesaView === 'categories' && (
-            <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden">
 
               {/* Sidebar categorías — cat-item con color siempre visible */}
               <div className="cat-sidebar w-[200px] shrink-0 flex-col">
@@ -612,8 +533,8 @@ export function MesaProductSelector({
                         <button
                           key={item.id}
                           onClick={() => openAddModal(prod)}
-                          className="relative text-left flex flex-col justify-between p-4 min-h-[110px] rounded-[var(--radius-16)] transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
-                          style={{ backgroundColor: def.lightBg }}
+                          className="relative text-left flex flex-col rounded-[var(--radius-16)] transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
+                          style={{ backgroundColor: def.lightBg, padding: '10px 12px', gap: '4px' }}
                         >
                           {/* Badge cantidad en orden — esquina inferior derecha */}
                           {qty > 0 && (
@@ -652,13 +573,12 @@ export function MesaProductSelector({
 
                           <span
                             className="leading-snug pr-8"
-                            style={{ color: 'var(--black-100)', fontSize: '16px', fontWeight: 600, lineHeight: '24px' }}
+                            style={{ color: 'var(--black-100)', fontSize: '13px', fontWeight: 600 }}
                           >
                             {item.name}
                           </span>
                           <span
-                            className="mt-3 block"
-                            style={{ color: 'var(--black-100)', fontSize: '14px', fontWeight: 600, lineHeight: '18px' }}
+                            style={{ color: 'var(--black-100)', fontSize: '13px', fontWeight: 700 }}
                           >
                             ${item.price.toLocaleString('es-CO')}
                           </span>
@@ -676,149 +596,7 @@ export function MesaProductSelector({
                 )}
               </div>
             </div>
-          )}
-
-          {/* ══════════════════════════════════════════════════════════════════
-              VISTA GRID — con fotos (51 con imagen, 5 placeholder)
-              ══════════════════════════════════════════════════════════════ */}
-          {mesaView === 'grid' && (
-            <div className="flex-1 flex flex-col overflow-hidden p-4 gap-3">
-              <div className="flex-1 overflow-y-auto no-scrollbar">
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-                  {filteredProducts.map(product => {
-                    const isFlashing = addedFlash === product.id;
-                    const inOrder    = table.items.find(i => i.productId === product.id);
-                    const qtyInOrder = inOrder?.quantity ?? 0;
-                    const def        = CAT_DEFS.find(c => c.id === product.catId) ?? CAT_DEFS[0];
-
-                    return (
-                      <div
-                        key={product.id}
-                        onClick={() => openAddModal(product)}
-                        style={{
-                          display: 'flex', flexDirection: 'column', height: 160,
-                          borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
-                          background: '#fff', position: 'relative',
-                          boxShadow: isFlashing
-                            ? '0 4px 12px rgba(16,185,129,0.20)'
-                            : '0 1px 3px rgba(0,0,0,0.06)',
-                          transition: 'box-shadow 150ms',
-                        }}
-                        onMouseEnter={e => { if (!isFlashing) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; }}
-                        onMouseLeave={e => { if (!isFlashing) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; }}
-                      >
-                        {/* Imagen — 2/3 superiores */}
-                        <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden', background: `${def.color}15` }}>
-                          {product.image ? (
-                            <ImageWithFallback src={product.image} alt={product.name} className="object-cover w-full h-full" />
-                          ) : (
-                            <ImagePlaceholderMesa catColor={def.color} />
-                          )}
-
-                          {/* Estrella favorito — círculo blanco con sombra */}
-                          <button
-                            onClick={(e) => toggleFavorite(product.id, e)}
-                            style={{
-                              position: 'absolute', top: 6, right: 6,
-                              width: 24, height: 24, borderRadius: '50%',
-                              background: '#fff',
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              border: 'none', cursor: 'pointer', transition: 'transform 150ms',
-                            }}
-                            title={favoriteIds.has(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                          >
-                            <Star
-                              size={12}
-                              strokeWidth={1.5}
-                              style={{
-                                color: favoriteIds.has(product.id) ? '#F59E0B' : '#9CA3AF',
-                                fill: favoriteIds.has(product.id) ? '#F59E0B' : 'none',
-                              }}
-                            />
-                          </button>
-
-                          {/* Badge cantidad en pedido — esquina inferior derecha de imagen */}
-                          {qtyInOrder > 0 && (
-                            <div style={{
-                              position: 'absolute', bottom: 5, right: 5,
-                              minWidth: 18, height: 18,
-                              background: '#FF2947', borderRadius: '50%',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 10, fontWeight: 700, color: '#fff',
-                              fontFamily: 'Montserrat, sans-serif',
-                            }}>
-                              {qtyInOrder}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Info inferior */}
-                        <div style={{
-                          flexShrink: 0,
-                          padding: '8px 10px 10px 10px',
-                          backgroundColor: 'rgba(255,255,255,0.85)',
-                          borderTop: '1px solid rgba(0,0,0,0.06)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '2px'
-                        }}>
-                          <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#1E1E1E', lineHeight: '1.2', fontFamily: 'Montserrat, sans-serif', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                            {product.name}
-                          </h3>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: def.darkColor, fontFamily: 'Montserrat, sans-serif' }}>
-                            ${product.price.toLocaleString()}
-                          </p>
-                        </div>
-
-                        {/* Línea inferior de categoría */}
-                        <div style={{ height: 3, background: def.lineColor }} />
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {filteredProducts.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-20 text-[var(--black-40)] gap-4">
-                    <Search size={48} className="opacity-20" />
-                    <p className="font-medium">Sin resultados para «{searchQuery}»</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Pills de categorías — solo en Vista Grid */}
-              <div className="flex items-center gap-3 bg-white p-3 rounded-[var(--radius-16)] border border-[var(--black-10)] shadow-sm shrink-0">
-                <div className="flex-1 flex gap-2 overflow-x-auto no-scrollbar py-1">
-                  <button
-                    onClick={() => setSelectedCategory('Favoritos')}
-                    className={cn(
-                      'px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5',
-                      selectedCategory === 'Favoritos'
-                        ? 'bg-[var(--feedback-warning-100)] text-white shadow-lg shadow-amber-500/30'
-                        : 'bg-[var(--blue-10)] text-[var(--black-60)] hover:bg-[var(--feedback-warning-10)] hover:text-[var(--feedback-warning-100)]',
-                    )}
-                  >
-                    <Star size={11} className={selectedCategory === 'Favoritos' ? 'fill-white' : 'fill-[var(--feedback-warning-100)]'} />
-                    Favoritos
-                  </button>
-                  {CAT_DEFS.map(cat => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={cn(
-                        'px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-                        selectedCategory === cat.id ? 'text-white shadow-lg' : 'bg-[var(--blue-10)] text-[var(--black-60)] hover:opacity-80',
-                      )}
-                      style={selectedCategory === cat.id ? { backgroundColor: cat.color } : undefined}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
 
         {/* ── Panel derecho: Pedido Mesa X ────────────────────────────────── */}
         <div style={{ width: 380, background: '#fff', borderLeft: '1px solid #F0F0F0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
