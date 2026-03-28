@@ -696,6 +696,7 @@ export function MesaProductSelector({
                         key={product.id}
                         onClick={() => openAddModal(product)}
                         style={{
+                          display: 'flex', flexDirection: 'column', height: 160,
                           borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
                           background: '#fff', position: 'relative',
                           boxShadow: isFlashing
@@ -707,7 +708,7 @@ export function MesaProductSelector({
                         onMouseLeave={e => { if (!isFlashing) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; }}
                       >
                         {/* Imagen — 2/3 superiores */}
-                        <div style={{ position: 'relative', height: 76, overflow: 'hidden', background: `${def.color}15` }}>
+                        <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden', background: `${def.color}15` }}>
                           {product.image ? (
                             <ImageWithFallback src={product.image} alt={product.name} className="object-cover w-full h-full" />
                           ) : (
@@ -753,7 +754,7 @@ export function MesaProductSelector({
                         </div>
 
                         {/* Info inferior */}
-                        <div style={{ padding: '8px' }}>
+                        <div style={{ flexShrink: 0, padding: '8px 10px' }}>
                           <h3 style={{
                             fontSize: 13, fontWeight: 600, color: '#1E1E1E',
                             lineHeight: '18px', fontFamily: 'Montserrat, sans-serif',
