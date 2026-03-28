@@ -1136,6 +1136,30 @@ function PanelBillBtn({ children, onClick }: { children: React.ReactNode; onClic
   );
 }
 
+function ReenviarLink({ sent, onClick }: { sent: boolean; onClick: () => void }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+        cursor: 'pointer', padding: '6px 0',
+        fontSize: 13, fontWeight: 400, fontFamily: MFONT,
+        color: sent ? '#059669' : hov ? '#121E6C' : '#606060',
+        transition: 'color 150ms',
+        userSelect: 'none',
+      }}
+    >
+      {sent
+        ? <><CheckCircle size={13} color="#059669" /> ✓ Comanda reenviada</>
+        : <><RefreshCw size={13} color={hov ? '#121E6C' : '#606060'} /> Reenviar comanda</>
+      }
+    </div>
+  );
+}
+
 // ─── MesasView ────────────────────────────────────────────────────────────────
 
 export function MesasView() {
@@ -1169,8 +1193,8 @@ export function MesasView() {
   const [editingPriceId,  setEditingPriceId]  = useState<string | null>(null);
   const [editingPriceVal, setEditingPriceVal] = useState<string>('');
 
-  // ── Task 1: Reenviar comanda toast ────────────────────────────────────────
-  const [showReenviarToast, setShowReenviarToast] = useState(false);
+  // ── Task 1: Reenviar comanda inline feedback ──────────────────────────────
+  const [reenviarSent, setReenviarSent] = useState(false);
 
   // ── Task 2: Delete confirmation modal + cancellation notification ─────────
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<TableItem | null>(null);
@@ -1178,7 +1202,9 @@ export function MesasView() {
     tableName: string;
     itemName: string;
     itemQty: number;
+    itemNote?: string;
     timestamp: string;
+    visible: boolean;
   } | null>(null);
 
   // ── Task 3: Item edit modal ───────────────────────────────────────────────
@@ -1402,15 +1428,15 @@ export function MesasView() {
   // ── Task 1: Reenviar comanda (resend all sent items) ────────────────────────
   const handleReenviarComanda = () => {
     if (!selectedTableId || !selectedTable) return;
-    setShowReenviarToast(true);
-    setTimeout(() => setShowReenviarToast(false), 3000);
+    setReenviarSent(true);
+    setTimeout(() => setReenviarSent(false), 2000);
   };
 
   // ── Task 2: Confirm delete with cancellation notification ──────────────────
   const confirmDeleteItem = () => {
     if (!deleteConfirmItem || !selectedTableId || !selectedTable) return;
     const item = deleteConfirmItem;
-    const tableName = selectedTable.name;
+    const tableName = `Mesa ${selectedTable.name} — ${selectedTable.zone}`;
     removeItem(item.id);
     setDeleteConfirmItem(null);
     const now = new Date();
@@ -1419,9 +1445,11 @@ export function MesasView() {
       tableName,
       itemName: item.name,
       itemQty: item.quantity,
+      itemNote: item.note,
       timestamp: timeStr,
+      visible: true,
     });
-    setTimeout(() => setCancelNotification(null), 4000);
+    setTimeout(() => setCancelNotification(null), 5000);
   };
 
   // ── Task 3: Save item edit ─────────────────────────────────────────────────
@@ -2228,38 +2256,90 @@ export function MesasView() {
       )}
 
       {/* ════════════════════════════════════════════════════
-          Task 2: Notificación de cancelación de comanda
+          Task 2: Panel de comanda de cancelación (slide-up)
           ════════════════════════════════════════════════════ */}
+      <style>{`
+        @keyframes cancelSlideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes cancelSlideDown {
+          from { transform: translateY(0);    opacity: 1; }
+          to   { transform: translateY(100%); opacity: 0; }
+        }
+      `}</style>
       {cancelNotification && (
         <div style={{
-          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 300, minWidth: 280, maxWidth: 380,
-          background: '#FFF0F2', borderLeft: '4px solid #FF2947',
-          borderRadius: 8, padding: '12px 16px',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.14)',
-          fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+          position: 'fixed', bottom: 0, right: 0, width: 400, zIndex: 350,
+          animation: 'cancelSlideUp 300ms ease-out forwards',
+          fontFamily: MFONT,
         }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#FF2947', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-                CANCELACIÓN — COCINA
-              </p>
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#1E1E1E', marginBottom: 4 }}>
-                Mesa {cancelNotification.tableName}
-              </p>
-              <p style={{ fontSize: 14, color: '#FF2947', textDecoration: 'line-through', marginBottom: 4 }}>
-                {cancelNotification.itemQty}x {cancelNotification.itemName}
-              </p>
-              <p style={{ fontSize: 11, color: '#606060' }}>
+          <div style={{
+            margin: '0 0 0 0',
+            background: '#fff',
+            borderLeft: '4px solid #FF2947',
+            borderRadius: '8px 8px 0 0',
+            boxShadow: '0 -2px 12px rgba(0,0,0,0.10)',
+            padding: '14px 16px',
+            maxHeight: 200,
+            overflowY: 'auto',
+          }}>
+            {/* Header row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <AlertTriangle size={14} color="#FF2947" />
+                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#FF2947' }}>
+                  CANCELACIÓN — COCINA
+                </span>
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 400, color: '#909090' }}>
                 {cancelNotification.timestamp}
-              </p>
+              </span>
             </div>
-            <button
-              onClick={() => setCancelNotification(null)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: '#606060', flexShrink: 0 }}
-            >
-              <X size={14} />
-            </button>
+
+            {/* Table name */}
+            <p style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E', marginBottom: 6 }}>
+              {cancelNotification.tableName}
+            </p>
+
+            {/* Cancelled item row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{
+                  background: '#FFF0F2', color: '#FF2947', borderRadius: 3,
+                  padding: '1px 5px', fontSize: 11, fontWeight: 700,
+                }}>
+                  {cancelNotification.itemQty}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: '#1E1E1E', textDecoration: 'line-through', textDecorationColor: '#FF2947' }}>
+                  {cancelNotification.itemName}
+                </span>
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#FF2947', letterSpacing: '0.5px' }}>
+                CANCELADO
+              </span>
+            </div>
+
+            {/* Note (if any) */}
+            {cancelNotification.itemNote && (
+              <p style={{ fontSize: 11, fontStyle: 'italic', color: '#606060', marginTop: 4 }}>
+                {cancelNotification.itemNote}
+              </p>
+            )}
+
+            {/* Footer: close */}
+            <div style={{ borderTop: '1px solid #F0F0F0', marginTop: 10, paddingTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setCancelNotification(null)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 11, color: '#606060', fontFamily: MFONT,
+                }}
+              >
+                Cerrar <X size={12} />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2736,66 +2816,29 @@ export function MesasView() {
                 )}
 
                 {/* ── OCUPADA ── */}
-                {selectedTable.status === 'OCUPADA' && (
+                {selectedTable.status === 'OCUPADA' && selectedTable.items.length > 0 && (
                   <>
-                    {selectedTable.items.length > 0 && (
-                      hasPendingChanges ? (
-                        <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
-                          <RotateCcw size={18} color="#fff" /> Reenviar comanda
-                        </PanelCoralBtn>
-                      ) : !isComandaSent ? (
-                        <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
-                          <Send size={18} color="#fff" /> Enviar comanda
-                        </PanelCoralBtn>
-                      ) : (
-                        <>
-                          <div style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            padding: '12px', borderRadius: 8,
-                            border: '1px solid var(--feedback-success-100)',
-                            background: 'var(--feedback-success-10)',
-                            fontSize: 13, fontWeight: 600, color: 'var(--feedback-success-150)',
-                            fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                          }}>
-                            <CheckCircle2 size={15} /> Comanda enviada
-                          </div>
-                          {/* Task 1: Reenviar comanda button — only when at least 1 item is sent */}
-                          {selectedTable.items.some(i => i.isSent) && (
-                            <>
-                              <button
-                                onClick={handleReenviarComanda}
-                                style={{
-                                  height: 36, borderRadius: 8, border: '1.5px solid #C7CBE0',
-                                  background: '#fff', color: '#606060', fontSize: 13, fontWeight: 500,
-                                  width: '100%', display: 'flex', alignItems: 'center',
-                                  justifyContent: 'center', gap: 6, cursor: 'pointer',
-                                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                                }}
-                              >
-                                <RefreshCw size={14} /> Reenviar comanda
-                              </button>
-                              {/* Task 1: Green toast */}
-                              {showReenviarToast && (
-                                <div style={{
-                                  display: 'flex', alignItems: 'center', gap: 6,
-                                  padding: '10px 14px', borderRadius: 8,
-                                  background: 'var(--feedback-success-10)',
-                                  border: '1px solid var(--feedback-success-100)',
-                                  fontSize: 13, fontWeight: 600, color: 'var(--feedback-success-150)',
-                                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                                }}>
-                                  <CheckCircle size={14} /> Comanda reenviada a cocina
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </>
-                      )
+                    {/* Fila 1: Enviar / Reenviar comanda (coral) — solo si hay ítems nuevos */}
+                    {(hasPendingChanges || !isComandaSent) && (
+                      <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
+                        {hasPendingChanges
+                          ? <><RotateCcw size={18} color="#fff" /> Reenviar comanda</>
+                          : <><Send size={18} color="#fff" /> Enviar comanda</>
+                        }
+                      </PanelCoralBtn>
                     )}
-                    {selectedTable.items.length > 0 && (
-                      <PanelBillBtn onClick={requestBill}>
-                        <Receipt size={18} color="#1E1E1E" /> Solicitar cuenta
-                      </PanelBillBtn>
+
+                    {/* Fila 2: Solicitar cuenta (outline) */}
+                    <PanelBillBtn onClick={requestBill}>
+                      <Receipt size={16} color="#1E1E1E" /> Solicitar cuenta
+                    </PanelBillBtn>
+
+                    {/* Fila 3: Reenviar comanda — link de texto, solo cuando ya fue enviada */}
+                    {isComandaSent && selectedTable.items.some(i => i.isSent) && (
+                      <ReenviarLink
+                        sent={reenviarSent}
+                        onClick={handleReenviarComanda}
+                      />
                     )}
                   </>
                 )}
