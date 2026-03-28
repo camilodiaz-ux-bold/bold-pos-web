@@ -7,7 +7,7 @@ import {
   Trash2, MapPin, Receipt, ArrowLeftRight,
   CheckCircle2, Minus, RotateCcw, Pencil, AlertTriangle,
   MessageSquare, Timer, Printer, ZoomIn, ZoomOut, Maximize2, Info,
-  LayoutGrid, Map, RefreshCw, CheckCircle,
+  LayoutGrid, Map, RefreshCw, CheckCircle, DollarSign,
 } from 'lucide-react';
 import { MesasGridView } from './MesasGridView';
 import { toast } from 'sonner';
@@ -1166,17 +1166,17 @@ function SolicitarLink({ onClick }: { onClick: () => void }) {
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
         cursor: 'pointer', padding: '6px 0',
-        fontSize: 13, fontWeight: 400, fontFamily: MFONT,
-        color: hov ? '#121E6C' : '#606060',
+        fontSize: 13, fontWeight: 500, fontFamily: MFONT,
+        color: hov ? '#D91E34' : '#FF2947',
         transition: 'color 150ms', userSelect: 'none',
       }}
     >
-      <Receipt size={13} color={hov ? '#121E6C' : '#606060'} /> Solicitar cuenta
+      <Receipt size={13} color={hov ? '#D91E34' : '#FF2947'} /> Solicitar cuenta
     </div>
   );
 }
 
-function ReenviarLink({ sent, onClick }: { sent: boolean; onClick: () => void }) {
+function ReenviarLink({ onClick }: { onClick: () => void }) {
   const [hov, setHov] = React.useState(false);
   return (
     <div
@@ -1186,16 +1186,14 @@ function ReenviarLink({ sent, onClick }: { sent: boolean; onClick: () => void })
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
         cursor: 'pointer', padding: '6px 0',
-        fontSize: 13, fontWeight: 400, fontFamily: MFONT,
-        color: sent ? '#059669' : hov ? '#121E6C' : '#606060',
+        fontSize: 13, fontWeight: 500, fontFamily: MFONT,
+        color: hov ? '#D91E34' : '#FF2947',
         transition: 'color 150ms',
         userSelect: 'none',
       }}
     >
-      {sent
-        ? <><CheckCircle size={13} color="#059669" /> ✓ Comanda reenviada</>
-        : <><RefreshCw size={13} color={hov ? '#121E6C' : '#606060'} /> Reenviar comanda</>
-      }
+      <><RefreshCw size={13} color={hov ? '#D91E34' : '#FF2947'} /> Reenviar comanda</>
+
     </div>
   );
 }
@@ -1233,19 +1231,16 @@ export function MesasView() {
   const [editingPriceId,  setEditingPriceId]  = useState<string | null>(null);
   const [editingPriceVal, setEditingPriceVal] = useState<string>('');
 
-  // ── Task 1: Reenviar comanda inline feedback ──────────────────────────────
-  const [reenviarSent, setReenviarSent] = useState(false);
+  // ── Reenviar comanda modal ────────────────────────────────────────────────
+  const [showReenviarModal, setShowReenviarModal] = useState(false);
 
-  // ── Task 2: Delete confirmation modal + cancellation notification ─────────
+  // ── Delete confirmation modal + cancellation kitchen preview ──────────────
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<TableItem | null>(null);
-  const [cancelNotification, setCancelNotification] = useState<{
-    tableName: string;
-    itemName: string;
-    itemQty: number;
-    itemNote?: string;
-    timestamp: string;
-    visible: boolean;
-  } | null>(null);
+  const [cancelKitchenItem, setCancelKitchenItem] = useState<TableItem | null>(null);
+
+  // ── Inline note editing ───────────────────────────────────────────────────
+  const [inlineNoteItemId, setInlineNoteItemId] = useState<string | null>(null);
+  const [inlineNoteValue, setInlineNoteValue] = useState<string>('');
 
   // ── Task 3: Item edit modal ───────────────────────────────────────────────
   const [editItemTarget, setEditItemTarget] = useState<TableItem | null>(null);
@@ -1465,31 +1460,19 @@ export function MesasView() {
     );
   };
 
-  // ── Task 1: Reenviar comanda (resend all sent items) ────────────────────────
+  // ── Reenviar comanda: abre modal de preview ───────────────────────────────
   const handleReenviarComanda = () => {
     if (!selectedTableId || !selectedTable) return;
-    setReenviarSent(true);
-    setTimeout(() => setReenviarSent(false), 2000);
+    setShowReenviarModal(true);
   };
 
-  // ── Task 2: Confirm delete with cancellation notification ──────────────────
+  // ── Confirm delete: abre modal de preview de cancelación ─────────────────
   const confirmDeleteItem = () => {
     if (!deleteConfirmItem || !selectedTableId || !selectedTable) return;
     const item = deleteConfirmItem;
-    const tableName = `Mesa ${selectedTable.name} — ${selectedTable.zone}`;
     removeItem(item.id);
     setDeleteConfirmItem(null);
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-    setCancelNotification({
-      tableName,
-      itemName: item.name,
-      itemQty: item.quantity,
-      itemNote: item.note,
-      timestamp: timeStr,
-      visible: true,
-    });
-    setTimeout(() => setCancelNotification(null), 5000);
+    setCancelKitchenItem(item);
   };
 
   // ── Task 3: Save item edit ─────────────────────────────────────────────────
@@ -2296,93 +2279,49 @@ export function MesasView() {
       )}
 
       {/* ════════════════════════════════════════════════════
-          Task 2: Panel de comanda de cancelación (slide-up)
+          Modal de reenviar comanda
           ════════════════════════════════════════════════════ */}
-      <style>{`
-        @keyframes cancelSlideUp {
-          from { transform: translateY(100%); opacity: 0; }
-          to   { transform: translateY(0);    opacity: 1; }
-        }
-        @keyframes cancelSlideDown {
-          from { transform: translateY(0);    opacity: 1; }
-          to   { transform: translateY(100%); opacity: 0; }
-        }
-      `}</style>
-      {cancelNotification && (
-        <div style={{
-          position: 'fixed', bottom: 0, right: 0, width: 400, zIndex: 350,
-          animation: 'cancelSlideUp 300ms ease-out forwards',
-          fontFamily: MFONT,
-        }}>
-          <div style={{
-            margin: '0 0 0 0',
-            background: '#fff',
-            borderLeft: '4px solid #FF2947',
-            borderRadius: '8px 8px 0 0',
-            boxShadow: '0 -2px 12px rgba(0,0,0,0.10)',
-            padding: '14px 16px',
-            maxHeight: 200,
-            overflowY: 'auto',
-          }}>
-            {/* Header row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <AlertTriangle size={14} color="#FF2947" />
-                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#FF2947' }}>
-                  CANCELACIÓN — COCINA
-                </span>
-              </div>
-              <span style={{ fontSize: 10, fontWeight: 400, color: '#909090' }}>
-                {cancelNotification.timestamp}
-              </span>
-            </div>
-
-            {/* Table name */}
-            <p style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E', marginBottom: 6 }}>
-              {cancelNotification.tableName}
-            </p>
-
-            {/* Cancelled item row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{
-                  background: '#FFF0F2', color: '#FF2947', borderRadius: 3,
-                  padding: '1px 5px', fontSize: 11, fontWeight: 700,
-                }}>
-                  {cancelNotification.itemQty}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: '#1E1E1E', textDecoration: 'line-through', textDecorationColor: '#FF2947' }}>
-                  {cancelNotification.itemName}
-                </span>
-              </div>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#FF2947', letterSpacing: '0.5px' }}>
-                CANCELADO
-              </span>
-            </div>
-
-            {/* Note (if any) */}
-            {cancelNotification.itemNote && (
-              <p style={{ fontSize: 11, fontStyle: 'italic', color: '#606060', marginTop: 4 }}>
-                {cancelNotification.itemNote}
-              </p>
-            )}
-
-            {/* Footer: close */}
-            <div style={{ borderTop: '1px solid #F0F0F0', marginTop: 10, paddingTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setCancelNotification(null)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 11, color: '#606060', fontFamily: MFONT,
-                }}
-              >
-                Cerrar <X size={12} />
-              </button>
-            </div>
-          </div>
-        </div>
+      {showReenviarModal && selectedTable && (
+        <KitchenTicketPreviewModal
+          headerLabel="Mesa"
+          headerValue={selectedTable.name}
+          showPersonas
+          guests={selectedTable.guests}
+          staffLabel="Mesero"
+          items={selectedTable.items as TicketItem[]}
+          firstComandaSentAt={selectedTable.firstComandaSentAt}
+          isResend
+          title="Reenviar comanda a cocina"
+          actionLabel="Reenviar e imprimir"
+          onCancel={() => setShowReenviarModal(false)}
+          onConfirm={() => {
+            sendComanda();
+            setShowReenviarModal(false);
+          }}
+        />
       )}
+
+      {/* ════════════════════════════════════════════════════
+          Modal de cancelación de ítem a cocina
+          ════════════════════════════════════════════════════ */}
+      {cancelKitchenItem && selectedTable && (
+        <KitchenTicketPreviewModal
+          headerLabel="Mesa"
+          headerValue={selectedTable.name}
+          showPersonas={false}
+          staffLabel="Mesero"
+          items={[{ ...cancelKitchenItem, name: `CANCELAR: ${cancelKitchenItem.name}`, isSent: false }] as TicketItem[]}
+          title="Cancelación — Cocina"
+          subtitle="Se enviará la siguiente comanda de cancelación a cocina"
+          actionLabel="Enviar cancelación"
+          onCancel={() => setCancelKitchenItem(null)}
+          onConfirm={() => {
+            setCancelKitchenItem(null);
+            toast.success(`Cancelación enviada a cocina — ${cancelKitchenItem.name}`);
+          }}
+        />
+      )}
+
 
       {/* ════════════════════════════════════════════════════
           Task 3: Modal de edición de ítem
@@ -2734,38 +2673,89 @@ export function MesasView() {
                           className="panel-item"
                           style={{ position: 'relative' }}
                         >
-                          {/* Task 3 & 4: Clickable name+price area with hover */}
+                          {/* Clickable name+price area with hover + inline note */}
                           {selectedTable.status === 'OCUPADA' ? (
-                            <div
-                              style={{
-                                flex: 1, minWidth: 0, cursor: 'pointer',
-                                borderRadius: 6,
-                                background: hoveredItemId === item.id ? '#F8F8F8' : 'transparent',
-                                transition: 'background 150ms',
-                                padding: '2px 4px',
-                                margin: '-2px -4px',
-                              }}
-                              onMouseEnter={() => setHoveredItemId(item.id)}
-                              onMouseLeave={() => setHoveredItemId(null)}
-                              onClick={() => {
-                                setEditItemTarget(item);
-                                setEditItemQty(item.quantity);
-                                setEditItemPrice(item.price);
-                                setEditItemDiscount('0');
-                                setEditItemRef(item.note ?? '');
-                              }}
-                            >
-                              <p className="panel-item-name">{item.name}</p>
-                              <p style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                                ${(item.price * item.quantity).toLocaleString()}
-                              </p>
-                              {item.note && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                                  <MessageSquare size={11} style={{ color: 'var(--black-40)', flexShrink: 0 }} />
-                                  <span style={{ fontSize: 12, color: 'var(--black-60)', lineHeight: '18px', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                                    {item.note}
-                                  </span>
-                                </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div
+                                style={{
+                                  cursor: 'pointer',
+                                  borderRadius: 6,
+                                  background: hoveredItemId === item.id ? '#F8F8F8' : 'transparent',
+                                  transition: 'background 150ms',
+                                  padding: '2px 4px',
+                                  margin: '-2px -4px',
+                                }}
+                                onMouseEnter={() => setHoveredItemId(item.id)}
+                                onMouseLeave={() => setHoveredItemId(null)}
+                                onClick={() => {
+                                  setEditItemTarget(item);
+                                  setEditItemQty(item.quantity);
+                                  setEditItemPrice(item.price);
+                                  setEditItemDiscount('0');
+                                  setEditItemRef(item.note ?? '');
+                                }}
+                              >
+                                <p className="panel-item-name">{item.name}</p>
+                                <p style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                  ${(item.price * item.quantity).toLocaleString()}
+                                </p>
+                              </div>
+                              {/* Nota inline */}
+                              {inlineNoteItemId === item.id ? (
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  value={inlineNoteValue}
+                                  placeholder="Escribe una nota para cocina..."
+                                  onChange={e => setInlineNoteValue(e.target.value)}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      updateItemNote(item.id, inlineNoteValue.trim());
+                                      setInlineNoteItemId(null);
+                                    } else if (e.key === 'Escape') {
+                                      setInlineNoteItemId(null);
+                                    }
+                                  }}
+                                  onBlur={() => {
+                                    updateItemNote(item.id, inlineNoteValue.trim());
+                                    setInlineNoteItemId(null);
+                                  }}
+                                  style={{
+                                    marginTop: 4, width: '100%',
+                                    background: 'transparent', border: 'none',
+                                    borderBottom: '2px solid #121E6C',
+                                    outline: 'none', fontSize: 13,
+                                    color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                                    padding: '2px 0 3px 0',
+                                  }}
+                                />
+                              ) : (
+                                <>
+                                  {item.note && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                                      <MessageSquare size={11} style={{ color: 'var(--black-40)', flexShrink: 0 }} />
+                                      <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--black-60)', lineHeight: '18px', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                        {item.note}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div
+                                    style={{
+                                      display: 'flex', alignItems: 'center', gap: 4, marginTop: 4,
+                                      cursor: 'pointer', userSelect: 'none',
+                                    }}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      setInlineNoteItemId(item.id);
+                                      setInlineNoteValue(item.note ?? '');
+                                    }}
+                                  >
+                                    <Pencil size={12} color="#606060" />
+                                    <span style={{ fontSize: 12, fontWeight: 400, color: '#606060', textDecoration: 'underline', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                      {item.note ? 'Editar nota' : 'Agregar nota'}
+                                    </span>
+                                  </div>
+                                </>
                               )}
                             </div>
                           ) : (
@@ -2850,13 +2840,13 @@ export function MesasView() {
                         <SolicitarLink onClick={requestBill} />
                       </>
                     ) : (
-                      /* Estado B: comanda ya enviada, sin cambios → Solicitar cuenta (outline) + link Reenviar */
+                      /* Estado B: comanda ya enviada, sin cambios → Solicitar cuenta (coral) + link Reenviar */
                       <>
-                        <PanelBillBtn onClick={requestBill}>
-                          <Receipt size={16} color="#1E1E1E" /> Solicitar cuenta
-                        </PanelBillBtn>
+                        <PanelCoralBtn onClick={requestBill}>
+                          <Receipt size={16} color="#fff" /> Solicitar cuenta
+                        </PanelCoralBtn>
                         {selectedTable.items.some(i => i.isSent) && (
-                          <ReenviarLink sent={reenviarSent} onClick={handleReenviarComanda} />
+                          <ReenviarLink onClick={handleReenviarComanda} />
                         )}
                       </>
                     )}
@@ -2866,9 +2856,12 @@ export function MesasView() {
                 {/* ── CUENTA_SOLICITADA ── */}
                 {selectedTable.status === 'CUENTA_SOLICITADA' && (
                   <>
-                    <button onClick={() => setShowCheckout(true)} className="btn btn-primary btn-primary--full" style={{ justifyContent: 'center', fontSize: 15, fontWeight: 700 }}>
-                      Cobrar mesa
-                    </button>
+                    <PanelCoralBtn onClick={() => setShowCheckout(true)}>
+                      <DollarSign size={16} color="#fff" /> Cobrar mesa
+                    </PanelCoralBtn>
+                    {selectedTable.items.some(i => i.isSent) && (
+                      <ReenviarLink onClick={handleReenviarComanda} />
+                    )}
                   </>
                 )}
 

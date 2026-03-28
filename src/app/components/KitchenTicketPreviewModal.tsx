@@ -44,6 +44,12 @@ export interface KitchenTicketPreviewModalProps {
   /** Timestamp del primer envío de comanda (para mostrar en reenvío) */
   firstComandaSentAt?: number;
   isResend?: boolean;
+  /** Override del título del modal (default basado en isResend) */
+  title?: string;
+  /** Override del subtítulo (default basado en isResend) */
+  subtitle?: string;
+  /** Override del label del botón de acción (default "Enviar e imprimir") */
+  actionLabel?: string;
   onCancel:  () => void;
   onConfirm: () => void;
 }
@@ -129,6 +135,9 @@ export function KitchenTicketPreviewModal({
   items,
   firstComandaSentAt,
   isResend     = false,
+  title,
+  subtitle,
+  actionLabel,
   onCancel,
   onConfirm,
 }: KitchenTicketPreviewModalProps) {
@@ -174,7 +183,7 @@ export function KitchenTicketPreviewModal({
         {/* ── Header ── */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3 shrink-0">
           <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--black-100)' }}>
-            {isResend ? 'Reenviar comanda a cocina' : 'Enviar comanda a cocina'}
+            {title ?? (isResend ? 'Reenviar comanda a cocina' : 'Enviar comanda a cocina')}
           </h2>
           <button
             onClick={onCancel}
@@ -186,9 +195,9 @@ export function KitchenTicketPreviewModal({
 
         {/* ── Subtítulo ── */}
         <p className="px-6 pb-5 shrink-0" style={{ fontSize: 14, color: 'var(--black-60)' }}>
-          {isResend
+          {subtitle ?? (isResend
             ? 'Se imprimirán solo los productos nuevos o modificados'
-            : 'Se imprimirá el siguiente ticket en cocina'}
+            : 'Se imprimirá el siguiente ticket en cocina')}
         </p>
 
         {/* ── Preview del ticket ── */}
@@ -363,7 +372,7 @@ export function KitchenTicketPreviewModal({
           </button>
           <button onClick={onConfirm} className="btn btn-primary flex-1 flex items-center justify-center gap-2">
             <Printer size={15} />
-            Enviar e imprimir
+            {actionLabel ?? 'Enviar e imprimir'}
           </button>
         </div>
       </div>
