@@ -7,7 +7,7 @@ import {
   Trash2, MapPin, Receipt, ArrowLeftRight,
   CheckCircle2, Minus, RotateCcw, Pencil, AlertTriangle,
   MessageSquare, Timer, Printer, ZoomIn, ZoomOut, Maximize2, Info,
-  LayoutGrid, Map,
+  LayoutGrid, Map, RefreshCw, CheckCircle,
 } from 'lucide-react';
 import { MesasGridView } from './MesasGridView';
 import { toast } from 'sonner';
@@ -1169,6 +1169,28 @@ export function MesasView() {
   const [editingPriceId,  setEditingPriceId]  = useState<string | null>(null);
   const [editingPriceVal, setEditingPriceVal] = useState<string>('');
 
+  // ── Task 1: Reenviar comanda toast ────────────────────────────────────────
+  const [showReenviarToast, setShowReenviarToast] = useState(false);
+
+  // ── Task 2: Delete confirmation modal + cancellation notification ─────────
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<TableItem | null>(null);
+  const [cancelNotification, setCancelNotification] = useState<{
+    tableName: string;
+    itemName: string;
+    itemQty: number;
+    timestamp: string;
+  } | null>(null);
+
+  // ── Task 3: Item edit modal ───────────────────────────────────────────────
+  const [editItemTarget, setEditItemTarget] = useState<TableItem | null>(null);
+  const [editItemQty, setEditItemQty]       = useState<number>(1);
+  const [editItemDiscount, setEditItemDiscount] = useState<string>('0');
+  const [editItemPrice, setEditItemPrice]   = useState<number>(0);
+  const [editItemRef, setEditItemRef]       = useState<string>('');
+
+  // ── Task 4: Hovered item row id ───────────────────────────────────────────
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+
   // ── Viewport: zoom + pan ──────────────────────────────────────────────────
   const ZOOM_STEPS = [0.75, 1, 1.25] as const;
   const [zoom, setZoom] = useState(1);
@@ -1375,6 +1397,52 @@ export function MesasView() {
         },
       ),
     );
+  };
+
+  // ── Task 1: Reenviar comanda (resend all sent items) ────────────────────────
+  const handleReenviarComanda = () => {
+    if (!selectedTableId || !selectedTable) return;
+    setShowReenviarToast(true);
+    setTimeout(() => setShowReenviarToast(false), 3000);
+  };
+
+  // ── Task 2: Confirm delete with cancellation notification ──────────────────
+  const confirmDeleteItem = () => {
+    if (!deleteConfirmItem || !selectedTableId || !selectedTable) return;
+    const item = deleteConfirmItem;
+    const tableName = selectedTable.name;
+    removeItem(item.id);
+    setDeleteConfirmItem(null);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    setCancelNotification({
+      tableName,
+      itemName: item.name,
+      itemQty: item.quantity,
+      timestamp: timeStr,
+    });
+    setTimeout(() => setCancelNotification(null), 4000);
+  };
+
+  // ── Task 3: Save item edit ─────────────────────────────────────────────────
+  const saveItemEdit = () => {
+    if (!editItemTarget || !selectedTableId) return;
+    const itemId = editItemTarget.id;
+    setTables(prev =>
+      prev.map(t => {
+        if (t.id !== selectedTableId) return t;
+        return {
+          ...t,
+          items: t.items.map(i =>
+            i.id === itemId
+              ? { ...i, quantity: editItemQty, price: editItemPrice, note: editItemRef || i.note }
+              : i,
+          ),
+          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+        };
+      }),
+    );
+    setEditItemTarget(null);
   };
 
   const updateItemPrice = (itemId: string, newPrice: number) => {
@@ -2106,6 +2174,260 @@ export function MesasView() {
         />
       )}
 
+      {/* ════════════════════════════════════════════════════
+          Task 2: Modal de confirmación de eliminación de ítem
+          ════════════════════════════════════════════════════ */}
+      {deleteConfirmItem && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        }}>
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }}
+            onClick={() => setDeleteConfirmItem(null)}
+          />
+          <div style={{
+            position: 'relative', zIndex: 1,
+            background: '#fff', borderRadius: 16, padding: 24,
+            maxWidth: 380, width: '100%',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+          }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1E1E1E', marginBottom: 10 }}>
+              Eliminar ítem
+            </h3>
+            <p style={{ fontSize: 14, fontWeight: 400, color: '#606060', marginBottom: 24, lineHeight: 1.5 }}>
+              ¿Confirmar eliminación de <strong>{deleteConfirmItem.name}</strong>? Se enviará una comanda de cancelación a cocina.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setDeleteConfirmItem(null)}
+                style={{
+                  flex: 1, height: 40, borderRadius: 8,
+                  border: '1.5px solid #C7CBE0', background: '#fff',
+                  fontSize: 14, fontWeight: 500, color: '#606060', cursor: 'pointer',
+                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteItem}
+                style={{
+                  flex: 1, height: 40, borderRadius: 8,
+                  border: 'none', background: '#FF2947',
+                  fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer',
+                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                }}
+              >
+                Eliminar y notificar cocina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════
+          Task 2: Notificación de cancelación de comanda
+          ════════════════════════════════════════════════════ */}
+      {cancelNotification && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 300, minWidth: 280, maxWidth: 380,
+          background: '#FFF0F2', borderLeft: '4px solid #FF2947',
+          borderRadius: 8, padding: '12px 16px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.14)',
+          fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#FF2947', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                CANCELACIÓN — COCINA
+              </p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#1E1E1E', marginBottom: 4 }}>
+                Mesa {cancelNotification.tableName}
+              </p>
+              <p style={{ fontSize: 14, color: '#FF2947', textDecoration: 'line-through', marginBottom: 4 }}>
+                {cancelNotification.itemQty}x {cancelNotification.itemName}
+              </p>
+              <p style={{ fontSize: 11, color: '#606060' }}>
+                {cancelNotification.timestamp}
+              </p>
+            </div>
+            <button
+              onClick={() => setCancelNotification(null)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: '#606060', flexShrink: 0 }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════
+          Task 3: Modal de edición de ítem
+          ════════════════════════════════════════════════════ */}
+      {editItemTarget && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        }}>
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }}
+            onClick={() => setEditItemTarget(null)}
+          />
+          <div style={{
+            position: 'relative', zIndex: 1,
+            background: '#fff', borderRadius: 16, padding: 20,
+            maxWidth: 420, width: '100%',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.16)',
+            fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+              <button
+                onClick={() => setEditItemTarget(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#606060', flexShrink: 0 }}
+              >
+                <X size={18} />
+              </button>
+              <h3 style={{
+                flex: 1, textAlign: 'center',
+                fontSize: 17, fontWeight: 700, color: '#121E6C',
+                fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+              }}>
+                {editItemTarget.name}
+              </h3>
+              <div style={{ width: 26 }} />
+            </div>
+
+            {/* Form fields */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Cantidad */}
+              <div>
+                <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
+                  Cantidad
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={editItemQty}
+                  onChange={e => setEditItemQty(Math.max(1, parseInt(e.target.value) || 1))}
+                  style={{
+                    width: '100%', height: 40, borderRadius: 12,
+                    border: '1.5px solid #C7CBE0', background: '#F7F8FB',
+                    fontSize: 14, padding: '0 12px', outline: 'none',
+                    boxSizing: 'border-box', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                    transition: 'border-color 200ms',
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
+                />
+              </div>
+
+              {/* Descuento por ítem */}
+              <div>
+                <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
+                  Descuento por ítem
+                </label>
+                <select
+                  value={editItemDiscount}
+                  onChange={e => setEditItemDiscount(e.target.value)}
+                  style={{
+                    width: '100%', height: 40, borderRadius: 12,
+                    border: '1.5px solid #C7CBE0', background: '#F7F8FB',
+                    fontSize: 14, padding: '0 12px', outline: 'none',
+                    boxSizing: 'border-box', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                    transition: 'border-color 200ms', cursor: 'pointer',
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
+                >
+                  <option value="0">Sin descuento</option>
+                  <option value="5">5%</option>
+                  <option value="10">10%</option>
+                  <option value="15">15%</option>
+                  <option value="20">20%</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+              </div>
+
+              {/* Precio total */}
+              <div>
+                <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
+                  Precio total
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={editItemPrice}
+                  onChange={e => setEditItemPrice(Math.max(0, parseFloat(e.target.value) || 0))}
+                  style={{
+                    width: '100%', height: 40, borderRadius: 12,
+                    border: '1.5px solid #C7CBE0', background: '#F7F8FB',
+                    fontSize: 14, padding: '0 12px', outline: 'none',
+                    boxSizing: 'border-box', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                    transition: 'border-color 200ms',
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
+                />
+              </div>
+
+              {/* Referencia */}
+              <div>
+                <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
+                  Referencia
+                </label>
+                <textarea
+                  value={editItemRef}
+                  onChange={e => setEditItemRef(e.target.value)}
+                  placeholder="Ingresa una referencia"
+                  style={{
+                    width: '100%', height: 80, borderRadius: 12,
+                    border: '1.5px solid #C7CBE0', background: '#F7F8FB',
+                    fontSize: 14, padding: '8px 12px', outline: 'none',
+                    boxSizing: 'border-box', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                    transition: 'border-color 200ms', resize: 'none',
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
+                />
+              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <button
+                onClick={() => {
+                  setEditItemTarget(null);
+                  setDeleteConfirmItem(editItemTarget);
+                }}
+                style={{
+                  flex: 1, height: 44, borderRadius: 20,
+                  border: '1.5px solid #FF2947', color: '#FF2947',
+                  background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                }}
+              >
+                Eliminar de la factura
+              </button>
+              <button
+                onClick={saveItemEdit}
+                style={{
+                  flex: 1, height: 44, borderRadius: 20,
+                  border: 'none', background: '#FF2947',
+                  color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                }}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ════════════════════════════════════════════���═══════
           Columna derecha: Panel detalle de mesa
           ════════════════════════════════════════════════════ */}
@@ -2304,89 +2626,79 @@ export function MesasView() {
                   ) : (
                     <div style={{ padding: '0 24px' }}>
                       {selectedTable.items.map(item => (
-                        <div key={item.id} className="panel-item">
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p className="panel-item-name">{item.name}</p>
-                            {editingPriceId === item.id ? (
-                              <input
-                                type="number"
-                                autoFocus
-                                value={editingPriceVal}
-                                onChange={e => setEditingPriceVal(e.target.value)}
-                                onBlur={() => {
-                                  const n = parseInt(editingPriceVal);
-                                  if (!isNaN(n) && n > 0) updateItemPrice(item.id, n);
-                                  setEditingPriceId(null);
-                                }}
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') {
-                                    const n = parseInt(editingPriceVal);
-                                    if (!isNaN(n) && n > 0) updateItemPrice(item.id, n);
-                                    setEditingPriceId(null);
-                                  }
-                                  if (e.key === 'Escape') setEditingPriceId(null);
-                                }}
-                                style={{
-                                  marginTop: 2, width: 90, border: 'none',
-                                  borderBottom: '2px solid #121E6C', outline: 'none',
-                                  background: 'transparent', padding: '0 0 2px',
-                                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                                  fontSize: 14, fontWeight: 700, color: '#121E6C',
-                                }}
-                              />
-                            ) : selectedTable.status === 'OCUPADA' ? (
-                              <button
-                                onClick={() => {
-                                  setEditingPriceId(item.id);
-                                  setEditingPriceVal(String(item.price));
-                                }}
-                                style={{
-                                  display: 'block', marginTop: 2, background: 'none', border: 'none',
-                                  cursor: 'pointer', padding: 0, textDecoration: 'underline',
-                                  color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                                  fontSize: 14, fontWeight: 700,
-                                }}
-                              >
+                        <div
+                          key={item.id}
+                          className="panel-item"
+                          style={{ position: 'relative' }}
+                        >
+                          {/* Task 3 & 4: Clickable name+price area with hover */}
+                          {selectedTable.status === 'OCUPADA' ? (
+                            <div
+                              style={{
+                                flex: 1, minWidth: 0, cursor: 'pointer',
+                                borderRadius: 6,
+                                background: hoveredItemId === item.id ? '#F8F8F8' : 'transparent',
+                                transition: 'background 150ms',
+                                padding: '2px 4px',
+                                margin: '-2px -4px',
+                              }}
+                              onMouseEnter={() => setHoveredItemId(item.id)}
+                              onMouseLeave={() => setHoveredItemId(null)}
+                              onClick={() => {
+                                setEditItemTarget(item);
+                                setEditItemQty(item.quantity);
+                                setEditItemPrice(item.price);
+                                setEditItemDiscount('0');
+                                setEditItemRef(item.note ?? '');
+                              }}
+                            >
+                              <p className="panel-item-name">{item.name}</p>
+                              <p style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
                                 ${(item.price * item.quantity).toLocaleString()}
-                              </button>
-                            ) : (
+                              </p>
+                              {item.note && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                                  <MessageSquare size={11} style={{ color: 'var(--black-40)', flexShrink: 0 }} />
+                                  <span style={{ fontSize: 12, color: 'var(--black-60)', lineHeight: '18px', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                    {item.note}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p className="panel-item-name">{item.name}</p>
                               <p className="panel-item-price" style={{ marginTop: 2 }}>
                                 ${(item.price * item.quantity).toLocaleString()}
                               </p>
-                            )}
-                            {item.note ? (
-                              <button
-                                onClick={() => selectedTable.status === 'OCUPADA' && setEditNoteTarget({ itemId: item.id, itemName: item.name, note: item.note ?? '' })}
-                                style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, background: 'none', border: 'none', cursor: selectedTable.status === 'OCUPADA' ? 'pointer' : 'default', padding: 0 }}
-                              >
-                                <MessageSquare size={11} style={{ color: 'var(--black-40)', flexShrink: 0 }} />
-                                <span style={{ fontSize: 12, color: 'var(--black-60)', lineHeight: '18px', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                                  {item.note}
-                                </span>
-                              </button>
-                            ) : selectedTable.status === 'OCUPADA' ? (
-                              <button
-                                onClick={() => setEditNoteTarget({ itemId: item.id, itemName: item.name, note: '' })}
-                                className="link-blue"
-                                style={{ marginTop: 4, fontSize: 12, display: 'flex', alignItems: 'center', gap: 3 }}
-                              >
-                                <Pencil size={10} /> + Nota
-                              </button>
-                            ) : null}
-                          </div>
+                              {item.note && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                                  <MessageSquare size={11} style={{ color: 'var(--black-40)', flexShrink: 0 }} />
+                                  <span style={{ fontSize: 12, color: 'var(--black-60)', lineHeight: '18px', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                    {item.note}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                           {selectedTable.status === 'OCUPADA' ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                               <div className="qty-stepper">
-                                <button className="qty-stepper__btn" onClick={() => updateItemQty(item.id, -1)}>
+                                <button className="qty-stepper__btn" onClick={e => { e.stopPropagation(); updateItemQty(item.id, -1); }}>
                                   <ChevronLeft size={13} />
                                 </button>
                                 <span className="qty-stepper__count">{item.quantity}</span>
-                                <button className="qty-stepper__btn" onClick={() => updateItemQty(item.id, 1)}>
+                                <button className="qty-stepper__btn" onClick={e => { e.stopPropagation(); updateItemQty(item.id, 1); }}>
                                   <ChevronRight size={13} />
                                 </button>
                               </div>
-                              <button onClick={() => removeItem(item.id)} className="btn-danger btn--icon" style={{ color: 'var(--black-40)' }}>
+                              {/* Task 2: Trash triggers confirm modal */}
+                              <button
+                                onClick={e => { e.stopPropagation(); setDeleteConfirmItem(item); }}
+                                className="btn-danger btn--icon"
+                                style={{ color: 'var(--black-40)' }}
+                              >
                                 <Trash2 size={14} />
                               </button>
                             </div>
@@ -2436,16 +2748,48 @@ export function MesasView() {
                           <Send size={18} color="#fff" /> Enviar comanda
                         </PanelCoralBtn>
                       ) : (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                          padding: '12px', borderRadius: 8,
-                          border: '1px solid var(--feedback-success-100)',
-                          background: 'var(--feedback-success-10)',
-                          fontSize: 13, fontWeight: 600, color: 'var(--feedback-success-150)',
-                          fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                        }}>
-                          <CheckCircle2 size={15} /> Comanda enviada
-                        </div>
+                        <>
+                          <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            padding: '12px', borderRadius: 8,
+                            border: '1px solid var(--feedback-success-100)',
+                            background: 'var(--feedback-success-10)',
+                            fontSize: 13, fontWeight: 600, color: 'var(--feedback-success-150)',
+                            fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                          }}>
+                            <CheckCircle2 size={15} /> Comanda enviada
+                          </div>
+                          {/* Task 1: Reenviar comanda button — only when at least 1 item is sent */}
+                          {selectedTable.items.some(i => i.isSent) && (
+                            <>
+                              <button
+                                onClick={handleReenviarComanda}
+                                style={{
+                                  height: 36, borderRadius: 8, border: '1.5px solid #C7CBE0',
+                                  background: '#fff', color: '#606060', fontSize: 13, fontWeight: 500,
+                                  width: '100%', display: 'flex', alignItems: 'center',
+                                  justifyContent: 'center', gap: 6, cursor: 'pointer',
+                                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                                }}
+                              >
+                                <RefreshCw size={14} /> Reenviar comanda
+                              </button>
+                              {/* Task 1: Green toast */}
+                              {showReenviarToast && (
+                                <div style={{
+                                  display: 'flex', alignItems: 'center', gap: 6,
+                                  padding: '10px 14px', borderRadius: 8,
+                                  background: 'var(--feedback-success-10)',
+                                  border: '1px solid var(--feedback-success-100)',
+                                  fontSize: 13, fontWeight: 600, color: 'var(--feedback-success-150)',
+                                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                                }}>
+                                  <CheckCircle size={14} /> Comanda reenviada a cocina
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </>
                       )
                     )}
                     {selectedTable.items.length > 0 && (
