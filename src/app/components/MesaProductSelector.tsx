@@ -753,7 +753,7 @@ export function MesaProductSelector({
                         </div>
 
                         {/* Info inferior */}
-                        <div style={{ padding: '8px 10px' }}>
+                        <div style={{ padding: '8px' }}>
                           <h3 style={{
                             fontSize: 13, fontWeight: 600, color: '#1E1E1E',
                             lineHeight: '18px', fontFamily: 'Montserrat, sans-serif',
