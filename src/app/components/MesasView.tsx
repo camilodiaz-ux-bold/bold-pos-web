@@ -2327,23 +2327,23 @@ export function MesasView() {
           Task 3: Modal de edición de ítem
           ════════════════════════════════════════════════════ */}
       {editItemTarget && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 200,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1100 }}>
+          {/* Overlay */}
           <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.32)' }}
             onClick={() => setEditItemTarget(null)}
           />
+          {/* Drawer lateral */}
           <div style={{
-            position: 'relative', zIndex: 1,
-            background: '#fff', borderRadius: 16, padding: 20,
-            maxWidth: 420, width: '100%',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.16)',
+            position: 'fixed', right: 0, top: 0, height: '100vh', width: 360,
+            backgroundColor: 'white',
+            boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
+            zIndex: 1101,
+            display: 'flex', flexDirection: 'column',
             fontFamily: 'var(--font-family, Montserrat, sans-serif)',
           }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+            {/* Header fijo */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #F0F0F0', flexShrink: 0 }}>
               <button
                 onClick={() => setEditItemTarget(null)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#606060', flexShrink: 0 }}
@@ -2352,7 +2352,7 @@ export function MesasView() {
               </button>
               <h3 style={{
                 flex: 1, textAlign: 'center',
-                fontSize: 17, fontWeight: 700, color: '#121E6C',
+                fontSize: 17, fontWeight: 700, color: '#121E6C', margin: 0,
                 fontFamily: 'var(--font-family, Montserrat, sans-serif)',
               }}>
                 {editItemTarget.name}
@@ -2360,8 +2360,8 @@ export function MesasView() {
               <div style={{ width: 26 }} />
             </div>
 
-            {/* Form fields */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* Body scrolleable */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Cantidad */}
               <div>
                 <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
@@ -2455,8 +2455,8 @@ export function MesasView() {
               </div>
             </div>
 
-            {/* Footer buttons */}
-            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            {/* Footer fijo */}
+            <div style={{ display: 'flex', gap: 10, padding: '12px 20px', borderTop: '1px solid #F0F0F0', flexShrink: 0 }}>
               <button
                 onClick={() => {
                   setEditItemTarget(null);
@@ -2688,35 +2688,31 @@ export function MesasView() {
                         <div
                           key={item.id}
                           className="panel-item"
-                          style={{ position: 'relative' }}
+                          style={{
+                            position: 'relative',
+                            padding: '10px 12px',
+                            borderBottom: '1px solid #F0F0F0',
+                            backgroundColor: hoveredItemId === item.id && selectedTable.status === 'OCUPADA' ? '#F8F8F8' : 'white',
+                            cursor: selectedTable.status === 'OCUPADA' ? 'pointer' : 'default',
+                            transition: 'background-color 150ms',
+                          }}
+                          onMouseEnter={() => { if (selectedTable.status === 'OCUPADA') setHoveredItemId(item.id); }}
+                          onMouseLeave={() => setHoveredItemId(null)}
+                          onClick={() => {
+                            if (selectedTable.status !== 'OCUPADA') return;
+                            setEditItemTarget(item);
+                            setEditItemQty(item.quantity);
+                            setEditItemPrice(item.price);
+                            setEditItemDiscount('0');
+                            setEditItemRef(item.note ?? '');
+                          }}
                         >
-                          {/* Clickable name+price area with hover + inline note */}
                           {selectedTable.status === 'OCUPADA' ? (
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div
-                                style={{
-                                  cursor: 'pointer',
-                                  borderRadius: 6,
-                                  background: hoveredItemId === item.id ? '#F8F8F8' : 'transparent',
-                                  transition: 'background 150ms',
-                                  padding: '2px 4px',
-                                  margin: '-2px -4px',
-                                }}
-                                onMouseEnter={() => setHoveredItemId(item.id)}
-                                onMouseLeave={() => setHoveredItemId(null)}
-                                onClick={() => {
-                                  setEditItemTarget(item);
-                                  setEditItemQty(item.quantity);
-                                  setEditItemPrice(item.price);
-                                  setEditItemDiscount('0');
-                                  setEditItemRef(item.note ?? '');
-                                }}
-                              >
-                                <p className="panel-item-name">{item.name}</p>
-                                <p style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                                  ${(item.price * item.quantity).toLocaleString()}
-                                </p>
-                              </div>
+                              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>{item.name}</p>
+                              <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                ${(item.price * item.quantity).toLocaleString()}
+                              </p>
                               {/* Nota inline */}
                               {inlineNoteItemId === item.id ? (
                                 <input
@@ -2737,6 +2733,7 @@ export function MesasView() {
                                     updateItemNote(item.id, inlineNoteValue.trim());
                                     setInlineNoteItemId(null);
                                   }}
+                                  onClick={e => e.stopPropagation()}
                                   style={{
                                     marginTop: 4, width: '100%',
                                     background: 'transparent', border: 'none',
@@ -2757,10 +2754,7 @@ export function MesasView() {
                                     </div>
                                   )}
                                   <div
-                                    style={{
-                                      display: 'flex', alignItems: 'center', gap: 4, marginTop: 4,
-                                      cursor: 'pointer', userSelect: 'none',
-                                    }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, cursor: 'pointer', userSelect: 'none' }}
                                     onClick={e => {
                                       e.stopPropagation();
                                       setInlineNoteItemId(item.id);
@@ -2768,7 +2762,7 @@ export function MesasView() {
                                     }}
                                   >
                                     <Pencil size={12} color="#606060" />
-                                    <span style={{ fontSize: 12, fontWeight: 400, color: '#606060', textDecoration: 'underline', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                    <span style={{ fontSize: 11, fontWeight: 400, color: '#606060', textDecoration: 'underline', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
                                       {item.note ? 'Editar nota' : 'Agregar nota'}
                                     </span>
                                   </div>
@@ -2777,8 +2771,8 @@ export function MesasView() {
                             </div>
                           ) : (
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p className="panel-item-name">{item.name}</p>
-                              <p style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>{item.name}</p>
+                              <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
                                 ${(item.price * item.quantity).toLocaleString()}
                               </p>
                               {item.note && (
@@ -2803,7 +2797,6 @@ export function MesasView() {
                                   <ChevronRight size={13} />
                                 </button>
                               </div>
-                              {/* Task 2: Trash triggers confirm modal */}
                               <button
                                 onClick={e => { e.stopPropagation(); setDeleteConfirmItem(item); }}
                                 className="btn-danger btn--icon"
