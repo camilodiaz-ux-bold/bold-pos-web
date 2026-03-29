@@ -534,7 +534,7 @@ export function MesaProductSelector({
                           key={item.id}
                           onClick={() => openAddModal(prod)}
                           className="relative text-left flex flex-col rounded-[var(--radius-16)] transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
-                          style={{ backgroundColor: def.lightBg, padding: '10px 12px', gap: '4px' }}
+                          style={{ backgroundColor: def.lightBg, padding: '10px 12px', gap: '4px', height: '96px' }}
                         >
                           {/* Badge cantidad en orden — esquina inferior derecha */}
                           {qty > 0 && (
@@ -573,12 +573,12 @@ export function MesaProductSelector({
 
                           <span
                             className="leading-snug pr-8"
-                            style={{ color: 'var(--black-100)', fontSize: '13px', fontWeight: 600 }}
+                            style={{ color: 'var(--black-100)', fontSize: '15px', fontWeight: 600 }}
                           >
                             {item.name}
                           </span>
                           <span
-                            style={{ color: 'var(--black-100)', fontSize: '13px', fontWeight: 700 }}
+                            style={{ color: 'var(--black-100)', fontSize: '13px', fontWeight: 500 }}
                           >
                             ${item.price.toLocaleString('es-CO')}
                           </span>
