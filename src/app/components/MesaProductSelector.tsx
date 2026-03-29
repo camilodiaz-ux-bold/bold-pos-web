@@ -533,31 +533,26 @@ export function MesaProductSelector({
                         <button
                           key={item.id}
                           onClick={() => openAddModal(prod)}
-                          className="relative text-left flex flex-col rounded-[var(--radius-16)] transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
-                          style={{ backgroundColor: def.lightBg, padding: '10px 12px', gap: '4px', height: '96px' }}
+                          className="text-left rounded-[var(--radius-16)] transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
+                          style={{
+                            backgroundColor: def.lightBg,
+                            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                            padding: '10px 12px', position: 'relative', height: '96px',
+                          }}
                         >
-                          {/* Badge cantidad en orden — esquina inferior derecha */}
-                          {qty > 0 && (
-                            <div
-                              className="absolute bottom-2 right-2 min-w-[22px] h-5 px-1.5 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm"
-                              style={{ backgroundColor: 'var(--coral-100)' }}
-                            >
-                              {qty}
-                            </div>
-                          )}
-
-                          {/* Estrella favorito — siempre visible, independiente del globo */}
+                          {/* Estrella favorito — absoluta, no interfiere con el texto */}
                           <div
                             role="button"
                             tabIndex={0}
                             onClick={(e) => toggleFavorite(item.id, e)}
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleFavorite(item.id, e as unknown as React.MouseEvent); }}
-                            className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 cursor-pointer"
-                            style={
-                              isFav
+                            className="w-6 h-6 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 cursor-pointer"
+                            style={{
+                              position: 'absolute', top: '8px', right: '8px',
+                              ...(isFav
                                 ? { backgroundColor: '#FFFFFF', opacity: 1, boxShadow: '0px 1px 3px rgba(0,0,0,0.12)' }
-                                : { backgroundColor: '#FFFFFF', opacity: 0.6 }
-                            }
+                                : { backgroundColor: '#FFFFFF', opacity: 0.6 }),
+                            }}
                             title={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                           >
                             <Star
@@ -571,15 +566,29 @@ export function MesaProductSelector({
                             />
                           </div>
 
+                          {/* Badge cantidad — absoluto, no interfiere con el texto */}
+                          {qty > 0 && (
+                            <div
+                              className="min-w-[22px] h-5 px-1.5 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm"
+                              style={{ position: 'absolute', bottom: '8px', right: '8px', backgroundColor: 'var(--coral-100)' }}
+                            >
+                              {qty}
+                            </div>
+                          )}
+
+                          {/* Nombre — arriba, con padding para no solaparse con la estrella */}
                           <span
-                            className="leading-snug pr-8"
-                            style={{ color: 'var(--black-100)', fontSize: '15px', fontWeight: 600 }}
+                            style={{
+                              color: 'var(--black-100)', fontSize: '15px', fontWeight: 600,
+                              lineHeight: '1.2', paddingRight: '24px',
+                              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                            }}
                           >
                             {item.name}
                           </span>
-                          <span
-                            style={{ color: 'var(--black-100)', fontSize: '13px', fontWeight: 500 }}
-                          >
+
+                          {/* Precio — abajo */}
+                          <span style={{ color: 'var(--black-100)', fontSize: '13px', fontWeight: 500, marginTop: 'auto' }}>
                             ${item.price.toLocaleString('es-CO')}
                           </span>
                         </button>
