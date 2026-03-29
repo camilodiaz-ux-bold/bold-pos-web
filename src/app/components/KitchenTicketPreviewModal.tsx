@@ -156,7 +156,10 @@ export function KitchenTicketPreviewModal({
   [firstComandaSentAt]);
 
   const isAdjustMode  = adjustmentLines !== undefined;
-  const printItems    = items.filter(i => i.quantity > 0);
+  // En reenvío solo mostramos ítems ya enviados con cantidad enviada > 0
+  const printItems    = isResend
+    ? items.filter(i => i.isSent && (i.sentQuantity ?? i.quantity) > 0)
+    : items.filter(i => i.quantity > 0);
   const diffItems     = useMemo(() => computeDiffItems(printItems), [items]);
   const modifiedItems = useMemo(() => computeModifiedItems(printItems), [items]);
   const hasNothingNew = !isAdjustMode && isResend && diffItems.length === 0 && modifiedItems.length === 0;
@@ -223,10 +226,6 @@ export function KitchenTicketPreviewModal({
               <div style={{ backgroundColor: '#FFF3D1', padding: '6px 16px', marginBottom: 4, textAlign: 'center' }}>
                 <span style={{ ...TXT.bold, fontSize: 14 }}>COMANDA DE AJUSTE</span>
               </div>
-            ) : isResend ? (
-              <div style={{ backgroundColor: '#FEF3C7', padding: '6px 16px', marginBottom: 4, textAlign: 'center' }}>
-                <span style={{ ...TXT.bold, fontSize: 14 }}>COMANDA COMPLETA</span>
-              </div>
             ) : (
               <p style={{ ...TXT.bold, fontSize: 14, textAlign: 'center', marginBottom: 4, paddingInline: 16 }}>
                 COMANDA DE COCINA
@@ -288,18 +287,23 @@ export function KitchenTicketPreviewModal({
                 </p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
-                  {printItems.map(item => (
-                    <div key={item.id}>
-                      <p style={{ ...TXT.bold, fontWeight: 600 }}>
-                        {String(item.quantity).padEnd(3, ' ')} {item.name}
-                      </p>
-                      {item.note && item.note.trim() && (
-                        <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
-                          {'    '}&#x2192;{'  '}{item.note}
+                  {printItems.map(item => {
+                    // En reenvío mostramos el snapshot de lo último enviado
+                    const displayQty  = isResend ? (item.sentQuantity ?? item.quantity) : item.quantity;
+                    const displayNote = isResend ? (item.sentNote ?? '') : (item.note ?? '');
+                    return (
+                      <div key={item.id}>
+                        <p style={{ ...TXT.bold, fontWeight: 600 }}>
+                          {String(displayQty).padEnd(3, ' ')} {item.name}
                         </p>
-                      )}
-                    </div>
-                  ))}
+                        {displayNote.trim() && (
+                          <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
+                            {'    '}&#x2192;{'  '}{displayNote}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

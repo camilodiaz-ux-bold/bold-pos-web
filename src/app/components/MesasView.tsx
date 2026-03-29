@@ -1711,23 +1711,34 @@ export function MesasView() {
           onBack={() => setShowProductSelector(false)}
           onOpenKitchenPreview={() => setShowKitchenPreview(true)}
         />
-        {showKitchenPreview && selectedTable && (
-          <KitchenTicketPreviewModal
-            headerLabel="Mesa"
-            headerValue={selectedTable.name}
-            showPersonas
-            guests={selectedTable.guests}
-            staffLabel="Mesero"
-            items={selectedTable.items as TicketItem[]}
-            firstComandaSentAt={selectedTable.firstComandaSentAt}
-            isResend={selectedTable.comandaSent && selectedTable.hasPendingChanges}
-            onCancel={() => setShowKitchenPreview(false)}
-            onConfirm={() => {
-              sendComanda();
-              setShowKitchenPreview(false);
-            }}
-          />
-        )}
+        {showKitchenPreview && selectedTable && (() => {
+          const isAdjust     = (selectedTable.comandaSent ?? false) && (selectedTable.hasPendingChanges ?? false);
+          const isFullResend = (selectedTable.comandaSent ?? false) && !(selectedTable.hasPendingChanges ?? false);
+          const adjLines     = isAdjust
+            ? formatAdjustmentLines(selectedTable.items, selectedTable.pendingChanges ?? [])
+            : undefined;
+          return (
+            <KitchenTicketPreviewModal
+              headerLabel="Mesa"
+              headerValue={selectedTable.name}
+              showPersonas
+              guests={selectedTable.guests}
+              staffLabel="Mesero"
+              items={selectedTable.items as TicketItem[]}
+              firstComandaSentAt={selectedTable.firstComandaSentAt}
+              isResend={isFullResend}
+              title={isAdjust ? 'Comanda de ajuste — Cocina' : isFullResend ? 'Reenviar comanda a cocina' : undefined}
+              subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
+              actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
+              adjustmentLines={adjLines}
+              onCancel={() => setShowKitchenPreview(false)}
+              onConfirm={() => {
+                sendComanda();
+                setShowKitchenPreview(false);
+              }}
+            />
+          );
+        })()}
       </>
     );
   }
@@ -2318,7 +2329,7 @@ export function MesasView() {
             firstComandaSentAt={selectedTable.firstComandaSentAt}
             isResend={isFullResend}
             title={isAdjust ? 'Comanda de ajuste — Cocina' : isFullResend ? 'Reenviar comanda a cocina' : undefined}
-            subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : undefined}
+            subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
             actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
             adjustmentLines={adjLines}
             onCancel={() => setShowKitchenPreview(false)}

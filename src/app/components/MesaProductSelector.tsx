@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { MesaTable, TableItem } from './MesasView';
+import type { MesaTable, TableItem, PendingChange, PendingChangeType } from './MesasView';
 import { CAT_DEFS, CAT_PRODUCTS, ALL_CATALOG_PRODUCTS, FAVORITE_PRODUCTS } from '../data/productCatalog';
 import type { CatalogProduct } from '../data/productCatalog';
 import { useFavorites } from '../store/favoritesStore';
@@ -136,12 +136,31 @@ export function MesaProductSelector({
     setTables(prev =>
       prev.map(t => {
         if (t.id !== tableId) return t;
+        const item   = t.items.find(i => i.id === itemId);
+        const newQty = Math.max(1, (item?.quantity ?? 1) + delta);
+        let newPendingChanges = t.pendingChanges ?? [];
+        if (item && t.comandaSent && item.isSent) {
+          const sentQty = item.sentQuantity ?? item.quantity;
+          newPendingChanges = newPendingChanges.filter(
+            c => !(c.productId === item.productId && c.type === 'CANTIDAD'),
+          );
+          if (newQty !== sentQty) {
+            newPendingChanges = [...newPendingChanges, {
+              type:      'CANTIDAD' as PendingChangeType,
+              productId: item.productId,
+              name:      item.name,
+              prevQty:   sentQty,
+              newQty,
+              prevNote:  item.sentNote ?? '',
+              newNote:   item.note ?? '',
+            }];
+          }
+        }
         return {
           ...t,
-          items: t.items.map(i =>
-            i.id === itemId ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i,
-          ),
+          items:             t.items.map(i => i.id === itemId ? { ...i, quantity: newQty } : i),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          pendingChanges:    newPendingChanges,
         };
       }),
     );
@@ -149,13 +168,31 @@ export function MesaProductSelector({
 
   const removeItem = (itemId: string) => {
     setTables(prev =>
-      prev.map(t =>
-        t.id !== tableId ? t : {
+      prev.map(t => {
+        if (t.id !== tableId) return t;
+        const item = t.items.find(i => i.id === itemId);
+        let newPendingChanges = t.pendingChanges ?? [];
+        if (item && t.comandaSent && item.isSent) {
+          newPendingChanges = [
+            ...newPendingChanges.filter(c => c.productId !== item.productId),
+            {
+              type:      'ELIMINAR' as PendingChangeType,
+              productId: item.productId,
+              name:      item.name,
+              prevQty:   item.sentQuantity ?? item.quantity,
+              newQty:    0,
+              prevNote:  item.sentNote ?? '',
+              newNote:   '',
+            } as PendingChange,
+          ];
+        }
+        return {
           ...t,
-          items: t.items.filter(i => i.id !== itemId),
+          items:             t.items.filter(i => i.id !== itemId),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
-        },
-      ),
+          pendingChanges:    newPendingChanges,
+        };
+      }),
     );
   };
 
@@ -170,6 +207,7 @@ export function MesaProductSelector({
           ...t,
           comandaSent: true,
           hasPendingChanges: false,
+          pendingChanges: [],
           firstComandaSentAt: t.firstComandaSentAt ?? now,
           items: t.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
         },
@@ -190,18 +228,48 @@ export function MesaProductSelector({
 
   const saveItemEdit = () => {
     if (!editItemTarget) return;
-    const itemId = editItemTarget.id;
+    const itemId  = editItemTarget.id;
+    const newNote = editItemNote.trim();
     setTables(prev =>
       prev.map(t => {
         if (t.id !== tableId) return t;
+        const item = t.items.find(i => i.id === itemId);
+        let newPendingChanges = t.pendingChanges ?? [];
+        if (item && t.comandaSent && item.isSent) {
+          const sentQty  = item.sentQuantity ?? item.quantity;
+          const sentNote = item.sentNote ?? '';
+          // CANTIDAD
+          newPendingChanges = newPendingChanges.filter(
+            c => !(c.productId === item.productId && c.type === 'CANTIDAD'),
+          );
+          if (editItemQty !== sentQty) {
+            newPendingChanges = [...newPendingChanges, {
+              type: 'CANTIDAD' as PendingChangeType, productId: item.productId,
+              name: item.name, prevQty: sentQty, newQty: editItemQty,
+              prevNote: sentNote, newNote,
+            }];
+          }
+          // NOTA
+          newPendingChanges = newPendingChanges.filter(
+            c => !(c.productId === item.productId && c.type === 'NOTA'),
+          );
+          if (newNote && newNote !== sentNote) {
+            newPendingChanges = [...newPendingChanges, {
+              type: 'NOTA' as PendingChangeType, productId: item.productId,
+              name: item.name, prevQty: sentQty, newQty: editItemQty,
+              prevNote: sentNote, newNote,
+            }];
+          }
+        }
         return {
           ...t,
           items: t.items.map(i =>
             i.id === itemId
-              ? { ...i, quantity: editItemQty, price: editItemPrice, note: editItemNote.trim() || undefined }
+              ? { ...i, quantity: editItemQty, price: editItemPrice, note: newNote || undefined }
               : i,
           ),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          pendingChanges:    newPendingChanges,
         };
       }),
     );
