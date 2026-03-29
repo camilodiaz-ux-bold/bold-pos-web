@@ -20,6 +20,7 @@ export interface CheckoutItem {
   quantity: number;
   price: number;
   note?: string;
+  discount?: number;   // % de descuento por ítem (0-20)
 }
 
 export interface CheckoutDrawerProps {
@@ -43,6 +44,7 @@ export interface CheckoutDrawerProps {
 type Phase         = 'checkout' | 'completed';
 type SplitMode     = 'equal' | 'custom';
 type TipMode       = '0' | '10' | 'manual';
+type DiscountMode  = '0' | '5' | '10' | '15' | 'custom';
 type PaymentMethod = 'cash' | 'card' | 'transfer' | 'mixed';
 
 // ─── Palette for up to 6 split accounts ──────────────────────────────────────
@@ -134,6 +136,10 @@ export function CheckoutDrawer({
   const [paidAccounts,   setPaidAccounts]   = useState<Set<number>>(new Set());
   const [currentAccount, setCurrentAccount] = useState(1);
 
+  // ── B2. Descuento general ────────────────────────────────────────────────
+  const [discountMode,   setDiscountMode]   = useState<DiscountMode>('0');
+  const [discountCustom, setDiscountCustom] = useState('');
+
   // ── C. Propina ────────────────────────────────────────────────────────────
   const [tipMode,   setTipMode]   = useState<TipMode>('10');
   const [tipManual, setTipManual] = useState('');
@@ -152,8 +158,30 @@ export function CheckoutDrawer({
     () => items.reduce((s, i) => s + i.price * i.quantity, 0),
     [items],
   );
-  const tax             = Math.round(subtotal * 0.19);
-  const subtotalWithTax = subtotal + tax;
+
+  // Descuentos por ítem
+  const itemDiscountsTotal = useMemo(
+    () => items.reduce((s, i) => {
+      const disc = i.discount ?? 0;
+      return s + (disc > 0 ? Math.round(i.price * i.quantity * disc / 100) : 0);
+    }, 0),
+    [items],
+  );
+  const subtotalAfterItemDisc = subtotal - itemDiscountsTotal;
+
+  // Descuento general de checkout
+  const discountAmount = useMemo(() => {
+    if (discountMode === '0') return 0;
+    if (discountMode === 'custom') {
+      const n = parseFloat(discountCustom.replace(/[^0-9.]/g, ''));
+      return isNaN(n) ? 0 : Math.round(n);
+    }
+    return Math.round(subtotalAfterItemDisc * parseInt(discountMode) / 100);
+  }, [discountMode, discountCustom, subtotalAfterItemDisc]);
+
+  const taxBase         = subtotalAfterItemDisc - discountAmount;
+  const tax             = Math.round(taxBase * 0.19);
+  const subtotalWithTax = taxBase + tax;
 
   const tipAmount = useMemo(() => {
     if (tipMode === '0')  return 0;
@@ -403,6 +431,8 @@ export function CheckoutDrawer({
                   <Row label="Método" value={paymentDisplay} />
                   {subtitle && <Row label="Ubicación" value={subtitle} />}
                   <Row label="Subtotal" value={`$${subtotal.toLocaleString()}`} />
+                  {itemDiscountsTotal > 0 && <Row label="Descuentos por ítem" value={`-$${itemDiscountsTotal.toLocaleString()}`} colored="green" />}
+                  {discountAmount > 0 && <Row label={`Descuento${discountMode !== 'custom' ? ` (${discountMode}%)` : ''}`} value={`-$${discountAmount.toLocaleString()}`} colored="green" />}
                   <Row label="IVA 19%" value={`$${tax.toLocaleString()}`} />
                   {tipAmount > 0 && <Row label="Propina" value={`+$${tipAmount.toLocaleString()}`} colored="blue" />}
                 </div>
@@ -510,11 +540,16 @@ export function CheckoutDrawer({
                             background: '#F1F2F6', borderRadius: 3, padding: '1px 5px',
                             fontFamily: 'Montserrat, sans-serif',
                           }}>×{item.quantity}</span>
+                          {(item.discount ?? 0) > 0 && (
+                            <span style={{ fontSize: 10, fontWeight: 600, color: '#059669', background: '#D1FAE5', borderRadius: 3, padding: '1px 5px', fontFamily: 'Montserrat, sans-serif' }}>
+                              Desc.{item.discount}%
+                            </span>
+                          )}
                         </div>
                         {item.note && <p style={{ fontSize: 11, color: '#909090', fontStyle: 'italic', marginTop: 2, fontFamily: 'Montserrat, sans-serif' }}>{item.note}</p>}
                       </div>
                       <span style={{ fontSize: 14, fontWeight: 600, color: '#1E1E1E', flexShrink: 0, fontFamily: 'Montserrat, sans-serif' }}>
-                        ${(item.price * item.quantity).toLocaleString()}
+                        ${(item.discount ? Math.round(item.price * (1 - item.discount/100)) * item.quantity : item.price * item.quantity).toLocaleString()}
                       </span>
                     </div>
                   ))}
@@ -526,6 +561,20 @@ export function CheckoutDrawer({
                     <span style={{ fontSize: 13, fontWeight: 400, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>Subtotal</span>
                     <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>${subtotal.toLocaleString()}</span>
                   </div>
+                  {itemDiscountsTotal > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 13, fontWeight: 400, color: '#059669', fontFamily: 'Montserrat, sans-serif' }}>Descuentos por ítem</span>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: '#059669', fontFamily: 'Montserrat, sans-serif' }}>-${itemDiscountsTotal.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {discountAmount > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 13, fontWeight: 400, color: '#059669', fontFamily: 'Montserrat, sans-serif' }}>
+                        Descuento{discountMode !== 'custom' ? ` (${discountMode}%)` : ''}
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: '#059669', fontFamily: 'Montserrat, sans-serif' }}>-${discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 13, fontWeight: 400, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>IVA 19%</span>
                     <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>${tax.toLocaleString()}</span>
@@ -546,7 +595,45 @@ export function CheckoutDrawer({
                 </div>
               </div>
 
-              {/* ─── 2. DIVIDIR CUENTA ─── */}
+              {/* ─── 2. DESCUENTO GENERAL ─── */}
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
+                <SectionLabel
+                  label="Descuento"
+                  hint={discountAmount > 0 ? (
+                    <span style={{
+                      background: '#D1FAE5', color: '#059669', borderRadius: 4,
+                      padding: '2px 8px', fontSize: 11, fontWeight: 600,
+                      fontFamily: 'Montserrat, sans-serif',
+                    }}>-${discountAmount.toLocaleString()}</span>
+                  ) : undefined}
+                />
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
+                  {(['0', '5', '10', '15', 'custom'] as DiscountMode[]).map(m => (
+                    <button key={m}
+                      onClick={() => setDiscountMode(m)}
+                      style={{
+                        background: 'none', border: 'none',
+                        borderBottom: discountMode === m ? '2px solid #121E6C' : '2px solid transparent',
+                        paddingBottom: 4, fontSize: 14,
+                        fontWeight: discountMode === m ? 700 : 400,
+                        color: discountMode === m ? '#121E6C' : '#606060',
+                        cursor: 'pointer', transition: 'all 150ms ease',
+                        fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {m === '0' ? 'Sin descuento' : m === 'custom' ? 'Personalizado' : `${m}%`}
+                    </button>
+                  ))}
+                </div>
+                {discountMode === 'custom' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', lineHeight: '20px' }}>Monto</span>
+                    <MoneyInput value={discountCustom} onChange={setDiscountCustom} placeholder="0" autoFocus />
+                  </div>
+                )}
+              </div>
+
+              {/* ─── 3. DIVIDIR CUENTA ─── */}
               <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
               <SectionLabel
                 label="¿Dividir cuenta?"
@@ -1224,9 +1311,10 @@ function CustomPersonRow({ label, value, onChange }: { label: string; value: num
 
 // ─── Small display helper ─────────────────────────────────────────────────────
 
-function Row({ label, value, colored }: { label: string; value: string; colored?: 'blue' }) {
+function Row({ label, value, colored }: { label: string; value: string; colored?: 'blue' | 'green' }) {
+  const colorClass = colored === 'blue' ? 'text-[var(--blue-100)]' : colored === 'green' ? 'text-[#059669]' : 'text-[var(--black-60)]';
   return (
-    <div className={cn('flex justify-between text-xs font-bold', colored === 'blue' ? 'text-[var(--blue-100)]' : 'text-[var(--black-60)]')}>
+    <div className={cn('flex justify-between text-xs font-bold', colorClass)}>
       <span>{label}</span><span>{value}</span>
     </div>
   );

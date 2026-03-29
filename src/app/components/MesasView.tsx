@@ -40,6 +40,7 @@ export interface TableItem {
   sentNote?: string;       // nota enviada en la comanda anterior
   description?: string;
   catId?: string;           // id de categoría del producto
+  discount?: number;        // % de descuento por ítem (0-20)
 }
 
 // ─── Pending changes (modificaciones post-primera-comanda) ───────────────────
@@ -1579,7 +1580,7 @@ export function MesasView() {
           ...t,
           items: t.items.map(i =>
             i.id === itemId
-              ? { ...i, quantity: editItemQty, price: editItemPrice, note: newNote || undefined }
+              ? { ...i, quantity: editItemQty, price: editItemPrice, note: newNote || undefined, discount: parseInt(editItemDiscount) || undefined }
               : i,
           ),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
@@ -2750,7 +2751,7 @@ export function MesasView() {
                             setEditItemTarget(item);
                             setEditItemQty(item.quantity);
                             setEditItemPrice(item.price);
-                            setEditItemDiscount('0');
+                            setEditItemDiscount(String(item.discount ?? 0));
                             setEditItemNote(item.note ?? '');
                           }}
                         >
@@ -2758,8 +2759,13 @@ export function MesasView() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>{item.name}</p>
                               <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                                ${(item.price * item.quantity).toLocaleString()}
+                                ${(item.discount ? Math.round(item.price * (1 - item.discount/100)) * item.quantity : item.price * item.quantity).toLocaleString()}
                               </p>
+                              {(item.discount ?? 0) > 0 && (
+                                <p style={{ margin: '2px 0 0', fontSize: 11, color: '#059669', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                  Desc. {item.discount}%
+                                </p>
+                              )}
                               {item.note && (
                                 <p style={{
                                   margin: '3px 0 0', fontSize: 11, fontStyle: 'italic',
@@ -2774,8 +2780,13 @@ export function MesasView() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>{item.name}</p>
                               <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                                ${(item.price * item.quantity).toLocaleString()}
+                                ${(item.discount ? Math.round(item.price * (1 - item.discount/100)) * item.quantity : item.price * item.quantity).toLocaleString()}
                               </p>
+                              {(item.discount ?? 0) > 0 && (
+                                <p style={{ margin: '2px 0 0', fontSize: 11, color: '#059669', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                                  Desc. {item.discount}%
+                                </p>
+                              )}
                               {item.note && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
                                   <MessageSquare size={11} style={{ color: 'var(--black-40)', flexShrink: 0 }} />

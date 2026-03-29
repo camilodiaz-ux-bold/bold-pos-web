@@ -8,7 +8,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import React, { useState } from 'react';
-import { Calendar, Clock, ChevronRight, ChevronLeft, Sun } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, ChevronLeft, Sun, HandCoins, TrendingUp } from 'lucide-react';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -767,6 +767,42 @@ function TurnoDetail({ turno }: { turno: Turno }) {
             </p>
             <p style={{ fontSize: 12, color: C.black60, fontFamily: FONT, margin: 0 }}>
               {d.numVentas} ventas
+            </p>
+            <p style={{ fontSize: 10, color: '#909090', fontFamily: FONT, margin: '4px 0 0' }}>
+              No incluye propinas
+            </p>
+          </div>
+        </Card>
+
+        {/* Card 3: Total propinas */}
+        <Card style={{ flex: '1 0 160px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <HandCoins size={20} color={C.blue100} />
+            <span style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+              Total propinas
+            </span>
+          </div>
+          <div>
+            <p style={{ fontSize: 20, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px', lineHeight: '26px' }}>
+              {cop(turno.ventas.propinas)}
+            </p>
+          </div>
+        </Card>
+
+        {/* Card 4: Total con propinas */}
+        <Card style={{ flex: '1 0 180px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <TrendingUp size={20} color={C.successText} />
+            <span style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+              Total con propinas
+            </span>
+          </div>
+          <div>
+            <p style={{ fontSize: 20, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px', lineHeight: '26px' }}>
+              {cop(d.ventasRegistradas + turno.ventas.propinas)}
+            </p>
+            <p style={{ fontSize: 10, color: '#909090', fontFamily: FONT, margin: '4px 0 0' }}>
+              Ventas {cop(d.ventasRegistradas)} + Propinas {cop(turno.ventas.propinas)}
             </p>
           </div>
         </Card>

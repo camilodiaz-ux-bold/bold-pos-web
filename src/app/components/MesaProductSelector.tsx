@@ -265,7 +265,7 @@ export function MesaProductSelector({
           ...t,
           items: t.items.map(i =>
             i.id === itemId
-              ? { ...i, quantity: editItemQty, price: editItemPrice, note: newNote || undefined }
+              ? { ...i, quantity: editItemQty, price: editItemPrice, note: newNote || undefined, discount: parseInt(editItemDiscount) || undefined }
               : i,
           ),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
@@ -283,7 +283,7 @@ export function MesaProductSelector({
     : null;
 
 
-  const subtotal   = table.items.reduce((a, i) => a + i.price * i.quantity, 0);
+  const subtotal   = table.items.reduce((a, i) => a + (i.discount ? Math.round(i.price * (1 - i.discount/100)) : i.price) * i.quantity, 0);
   const tax        = subtotal * 0.19;
   const total      = subtotal + tax;
   const totalItems = table.items.reduce((a, i) => a + i.quantity, 0);
@@ -778,7 +778,7 @@ export function MesaProductSelector({
                       setEditItemTarget(item);
                       setEditItemQty(item.quantity);
                       setEditItemPrice(item.price);
-                      setEditItemDiscount('0');
+                      setEditItemDiscount(String(item.discount ?? 0));
                       setEditItemNote(item.note ?? '');
                     }}
                   >
@@ -788,8 +788,13 @@ export function MesaProductSelector({
                           {item.name}
                         </p>
                         <p style={{ fontSize: 13, fontWeight: 500, color: '#FF2947', marginTop: 2, margin: '2px 0 0' }}>
-                          ${(item.price * item.quantity).toLocaleString()}
+                          ${(item.discount ? Math.round(item.price * (1 - item.discount/100)) * item.quantity : item.price * item.quantity).toLocaleString()}
                         </p>
+                        {(item.discount ?? 0) > 0 && (
+                          <p style={{ margin: '2px 0 0', fontSize: 11, color: '#059669', fontFamily: 'Montserrat, sans-serif' }}>
+                            Desc. {item.discount}%
+                          </p>
+                        )}
                         {item.note && (
                           <p style={{ margin: '3px 0 0', fontSize: 11, fontStyle: 'italic', color: '#606060', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {item.note}

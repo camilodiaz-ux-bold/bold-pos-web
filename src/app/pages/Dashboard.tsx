@@ -113,12 +113,14 @@ function KpiCard({
   label,
   badge,
   badgeColor,
+  note,
 }: {
   icon: React.ElementType;
   value: string;
   label: string;
   badge: string;
   badgeColor: 'green' | 'red' | 'yellow';
+  note?: string;
 }) {
   const palette = {
     green:  { bg: '#D1FAE5', text: '#0F6E56' },
@@ -158,6 +160,11 @@ function KpiCard({
       <div style={{ fontSize: 14, color: C.black100, fontFamily: FONT, lineHeight: '20px' }}>
         {label}
       </div>
+      {note && (
+        <div style={{ fontSize: 10, color: '#909090', fontFamily: FONT, marginTop: 4 }}>
+          {note}
+        </div>
+      )}
     </Card>
   );
 }
@@ -1026,6 +1033,7 @@ export function Dashboard() {
             label={kpi.ventasLabel}
             badge={kpi.vBadge}
             badgeColor={kpi.vBadgeColor}
+            note="No incluye propinas"
           />
           <KpiCard
             icon={Receipt}
@@ -1033,6 +1041,7 @@ export function Dashboard() {
             label="Ticket promedio"
             badge={kpi.tBadge}
             badgeColor={kpi.tBadgeColor}
+            note="No incluye propinas"
           />
           <KpiCard
             icon={countIcon}
