@@ -460,16 +460,17 @@ export function MesaProductSelector({
                       onClick={() => { setActiveCatMesa('favoritos'); setSearchQuery(''); }}
                       className="cat-item w-full text-left flex items-center justify-between gap-2"
                       style={{
-                        borderLeftColor: 'var(--black-100)',
-                        background: isFavActive ? 'var(--black-10)' : '#fff',
-                        color: 'var(--black-100)',
-                        fontWeight: isFavActive ? 700 : 500,
-                        padding: '12px 20px',
+                        borderLeft: isFavActive ? '3px solid #1E1E1E' : '3px solid transparent',
+                        backgroundColor: isFavActive ? 'rgba(0,0,0,0.06)' : '#fff',
+                        color: isFavActive ? '#121E6C' : '#1E1E1E',
+                        fontWeight: 500,
+                        padding: '10px 12px',
+                        borderBottom: '1px solid #F0F0F0',
                       }}
                     >
                       <div className="flex-1 min-w-0">
                         <span style={{ display: 'block', fontSize: 14 }}>Favoritos</span>
-                        <span style={{ display: 'block', fontSize: 12, opacity: 0.7, marginTop: 2 }}>
+                        <span style={{ display: 'block', fontSize: 11, color: '#909090', marginTop: 2 }}>
                           {favoriteIds.size} producto{favoriteIds.size !== 1 ? 's' : ''}
                         </span>
                       </div>
@@ -478,7 +479,7 @@ export function MesaProductSelector({
                   );
                 })()}
 
-                {CAT_DEFS.map(cat => {
+                {CAT_DEFS.map((cat, index) => {
                   const isActive = cat.id === activeCatMesa && !isSearchingMesa;
                   return (
                     <button
@@ -486,15 +487,16 @@ export function MesaProductSelector({
                       onClick={() => { setActiveCatMesa(cat.id); setSearchQuery(''); }}
                       className="cat-item w-full text-left"
                       style={{
-                        borderLeftColor: cat.lineColor,
-                        background: isActive ? cat.lightBg : '#fff',
-                        color: cat.darkColor,
-                        fontWeight: isActive ? 700 : 500,
-                        padding: '12px 20px',
+                        borderLeft: isActive ? `3px solid ${cat.lineColor}` : '3px solid transparent',
+                        backgroundColor: isActive ? `${cat.color}1A` : '#fff',
+                        color: isActive ? '#121E6C' : '#1E1E1E',
+                        fontWeight: 500,
+                        padding: '10px 12px',
+                        borderBottom: index < CAT_DEFS.length - 1 ? '1px solid #F0F0F0' : undefined,
                       }}
                     >
                       <span style={{ display: 'block', fontSize: 14 }}>{cat.name}</span>
-                      <span style={{ display: 'block', fontSize: 12, opacity: 0.7, marginTop: 2 }}>
+                      <span style={{ display: 'block', fontSize: 11, color: '#909090', marginTop: 2 }}>
                         {CAT_PRODUCTS[cat.id]?.length ?? 0} productos
                       </span>
                     </button>
