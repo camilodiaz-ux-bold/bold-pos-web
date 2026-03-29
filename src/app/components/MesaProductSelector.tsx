@@ -9,15 +9,15 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Search, Plus, ChevronLeft, ChevronRight,
-  Trash2, Receipt, Send, Users, Clock,
-  Utensils, CheckCircle2, RefreshCw, Minus, X, Star,
-  MessageSquare, Pencil, ShoppingBag,
+  Search, ChevronLeft, ChevronRight,
+  Trash2, Receipt, Send, Clock,
+  Utensils, CheckCircle2, RefreshCw, X, Star,
+  Pencil, ShoppingBag, ChefHat, Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { MesaTable } from './MesasView';
+import type { MesaTable, TableItem } from './MesasView';
 import { CAT_DEFS, CAT_PRODUCTS, ALL_CATALOG_PRODUCTS, FAVORITE_PRODUCTS } from '../data/productCatalog';
 import type { CatalogProduct } from '../data/productCatalog';
 import { useFavorites } from '../store/favoritesStore';
@@ -35,20 +35,6 @@ function toProduct(p: CatalogProduct): Product {
   return { ...p, image: p.image ?? '', category: def.name };
 }
 
-// ─── Note chips ───────────────────────────────────────────────────────────────
-
-const NOTE_CHIPS = [
-  'Sin cebolla', 'Sin gluten', 'Término medio', 'Bien cocido',
-  'Extra salsa', 'Para llevar', 'Sin sal', 'Poco picante',
-];
-
-// ─── Modal state types ────────────────────────────────────────────────────────
-
-type ModalState =
-  | { mode: 'add';  product: Product; quantity: number; note: string }
-  | { mode: 'edit'; itemId: string;   itemName: string; note: string }
-  | null;
-
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface MesaProductSelectorProps {
@@ -64,8 +50,15 @@ interface MesaProductSelectorProps {
 export function MesaProductSelector({
   tableId, tables, setTables, onBack, onOpenKitchenPreview,
 }: MesaProductSelectorProps) {
-  const [searchQuery,      setSearchQuery]      = useState('');
-  const [modalState,       setModalState]       = useState<ModalState>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // ── Drawer de edición de ítem (igual que MesasView) ───────────────────────
+  const [editItemTarget,   setEditItemTarget]   = useState<TableItem | null>(null);
+  const [editItemQty,      setEditItemQty]      = useState<number>(1);
+  const [editItemDiscount, setEditItemDiscount] = useState<string>('0');
+  const [editItemPrice,    setEditItemPrice]    = useState<number>(0);
+  const [editItemNote,     setEditItemNote]     = useState<string>('');
+  const [hoveredItemId,    setHoveredItemId]    = useState<string | null>(null);
 
   const { favoriteIds, toggleFavorite } = useFavorites();
 
@@ -166,21 +159,6 @@ export function MesaProductSelector({
     );
   };
 
-  const updateNote = (itemId: string, note: string) => {
-    setTables(prev =>
-      prev.map(t => {
-        if (t.id !== tableId) return t;
-        return {
-          ...t,
-          items: t.items.map(i =>
-            i.id === itemId ? { ...i, note: note || undefined } : i,
-          ),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
-        };
-      }),
-    );
-  };
-
   const sendToKitchen = () => {
     if (!table) return;
     const isResend = table.comandaSent;
@@ -208,38 +186,26 @@ export function MesaProductSelector({
     onBack();
   };
 
-  // ── Modal handlers ────────────────────────────────────────────────────────
+  // ── Guardar edición de ítem del drawer ───────────────────────────────────
 
-  const openAddModal = (product: Product) => {
-    setModalState({ mode: 'add', product, quantity: 1, note: '' });
-  };
-
-  const confirmAdd = () => {
-    if (!modalState || modalState.mode !== 'add') return;
-    addItem(modalState.product, modalState.quantity, modalState.note);
-    setModalState(null);
-  };
-
-  const confirmEditNote = () => {
-    if (!modalState || modalState.mode !== 'edit') return;
-    updateNote(modalState.itemId, modalState.note);
-    setModalState(null);
-    toast.success('Nota actualizada');
-    if (table?.comandaSent) toast.info('Recuerda reenviar la comanda a cocina');
-  };
-
-  const toggleChip = (chip: string) => {
-    if (!modalState) return;
-    const cur = modalState.note;
-    const next = cur.includes(chip)
-      ? cur.replace(chip, '').replace(/^[,\s]+|[,\s]+$/g, '').replace(/\s*,\s*,\s*/g, ', ').trim()
-      : cur ? `${cur}, ${chip}` : chip;
-    setModalState({ ...modalState, note: next });
-  };
-
-  const setModalQty = (delta: number) => {
-    if (!modalState || modalState.mode !== 'add') return;
-    setModalState({ ...modalState, quantity: Math.max(1, modalState.quantity + delta) });
+  const saveItemEdit = () => {
+    if (!editItemTarget) return;
+    const itemId = editItemTarget.id;
+    setTables(prev =>
+      prev.map(t => {
+        if (t.id !== tableId) return t;
+        return {
+          ...t,
+          items: t.items.map(i =>
+            i.id === itemId
+              ? { ...i, quantity: editItemQty, price: editItemPrice, note: editItemNote.trim() || undefined }
+              : i,
+          ),
+          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+        };
+      }),
+    );
+    setEditItemTarget(null);
   };
 
   if (!table) return null;
@@ -257,110 +223,140 @@ export function MesaProductSelector({
   const hasPendingChanges = table.hasPendingChanges ?? false;
 
   // ── Render ────────────────────────────────────────────────────────────────
+  const MFONT = 'Montserrat, sans-serif';
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
 
-      {/* ══════════ MODAL ══════════════════════════════════════════════════════ */}
-      {modalState && (
-        <div className="fixed inset-0 z-[180] flex items-end sm:items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setModalState(null)} />
-          <div className="relative bg-white rounded-[var(--radius-20)] w-full max-w-sm overflow-hidden" style={{ boxShadow: '0px 8px 32px rgba(0,0,0,0.16)' }}>
-            <div className="flex items-start justify-between p-5 pb-0">
-              <div>
-                <h3 className="text-[20px] font-bold text-[var(--black-100)]">
-                  {modalState.mode === 'add' ? modalState.product.name : 'Editar nota'}
-                </h3>
-                {modalState.mode === 'add' && (
-                  <p className="text-xs text-[var(--blue-100)] font-bold mt-0.5">${modalState.product.price.toLocaleString()}</p>
-                )}
-                {modalState.mode === 'edit' && (
-                  <p className="text-xs text-[var(--black-40)] mt-0.5">{modalState.itemName}</p>
-                )}
-                {modalState.mode === 'add' && modalState.product.description && (
-                  <p
-                    className="mt-2 line-clamp-2 leading-snug"
-                    style={{ color: 'var(--black-60)', fontSize: '14px' }}
-                  >
-                    {modalState.product.description}
-                  </p>
-                )}
-              </div>
-              <button onClick={() => setModalState(null)} className="btn--icon p-1.5 shrink-0">
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="p-5 flex flex-col gap-4">
-              {modalState.mode === 'add' && (
-                <div className="flex items-center justify-between bg-[var(--blue-10)] rounded-[var(--radius-12)] p-3">
-                  <span className="text-xs font-semibold text-[var(--black-40)]">Cantidad</span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setModalQty(-1)}
-                      disabled={modalState.quantity <= 1}
-                      className={cn('w-8 h-8 rounded-[var(--radius-12)] border-[1.5px] flex items-center justify-center transition-all border-[var(--black-10)]',
-                        modalState.quantity > 1
-                          ? 'text-[var(--black-60)] hover:bg-white hover:border-[var(--blue-100)] hover:text-[var(--blue-100)]'
-                          : 'text-[var(--black-40)] cursor-not-allowed opacity-50',
-                      )}
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <span className="w-10 text-center text-lg font-bold text-[var(--black-100)]">{modalState.quantity}</span>
-                    <button
-                      onClick={() => setModalQty(1)}
-                      className="w-8 h-8 rounded-[var(--radius-12)] border-[1.5px] border-[var(--black-10)] flex items-center justify-center text-[var(--black-60)] hover:bg-white hover:border-[var(--blue-100)] hover:text-[var(--blue-100)] transition-all"
-                    >
-                      <Plus size={14} />
-                    </button>
+      {/* ══════════ DRAWER DE EDICIÓN DE ÍTEM ══════════════════════════════════ */}
+      {editItemTarget && (() => {
+        const catDef   = CAT_DEFS.find(c => c.id === editItemTarget.catId);
+        const catColor = catDef?.color ?? '#606060';
+        const catName  = catDef?.name  ?? '';
+        const merlinInput: React.CSSProperties = {
+          width: '100%', borderRadius: 8, border: '1px solid #E0E0E0',
+          background: '#F5F5F5', fontSize: 15, padding: '10px 12px',
+          outline: 'none', boxSizing: 'border-box', fontFamily: MFONT,
+          transition: 'border-color 180ms', color: '#1E1E1E',
+        };
+        const labelStyle: React.CSSProperties = {
+          fontSize: 12, fontWeight: 600, color: '#1E1E1E',
+          fontFamily: MFONT, display: 'block', marginBottom: 6,
+        };
+        const totalCalc = editItemPrice * editItemQty;
+        return (
+          <>
+            <div
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.32)', zIndex: 1099 }}
+              onClick={() => setEditItemTarget(null)}
+            />
+            <div style={{
+              position: 'fixed', right: 0, top: 0, height: '100vh',
+              width: 'min(549px, 100vw)',
+              backgroundColor: 'white',
+              boxShadow: '-4px 0 24px rgba(0,0,0,0.14)',
+              zIndex: 1100,
+              display: 'flex', flexDirection: 'column',
+              fontFamily: MFONT,
+            }}>
+              {/* Header 72px */}
+              <div style={{
+                height: 72, padding: '0 24px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                borderBottom: '2px solid #F0F0F0',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                  <div style={{ width: 8, height: 32, borderRadius: 4, backgroundColor: catColor, flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '1.2', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {editItemTarget.name}
+                    </p>
+                    {catName && (
+                      <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 500, color: catColor, fontFamily: MFONT }}>
+                        {catName}
+                      </p>
+                    )}
                   </div>
                 </div>
-              )}
-
-              <div className="merlin-field">
-                <label className="merlin-label">
-                  Nota para cocina <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>(opcional)</span>
-                </label>
-                <textarea
-                  className="merlin-input resize-none"
-                  rows={2}
-                  placeholder="Ej: Sin cebolla, extra picante..."
-                  value={modalState.note}
-                  onChange={e => setModalState({ ...modalState, note: e.target.value })}
-                />
+                <button onClick={() => setEditItemTarget(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: '#606060', flexShrink: 0 }}>
+                  <X size={22} />
+                </button>
               </div>
 
-              <div className="flex flex-wrap gap-1.5">
-                {NOTE_CHIPS.map(chip => (
-                  <button
-                    key={chip}
-                    onClick={() => toggleChip(chip)}
-                    className={cn('px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all',
-                      modalState.note.includes(chip)
-                        ? 'bg-[var(--blue-100)] text-white border-[var(--blue-100)]'
-                        : 'bg-[var(--blue-10)] text-[var(--black-60)] border-[var(--black-10)] hover:border-[var(--blue-100)] hover:text-[var(--blue-100)]',
-                    )}
-                  >
-                    {chip}
-                  </button>
-                ))}
+              {/* Body */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>Cantidad</label>
+                    <input type="number" min={1} value={editItemQty}
+                      onChange={e => setEditItemQty(Math.max(1, parseInt(e.target.value) || 1))}
+                      style={merlinInput}
+                      onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                      onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Descuento</label>
+                    <select value={editItemDiscount} onChange={e => setEditItemDiscount(e.target.value)}
+                      style={{ ...merlinInput, cursor: 'pointer' }}
+                      onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                      onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                    >
+                      <option value="0">Sin descuento</option>
+                      <option value="5">5%</option>
+                      <option value="10">10%</option>
+                      <option value="15">15%</option>
+                      <option value="20">20%</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ ...labelStyle, marginBottom: 0 }}>Precio unitario</label>
+                    <span style={{ fontSize: 11, color: '#606060', fontFamily: MFONT }}>Total: ${totalCalc.toLocaleString('es-CO')}</span>
+                  </div>
+                  <input type="number" min={0} value={editItemPrice}
+                    onChange={e => setEditItemPrice(Math.max(0, parseFloat(e.target.value) || 0))}
+                    style={merlinInput}
+                    onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                    onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                  />
+                </div>
+
+                <div style={{ height: 1, background: '#F0F0F0' }} />
+
+                <div>
+                  <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <ChefHat size={13} color="#1E1E1E" /> Nota para cocina
+                  </label>
+                  <textarea value={editItemNote} onChange={e => setEditItemNote(e.target.value)}
+                    placeholder="Ej: sin cebolla, término 3/4, salsa aparte..." rows={3}
+                    style={{ ...merlinInput, minHeight: 80, resize: 'none', padding: '10px 12px', lineHeight: '1.5' }}
+                    onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                    onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                  />
+                </div>
               </div>
 
-              <div className="flex gap-2 pt-1">
-                <button onClick={() => setModalState(null)} className="btn btn-cancel flex-1">
-                  Cancelar
+              {/* Footer */}
+              <div style={{ display: 'flex', gap: 12, padding: '16px 24px', borderTop: '1px solid #F0F0F0', flexShrink: 0 }}>
+                <button
+                  onClick={() => { removeItem(editItemTarget.id); setEditItemTarget(null); }}
+                  style={{ flex: 1, height: 44, borderRadius: 8, border: '1.5px solid #FF2947', color: '#FF2947', background: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: MFONT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                >
+                  <Trash2 size={14} color="#FF2947" /> Eliminar del pedido
                 </button>
                 <button
-                  onClick={modalState.mode === 'add' ? confirmAdd : confirmEditNote}
-                  className="btn btn-primary flex-1"
+                  onClick={saveItemEdit}
+                  style={{ flex: 1, height: 44, borderRadius: 8, border: 'none', background: '#121E6C', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: MFONT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 >
-                  {modalState.mode === 'add' ? 'Agregar' : 'Guardar'}
+                  <Check size={14} color="#fff" /> Guardar cambios
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        );
+      })()}
 
       {/* ══════════ BARRA DE CONTEXTO ══════════════════════════════════════════ */}
       <div
@@ -432,15 +428,22 @@ export function MesaProductSelector({
         <div className="flex-1 flex flex-col overflow-hidden bg-[var(--blue-10)]">
 
           {/* Buscador */}
-          <div className="flex items-center h-14 px-6 gap-4 bg-white border-b border-[var(--black-10)] shrink-0">
-            <div className="relative flex-1 max-w-lg">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--black-40)]" size={18} />
+          <div style={{ display: 'flex', alignItems: 'center', height: 56, padding: '0 24px', gap: 16, background: 'white', borderBottom: '1px solid #F0F0F0', flexShrink: 0 }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <Search size={16} color="#909090" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               <input
                 type="text"
                 placeholder="Buscar por nombre o código de producto..."
-                className="pos-input pl-10 pr-4 py-2 text-sm"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%', border: '1.5px solid #E0E0E0', borderRadius: 8,
+                  padding: '8px 12px 8px 36px', fontSize: 14,
+                  fontFamily: 'Montserrat, sans-serif', color: '#1E1E1E',
+                  backgroundColor: 'white', outline: 'none', boxSizing: 'border-box',
+                }}
+                onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
               />
             </div>
           </div>
@@ -535,7 +538,7 @@ export function MesaProductSelector({
                       return (
                         <button
                           key={item.id}
-                          onClick={() => openAddModal(prod)}
+                          onClick={() => addItem(prod)}
                           className="text-left rounded-[var(--radius-16)] transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
                           style={{
                             backgroundColor: def.lightBg,
@@ -652,11 +655,11 @@ export function MesaProductSelector({
               style={{
                 display: 'flex', alignItems: 'center', gap: 4,
                 background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                fontSize: 12, fontWeight: 500, color: '#121E6C', marginTop: 6,
+                fontSize: 13, fontWeight: 500, color: '#121E6C', marginTop: 6,
                 fontFamily: 'Montserrat, sans-serif',
               }}
             >
-              <ChevronLeft size={12} /> Volver al mapa
+              <ChevronLeft size={14} /> Volver al mapa
             </button>
 
           </div>
@@ -693,45 +696,51 @@ export function MesaProductSelector({
             ) : (
               <div>
                 {table.items.map(item => (
-                  <div key={item.id} style={{ padding: '10px 16px', borderBottom: '1px solid #F0F0F0', fontFamily: 'Montserrat, sans-serif' }}>
+                  <div
+                    key={item.id}
+                    style={{
+                      padding: '10px 16px', borderBottom: '1px solid #F0F0F0',
+                      fontFamily: 'Montserrat, sans-serif',
+                      backgroundColor: hoveredItemId === item.id ? '#F8F8F8' : 'white',
+                      cursor: 'pointer', transition: 'background-color 150ms', position: 'relative',
+                    }}
+                    onMouseEnter={() => setHoveredItemId(item.id)}
+                    onMouseLeave={() => setHoveredItemId(null)}
+                    onClick={() => {
+                      setEditItemTarget(item);
+                      setEditItemQty(item.quantity);
+                      setEditItemPrice(item.price);
+                      setEditItemDiscount('0');
+                      setEditItemNote(item.note ?? '');
+                    }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: '#1E1E1E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
                           {item.name}
                         </p>
-                        <p style={{ fontSize: 13, fontWeight: 500, color: '#FF2947', marginTop: 2 }}>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: '#FF2947', marginTop: 2, margin: '2px 0 0' }}>
                           ${(item.price * item.quantity).toLocaleString()}
                         </p>
-
-                        {/* Nota */}
-                        {item.note ? (
-                          <button
-                            onClick={() => setModalState({ mode: 'edit', itemId: item.id, itemName: item.name, note: item.note ?? '' })}
-                            style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                          >
-                            <Pencil size={11} style={{ color: '#606060', flexShrink: 0 }} />
-                            <span style={{ fontSize: 11, fontStyle: 'italic', color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>
-                              {item.note}
-                            </span>
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setModalState({ mode: 'edit', itemId: item.id, itemName: item.name, note: '' })}
-                            style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                          >
-                            <Pencil size={11} style={{ color: '#606060' }} />
-                            <span style={{ fontSize: 11, fontWeight: 400, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>
-                              + Agregar nota
-                            </span>
-                          </button>
+                        {item.note && (
+                          <p style={{ margin: '3px 0 0', fontSize: 11, fontStyle: 'italic', color: '#606060', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {item.note}
+                          </p>
                         )}
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                        {/* Lápiz — solo visible en hover */}
+                        {hoveredItemId === item.id && (
+                          <Pencil size={11} color="#C7CBE0" style={{ flexShrink: 0 }} />
+                        )}
                         {/* Qty controls */}
-                        <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #F0F0F0', borderRadius: 6, height: 28, overflow: 'hidden' }}>
+                        <div
+                          style={{ display: 'flex', alignItems: 'center', border: '1px solid #F0F0F0', borderRadius: 6, height: 28, overflow: 'hidden' }}
+                          onClick={e => e.stopPropagation()}
+                        >
                           <button
-                            onClick={() => updateQty(item.id, -1)}
+                            onClick={e => { e.stopPropagation(); updateQty(item.id, -1); }}
                             style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#606060' }}
                           >
                             <ChevronLeft size={13} />
@@ -740,7 +749,7 @@ export function MesaProductSelector({
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQty(item.id, 1)}
+                            onClick={e => { e.stopPropagation(); updateQty(item.id, 1); }}
                             style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#606060' }}
                           >
                             <ChevronRight size={13} />
@@ -748,7 +757,7 @@ export function MesaProductSelector({
                         </div>
                         {/* Trash */}
                         <button
-                          onClick={() => removeItem(item.id)}
+                          onClick={e => { e.stopPropagation(); removeItem(item.id); }}
                           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#C7CBE0', transition: 'color 150ms', marginLeft: 2 }}
                           onMouseEnter={e => (e.currentTarget.style.color = '#FF2947')}
                           onMouseLeave={e => (e.currentTarget.style.color = '#C7CBE0')}
