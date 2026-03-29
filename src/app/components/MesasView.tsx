@@ -8,6 +8,7 @@ import {
   CheckCircle2, Minus, RotateCcw, Pencil, AlertTriangle,
   MessageSquare, Timer, Printer, ZoomIn, ZoomOut, Maximize2, Info,
   LayoutGrid, Map, RefreshCw, CheckCircle, DollarSign,
+  ChefHat, Check,
 } from 'lucide-react';
 import { MesasGridView } from './MesasGridView';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ import { twMerge } from 'tailwind-merge';
 import { MesaProductSelector } from './MesaProductSelector';
 import { CheckoutDrawer } from './CheckoutDrawer';
 import { KitchenTicketPreviewModal, type TicketItem } from './KitchenTicketPreviewModal';
+import { CAT_DEFS } from '../data/productCatalog';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -37,6 +39,7 @@ export interface TableItem {
   sentQuantity?: number;  // cantidad enviada en el último envío confirmado
   sentNote?: string;       // nota enviada en la comanda anterior
   description?: string;
+  catId?: string;           // id de categoría del producto
 }
 
 export interface MesaTable {
@@ -1238,16 +1241,12 @@ export function MesasView() {
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<TableItem | null>(null);
   const [cancelKitchenItem, setCancelKitchenItem] = useState<TableItem | null>(null);
 
-  // ── Inline note editing ───────────────────────────────────────────────────
-  const [inlineNoteItemId, setInlineNoteItemId] = useState<string | null>(null);
-  const [inlineNoteValue, setInlineNoteValue] = useState<string>('');
-
-  // ── Task 3: Item edit modal ───────────────────────────────────────────────
+  // ── Task 3: Item edit drawer ──────────────────────────────────────────────
   const [editItemTarget, setEditItemTarget] = useState<TableItem | null>(null);
   const [editItemQty, setEditItemQty]       = useState<number>(1);
   const [editItemDiscount, setEditItemDiscount] = useState<string>('0');
   const [editItemPrice, setEditItemPrice]   = useState<number>(0);
-  const [editItemRef, setEditItemRef]       = useState<string>('');
+  const [editItemNote, setEditItemNote]     = useState<string>('');
 
   // ── Task 4: Hovered item row id ───────────────────────────────────────────
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
@@ -1486,7 +1485,7 @@ export function MesasView() {
           ...t,
           items: t.items.map(i =>
             i.id === itemId
-              ? { ...i, quantity: editItemQty, price: editItemPrice, note: editItemRef || i.note }
+              ? { ...i, quantity: editItemQty, price: editItemPrice, note: editItemNote.trim() || undefined }
               : i,
           ),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
@@ -2326,166 +2325,194 @@ export function MesasView() {
       {/* ════════════════════════════════════════════════════
           Task 3: Modal de edición de ítem
           ════════════════════════════════════════════════════ */}
-      {editItemTarget && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1100 }}>
-          {/* Overlay */}
-          <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.32)' }}
-            onClick={() => setEditItemTarget(null)}
-          />
-          {/* Drawer lateral */}
-          <div style={{
-            position: 'fixed', right: 0, top: 0, height: '100vh', width: 360,
-            backgroundColor: 'white',
-            boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
-            zIndex: 1101,
-            display: 'flex', flexDirection: 'column',
-            fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-          }}>
-            {/* Header fijo */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #F0F0F0', flexShrink: 0 }}>
-              <button
-                onClick={() => setEditItemTarget(null)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#606060', flexShrink: 0 }}
-              >
-                <X size={18} />
-              </button>
-              <h3 style={{
-                flex: 1, textAlign: 'center',
-                fontSize: 17, fontWeight: 700, color: '#121E6C', margin: 0,
-                fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+      {editItemTarget && (() => {
+        const catDef = CAT_DEFS.find(c => c.id === editItemTarget.catId);
+        const catColor = catDef?.color ?? '#606060';
+        const catName  = catDef?.name  ?? '';
+        const MFONT_D  = 'var(--font-family, Montserrat, sans-serif)';
+        const merlinInput: React.CSSProperties = {
+          width: '100%', borderRadius: 8, border: '1px solid #E0E0E0',
+          background: '#F5F5F5', fontSize: 15, padding: '10px 12px',
+          outline: 'none', boxSizing: 'border-box', fontFamily: MFONT_D,
+          transition: 'border-color 180ms', color: '#1E1E1E',
+        };
+        const labelStyle: React.CSSProperties = {
+          fontSize: 12, fontWeight: 600, color: '#1E1E1E',
+          fontFamily: MFONT_D, display: 'block', marginBottom: 6,
+        };
+        const totalCalc = editItemPrice * editItemQty;
+        return (
+          <>
+            {/* Overlay */}
+            <div
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.32)', zIndex: 1099 }}
+              onClick={() => setEditItemTarget(null)}
+            />
+            {/* Drawer lateral */}
+            <div style={{
+              position: 'fixed', right: 0, top: 0, height: '100vh',
+              width: 'min(549px, 100vw)',
+              backgroundColor: 'white',
+              boxShadow: '-4px 0 24px rgba(0,0,0,0.14)',
+              zIndex: 1100,
+              display: 'flex', flexDirection: 'column',
+              fontFamily: MFONT_D,
+            }}>
+              {/* ── Header fijo 72px ── */}
+              <div style={{
+                height: 72, padding: '0 24px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                borderBottom: '2px solid #F0F0F0',
               }}>
-                {editItemTarget.name}
-              </h3>
-              <div style={{ width: 26 }} />
-            </div>
-
-            {/* Body scrolleable */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Cantidad */}
-              <div>
-                <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
-                  Cantidad
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  value={editItemQty}
-                  onChange={e => setEditItemQty(Math.max(1, parseInt(e.target.value) || 1))}
-                  style={{
-                    width: '100%', height: 40, borderRadius: 12,
-                    border: '1.5px solid #C7CBE0', background: '#F7F8FB',
-                    fontSize: 14, padding: '0 12px', outline: 'none',
-                    boxSizing: 'border-box', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                    transition: 'border-color 200ms',
-                  }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
-                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
-                />
-              </div>
-
-              {/* Descuento por ítem */}
-              <div>
-                <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
-                  Descuento por ítem
-                </label>
-                <select
-                  value={editItemDiscount}
-                  onChange={e => setEditItemDiscount(e.target.value)}
-                  style={{
-                    width: '100%', height: 40, borderRadius: 12,
-                    border: '1.5px solid #C7CBE0', background: '#F7F8FB',
-                    fontSize: 14, padding: '0 12px', outline: 'none',
-                    boxSizing: 'border-box', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                    transition: 'border-color 200ms', cursor: 'pointer',
-                  }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
-                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
+                {/* Lado izq: barra de color + nombre + categoría */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                  <div style={{
+                    width: 8, height: 32, borderRadius: 4,
+                    backgroundColor: catColor, flexShrink: 0,
+                  }} />
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{
+                      margin: 0, fontSize: 20, fontWeight: 700, color: '#1E1E1E',
+                      fontFamily: MFONT_D, lineHeight: '1.2',
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      {editItemTarget.name}
+                    </p>
+                    {catName && (
+                      <p style={{
+                        margin: '2px 0 0', fontSize: 12, fontWeight: 500,
+                        color: catColor, fontFamily: MFONT_D,
+                      }}>
+                        {catName}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {/* Lado der: botón X */}
+                <button
+                  onClick={() => setEditItemTarget(null)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: '#606060', flexShrink: 0 }}
                 >
-                  <option value="0">Sin descuento</option>
-                  <option value="5">5%</option>
-                  <option value="10">10%</option>
-                  <option value="15">15%</option>
-                  <option value="20">20%</option>
-                  <option value="custom">Personalizado</option>
-                </select>
+                  <X size={22} />
+                </button>
               </div>
 
-              {/* Precio total */}
-              <div>
-                <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
-                  Precio total
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={editItemPrice}
-                  onChange={e => setEditItemPrice(Math.max(0, parseFloat(e.target.value) || 0))}
-                  style={{
-                    width: '100%', height: 40, borderRadius: 12,
-                    border: '1.5px solid #C7CBE0', background: '#F7F8FB',
-                    fontSize: 14, padding: '0 12px', outline: 'none',
-                    boxSizing: 'border-box', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                    transition: 'border-color 200ms',
-                  }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
-                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
-                />
+              {/* ── Body scrolleable ── */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                {/* Fila 1: Cantidad + Descuento */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>Cantidad</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={editItemQty}
+                      onChange={e => setEditItemQty(Math.max(1, parseInt(e.target.value) || 1))}
+                      style={merlinInput}
+                      onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                      onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Descuento</label>
+                    <select
+                      value={editItemDiscount}
+                      onChange={e => setEditItemDiscount(e.target.value)}
+                      style={{ ...merlinInput, cursor: 'pointer' }}
+                      onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                      onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                    >
+                      <option value="0">Sin descuento</option>
+                      <option value="5">5%</option>
+                      <option value="10">10%</option>
+                      <option value="15">15%</option>
+                      <option value="20">20%</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Precio unitario */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ ...labelStyle, marginBottom: 0 }}>Precio unitario</label>
+                    <span style={{ fontSize: 11, color: '#606060', fontFamily: MFONT_D }}>
+                      Total: ${totalCalc.toLocaleString('es-CO')}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    min={0}
+                    value={editItemPrice}
+                    onChange={e => setEditItemPrice(Math.max(0, parseFloat(e.target.value) || 0))}
+                    style={merlinInput}
+                    onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                    onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                  />
+                </div>
+
+                {/* Separador */}
+                <div style={{ height: 1, background: '#F0F0F0', margin: '0' }} />
+
+                {/* Nota para cocina */}
+                <div>
+                  <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <ChefHat size={13} color="#1E1E1E" />
+                    Nota para cocina
+                  </label>
+                  <textarea
+                    value={editItemNote}
+                    onChange={e => setEditItemNote(e.target.value)}
+                    placeholder="Ej: sin cebolla, término 3/4, salsa aparte..."
+                    rows={3}
+                    style={{
+                      ...merlinInput,
+                      minHeight: 80, resize: 'none',
+                      padding: '10px 12px', lineHeight: '1.5',
+                    }}
+                    onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                    onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                  />
+                </div>
               </div>
 
-              {/* Referencia */}
-              <div>
-                <label style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'var(--font-family, Montserrat, sans-serif)', display: 'block', marginBottom: 6 }}>
-                  Referencia
-                </label>
-                <textarea
-                  value={editItemRef}
-                  onChange={e => setEditItemRef(e.target.value)}
-                  placeholder="Ingresa una referencia"
-                  style={{
-                    width: '100%', height: 80, borderRadius: 12,
-                    border: '1.5px solid #C7CBE0', background: '#F7F8FB',
-                    fontSize: 14, padding: '8px 12px', outline: 'none',
-                    boxSizing: 'border-box', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                    transition: 'border-color 200ms', resize: 'none',
+              {/* ── Footer fijo ── */}
+              <div style={{
+                display: 'flex', gap: 12, padding: '16px 24px',
+                borderTop: '1px solid #F0F0F0', flexShrink: 0,
+              }}>
+                <button
+                  onClick={() => {
+                    setEditItemTarget(null);
+                    setDeleteConfirmItem(editItemTarget);
                   }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
-                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
-                />
+                  style={{
+                    flex: 1, height: 44, borderRadius: 8,
+                    border: '1.5px solid #FF2947', color: '#FF2947',
+                    background: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: MFONT_D, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  }}
+                >
+                  <Trash2 size={14} color="#FF2947" />
+                  Eliminar del pedido
+                </button>
+                <button
+                  onClick={saveItemEdit}
+                  style={{
+                    flex: 1, height: 44, borderRadius: 8,
+                    border: 'none', background: '#121E6C',
+                    color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: MFONT_D, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  }}
+                >
+                  <Check size={14} color="#fff" />
+                  Guardar cambios
+                </button>
               </div>
             </div>
-
-            {/* Footer fijo */}
-            <div style={{ display: 'flex', gap: 10, padding: '12px 20px', borderTop: '1px solid #F0F0F0', flexShrink: 0 }}>
-              <button
-                onClick={() => {
-                  setEditItemTarget(null);
-                  setDeleteConfirmItem(editItemTarget);
-                }}
-                style={{
-                  flex: 1, height: 44, borderRadius: 20,
-                  border: '1.5px solid #FF2947', color: '#FF2947',
-                  background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer',
-                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                }}
-              >
-                Eliminar de la factura
-              </button>
-              <button
-                onClick={saveItemEdit}
-                style={{
-                  flex: 1, height: 44, borderRadius: 20,
-                  border: 'none', background: '#FF2947',
-                  color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                }}
-              >
-                Guardar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+        );
+      })()}
 
       {/* ════════════════════════════════════════════���═══════
           Columna derecha: Panel detalle de mesa
@@ -2704,7 +2731,7 @@ export function MesasView() {
                             setEditItemQty(item.quantity);
                             setEditItemPrice(item.price);
                             setEditItemDiscount('0');
-                            setEditItemRef(item.note ?? '');
+                            setEditItemNote(item.note ?? '');
                           }}
                         >
                           {selectedTable.status === 'OCUPADA' ? (
@@ -2713,60 +2740,14 @@ export function MesasView() {
                               <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
                                 ${(item.price * item.quantity).toLocaleString()}
                               </p>
-                              {/* Nota inline */}
-                              {inlineNoteItemId === item.id ? (
-                                <input
-                                  autoFocus
-                                  type="text"
-                                  value={inlineNoteValue}
-                                  placeholder="Escribe una nota para cocina..."
-                                  onChange={e => setInlineNoteValue(e.target.value)}
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                      updateItemNote(item.id, inlineNoteValue.trim());
-                                      setInlineNoteItemId(null);
-                                    } else if (e.key === 'Escape') {
-                                      setInlineNoteItemId(null);
-                                    }
-                                  }}
-                                  onBlur={() => {
-                                    updateItemNote(item.id, inlineNoteValue.trim());
-                                    setInlineNoteItemId(null);
-                                  }}
-                                  onClick={e => e.stopPropagation()}
-                                  style={{
-                                    marginTop: 4, width: '100%',
-                                    background: 'transparent', border: 'none',
-                                    borderBottom: '2px solid #121E6C',
-                                    outline: 'none', fontSize: 13,
-                                    color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                                    padding: '2px 0 3px 0',
-                                  }}
-                                />
-                              ) : (
-                                <>
-                                  {item.note && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                                      <MessageSquare size={11} style={{ color: 'var(--black-40)', flexShrink: 0 }} />
-                                      <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--black-60)', lineHeight: '18px', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                                        {item.note}
-                                      </span>
-                                    </div>
-                                  )}
-                                  <div
-                                    style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, cursor: 'pointer', userSelect: 'none' }}
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      setInlineNoteItemId(item.id);
-                                      setInlineNoteValue(item.note ?? '');
-                                    }}
-                                  >
-                                    <Pencil size={12} color="#606060" />
-                                    <span style={{ fontSize: 11, fontWeight: 400, color: '#606060', textDecoration: 'underline', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
-                                      {item.note ? 'Editar nota' : 'Agregar nota'}
-                                    </span>
-                                  </div>
-                                </>
+                              {item.note && (
+                                <p style={{
+                                  margin: '3px 0 0', fontSize: 11, fontStyle: 'italic',
+                                  color: '#606060', fontFamily: 'var(--font-family, Montserrat, sans-serif)',
+                                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                }}>
+                                  {item.note}
+                                </p>
                               )}
                             </div>
                           ) : (

@@ -364,3 +364,43 @@ Shadow color base: rgba(18, 30, 108, 0.08)
   Colores por categoría: Entrada fría, Entrada caliente, Pastas, Carnes, Pescados, Postres, Bebidas (8-10 lógicas)
   Estados: Default, Seleccionada
   Adicionales: favoritos (estrella) y cantidad (globo)
+
+## Drawer Lateral de Producto
+
+Panel deslizante de edición de un ítem del pedido. Se abre al hacer click en cualquier ítem ya agregado en el panel lateral del pedido (mesa OCUPADA). El click directo en una card del catálogo siempre agrega el producto al pedido sin abrir el drawer.
+
+### Contenedor
+- `position: fixed`, `right: 0`, `top: 0`, `height: 100vh`, `width: min(549px, 100vw)`
+- `backgroundColor: white`, `boxShadow: -4px 0 24px rgba(0,0,0,0.14)`, `zIndex: 1100`
+- `display: flex`, `flexDirection: column`
+- Overlay detrás: `rgba(0,0,0,0.32)`, `zIndex: 1099`
+
+### Header (fijo, no hace scroll)
+- Altura: `72px`, `padding: 0 24px`
+- `display: flex`, `alignItems: center`, `justifyContent: space-between`
+- `borderBottom: 2px solid #F0F0F0`
+- **Lado izquierdo:** rectángulo de color de categoría (`8px × 32px`, `borderRadius: 4px`, color sólido de `catDef.color`) + nombre del producto (`20px / 700 / #1E1E1E / Montserrat`) + nombre de categoría debajo (`12px / 500`, color de la categoría)
+- **Lado derecho:** botón X (`X` de Lucide, `22px`, `#606060`, sin borde, fondo transparente)
+
+### Body (scrolleable)
+- `flex: 1`, `overflowY: auto`, `padding: 24px`, `gap: 16px`
+- **Estilo MERLin** para todos los inputs: `border: 1px solid #E0E0E0`, `background: #F5F5F5`, `borderRadius: 8px`, `padding: 10px 12px`, `fontSize: 15px`, `fontFamily: Montserrat`
+- **Labels:** `12px / 600 / #1E1E1E`
+
+**Campos en orden:**
+1. **Fila 1** — grid 2 columnas, `gap: 16px`: Campo "Cantidad" (`input[type=number]`, mín 1) + Campo "Descuento" (`select`: Sin descuento, 5%, 10%, 15%, 20%)
+2. **Precio unitario** — `input[type=number]`. Label incluye precio total calculado a la derecha: `"Total: $XX.XXX"` (`11px / #606060`)
+3. **Separador** — `1px solid #F0F0F0`
+4. **Nota para cocina** — `textarea`, `minHeight: 80px`, placeholder `"Ej: sin cebolla, término 3/4, salsa aparte..."`. Label con ícono `ChefHat` (`13px`) a la izquierda
+
+### Footer (fijo)
+- `padding: 16px 24px`, `borderTop: 1px solid #F0F0F0`, `gap: 12px`
+- **Botón "Eliminar del pedido":** `flex: 1`, `height: 44px`, `borderRadius: 8px`, `border: 1.5px solid #FF2947`, fondo blanco, texto `#FF2947`, `14px / 600`, ícono `Trash2 14px`
+- **Botón "Guardar cambios":** `flex: 1`, `height: 44px`, `borderRadius: 8px`, fondo `#121E6C`, texto blanco, `14px / 600`, ícono `Check 14px`
+- Al guardar: actualiza `quantity`, `price`, `note` del ítem y cierra el drawer
+
+### Nota en panel del pedido
+- Cuando el ítem tiene nota, se muestra debajo del precio: `11px / italic / #606060`
+- `whiteSpace: nowrap`, `overflow: hidden`, `textOverflow: ellipsis` (máximo 1 línea)
+- Si no hay nota, no se muestra nada
+- La nota solo se gestiona desde el drawer (no hay edición inline)

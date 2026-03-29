@@ -130,6 +130,7 @@ export function MesaProductSelector({
               note: note || undefined,
               isSent: false,
               description: product.description || undefined,
+              catId: product.catId,
             },
           ],
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
