@@ -42,6 +42,20 @@ export interface TableItem {
   catId?: string;           // id de categoría del producto
 }
 
+// ─── Pending changes (modificaciones post-primera-comanda) ───────────────────
+
+export type PendingChangeType = 'ELIMINAR' | 'CANTIDAD' | 'NOTA';
+
+export interface PendingChange {
+  type:        PendingChangeType;
+  productId:   number;
+  name:        string;
+  prevQty:     number;
+  newQty:      number;
+  prevNote:    string;
+  newNote:     string;
+}
+
 export interface MesaTable {
   id: string;
   name: string;
@@ -58,6 +72,7 @@ export interface MesaTable {
   guests?: number;
   comandaSent?: boolean;
   hasPendingChanges?: boolean;
+  pendingChanges?: PendingChange[];  // modificaciones post-primera-comanda
   frozenElapsedMs?: number;      // ms transcurridos al momento de finalizar (congelado)
 }
 
@@ -79,6 +94,29 @@ function formatElapsed(openedAtTimestamp: number, frozenElapsedMs?: number): str
 /** Devuelve la hora de apertura formateada: "2:15 PM" */
 function formatOpenTime(ts: number): string {
   return new Date(ts).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ─── Formato de líneas para ticket de ajuste ─────────────────────────────────
+
+function formatAdjustmentLines(items: TableItem[], pendingChanges: PendingChange[]): string[] {
+  const lines: string[] = [];
+  // Nuevos ítems (nunca enviados)
+  for (const item of items.filter(i => !i.isSent && i.quantity > 0)) {
+    lines.push(`${String(item.quantity).padEnd(3)} ${item.name}`);
+    if (item.note?.trim()) lines.push(`    -> ${item.note}`);
+  }
+  // Modificaciones a ítems ya enviados
+  for (const c of pendingChanges) {
+    if (c.type === 'ELIMINAR') {
+      lines.push(`CANCELAR: ${c.prevQty} ${c.name}`);
+    } else if (c.type === 'CANTIDAD') {
+      const sign = c.newQty > c.prevQty ? '+' : '-';
+      lines.push(`${sign} ${c.newQty} ${c.name} (era ${c.prevQty})`);
+    } else if (c.type === 'NOTA') {
+      lines.push(`NOTA ${c.name}: ${c.newNote}`);
+    }
+  }
+  return lines;
 }
 
 // ─── Static Config ────────────────────────────────────────────────────────────
@@ -1234,12 +1272,6 @@ export function MesasView() {
   const [editingPriceId,  setEditingPriceId]  = useState<string | null>(null);
   const [editingPriceVal, setEditingPriceVal] = useState<string>('');
 
-  // ── Reenviar comanda modal ────────────────────────────────────────────────
-  const [showReenviarModal, setShowReenviarModal] = useState(false);
-
-  // ── Delete confirmation modal + cancellation kitchen preview ──────────────
-  const [deleteConfirmItem, setDeleteConfirmItem] = useState<TableItem | null>(null);
-  const [cancelKitchenItem, setCancelKitchenItem] = useState<TableItem | null>(null);
 
   // ── Task 3: Item edit drawer ──────────────────────────────────────────────
   const [editItemTarget, setEditItemTarget] = useState<TableItem | null>(null);
@@ -1392,14 +1424,15 @@ export function MesasView() {
       prev.map(t =>
         t.id !== selectedTableId ? t : {
           ...t,
-          comandaSent: true,
+          comandaSent:       true,
           hasPendingChanges: false,
+          pendingChanges:    [],
           firstComandaSentAt: t.firstComandaSentAt ?? now,
           items: t.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
         },
       ),
     );
-    toast.success(isResend ? 'Comanda reenviada' : 'Comanda enviada');
+    toast.success(isResend ? 'Ajustes enviados a cocina' : 'Comanda enviada a cocina');
   };
 
   const requestBill = () => {
@@ -1437,10 +1470,32 @@ export function MesasView() {
     setTables(prev =>
       prev.map(t => {
         if (t.id !== selectedTableId) return t;
+        const item   = t.items.find(i => i.id === itemId);
+        const newQty = Math.max(1, (item?.quantity ?? 1) + delta);
+        let newPendingChanges = t.pendingChanges ?? [];
+        if (item && t.comandaSent && item.isSent) {
+          const sentQty = item.sentQuantity ?? item.quantity;
+          // Eliminar entrada CANTIDAD anterior de este producto
+          newPendingChanges = newPendingChanges.filter(
+            c => !(c.productId === item.productId && c.type === 'CANTIDAD'),
+          );
+          if (newQty !== sentQty) {
+            newPendingChanges = [...newPendingChanges, {
+              type:      'CANTIDAD' as PendingChangeType,
+              productId: item.productId,
+              name:      item.name,
+              prevQty:   sentQty,
+              newQty,
+              prevNote:  item.sentNote ?? '',
+              newNote:   item.note ?? '',
+            }];
+          }
+        }
         return {
           ...t,
-          items: t.items.map(i => i.id === itemId ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i),
+          items:             t.items.map(i => i.id === itemId ? { ...i, quantity: newQty } : i),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          pendingChanges:    newPendingChanges,
         };
       }),
     );
@@ -1449,46 +1504,86 @@ export function MesasView() {
   const removeItem = (itemId: string) => {
     if (!selectedTableId) return;
     setTables(prev =>
-      prev.map(t =>
-        t.id !== selectedTableId ? t : {
+      prev.map(t => {
+        if (t.id !== selectedTableId) return t;
+        const item = t.items.find(i => i.id === itemId);
+        let newPendingChanges = t.pendingChanges ?? [];
+        if (item && t.comandaSent && item.isSent) {
+          // Ítem ya enviado a cocina → registrar como ELIMINAR
+          newPendingChanges = [
+            ...newPendingChanges.filter(c => c.productId !== item.productId),
+            {
+              type: 'ELIMINAR' as PendingChangeType,
+              productId: item.productId,
+              name:      item.name,
+              prevQty:   item.sentQuantity ?? item.quantity,
+              newQty:    0,
+              prevNote:  item.sentNote ?? '',
+              newNote:   '',
+            },
+          ];
+        }
+        return {
           ...t,
-          items: t.items.filter(i => i.id !== itemId),
+          items:             t.items.filter(i => i.id !== itemId),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
-        },
-      ),
+          pendingChanges:    newPendingChanges,
+        };
+      }),
     );
   };
 
-  // ── Reenviar comanda: abre modal de preview ───────────────────────────────
+  // ── Reenviar comanda: usa el mismo showKitchenPreview ─────────────────────
   const handleReenviarComanda = () => {
     if (!selectedTableId || !selectedTable) return;
-    setShowReenviarModal(true);
-  };
-
-  // ── Confirm delete: abre modal de preview de cancelación ─────────────────
-  const confirmDeleteItem = () => {
-    if (!deleteConfirmItem || !selectedTableId || !selectedTable) return;
-    const item = deleteConfirmItem;
-    removeItem(item.id);
-    setDeleteConfirmItem(null);
-    setCancelKitchenItem(item);
+    setShowKitchenPreview(true);
   };
 
   // ── Task 3: Save item edit ─────────────────────────────────────────────────
   const saveItemEdit = () => {
     if (!editItemTarget || !selectedTableId) return;
-    const itemId = editItemTarget.id;
+    const itemId  = editItemTarget.id;
+    const newNote = editItemNote.trim();
     setTables(prev =>
       prev.map(t => {
         if (t.id !== selectedTableId) return t;
+        const item = t.items.find(i => i.id === itemId);
+        let newPendingChanges = t.pendingChanges ?? [];
+        if (item && t.comandaSent && item.isSent) {
+          const sentQty  = item.sentQuantity ?? item.quantity;
+          const sentNote = item.sentNote ?? '';
+          // CANTIDAD
+          newPendingChanges = newPendingChanges.filter(
+            c => !(c.productId === item.productId && c.type === 'CANTIDAD'),
+          );
+          if (editItemQty !== sentQty) {
+            newPendingChanges = [...newPendingChanges, {
+              type: 'CANTIDAD' as PendingChangeType, productId: item.productId,
+              name: item.name, prevQty: sentQty, newQty: editItemQty,
+              prevNote: sentNote, newNote,
+            }];
+          }
+          // NOTA
+          newPendingChanges = newPendingChanges.filter(
+            c => !(c.productId === item.productId && c.type === 'NOTA'),
+          );
+          if (newNote && newNote !== sentNote) {
+            newPendingChanges = [...newPendingChanges, {
+              type: 'NOTA' as PendingChangeType, productId: item.productId,
+              name: item.name, prevQty: sentQty, newQty: editItemQty,
+              prevNote: sentNote, newNote,
+            }];
+          }
+        }
         return {
           ...t,
           items: t.items.map(i =>
             i.id === itemId
-              ? { ...i, quantity: editItemQty, price: editItemPrice, note: editItemNote.trim() || undefined }
+              ? { ...i, quantity: editItemQty, price: editItemPrice, note: newNote || undefined }
               : i,
           ),
           hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          pendingChanges:    newPendingChanges,
         };
       }),
     );
@@ -2205,121 +2300,35 @@ export function MesasView() {
         />
       )}
 
-      {/* ── Modal preview ticket de cocina ── */}
-      {showKitchenPreview && selectedTable && (
-        <KitchenTicketPreviewModal
-          headerLabel="Mesa"
-          headerValue={selectedTable.name}
-          showPersonas
-          guests={selectedTable.guests}
-          staffLabel="Mesero"
-          items={selectedTable.items as TicketItem[]}
-          firstComandaSentAt={selectedTable.firstComandaSentAt}
-          isResend={selectedTable.comandaSent && selectedTable.hasPendingChanges}
-          onCancel={() => setShowKitchenPreview(false)}
-          onConfirm={() => {
-            sendComanda();
-            setShowKitchenPreview(false);
-          }}
-        />
-      )}
-
-      {/* ════════════════════════════════════════════════════
-          Task 2: Modal de confirmación de eliminación de ítem
-          ════════════════════════════════════════════════════ */}
-      {deleteConfirmItem && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 200,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        }}>
-          <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }}
-            onClick={() => setDeleteConfirmItem(null)}
+      {/* ── Modal preview ticket de cocina / ajuste / reenvío ── */}
+      {showKitchenPreview && selectedTable && (() => {
+        const isAdjust     = (selectedTable.comandaSent ?? false) && (selectedTable.hasPendingChanges ?? false);
+        const isFullResend = (selectedTable.comandaSent ?? false) && !(selectedTable.hasPendingChanges ?? false);
+        const adjLines     = isAdjust
+          ? formatAdjustmentLines(selectedTable.items, selectedTable.pendingChanges ?? [])
+          : undefined;
+        return (
+          <KitchenTicketPreviewModal
+            headerLabel="Mesa"
+            headerValue={selectedTable.name}
+            showPersonas
+            guests={selectedTable.guests}
+            staffLabel="Mesero"
+            items={selectedTable.items as TicketItem[]}
+            firstComandaSentAt={selectedTable.firstComandaSentAt}
+            isResend={isFullResend}
+            title={isAdjust ? 'Comanda de ajuste — Cocina' : isFullResend ? 'Reenviar comanda a cocina' : undefined}
+            subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : undefined}
+            actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
+            adjustmentLines={adjLines}
+            onCancel={() => setShowKitchenPreview(false)}
+            onConfirm={() => {
+              sendComanda();
+              setShowKitchenPreview(false);
+            }}
           />
-          <div style={{
-            position: 'relative', zIndex: 1,
-            background: '#fff', borderRadius: 16, padding: 24,
-            maxWidth: 380, width: '100%',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-            fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-          }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1E1E1E', marginBottom: 10 }}>
-              Eliminar ítem
-            </h3>
-            <p style={{ fontSize: 14, fontWeight: 400, color: '#606060', marginBottom: 24, lineHeight: 1.5 }}>
-              ¿Confirmar eliminación de <strong>{deleteConfirmItem.name}</strong>? Se enviará una comanda de cancelación a cocina.
-            </p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                onClick={() => setDeleteConfirmItem(null)}
-                style={{
-                  flex: 1, height: 40, borderRadius: 8,
-                  border: '1.5px solid #C7CBE0', background: '#fff',
-                  fontSize: 14, fontWeight: 500, color: '#606060', cursor: 'pointer',
-                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmDeleteItem}
-                style={{
-                  flex: 1, height: 40, borderRadius: 8,
-                  border: 'none', background: '#FF2947',
-                  fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer',
-                  fontFamily: 'var(--font-family, Montserrat, sans-serif)',
-                }}
-              >
-                Eliminar y notificar cocina
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════
-          Modal de reenviar comanda
-          ════════════════════════════════════════════════════ */}
-      {showReenviarModal && selectedTable && (
-        <KitchenTicketPreviewModal
-          headerLabel="Mesa"
-          headerValue={selectedTable.name}
-          showPersonas
-          guests={selectedTable.guests}
-          staffLabel="Mesero"
-          items={selectedTable.items as TicketItem[]}
-          firstComandaSentAt={selectedTable.firstComandaSentAt}
-          isResend
-          title="Reenviar comanda a cocina"
-          actionLabel="Reenviar e imprimir"
-          onCancel={() => setShowReenviarModal(false)}
-          onConfirm={() => {
-            sendComanda();
-            setShowReenviarModal(false);
-          }}
-        />
-      )}
-
-      {/* ════════════════════════════════════════════════════
-          Modal de cancelación de ítem a cocina
-          ════════════════════════════════════════════════════ */}
-      {cancelKitchenItem && selectedTable && (
-        <KitchenTicketPreviewModal
-          headerLabel="Mesa"
-          headerValue={selectedTable.name}
-          showPersonas={false}
-          staffLabel="Mesero"
-          items={[{ ...cancelKitchenItem, name: `CANCELAR: ${cancelKitchenItem.name}`, isSent: false }] as TicketItem[]}
-          title="Cancelación — Cocina"
-          subtitle="Se enviará la siguiente comanda de cancelación a cocina"
-          actionLabel="Enviar cancelación"
-          onCancel={() => setCancelKitchenItem(null)}
-          onConfirm={() => {
-            setCancelKitchenItem(null);
-            toast.success(`Cancelación enviada a cocina — ${cancelKitchenItem.name}`);
-          }}
-        />
-      )}
+        );
+      })()}
 
 
       {/* ════════════════════════════════════════════════════
@@ -2483,8 +2492,8 @@ export function MesasView() {
               }}>
                 <button
                   onClick={() => {
+                    removeItem(editItemTarget.id);
                     setEditItemTarget(null);
-                    setDeleteConfirmItem(editItemTarget);
                   }}
                   style={{
                     flex: 1, height: 44, borderRadius: 8,
@@ -2779,7 +2788,7 @@ export function MesasView() {
                                 </button>
                               </div>
                               <button
-                                onClick={e => { e.stopPropagation(); setDeleteConfirmItem(item); }}
+                                onClick={e => { e.stopPropagation(); removeItem(item.id); }}
                                 className="btn-danger btn--icon"
                                 style={{ color: 'var(--black-40)' }}
                               >

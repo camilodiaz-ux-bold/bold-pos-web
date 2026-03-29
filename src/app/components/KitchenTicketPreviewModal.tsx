@@ -50,6 +50,9 @@ export interface KitchenTicketPreviewModalProps {
   subtitle?: string;
   /** Override del label del botón de acción (default "Enviar e imprimir") */
   actionLabel?: string;
+  /** Líneas pre-formateadas para modo comanda de ajuste.
+   *  Cuando se proveen, el ticket muestra estas líneas en lugar del listado normal. */
+  adjustmentLines?: string[];
   onCancel:  () => void;
   onConfirm: () => void;
 }
@@ -138,6 +141,7 @@ export function KitchenTicketPreviewModal({
   title,
   subtitle,
   actionLabel,
+  adjustmentLines,
   onCancel,
   onConfirm,
 }: KitchenTicketPreviewModalProps) {
@@ -151,10 +155,11 @@ export function KitchenTicketPreviewModal({
       : '—',
   [firstComandaSentAt]);
 
+  const isAdjustMode  = adjustmentLines !== undefined;
   const printItems    = items.filter(i => i.quantity > 0);
   const diffItems     = useMemo(() => computeDiffItems(printItems), [items]);
   const modifiedItems = useMemo(() => computeModifiedItems(printItems), [items]);
-  const hasNothingNew = isResend && diffItems.length === 0 && modifiedItems.length === 0;
+  const hasNothingNew = !isAdjustMode && isResend && diffItems.length === 0 && modifiedItems.length === 0;
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
@@ -214,15 +219,12 @@ export function KitchenTicketPreviewModal({
             }}
           >
             {/* ─ Encabezado del ticket ─ */}
-            {isResend ? (
-              <div
-                style={{
-                  backgroundColor: '#FEF3C7',
-                  padding: '6px 16px',
-                  marginBottom: 4,
-                  textAlign: 'center',
-                }}
-              >
+            {isAdjustMode ? (
+              <div style={{ backgroundColor: '#FFF3D1', padding: '6px 16px', marginBottom: 4, textAlign: 'center' }}>
+                <span style={{ ...TXT.bold, fontSize: 14 }}>COMANDA DE AJUSTE</span>
+              </div>
+            ) : isResend ? (
+              <div style={{ backgroundColor: '#FEF3C7', padding: '6px 16px', marginBottom: 4, textAlign: 'center' }}>
                 <span style={{ ...TXT.bold, fontSize: 14 }}>COMANDA COMPLETA</span>
               </div>
             ) : (
@@ -268,48 +270,37 @@ export function KitchenTicketPreviewModal({
 
             {/* ─ Productos ─ */}
             <div style={{ paddingInline: 16 }}>
-              {isResend ? (
-                printItems.length === 0 ? (
+              {isAdjustMode ? (
+                adjustmentLines!.length === 0 ? (
                   <p style={{ ...TXT.small, textAlign: 'center', marginBottom: 10 }}>
-                    (sin productos)
+                    (sin cambios pendientes)
                   </p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
-                    {printItems.map(item => (
-                      <div key={item.id}>
-                        <p style={{ ...TXT.bold, fontWeight: 600 }}>
-                          {String(item.quantity).padEnd(3, ' ')} {item.name}
-                        </p>
-                        {item.note && item.note.trim() && (
-                          <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
-                            {'    '}&#x2192;{'  '}{item.note}
-                          </p>
-                        )}
-                      </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                    {adjustmentLines!.map((line, i) => (
+                      <p key={i} style={{ ...TXT.bold, fontWeight: 600 }}>{line}</p>
                     ))}
                   </div>
                 )
+              ) : printItems.length === 0 ? (
+                <p style={{ ...TXT.small, textAlign: 'center', marginBottom: 10 }}>
+                  (sin productos)
+                </p>
               ) : (
-                printItems.length === 0 ? (
-                  <p style={{ ...TXT.small, textAlign: 'center', marginBottom: 10 }}>
-                    (sin productos)
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
-                    {printItems.map(item => (
-                      <div key={item.id}>
-                        <p style={{ ...TXT.bold, fontWeight: 600 }}>
-                          {String(item.quantity).padEnd(3, ' ')} {item.name}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+                  {printItems.map(item => (
+                    <div key={item.id}>
+                      <p style={{ ...TXT.bold, fontWeight: 600 }}>
+                        {String(item.quantity).padEnd(3, ' ')} {item.name}
+                      </p>
+                      {item.note && item.note.trim() && (
+                        <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
+                          {'    '}&#x2192;{'  '}{item.note}
                         </p>
-                        {item.note && item.note.trim() && (
-                          <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
-                            {'    '}&#x2192;{'  '}{item.note}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
