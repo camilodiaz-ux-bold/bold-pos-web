@@ -462,7 +462,7 @@ export function MesaProductSelector({
                       style={{
                         borderLeft: isFavActive ? '4px solid #1E1E1E' : '3px solid #1E1E1E',
                         backgroundColor: isFavActive ? 'rgba(0,0,0,0.06)' : 'transparent',
-                        color: isFavActive ? '#121E6C' : '#1E1E1E',
+                        color: '#1E1E1E',
                         fontWeight: isFavActive ? 700 : 500,
                         padding: '10px 12px',
                         borderBottom: '1px solid #F0F0F0',
@@ -489,7 +489,7 @@ export function MesaProductSelector({
                       style={{
                         borderLeft: isActive ? `4px solid ${cat.lineColor}` : `3px solid ${cat.lineColor}`,
                         backgroundColor: isActive ? `${cat.color}1A` : 'transparent',
-                        color: isActive ? '#121E6C' : '#1E1E1E',
+                        color: '#1E1E1E',
                         fontWeight: isActive ? 700 : 500,
                         padding: '10px 12px',
                         borderBottom: index < CAT_DEFS.length - 1 ? '1px solid #F0F0F0' : undefined,
