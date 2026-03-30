@@ -17,7 +17,7 @@ import { twMerge } from 'tailwind-merge';
 import { MesaProductSelector } from './MesaProductSelector';
 import { CheckoutDrawer } from './CheckoutDrawer';
 import { KitchenTicketPreviewModal, type TicketItem } from './KitchenTicketPreviewModal';
-import { CAT_DEFS } from '../data/productCatalog';
+import { CAT_DEFS, ALL_CATALOG_PRODUCTS } from '../data/productCatalog';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -161,117 +161,131 @@ const STATUS_CFG: Record<TableStatus, {
 
 function buildMockTables(): MesaTable[] {
   const ago = (min: number) => Date.now() - min * 60_000;
-  const it = (id: string, name: string, price: number, qty: number, sent = true): TableItem =>
-    ({ id, productId: 0, name, price, quantity: qty, isSent: sent });
+
+  /** Crea un TableItem con datos reales del catálogo */
+  const it = (tableId: string, suffix: string, prodId: number, qty: number, sent = true): TableItem => {
+    const prod = ALL_CATALOG_PRODUCTS.find(pr => pr.id === prodId)!;
+    return {
+      id:           `${tableId}-${suffix}`,
+      productId:    prod.id,
+      name:         prod.name,
+      price:        prod.price,
+      quantity:     qty,
+      catId:        prod.catId,
+      isSent:       sent,
+      sentQuantity: sent ? qty : undefined,
+    };
+  };
 
   return [
     // ── SALÓN: ESPERA ──────────────────────────────────────────────────────────
     { id:'s01', name:'S01', zone:'Salón', status:'INHABILITADA', capacity:2, shape:'round', x:60,  y:60,  rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s02', name:'S02', zone:'Salón', status:'OCUPADA',    capacity:2, shape:'round', x:200, y:60,  rotationDeg:0,
-      items:[ it('s02a','Café Americano',7500,2), it('s02b','Croissant',9000,2) ],
+      items:[ it('s02','a',164,1), it('s02','b',165,2) ],                                       // Mocktail + Ginger Beer
       openedAtTimestamp:ago(18), guests:2, comandaSent:true, hasPendingChanges:false },
     { id:'s03', name:'S03', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:60,  y:225, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s04', name:'S04', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:235, y:225, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     // ── SALÓN: CENTRO F1 ───────────────────────────────────────────────────────
     { id:'s05', name:'S05', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:400, y:60, rotationDeg:0,
-      items:[ it('s05a','Hamburguesa Gourmet',38000,2), it('s05b','Papas Fritas',12000,2), it('s05c','Iced Latte XL',12500,1) ],
+      items:[ it('s05','a',103,2), it('s05','b',131,2), it('s05','c',161,3) ],                  // Ceviche + Solomillo Wellington + Limonada
       openedAtTimestamp:ago(45), guests:3, comandaSent:true, hasPendingChanges:false },
     { id:'s06', name:'S06', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:555, y:60, rotationDeg:0,
-      items:[ it('s06a','Pizza Pepperoni',42000,1), it('s06b','Jugo Natural',9500,3) ],
+      items:[ it('s06','a',111,2), it('s06','b',122,2), it('s06','c',166,3) ],                  // Vieiras + Tagliatelle de Cacao + Néctar de Pera
       openedAtTimestamp:ago(28), guests:3, comandaSent:true, hasPendingChanges:false },
     { id:'s07', name:'S07', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:710, y:60, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s08', name:'S08', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:865, y:60, rotationDeg:0,
-      items:[ it('s08a','Salmón Grillado',54000,2), it('s08b','Ensalada Caesar',28500,1), it('s08c','Agua Mineral',6000,2) ],
+      items:[ it('s08','a',143,2), it('s08','b',104,1), it('s08','c',162,2) ],                  // Salmón Escocés + Burrata Ahumada + Agua de Piedra
       openedAtTimestamp:ago(67), guests:2, comandaSent:true, hasPendingChanges:false },
     // ── SALÓN: CENTRO F2 ───────────────────────────────────────────────────────
     { id:'s09', name:'S09', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:400, y:215, rotationDeg:0,
-      items:[ it('s09a','Costillas BBQ',48000,1,false), it('s09b','Iced Latte XL',12500,2,false) ],
+      items:[ it('s09','a',102,2,false), it('s09','b',136,3,false) ],                            // Tartar de Atún + Short Rib (no enviados)
       openedAtTimestamp:ago(12), guests:4, comandaSent:false, hasPendingChanges:false },
     { id:'s10', name:'S10', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:555, y:215, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s11', name:'S11', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:710, y:215, rotationDeg:0,
-      items:[ it('s11a','Pollo a la Plancha',32000,2), it('s11b','Arroz con Coco',11000,2), it('s11c','Jugo Natural',9500,2) ],
+      items:[ it('s11','a',135,2), it('s11','b',127,2), it('s11','c',166,2) ],                  // Cochinillo Confitado + Risotto Espárragos + Néctar de Pera
       openedAtTimestamp:ago(55), guests:4, comandaSent:true, hasPendingChanges:false },
     { id:'s12', name:'S12', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:865, y:215, rotationDeg:0,
-      items:[ it('s12a','Ensalada Caesar',28500,1,false), it('s12b','Sopa del Día',14000,1,false) ],
+      items:[ it('s12','a',101,1,false), it('s12','b',115,1,false) ],                            // Carpaccio de Wagyu + Tuétano Rostizado (no enviados)
       openedAtTimestamp:ago(22), guests:2, comandaSent:false, hasPendingChanges:false },
     // ── SALÓN: CENTRO F3 ───────────────────────────────────────────────────────
     { id:'s13', name:'S13', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:400, y:370, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s14', name:'S14', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:555, y:370, rotationDeg:0,
-      items:[ it('s14a','Brownie c/Helado',18000,2), it('s14b','Tiramisú',16000,1), it('s14c','Café Americano',7500,3) ],
+      items:[ it('s14','a',158,2), it('s14','b',151,1), it('s14','c',161,3) ],                  // Tiramisú de Autor + Esfera de Chocolate + Limonada
       openedAtTimestamp:ago(38), guests:3, comandaSent:true, hasPendingChanges:false },
     { id:'s15', name:'S15', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:710, y:370, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s16', name:'S16', zone:'Salón', status:'CUENTA_SOLICITADA', capacity:4, shape:'rect', x:865, y:370, rotationDeg:0,
-      items:[ it('s16a','Hamburguesa Gourmet',38000,4), it('s16b','Papas Fritas',12000,4), it('s16c','Gaseosa',8000,4) ],
+      items:[ it('s16','a',133,2), it('s16','b',141,2), it('s16','c',165,4) ],                  // Entrecot Dry Aged + Bacalao Negro + Ginger Beer
       openedAtTimestamp:ago(75), guests:4, comandaSent:true, hasPendingChanges:false },
     // ── SALÓN: CENTRO F4 ───────────────────────────────────────────────────────
     { id:'s17', name:'S17', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:400, y:525, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s18', name:'S18', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:555, y:525, rotationDeg:0,
-      items:[ it('s18a','Ceviche',29000,2), it('s18b','Patacones',11000,2) ],
+      items:[ it('s18','a',146,2), it('s18','b',103,1) ],                                        // Atún Rojo en Costra + Ceviche de Corvina
       openedAtTimestamp:ago(31), guests:2, comandaSent:true, hasPendingChanges:false },
     { id:'s19', name:'S19', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:710, y:525, rotationDeg:0,
-      items:[ it('s19a','Pizza Pepperoni',42000,1), it('s19b','Iced Latte XL',12500,2) ],
+      items:[ it('s19','a',125,2,false), it('s19','b',153,3,false) ],                            // Pappardelle con Cordero + Tarta Tatín (no enviados)
       openedAtTimestamp:ago(19), guests:3, comandaSent:false, hasPendingChanges:false },
     { id:'s22', name:'S22', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:865, y:525, rotationDeg:0,
-      items:[ it('s22a','Costillas BBQ',48000,2), it('s22b','Cerveza Artesanal',9500,4) ],
+      items:[ it('s22','a',138,1), it('s22','b',165,4) ],                                        // Tomahawk + Ginger Beer Artesanal
       openedAtTimestamp:ago(89), guests:4, comandaSent:true, hasPendingChanges:false },
     // ── SALÓN: CENTRO Redondas ─────────────────────────────────────────────────
     { id:'s20', name:'S20', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'round', x:400, y:680, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s21', name:'S21', zone:'Salón', status:'OCUPADA',    capacity:4, shape:'round', x:555, y:680, rotationDeg:0,
-      items:[ it('s21a','Salmón Grillado',54000,1), it('s21b','Vino Copa',18000,2) ],
+      items:[ it('s21','a',142,1), it('s21','b',164,2) ],                                        // Lubina en Sal de Mar + Mocktail de Pepino
       openedAtTimestamp:ago(42), guests:2, comandaSent:true, hasPendingChanges:false },
     // ── SALÓN: VENTANA ─────────────────────────────────────────────────────────
     { id:'s23', name:'S23', zone:'Salón', status:'DISPONIBLE',        capacity:4, shape:'rect', x:1015, y:60,  rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s24', name:'S24', zone:'Salón', status:'OCUPADA',           capacity:4, shape:'rect', x:1015, y:215, rotationDeg:0,
-      items:[ it('s24a','Hamburguesa Gourmet',38000,2), it('s24b','Gaseosa',8000,2) ],
+      items:[ it('s24','a',117,2), it('s24','b',121,1) ],                                        // Langostinos al Josper + Risotto de Trufa Blanca
       openedAtTimestamp:ago(34), guests:2, comandaSent:true, hasPendingChanges:false },
     { id:'s25', name:'S25', zone:'Salón', status:'DISPONIBLE',        capacity:4, shape:'rect', x:1015, y:370, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s26', name:'S26', zone:'Salón', status:'CUENTA_SOLICITADA', capacity:6, shape:'rect', x:1015, y:525, rotationDeg:0,
-      items:[ it('s26a','Pollo a la Plancha',32000,3), it('s26b','Ensalada Caesar',28500,2), it('s26c','Jugo Natural',9500,4), it('s26d','Tiramisú',16000,3) ],
+      items:[ it('s26','a',108,2), it('s26','b',134,3), it('s26','c',125,2), it('s26','d',164,4), it('s26','e',155,3) ], // Ensalada Centollo + Pato Naranja + Pappardelle + Mocktail + Texturas Avellana
       openedAtTimestamp:ago(93), guests:6, comandaSent:true, hasPendingChanges:false },
     { id:'s27', name:'S27', zone:'Salón', status:'OCUPADA',           capacity:4, shape:'rect', x:1190, y:60,  rotationDeg:0,
-      items:[ it('s27a','Ceviche',29000,1), it('s27b','Agua con Gas',6000,2) ],
+      items:[ it('s27','a',105,1,false), it('s27','b',163,2,false) ],                            // Ostras Fine de Claire + Infusión de Rooibos (no enviados)
       openedAtTimestamp:ago(25), guests:2, comandaSent:false, hasPendingChanges:false },
     { id:'s28', name:'S28', zone:'Salón', status:'CUENTA_SOLICITADA', capacity:6, shape:'rect', x:1190, y:215, rotationDeg:0,
-      items:[ it('s28a','Hamburguesa Gourmet',38000,3), it('s28b','Papas Fritas',12000,3), it('s28c','Cerveza Artesanal',9500,6) ],
+      items:[ it('s28','a',131,3), it('s28','b',148,2), it('s28','c',161,5) ],                  // Solomillo Wellington + Lenguado Meunière + Limonada
       openedAtTimestamp:ago(71), guests:5, comandaSent:true, hasPendingChanges:false },
     { id:'s29', name:'S29', zone:'Salón', status:'DISPONIBLE',        capacity:4, shape:'rect', x:1190, y:370, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s30', name:'S30', zone:'Salón', status:'DISPONIBLE',         capacity:4, shape:'rect', x:1190, y:525, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     // ── SALÓN: FAMILIAR ────────────────────────────────────────────────────────
     { id:'s31', name:'S31', zone:'Salón', status:'DISPONIBLE',        capacity:6,  shape:'rect', x:60,  y:810, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s32', name:'S32', zone:'Salón', status:'CUENTA_SOLICITADA', capacity:6,  shape:'rect', x:235, y:810, rotationDeg:0,
-      items:[ it('s32a','Costillas BBQ',48000,4), it('s32b','Papas Fritas',12000,4), it('s32c','Cerveza Artesanal',9500,8) ],
+      items:[ it('s32','a',132,3), it('s32','b',139,3), it('s32','c',161,6) ],                  // Costillar de Cordero + Tournedó Rossini + Limonada
       openedAtTimestamp:ago(118), guests:6, comandaSent:true, hasPendingChanges:false },
     { id:'s33', name:'S33', zone:'Salón', status:'DISPONIBLE',        capacity:6,  shape:'rect', x:410, y:810, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s34', name:'S34', zone:'Salón', status:'DISPONIBLE',         capacity:6,  shape:'rect', x:585, y:810, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s35', name:'S35', zone:'Salón', status:'OCUPADA',           capacity:12, shape:'rect', x:775, y:800, rotationDeg:0,
-      items:[ it('s35a','Hamburguesa Gourmet',38000,8), it('s35b','Papas Fritas',12000,8), it('s35c','Iced Latte XL',12500,6), it('s35d','Brownie c/Helado',18000,4) ],
+      items:[ it('s35','a',132,4), it('s35','b',111,5), it('s35','c',124,3), it('s35','d',152,4) ], // Costillar + Vieiras + Risotto di Mare + Soufflé
       openedAtTimestamp:ago(88), guests:10, comandaSent:true, hasPendingChanges:false },
     // ── TERRAZA ────────────────────────────────────────────────────────────────
     { id:'t01', name:'T01', zone:'Terraza', status:'DISPONIBLE',        capacity:4, shape:'round', x:80,  y:80,  rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'t02', name:'T02', zone:'Terraza', status:'OCUPADA',           capacity:4, shape:'round', x:270, y:80,  rotationDeg:0,
-      items:[ it('t02a','Jugo Natural',9500,4), it('t02b','Bruschetta',16000,2) ],
+      items:[ it('t02','a',166,4), it('t02','b',104,2) ],                                        // Néctar de Pera + Burrata Ahumada
       openedAtTimestamp:ago(15), guests:4, comandaSent:true, hasPendingChanges:false },
     { id:'t03', name:'T03', zone:'Terraza', status:'DISPONIBLE',        capacity:4, shape:'round', x:460, y:80,  rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'t04', name:'T04', zone:'Terraza', status:'OCUPADA',           capacity:4, shape:'round', x:650, y:80,  rotationDeg:0,
-      items:[ it('t04a','Ceviche',29000,2), it('t04b','Agua con Gas',6000,4) ],
+      items:[ it('t04','a',103,2), it('t04','b',162,3) ],                                        // Ceviche de Corvina + Agua de Piedra
       openedAtTimestamp:ago(44), guests:3, comandaSent:true, hasPendingChanges:false },
     { id:'t05', name:'T05', zone:'Terraza', status:'DISPONIBLE',        capacity:4, shape:'round', x:80,  y:290, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'t06', name:'T06', zone:'Terraza', status:'OCUPADA',           capacity:4, shape:'round', x:270, y:290, rotationDeg:0,
-      items:[ it('t06a','Pizza Margherita',38000,1), it('t06b','Gaseosa',8000,2) ],
+      items:[ it('t06','a',123,2,false), it('t06','b',161,2,false) ],                            // Gnocchi de Calabaza + Limonada (no enviados)
       openedAtTimestamp:ago(27), guests:2, comandaSent:false, hasPendingChanges:false },
     { id:'t07', name:'T07', zone:'Terraza', status:'INHABILITADA',      capacity:4, shape:'round', x:460, y:290, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'t08', name:'T08', zone:'Terraza', status:'CUENTA_SOLICITADA', capacity:4, shape:'round', x:650, y:290, rotationDeg:0,
-      items:[ it('t08a','Hamburguesa Gourmet',38000,2), it('t08b','Iced Latte XL',12500,2), it('t08c','Brownie c/Helado',18000,1) ],
+      items:[ it('t08','a',144,2), it('t08','b',118,1), it('t08','c',156,1) ],                  // Turbot + Mollejas de Ternera + Degustación de Quesos
       openedAtTimestamp:ago(62), guests:3, comandaSent:true, hasPendingChanges:false },
     // ── BARRA ──────────────────────────────────────────────────────────────────
     { id:'bar01', name:'B01', zone:'Barra', status:'OCUPADA',    capacity:12, shape:'barra', x:80,  y:60,  rotationDeg:90,
-      items:[ it('bar01a','Café Americano',7500,5), it('bar01b','Tostada c/Mantequilla',6000,3), it('bar01c','Jugo Natural',9500,2) ],
+      items:[ it('bar01','a',165,5), it('bar01','b',164,4), it('bar01','c',158,2) ],             // Ginger Beer + Mocktail + Tiramisú de Autor
       openedAtTimestamp:ago(35), guests:7, comandaSent:true, hasPendingChanges:false },
     { id:'bar02', name:'B02', zone:'Barra', status:'DISPONIBLE', capacity:5,  shape:'barra', x:260, y:240, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
   ];
 }
 
-const INITIAL_TABLES = buildMockTables();
+const INITIAL_TABLES  = buildMockTables();
+const TABLES_LS_KEY   = 'bold-pos-tables-v2';
 
 // ─── Store ↔ Operación: helpers de conversión ─────────────────────────────────
 
@@ -1249,13 +1263,23 @@ export function MesasView() {
   // Estado operativo: se inicializa desde el store + datos mock de demo.
   // Los cambios posteriores en mesasConfig (guardados desde Gestionar mesas)
   // se sincronizan vía useEffect sin perder el estado de cada mesa.
-  const [tables, setTables] = useState<MesaTable[]>(
-    () => syncTablesFromConfig(mesasConfig, INITIAL_TABLES).map(t =>
+  const [tables, setTables] = useState<MesaTable[]>(() => {
+    let base = INITIAL_TABLES;
+    try {
+      const saved = localStorage.getItem(TABLES_LS_KEY);
+      if (saved) base = JSON.parse(saved) as MesaTable[];
+    } catch { /* ignorar */ }
+    return syncTablesFromConfig(mesasConfig, base).map(t =>
       STATUS_CFG[t.status]
         ? t
         : { ...t, status: 'DISPONIBLE' as TableStatus, items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined },
-    ),
-  );
+    );
+  });
+
+  // Persistir cambios en el pedido de cada mesa a localStorage
+  useEffect(() => {
+    try { localStorage.setItem(TABLES_LS_KEY, JSON.stringify(tables)); } catch { /* ignorar */ }
+  }, [tables]);
   const [selectedTableId, setSelectedTableId]   = useState<string | null>('s09');
   const [activeZone, setActiveZone]             = useState<string>(() => zonesConfig[0] ?? 'Salón');
   const [showProductSelector, setShowProductSelector] = useState(false);
