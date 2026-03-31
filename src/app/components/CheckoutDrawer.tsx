@@ -69,13 +69,17 @@ function SectionLabel({ label, hint }: { label: string; hint?: React.ReactNode }
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
       <p style={{
         fontSize: 11, fontWeight: 700, color: '#606060',
-        textTransform: 'uppercase', letterSpacing: '0.8px',
+        textTransform: 'uppercase', letterSpacing: '1px',
         fontFamily: 'Montserrat, sans-serif', margin: 0,
       }}>{label}</p>
       {hint}
     </div>
   );
 }
+
+const Divider = () => (
+  <div style={{ height: 8, background: '#F5F6FA', flexShrink: 0 }} />
+);
 
 function MoneyInput({
   value, onChange, placeholder, autoFocus,
@@ -438,36 +442,48 @@ export function CheckoutDrawer({
               PHASE: COMPLETED
               ═══════════════════════════════════════════════════ */}
           {phase === 'completed' && completedSnapshot ? (
-            <div className="flex flex-col items-center px-7 py-10 gap-6">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 24 }}>
               {/* Big checkmark */}
               <div className="w-20 h-20 rounded-full bg-[var(--feedback-success-10)] border-4 border-[var(--feedback-success-100)] flex items-center justify-center animate-in zoom-in duration-300">
                 <CheckCircle2 size={40} className="text-[var(--feedback-success-150)]" />
               </div>
 
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-[var(--black-100)] mb-1">Pago completado</h3>
-                <p className="text-sm text-[var(--black-60)]">{title} · {completedSnapshot.paidAt.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })} {completedSnapshot.paidAt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</p>
+              {/* Title + date */}
+              <div style={{ textAlign: 'center', marginTop: 16, width: '100%' }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: '#1E1E1E', margin: 0, fontFamily: 'Montserrat, sans-serif' }}>Pago completado</h3>
+                <p style={{ fontSize: 13, color: '#606060', marginTop: 4, fontFamily: 'Montserrat, sans-serif' }}>
+                  {title} · {completedSnapshot.paidAt.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })} {completedSnapshot.paidAt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
 
               {/* Summary card */}
-              <div className="w-full bg-[var(--blue-10)] rounded-[var(--radius-16)] border border-[var(--black-10)] p-5">
-                <div className="flex justify-between items-baseline mb-4">
-                  <span className="text-[11px] font-semibold text-[var(--black-40)] uppercase tracking-wide">Total cobrado</span>
-                  <span className="text-[24px] font-extrabold text-[var(--black-100)]">${completedSnapshot.grandTotal.toLocaleString()}</span>
+              <div style={{
+                width: '100%', marginTop: 24,
+                background: 'var(--blue-10)', borderRadius: 16,
+                border: '1px solid var(--black-10)', padding: 20,
+                boxSizing: 'border-box',
+              }}>
+                {/* Total header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#909090', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: 'Montserrat, sans-serif' }}>Total cobrado</span>
+                  <span style={{ fontSize: 24, fontWeight: 800, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif' }}>${completedSnapshot.grandTotal.toLocaleString()}</span>
                 </div>
 
                 {/* Items list */}
-                <div className="border-t border-[var(--black-10)] pt-3 flex flex-col gap-1 mb-3">
+                <div style={{ borderTop: '1px solid #E0E4F0', paddingTop: 4, marginBottom: 4 }}>
                   {completedSnapshot.snapshotItems.map((item, idx) => {
                     const unitPrice = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
                     const lineTotal = unitPrice * item.quantity;
                     return (
-                      <div key={idx} className="flex justify-between items-baseline">
-                        <span style={{ fontSize: 12, color: 'var(--black-80)', fontFamily: 'Montserrat, sans-serif', flex: 1, marginRight: 8 }}>
+                      <div key={idx} style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+                        paddingTop: 8, paddingBottom: 8, borderBottom: '1px solid #F0F0F0',
+                      }}>
+                        <span style={{ fontSize: 12, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif', flex: 1, marginRight: 8 }}>
                           {item.quantity}× {item.name}
-                          {item.discount ? <span style={{ fontSize: 10, color: 'var(--feedback-success-150)', marginLeft: 4 }}>−{item.discount}%</span> : null}
+                          {item.discount ? <span style={{ fontSize: 10, color: '#059669', marginLeft: 4 }}>−{item.discount}%</span> : null}
                         </span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--black-100)', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>
                           ${lineTotal.toLocaleString()}
                         </span>
                       </div>
@@ -475,7 +491,8 @@ export function CheckoutDrawer({
                   })}
                 </div>
 
-                <div className="border-t border-[var(--black-10)] pt-4 flex flex-col gap-2">
+                {/* Financial rows */}
+                <div>
                   <Row label="Método" value={completedSnapshot.paymentDisplay} />
                   {subtitle && <Row label="Ubicación" value={subtitle} />}
                   <Row label="Subtotal" value={`$${completedSnapshot.subtotal.toLocaleString()}`} />
@@ -487,9 +504,9 @@ export function CheckoutDrawer({
               </div>
 
               {/* Actions */}
-              <div className="w-full flex flex-col gap-3">
+              <div style={{ width: '100%', marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-                {/* ── Comanda a cocina — solo Mostrador (Mesas ya la enviaron durante el servicio) ── */}
+                {/* ── Comanda a cocina — solo Mostrador ── */}
                 {!hideSendToKitchen && (
                   <div className={cn(
                     'rounded-[var(--radius-20)] border p-4 flex flex-col gap-3 transition-all',
@@ -518,12 +535,7 @@ export function CheckoutDrawer({
                         setComandaSentAfterPay(true);
                         toast.success(comandaSentAfterPay ? 'Comanda reenviada a cocina' : 'Comanda enviada a cocina');
                       }}
-                      className={cn(
-                        'btn w-full',
-                        comandaSentAfterPay
-                          ? 'btn-secondary'
-                          : 'btn-primary',
-                      )}
+                      className={cn('btn w-full', comandaSentAfterPay ? 'btn-secondary' : 'btn-primary')}
                       style={{ padding: '12px 20px' }}
                     >
                       <Send size={15} />
@@ -532,26 +544,17 @@ export function CheckoutDrawer({
                   </div>
                 )}
 
-                {/* ── Imprimir factura ── */}
+                {/* ── Imprimir factura — link secundario ── */}
                 <button
                   onClick={() => toast.info('Documento enviado a impresora')}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left group transition-all"
-                  style={{ border: '1.5px solid var(--black-10)', borderRadius: 'var(--radius-8)', background: '#fff', cursor: 'pointer' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--blue-10)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
+                    fontSize: 13, fontWeight: 400, color: '#606060',
+                    fontFamily: 'Montserrat, sans-serif',
+                  }}
                 >
-                  <div className="w-9 h-9 flex items-center justify-center shrink-0" style={{ background: 'var(--blue-10)', borderRadius: 'var(--radius-8)' }}>
-                    <Printer size={16} style={{ color: 'var(--blue-100)' }} />
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>Imprimir factura</p>
-                    <p style={{ fontSize: 11, color: 'var(--black-60)' }}>Enviar a impresora fiscal</p>
-                  </div>
-                </button>
-
-                {/* ── Cerrar orden ── */}
-                <button onClick={onClose} className="btn btn-cancel w-full">
-                  Cerrar orden
+                  <Printer size={13} color="#606060" /> Imprimir factura
                 </button>
               </div>
             </div>
@@ -644,7 +647,8 @@ export function CheckoutDrawer({
               </div>
 
               {/* ─── 2. DESCUENTO GENERAL ─── */}
-              <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
+              <Divider />
+              <div style={{ padding: '16px 24px' }}>
                 <SectionLabel
                   label="Descuento"
                   hint={discountAmount > 0 ? (
@@ -682,7 +686,8 @@ export function CheckoutDrawer({
               </div>
 
               {/* ─── 3. DIVIDIR CUENTA ─── */}
-              <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
+              <Divider />
+              <div style={{ padding: '16px 24px' }}>
               <SectionLabel
                 label="¿Dividir cuenta?"
                 hint={splitBill ? (
@@ -867,9 +872,24 @@ export function CheckoutDrawer({
                               key={idx}
                               label={`Persona ${idx}`}
                               value={amount}
+                              isValid={customDiff === 0}
+                              isError={customDiff < 0}
                               onChange={val => setCustomAmounts(prev => {
                                 const next = [...prev];
                                 next[i] = val;
+                                // Smart autocomplete: distribute remainder equally among other persons
+                                const remaining = grandTotal - val;
+                                const othersCount = splitPersons - 1;
+                                if (othersCount > 0 && remaining >= 0) {
+                                  const base = Math.floor(remaining / othersCount);
+                                  let extra  = remaining - base * othersCount;
+                                  for (let j = 0; j < splitPersons; j++) {
+                                    if (j !== i) {
+                                      next[j] = base + (extra > 0 ? 1 : 0);
+                                      if (extra > 0) extra--;
+                                    }
+                                  }
+                                }
                                 return next;
                               })}
                             />
@@ -907,8 +927,9 @@ export function CheckoutDrawer({
               )}
               </div>{/* end dividir section */}
 
-              {/* ─── 3. PROPINA ─── */}
-              <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
+              {/* ─── 4. PROPINA ─── */}
+              <Divider />
+              <div style={{ padding: '16px 24px' }}>
               <SectionLabel
                 label="Propina"
                 hint={tipAmount > 0 ? (
@@ -954,8 +975,9 @@ export function CheckoutDrawer({
               </p>
               </div>{/* end propina section */}
 
-              {/* ─── 4. MÉTODO DE PAGO ─── */}
-              <div style={{ padding: '16px 24px', borderTop: '1px solid #F0F0F0' }}>
+              {/* ─── 5. MÉTODO DE PAGO ─── */}
+              <Divider />
+              <div style={{ padding: '16px 24px' }}>
               <SectionLabel label="Método de pago" />
 
               {/* Split progress — fila de estado */}
@@ -1035,7 +1057,13 @@ export function CheckoutDrawer({
               {(!splitBill || !allAccountsPaid) && (
                 <>
                   {splitBill && (
-                    <SectionLabel label={`Método para ${splitLabel}`} />
+                    <p style={{
+                      fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                      letterSpacing: '0.8px', color: '#909090',
+                      marginTop: 16, marginBottom: 8,
+                      borderTop: '1px solid #F0F0F0', paddingTop: 12,
+                      fontFamily: 'Montserrat, sans-serif',
+                    }}>Método para {splitLabel}</p>
                   )}
 
                   {/* Grid 2×2 de métodos */}
@@ -1233,7 +1261,7 @@ export function CheckoutDrawer({
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              Cerrar y volver
+              Finalizar orden
             </button>
           ) : (
             <>
@@ -1322,11 +1350,16 @@ export function CheckoutDrawer({
 
 // ─── Custom person amount row ─────────────────────────────────────────────────
 
-function CustomPersonRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function CustomPersonRow({ label, value, onChange, isValid, isError }: {
+  label: string; value: number; onChange: (v: number) => void;
+  isValid?: boolean; isError?: boolean;
+}) {
   const [focused, setFocused] = React.useState(false);
+  const borderColor = focused ? '#121E6C' : isValid ? '#059669' : isError ? '#FF2947' : '#C7CBE0';
+  const textColor   = isValid ? '#059669' : isError ? '#FF2947' : '#1E1E1E';
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-      <span style={{ fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 600, color: isValid ? '#059669' : '#121E6C', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
       <div style={{ position: 'relative', width: 140, flexShrink: 0 }}>
         <span style={{
           position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
@@ -1343,10 +1376,10 @@ function CustomPersonRow({ label, value, onChange }: { label: string; value: num
           style={{
             width: '100%', height: 36, boxSizing: 'border-box',
             borderRadius: 12,
-            border: focused ? '1.5px solid #121E6C' : '1.5px solid #C7CBE0',
-            background: '#F7F8FB',
+            border: `1.5px solid ${borderColor}`,
+            background: isValid ? '#F0FFF4' : isError ? '#FFF0F2' : '#F7F8FB',
             fontFamily: 'Montserrat, sans-serif', fontSize: 14,
-            fontWeight: 600, color: '#1E1E1E',
+            fontWeight: 600, color: textColor,
             padding: '0 12px 0 28px', textAlign: 'right',
             outline: 'none',
             transition: 'border-color 200ms',
@@ -1360,10 +1393,15 @@ function CustomPersonRow({ label, value, onChange }: { label: string; value: num
 // ─── Small display helper ─────────────────────────────────────────────────────
 
 function Row({ label, value, colored }: { label: string; value: string; colored?: 'blue' | 'green' }) {
-  const colorClass = colored === 'blue' ? 'text-[var(--blue-100)]' : colored === 'green' ? 'text-[#059669]' : 'text-[var(--black-60)]';
+  const color = colored === 'blue' ? 'var(--blue-100)' : colored === 'green' ? '#059669' : '#606060';
   return (
-    <div className={cn('flex justify-between text-xs font-bold', colorClass)}>
-      <span>{label}</span><span>{value}</span>
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+      paddingTop: 8, paddingBottom: 8,
+      borderBottom: '1px solid #F0F0F0',
+    }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color, fontFamily: 'Montserrat, sans-serif' }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color, fontFamily: 'Montserrat, sans-serif' }}>{value}</span>
     </div>
   );
 }
