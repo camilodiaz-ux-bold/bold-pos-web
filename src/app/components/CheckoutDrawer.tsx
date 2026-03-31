@@ -149,7 +149,8 @@ export function CheckoutDrawer({
   const [splitPersons, setSplitPersons] = useState(2);
 
   // ── E. Montos personalizados ──────────────────────────────────────────────
-  const [customAmounts, setCustomAmounts] = useState<number[]>([0, 0]);
+  const [customAmounts,  setCustomAmounts]  = useState<number[]>([0, 0]);
+  const [camposEditados, setCamposEditados] = useState<Set<number>>(new Set());
 
   // Split payment progress
   const [paidAccounts,   setPaidAccounts]   = useState<Set<number>>(new Set());
@@ -290,18 +291,27 @@ export function CheckoutDrawer({
     setCurrentAccount(1);
   }, [splitBill, splitMode, splitPersons]);
 
-  // Reset customAmounts to zero when switching TO custom mode
+  // Helper: build an equal-split array for N persons summing exactly to total
+  const buildEqualSplit = (total: number, n: number): number[] => {
+    const base = Math.floor(total / n);
+    const rem  = total - base * n;
+    return Array.from({ length: n }, (_, i) => base + (i === n - 1 ? rem : 0));
+  };
+
+  // Pre-fill with equal split when switching TO custom mode
   useEffect(() => {
     if (splitMode === 'custom') {
-      setCustomAmounts(Array(splitPersons).fill(0));
+      setCustomAmounts(buildEqualSplit(grandTotal, splitPersons));
+      setCamposEditados(new Set());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [splitMode]);
 
-  // Resize customAmounts array when splitPersons changes (preserves existing values)
+  // Re-initialize when number of persons changes (in custom mode)
   useEffect(() => {
     if (splitMode === 'custom') {
-      setCustomAmounts(prev => Array.from({ length: splitPersons }, (_, i) => prev[i] ?? 0));
+      setCustomAmounts(buildEqualSplit(grandTotal, splitPersons));
+      setCamposEditados(new Set());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [splitPersons]);
@@ -874,24 +884,30 @@ export function CheckoutDrawer({
                               value={amount}
                               isValid={customDiff === 0}
                               isError={customDiff < 0}
-                              onChange={val => setCustomAmounts(prev => {
-                                const next = [...prev];
-                                next[i] = val;
-                                // Smart autocomplete: distribute remainder equally among other persons
-                                const remaining = grandTotal - val;
-                                const othersCount = splitPersons - 1;
-                                if (othersCount > 0 && remaining >= 0) {
-                                  const base = Math.floor(remaining / othersCount);
-                                  let extra  = remaining - base * othersCount;
-                                  for (let j = 0; j < splitPersons; j++) {
-                                    if (j !== i) {
+                              onChange={val => {
+                                // Mark this field as manually edited
+                                setCamposEditados(prev => new Set(prev).add(i));
+                                setCustomAmounts(prev => {
+                                  const next = [...prev];
+                                  next[i] = val;
+                                  // Identify auto fields (not manually edited, excluding current)
+                                  const newEditados = new Set(camposEditados).add(i);
+                                  const autoIndices = Array.from({ length: splitPersons }, (_, j) => j)
+                                    .filter(j => !newEditados.has(j));
+                                  if (autoIndices.length > 0) {
+                                    // Remainder = total minus all manually-edited fields
+                                    const editedSum = Array.from(newEditados).reduce((s, j) => s + next[j], 0);
+                                    const remaining = grandTotal - editedSum;
+                                    const base = Math.floor(remaining / autoIndices.length);
+                                    let extra = remaining - base * autoIndices.length;
+                                    for (const j of autoIndices) {
                                       next[j] = base + (extra > 0 ? 1 : 0);
                                       if (extra > 0) extra--;
                                     }
                                   }
-                                }
-                                return next;
-                              })}
+                                  return next;
+                                });
+                              }}
                             />
                           );
                         })}
