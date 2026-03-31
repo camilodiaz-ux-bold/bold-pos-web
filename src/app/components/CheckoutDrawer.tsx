@@ -121,6 +121,21 @@ export function CheckoutDrawer({
   // ── Phase ──────────────────────────────────────────────────────────────────
   const [phase, setPhase] = useState<Phase>('checkout');
 
+  // ── Completed snapshot — frozen at the moment of payment ─────────────────
+  interface CompletedSnapshot {
+    paidAt: Date;
+    paymentDisplay: string;
+    snapshotItems: CheckoutItem[];
+    subtotal: number;
+    itemDiscountsTotal: number;
+    discountAmount: number;
+    discountMode: DiscountMode;
+    tax: number;
+    tipAmount: number;
+    grandTotal: number;
+  }
+  const [completedSnapshot, setCompletedSnapshot] = useState<CompletedSnapshot | null>(null);
+
   // ── Comanda post-pago ─────────────────────────────────────────────────────
   const [comandaSentAfterPay, setComandaSentAfterPay] = useState(false);
 
@@ -299,6 +314,19 @@ export function CheckoutDrawer({
 
   const finalizePay = () => {
     const method = splitBill ? 'Dividido' : METHOD_LABEL[paymentMethod];
+    // Snapshot all computed values NOW — before parent clears items prop
+    setCompletedSnapshot({
+      paidAt: new Date(),
+      paymentDisplay: splitBill ? `Dividido · ${totalSplits} personas` : METHOD_LABEL[paymentMethod],
+      snapshotItems: [...items],
+      subtotal,
+      itemDiscountsTotal,
+      discountAmount,
+      discountMode,
+      tax,
+      tipAmount,
+      grandTotal,
+    });
     toast.success(
       `Pago registrado · ${title} pagada · ${method} · $${grandTotal.toLocaleString()}`,
       { duration: 5000 },
@@ -409,7 +437,7 @@ export function CheckoutDrawer({
           {/* ═══════════════════════════════════════════════════
               PHASE: COMPLETED
               ═══════════════════════════════════════════════════ */}
-          {phase === 'completed' ? (
+          {phase === 'completed' && completedSnapshot ? (
             <div className="flex flex-col items-center px-7 py-10 gap-6">
               {/* Big checkmark */}
               <div className="w-20 h-20 rounded-full bg-[var(--feedback-success-10)] border-4 border-[var(--feedback-success-100)] flex items-center justify-center animate-in zoom-in duration-300">
@@ -418,19 +446,19 @@ export function CheckoutDrawer({
 
               <div className="text-center">
                 <h3 className="text-xl font-bold text-[var(--black-100)] mb-1">Pago completado</h3>
-                <p className="text-sm text-[var(--black-60)]">{title} ha sido pagada correctamente</p>
+                <p className="text-sm text-[var(--black-60)]">{title} · {completedSnapshot.paidAt.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })} {completedSnapshot.paidAt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
 
               {/* Summary card */}
               <div className="w-full bg-[var(--blue-10)] rounded-[var(--radius-16)] border border-[var(--black-10)] p-5">
                 <div className="flex justify-between items-baseline mb-4">
                   <span className="text-[11px] font-semibold text-[var(--black-40)] uppercase tracking-wide">Total cobrado</span>
-                  <span className="text-[24px] font-extrabold text-[var(--black-100)]">${grandTotal.toLocaleString()}</span>
+                  <span className="text-[24px] font-extrabold text-[var(--black-100)]">${completedSnapshot.grandTotal.toLocaleString()}</span>
                 </div>
 
                 {/* Items list */}
                 <div className="border-t border-[var(--black-10)] pt-3 flex flex-col gap-1 mb-3">
-                  {items.map((item, idx) => {
+                  {completedSnapshot.snapshotItems.map((item, idx) => {
                     const unitPrice = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
                     const lineTotal = unitPrice * item.quantity;
                     return (
@@ -448,13 +476,13 @@ export function CheckoutDrawer({
                 </div>
 
                 <div className="border-t border-[var(--black-10)] pt-4 flex flex-col gap-2">
-                  <Row label="Método" value={paymentDisplay} />
+                  <Row label="Método" value={completedSnapshot.paymentDisplay} />
                   {subtitle && <Row label="Ubicación" value={subtitle} />}
-                  <Row label="Subtotal" value={`$${subtotal.toLocaleString()}`} />
-                  {itemDiscountsTotal > 0 && <Row label="Descuentos por ítem" value={`-$${itemDiscountsTotal.toLocaleString()}`} colored="green" />}
-                  {discountAmount > 0 && <Row label={`Descuento${discountMode !== 'custom' ? ` (${discountMode}%)` : ''}`} value={`-$${discountAmount.toLocaleString()}`} colored="green" />}
-                  <Row label="IVA 19%" value={`$${tax.toLocaleString()}`} />
-                  {tipAmount > 0 && <Row label="Propina" value={`+$${tipAmount.toLocaleString()}`} colored="blue" />}
+                  <Row label="Subtotal" value={`$${completedSnapshot.subtotal.toLocaleString()}`} />
+                  {completedSnapshot.itemDiscountsTotal > 0 && <Row label="Descuentos por ítem" value={`-$${completedSnapshot.itemDiscountsTotal.toLocaleString()}`} colored="green" />}
+                  {completedSnapshot.discountAmount > 0 && <Row label={`Descuento${completedSnapshot.discountMode !== 'custom' ? ` (${completedSnapshot.discountMode}%)` : ''}`} value={`-$${completedSnapshot.discountAmount.toLocaleString()}`} colored="green" />}
+                  <Row label="IVA 19%" value={`$${completedSnapshot.tax.toLocaleString()}`} />
+                  {completedSnapshot.tipAmount > 0 && <Row label="Propina" value={`+$${completedSnapshot.tipAmount.toLocaleString()}`} colored="blue" />}
                 </div>
               </div>
 
