@@ -363,7 +363,7 @@ export function MesaProductSelector({
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Descuento</label>
+                    <label style={labelStyle}>Descuento por ítem</label>
                     <select value={editItemDiscount} onChange={e => setEditItemDiscount(e.target.value)}
                       style={{ ...merlinInput, cursor: 'pointer' }}
                       onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
@@ -379,16 +379,18 @@ export function MesaProductSelector({
                 </div>
 
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <label style={{ ...labelStyle, marginBottom: 0 }}>Precio unitario</label>
-                    <span style={{ fontSize: 11, color: '#606060', fontFamily: MFONT }}>Total: ${totalCalc.toLocaleString('es-CO')}</span>
+                  <label style={labelStyle}>Precio total</label>
+                  <div style={{
+                    ...merlinInput,
+                    display: 'flex', alignItems: 'center',
+                    background: '#F8F8F8', color: '#1E1E1E', fontWeight: 600,
+                    cursor: 'default',
+                  }}>
+                    ${totalCalc.toLocaleString('es-CO')}
                   </div>
-                  <input type="number" min={0} value={editItemPrice}
-                    onChange={e => setEditItemPrice(Math.max(0, parseFloat(e.target.value) || 0))}
-                    style={merlinInput}
-                    onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
-                    onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
-                  />
+                  <p style={{ fontSize: 11, color: '#909090', fontFamily: MFONT, marginTop: 4 }}>
+                    Precio unitario: ${editItemPrice.toLocaleString('es-CO')}
+                  </p>
                 </div>
 
                 <div style={{ height: 1, background: '#F0F0F0' }} />

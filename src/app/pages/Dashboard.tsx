@@ -813,15 +813,7 @@ export function Dashboard() {
     :                      { actual: 'Esta semana', pasada: 'Sem. pasada' };
 
   // Top 5 title — dynamic by channel + period
-  const top5Title =
-      period === 'custom' && channel === 'mesas'     ? 'Top 5 productos — Mesas'
-    : period === 'custom' && channel === 'mostrador' ? 'Top 5 productos — Mostrador'
-    : period === 'custom'                            ? 'Top 5 productos del período'
-    : channel === 'mesas'                            ? 'Top 5 — Mesas'
-    : channel === 'mostrador'                        ? 'Top 5 — Mostrador'
-    : period === 'week'                              ? 'Top 5 productos de la semana'
-    : period === 'month'                             ? 'Top 5 productos del mes'
-    :                                                  'Top 5 productos del día';
+  const top5Title = 'Top productos';
 
   // Ocupacion card title
   const ocupTitle = channel === 'mostrador' ? 'Órdenes del día'

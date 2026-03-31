@@ -64,9 +64,9 @@ const CONFIGS: Record<string, ReportConfig> = {
     showIncludeTip: true,
     showExport: true,
     widgets: [
-      { label: 'Total Subtotal',    value: '$604,500' },
-      { label: 'Total Descuentos',  value: '$12,000'  },
-      { label: 'Total General',     value: '$854,500' },
+      { label: 'Subtotal',   value: '$604,500' },
+      { label: 'Descuento',  value: '$12,000'  },
+      { label: 'Total',      value: '$854,500' },
     ],
     propinasWidget: { label: 'Total Propinas', value: '$58,000' },
     columns: [
@@ -104,7 +104,7 @@ const CONFIGS: Record<string, ReportConfig> = {
       { key: 'apertura',  label: 'Apertura',  width: '160px' },
       { key: 'cierre',    label: 'Cierre',    width: '160px' },
       { key: 'duracion',  label: 'Duración',  width: '100px' },
-      { key: 'cubiertos', label: 'Cubiertos', width: '100px' },
+      { key: 'cubiertos', label: 'Personas en mesa', width: '130px' },
       { key: 'usuario',   label: 'Usuario',   width: '160px' },
       { key: 'estado',    label: 'Estado',    width: '110px' },
     ],

@@ -427,6 +427,26 @@ export function CheckoutDrawer({
                   <span className="text-[11px] font-semibold text-[var(--black-40)] uppercase tracking-wide">Total cobrado</span>
                   <span className="text-[24px] font-extrabold text-[var(--black-100)]">${grandTotal.toLocaleString()}</span>
                 </div>
+
+                {/* Items list */}
+                <div className="border-t border-[var(--black-10)] pt-3 flex flex-col gap-1 mb-3">
+                  {items.map((item, idx) => {
+                    const unitPrice = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
+                    const lineTotal = unitPrice * item.quantity;
+                    return (
+                      <div key={idx} className="flex justify-between items-baseline">
+                        <span style={{ fontSize: 12, color: 'var(--black-80)', fontFamily: 'Montserrat, sans-serif', flex: 1, marginRight: 8 }}>
+                          {item.quantity}× {item.name}
+                          {item.discount ? <span style={{ fontSize: 10, color: 'var(--feedback-success-150)', marginLeft: 4 }}>−{item.discount}%</span> : null}
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--black-100)', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>
+                          ${lineTotal.toLocaleString()}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 <div className="border-t border-[var(--black-10)] pt-4 flex flex-col gap-2">
                   <Row label="Método" value={paymentDisplay} />
                   {subtitle && <Row label="Ubicación" value={subtitle} />}
