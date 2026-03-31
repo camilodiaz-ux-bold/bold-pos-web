@@ -1370,7 +1370,34 @@ function CustomPersonRow({ label, value, onChange, isValid, isError }: {
   label: string; value: number; onChange: (v: number) => void;
   isValid?: boolean; isError?: boolean;
 }) {
-  const [focused, setFocused] = React.useState(false);
+  const [focused,    setFocused]    = React.useState(false);
+  const [localInput, setLocalInput] = React.useState('');
+
+  // When focus is gained: show raw digits for easy editing
+  const handleFocus = () => {
+    setLocalInput(value > 0 ? String(value) : '');
+    setFocused(true);
+  };
+
+  // When focus is lost: commit parsed value, clear local input
+  const handleBlur = () => {
+    const parsed = parseInt(localInput.replace(/[^0-9]/g, ''), 10) || 0;
+    onChange(parsed);
+    setLocalInput('');
+    setFocused(false);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9]/g, '');
+    setLocalInput(raw);
+    const parsed = parseInt(raw, 10) || 0;
+    onChange(parsed);
+  };
+
+  const displayValue = focused
+    ? localInput
+    : value > 0 ? value.toLocaleString('es-CO') : '';
+
   const borderColor = focused ? '#121E6C' : isValid ? '#059669' : isError ? '#FF2947' : '#C7CBE0';
   const textColor   = isValid ? '#059669' : isError ? '#FF2947' : '#1E1E1E';
   return (
@@ -1383,12 +1410,13 @@ function CustomPersonRow({ label, value, onChange, isValid, isError }: {
           fontFamily: 'Montserrat, sans-serif',
         }}>$</span>
         <input
-          type="number" min={0}
-          value={value || ''}
+          type="text"
+          inputMode="numeric"
+          value={displayValue}
           placeholder="0"
-          onChange={e => onChange(parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           style={{
             width: '100%', height: 36, boxSizing: 'border-box',
             borderRadius: 12,
