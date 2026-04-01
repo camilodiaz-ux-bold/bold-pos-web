@@ -156,6 +156,12 @@ export function CheckoutDrawer({
   const [paidAccounts,   setPaidAccounts]   = useState<Set<number>>(new Set());
   const [currentAccount, setCurrentAccount] = useState(1);
 
+  // ── Vendedor ─────────────────────────────────────────────────────────────
+  const [vendedor, setVendedor] = useState('Carlos Méndez');
+
+  // ── Cliente ──────────────────────────────────────────────────────────────
+  const [cliente, setCliente] = useState('Consumidor final');
+
   // ── B2. Descuento general ────────────────────────────────────────────────
   const [discountMode,   setDiscountMode]   = useState<DiscountMode>('0');
   const [discountCustom, setDiscountCustom] = useState('');
@@ -402,7 +408,7 @@ export function CheckoutDrawer({
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
           flexShrink: 0, padding: '20px 24px', borderBottom: '1px solid #F0F0F0',
         }}>
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
               fontSize: 11, fontWeight: 700, color: '#606060',
               textTransform: 'uppercase', letterSpacing: '0.8px',
@@ -416,6 +422,29 @@ export function CheckoutDrawer({
                 {meta && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Users size={11} /> {meta}</span>}
               </p>
             )}
+            {/* Vendedor */}
+            <div style={{ marginTop: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#606060', textTransform: 'uppercase', letterSpacing: '0.6px', fontFamily: 'Montserrat, sans-serif', marginBottom: 4 }}>Vendedor</p>
+              <select
+                value={vendedor}
+                onChange={e => setVendedor(e.target.value)}
+                style={{
+                  width: '100%', maxWidth: 220,
+                  height: 36, borderRadius: 8,
+                  border: '1px solid #E0E0E0', background: '#F5F5F5',
+                  fontSize: 14, fontFamily: 'Montserrat, sans-serif',
+                  color: '#1E1E1E', padding: '0 10px',
+                  cursor: 'pointer', outline: 'none',
+                }}
+                onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+              >
+                <option>Carlos Méndez</option>
+                <option>Laura Torres</option>
+                <option>Miguel García</option>
+                <option>Ana Ruiz</option>
+              </select>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginTop: 2 }}>
             <button
@@ -991,7 +1020,32 @@ export function CheckoutDrawer({
               </p>
               </div>{/* end propina section */}
 
-              {/* ─── 5. MÉTODO DE PAGO ─── */}
+              {/* ─── 5. CLIENTE ─── */}
+              <Divider />
+              <div style={{ padding: '16px 24px' }}>
+                <SectionLabel label="Cliente" />
+                <input
+                  type="text"
+                  value={cliente}
+                  onChange={e => setCliente(e.target.value)}
+                  placeholder="Buscar cliente o NIT..."
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    height: 40, borderRadius: 8,
+                    border: '1px solid #E0E0E0', background: '#F5F5F5',
+                    fontSize: 14, fontFamily: 'Montserrat, sans-serif',
+                    color: '#1E1E1E', padding: '0 12px',
+                    outline: 'none', transition: 'border-color 180ms',
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                  onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
+                />
+                <p style={{ fontSize: 11, color: '#909090', fontFamily: 'Montserrat, sans-serif', marginTop: 6 }}>
+                  Requerido para factura electrónica
+                </p>
+              </div>
+
+              {/* ─── 6. MÉTODO DE PAGO ─── */}
               <Divider />
               <div style={{ padding: '16px 24px' }}>
               <SectionLabel label="Método de pago" />

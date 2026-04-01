@@ -650,39 +650,6 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
       {/* ── Left: Logo + mode toggle (only in POS view) ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
         <BoldLogo />
-        {(activeMode === 'Mesas' || activeMode === 'Mostrador') && (
-          <div style={{
-            backgroundColor: '#F3F4F6', borderRadius: 10, padding: 4,
-            display: 'flex', gap: 2,
-          }}>
-            {([
-              { mode: 'Mesas',     icon: <IcMesas size={18} />,       label: 'Mesas'     },
-              { mode: 'Mostrador', icon: <MostradorIcon size={18} />, label: 'Mostrador' },
-            ] as const).map(({ mode, icon, label }) => {
-              const isActive = activeMode === mode;
-              return (
-                <button
-                  key={mode}
-                  onClick={() => onModeChange(mode)}
-                  style={{
-                    padding: '8px 16px', borderRadius: 8,
-                    backgroundColor: isActive ? C.white : 'transparent',
-                    border: isActive ? `1px solid ${C.blue20}` : '1px solid transparent',
-                    boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                    color: isActive ? C.blue100 : C.black60,
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontFamily: FONT, fontSize: 14,
-                    fontWeight: isActive ? 600 : 400,
-                    transition: 'all 0.15s ease', cursor: 'pointer',
-                  }}
-                >
-                  {icon}
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* ── Right: business info + bell + avatar ── */}

@@ -5,7 +5,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import React, { useState } from 'react';
-import { TrendingUp, Receipt, Users, Clock, ChevronDown, ShoppingBag, MapPin } from 'lucide-react';
+import { TrendingUp, Receipt, Users, Clock, ChevronDown, ShoppingBag, MapPin, RefreshCw } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -779,8 +779,9 @@ export function Dashboard() {
   const [channelOpen, setChannelOpen] = useState(false);
   const [branch,      setBranch]     = useState('principal');
   const [branchOpen,  setBranchOpen] = useState(false);
-  const [customFrom,  setCustomFrom] = useState('');
-  const [customTo,    setCustomTo]   = useState('');
+  const [customFrom,    setCustomFrom]    = useState('');
+  const [customTo,      setCustomTo]      = useState('');
+  const [refreshCount,  setRefreshCount]  = useState(0);
 
   const kpi = period === 'custom' && customFrom && customTo
     ? getCustomKpi(customFrom, customTo, channel)
@@ -975,7 +976,27 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* Right: period tabs */}
+            {/* Right: Recargar + period tabs */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+
+            {/* Recargar button */}
+            <button
+              onClick={() => setRefreshCount(c => c + 1)}
+              title={`Refrescado ${refreshCount} veces`}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '8px 14px', borderRadius: 8,
+                border: '1.5px solid #121E6C', background: '#fff',
+                fontSize: 13, fontWeight: 600, color: '#121E6C',
+                fontFamily: FONT, cursor: 'pointer', transition: 'background 150ms',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#F1F2F6'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff'; }}
+            >
+              <RefreshCw size={14} color="#121E6C" /> Recargar
+            </button>
+
+            {/* Period tabs */}
             <div style={{
               display: 'flex', gap: 2,
               backgroundColor: C.border, borderRadius: 10, padding: 3,
@@ -999,6 +1020,7 @@ export function Dashboard() {
                 </button>
               ))}
             </div>
+            </div>{/* end right group */}
           </div>
 
           {/* Row 3: Custom date inputs — right-aligned */}
