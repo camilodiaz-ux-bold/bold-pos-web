@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   X, Printer, CreditCard, CheckCircle2, Minus, Plus,
   AlertTriangle, Users, Banknote, ArrowLeftRight, Layers,
-  Check, Send, ChevronDown,
+  Check, Send, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -159,8 +159,19 @@ export function CheckoutDrawer({
   // ── Vendedor ─────────────────────────────────────────────────────────────
   const [vendedor, setVendedor] = useState('Carlos Méndez');
 
-  // ── Cliente ──────────────────────────────────────────────────────────────
-  const [cliente, setCliente] = useState('Consumidor final');
+  // ── Cliente combobox ─────────────────────────────────────────────────────
+  const [cliente,          setCliente]          = useState('Consumidor final');
+  const [clienteOpen,      setClienteOpen]      = useState(false);
+  const [clientesList,     setClientesList]     = useState([
+    'Consumidor final',
+    'Restaurante El Cielo',
+    'Inversiones Tech SAS',
+    'Juan Pérez (NIT: 900.123.456)',
+    'María González',
+  ]);
+  const [showAddCliente,   setShowAddCliente]   = useState(false);
+  const [newClienteNombre, setNewClienteNombre] = useState('');
+  const [newClienteNit,    setNewClienteNit]    = useState('');
 
   // ── B2. Descuento general ────────────────────────────────────────────────
   const [discountMode,   setDiscountMode]   = useState<DiscountMode>('0');
@@ -585,59 +596,173 @@ export function CheckoutDrawer({
               <div style={{ padding: '16px 24px', borderBottom: '8px solid #F5F6FA' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
-                  {/* Vendedor */}
-                  <div style={{ position: 'relative', paddingTop: 4 }}>
-                    <label style={{
-                      display: 'block', fontSize: 11, fontWeight: 700,
-                      textTransform: 'uppercase', letterSpacing: '0.4px',
-                      color: '#121E6C', fontFamily: 'Montserrat, sans-serif', marginBottom: 4,
-                    }}>Vendedor</label>
+                  {/* ── Vendedor — MERLin SelectInput ── */}
+                  <div>
+                    <span style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 600, fontFamily: 'Montserrat, sans-serif', color: '#121E6C', lineHeight: '20px' }}>
+                      Nombre del vendedor
+                    </span>
                     <div style={{ position: 'relative' }}>
                       <select
                         value={vendedor}
                         onChange={e => setVendedor(e.target.value)}
                         style={{
-                          width: '100%', border: 'none',
-                          borderBottom: '2px solid #C7CBE0', background: 'transparent',
-                          fontFamily: 'Montserrat, sans-serif', fontSize: 15,
-                          color: '#1E1E1E', paddingBottom: 6, outline: 'none',
-                          borderRadius: 0, appearance: 'none', cursor: 'pointer',
-                          paddingRight: 20,
+                          width: '100%', height: 40, boxSizing: 'border-box',
+                          borderRadius: 12, border: '1.5px solid #C7CBE0',
+                          background: '#F7F8FB', fontFamily: 'Montserrat, sans-serif', fontSize: 14,
+                          color: '#1E1E1E', padding: '0 36px 0 12px',
+                          outline: 'none', appearance: 'none', cursor: 'pointer',
+                          transition: 'border-color 200ms',
                         }}
-                        onFocus={e => (e.currentTarget.style.borderBottomColor = '#121E6C')}
-                        onBlur={e => (e.currentTarget.style.borderBottomColor = '#C7CBE0')}
+                        onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                        onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
                       >
                         <option>Carlos Méndez</option>
                         <option>Laura Torres</option>
                         <option>Miguel García</option>
                         <option>Ana Ruiz</option>
                       </select>
-                      <ChevronDown size={14} color="#606060" style={{ position: 'absolute', right: 0, top: 2, pointerEvents: 'none' }} />
+                      <ChevronDown size={16} color="#606060" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                     </div>
                   </div>
 
-                  {/* Cliente */}
-                  <div style={{ position: 'relative', paddingTop: 4 }}>
-                    <label style={{
-                      display: 'block', fontSize: 11, fontWeight: 700,
-                      textTransform: 'uppercase', letterSpacing: '0.4px',
-                      color: '#121E6C', fontFamily: 'Montserrat, sans-serif', marginBottom: 4,
-                    }}>Cliente</label>
-                    <input
-                      type="text"
-                      value={cliente}
-                      onChange={e => setCliente(e.target.value)}
-                      placeholder="Nombre o NIT"
+                  {/* ── Cliente — Combobox ── */}
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 600, fontFamily: 'Montserrat, sans-serif', color: '#121E6C', lineHeight: '20px' }}>
+                      Cliente
+                    </span>
+                    {/* Trigger */}
+                    <div
+                      onClick={() => { setClienteOpen(o => !o); setShowAddCliente(false); }}
                       style={{
-                        width: '100%', border: 'none',
-                        borderBottom: '2px solid #C7CBE0', background: 'transparent',
-                        fontFamily: 'Montserrat, sans-serif', fontSize: 15,
-                        color: '#1E1E1E', paddingBottom: 6, outline: 'none',
-                        borderRadius: 0, boxSizing: 'border-box',
+                        width: '100%', height: 40, boxSizing: 'border-box',
+                        borderRadius: 12, border: clienteOpen ? '1.5px solid #121E6C' : '1.5px solid #C7CBE0',
+                        background: '#F7F8FB', fontFamily: 'Montserrat, sans-serif', fontSize: 14,
+                        color: '#1E1E1E', padding: '0 36px 0 12px',
+                        display: 'flex', alignItems: 'center', cursor: 'pointer',
+                        transition: 'border-color 200ms', userSelect: 'none',
+                        position: 'relative',
                       }}
-                      onFocus={e => (e.currentTarget.style.borderBottomColor = '#121E6C')}
-                      onBlur={e => (e.currentTarget.style.borderBottomColor = '#C7CBE0')}
-                    />
+                    >
+                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente}</span>
+                      {clienteOpen
+                        ? <ChevronUp   size={16} color="#606060" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                        : <ChevronDown size={16} color="#606060" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      }
+                    </div>
+
+                    {/* Dropdown panel */}
+                    {clienteOpen && (
+                      <>
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 1199 }} onClick={() => { setClienteOpen(false); setShowAddCliente(false); }} />
+                        <div style={{
+                          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                          zIndex: 1200, background: '#fff',
+                          border: '1px solid #C7CBE0', borderRadius: 8,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                          overflow: 'hidden',
+                        }}>
+                          {/* Existing clients */}
+                          {clientesList.map(c => (
+                            <div
+                              key={c}
+                              onClick={() => { setCliente(c); setClienteOpen(false); setShowAddCliente(false); }}
+                              style={{
+                                padding: '10px 14px', fontSize: 14,
+                                fontFamily: 'Montserrat, sans-serif', cursor: 'pointer',
+                                color: '#1E1E1E',
+                                background: cliente === c ? '#F5F6FA' : '#fff',
+                              }}
+                              onMouseEnter={e => { if (cliente !== c) (e.currentTarget as HTMLDivElement).style.background = '#F5F6FA'; }}
+                              onMouseLeave={e => { if (cliente !== c) (e.currentTarget as HTMLDivElement).style.background = cliente === c ? '#F5F6FA' : '#fff'; }}
+                            >{c}</div>
+                          ))}
+
+                          {/* Separator */}
+                          <div style={{ height: 1, background: '#F0F0F0' }} />
+
+                          {/* Add new */}
+                          {!showAddCliente ? (
+                            <div
+                              onClick={e => { e.stopPropagation(); setShowAddCliente(true); }}
+                              style={{
+                                padding: '10px 14px', fontSize: 14, fontWeight: 500,
+                                color: '#121E6C', cursor: 'pointer',
+                                fontFamily: 'Montserrat, sans-serif',
+                                display: 'flex', alignItems: 'center', gap: 6,
+                              }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = '#F5F6FA'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = '#fff'; }}
+                            >
+                              <Plus size={13} color="#121E6C" /> Agregar cliente nuevo
+                            </div>
+                          ) : (
+                            <div
+                              style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <div>
+                                <span style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 600, fontFamily: 'Montserrat, sans-serif', color: '#121E6C', lineHeight: '20px' }}>Nombre o razón social</span>
+                                <input
+                                  type="text" autoFocus
+                                  value={newClienteNombre}
+                                  onChange={e => setNewClienteNombre(e.target.value)}
+                                  placeholder="Ej: Inversiones Tech SAS"
+                                  style={{
+                                    width: '100%', height: 40, boxSizing: 'border-box',
+                                    borderRadius: 12, border: '1.5px solid #C7CBE0',
+                                    background: '#F7F8FB', fontFamily: 'Montserrat, sans-serif', fontSize: 14,
+                                    color: '#1E1E1E', padding: '0 12px', outline: 'none',
+                                    transition: 'border-color 200ms',
+                                  }}
+                                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
+                                />
+                              </div>
+                              <div>
+                                <span style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 600, fontFamily: 'Montserrat, sans-serif', color: '#121E6C', lineHeight: '20px' }}>NIT / CC</span>
+                                <input
+                                  type="text"
+                                  value={newClienteNit}
+                                  onChange={e => setNewClienteNit(e.target.value)}
+                                  placeholder="Ej: 900.123.456"
+                                  style={{
+                                    width: '100%', height: 40, boxSizing: 'border-box',
+                                    borderRadius: 12, border: '1.5px solid #C7CBE0',
+                                    background: '#F7F8FB', fontFamily: 'Montserrat, sans-serif', fontSize: 14,
+                                    color: '#1E1E1E', padding: '0 12px', outline: 'none',
+                                    transition: 'border-color 200ms',
+                                  }}
+                                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                                  onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
+                                />
+                              </div>
+                              <button
+                                onClick={() => {
+                                  if (!newClienteNombre.trim()) return;
+                                  const label = newClienteNit.trim()
+                                    ? `${newClienteNombre.trim()} (NIT: ${newClienteNit.trim()})`
+                                    : newClienteNombre.trim();
+                                  setClientesList(prev => [...prev, label]);
+                                  setCliente(label);
+                                  setClienteOpen(false);
+                                  setShowAddCliente(false);
+                                  setNewClienteNombre('');
+                                  setNewClienteNit('');
+                                }}
+                                style={{
+                                  height: 36, borderRadius: 8, border: 'none',
+                                  background: '#FF2947', color: '#fff',
+                                  fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                                  fontFamily: 'Montserrat, sans-serif',
+                                }}
+                              >
+                                Guardar
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                 </div>
