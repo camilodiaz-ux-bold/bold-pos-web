@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   X, Printer, CreditCard, CheckCircle2, Minus, Plus,
   AlertTriangle, Users, Banknote, ArrowLeftRight, Layers,
-  Check, Send,
+  Check, Send, ChevronDown,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
