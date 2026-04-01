@@ -408,7 +408,7 @@ export function CheckoutDrawer({
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
           flexShrink: 0, padding: '20px 24px', borderBottom: '1px solid #F0F0F0',
         }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div>
             <p style={{
               fontSize: 11, fontWeight: 700, color: '#606060',
               textTransform: 'uppercase', letterSpacing: '0.8px',
@@ -422,29 +422,6 @@ export function CheckoutDrawer({
                 {meta && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Users size={11} /> {meta}</span>}
               </p>
             )}
-            {/* Vendedor */}
-            <div style={{ marginTop: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#606060', textTransform: 'uppercase', letterSpacing: '0.6px', fontFamily: 'Montserrat, sans-serif', marginBottom: 4 }}>Vendedor</p>
-              <select
-                value={vendedor}
-                onChange={e => setVendedor(e.target.value)}
-                style={{
-                  width: '100%', maxWidth: 220,
-                  height: 36, borderRadius: 8,
-                  border: '1px solid #E0E0E0', background: '#F5F5F5',
-                  fontSize: 14, fontFamily: 'Montserrat, sans-serif',
-                  color: '#1E1E1E', padding: '0 10px',
-                  cursor: 'pointer', outline: 'none',
-                }}
-                onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
-                onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
-              >
-                <option>Carlos Méndez</option>
-                <option>Laura Torres</option>
-                <option>Miguel García</option>
-                <option>Ana Ruiz</option>
-              </select>
-            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginTop: 2 }}>
             <button
@@ -604,6 +581,68 @@ export function CheckoutDrawer({
                PHASE: CHECKOUT
                ═══════════════════════════════════════════════════ */
             <>
+              {/* ─── 0. VENDEDOR + CLIENTE ─── */}
+              <div style={{ padding: '16px 24px', borderBottom: '8px solid #F5F6FA' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+                  {/* Vendedor */}
+                  <div style={{ position: 'relative', paddingTop: 4 }}>
+                    <label style={{
+                      display: 'block', fontSize: 11, fontWeight: 700,
+                      textTransform: 'uppercase', letterSpacing: '0.4px',
+                      color: '#121E6C', fontFamily: 'Montserrat, sans-serif', marginBottom: 4,
+                    }}>Vendedor</label>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        value={vendedor}
+                        onChange={e => setVendedor(e.target.value)}
+                        style={{
+                          width: '100%', border: 'none',
+                          borderBottom: '2px solid #C7CBE0', background: 'transparent',
+                          fontFamily: 'Montserrat, sans-serif', fontSize: 15,
+                          color: '#1E1E1E', paddingBottom: 6, outline: 'none',
+                          borderRadius: 0, appearance: 'none', cursor: 'pointer',
+                          paddingRight: 20,
+                        }}
+                        onFocus={e => (e.currentTarget.style.borderBottomColor = '#121E6C')}
+                        onBlur={e => (e.currentTarget.style.borderBottomColor = '#C7CBE0')}
+                      >
+                        <option>Carlos Méndez</option>
+                        <option>Laura Torres</option>
+                        <option>Miguel García</option>
+                        <option>Ana Ruiz</option>
+                      </select>
+                      <ChevronDown size={14} color="#606060" style={{ position: 'absolute', right: 0, top: 2, pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+
+                  {/* Cliente */}
+                  <div style={{ position: 'relative', paddingTop: 4 }}>
+                    <label style={{
+                      display: 'block', fontSize: 11, fontWeight: 700,
+                      textTransform: 'uppercase', letterSpacing: '0.4px',
+                      color: '#121E6C', fontFamily: 'Montserrat, sans-serif', marginBottom: 4,
+                    }}>Cliente</label>
+                    <input
+                      type="text"
+                      value={cliente}
+                      onChange={e => setCliente(e.target.value)}
+                      placeholder="Nombre o NIT"
+                      style={{
+                        width: '100%', border: 'none',
+                        borderBottom: '2px solid #C7CBE0', background: 'transparent',
+                        fontFamily: 'Montserrat, sans-serif', fontSize: 15,
+                        color: '#1E1E1E', paddingBottom: 6, outline: 'none',
+                        borderRadius: 0, boxSizing: 'border-box',
+                      }}
+                      onFocus={e => (e.currentTarget.style.borderBottomColor = '#121E6C')}
+                      onBlur={e => (e.currentTarget.style.borderBottomColor = '#C7CBE0')}
+                    />
+                  </div>
+
+                </div>
+              </div>
+
               {/* ─── 1. RESUMEN DEL PEDIDO ─── */}
               <div style={{ padding: '16px 24px' }}>
                 <SectionLabel
@@ -1020,32 +1059,7 @@ export function CheckoutDrawer({
               </p>
               </div>{/* end propina section */}
 
-              {/* ─── 5. CLIENTE ─── */}
-              <Divider />
-              <div style={{ padding: '16px 24px' }}>
-                <SectionLabel label="Cliente" />
-                <input
-                  type="text"
-                  value={cliente}
-                  onChange={e => setCliente(e.target.value)}
-                  placeholder="Buscar cliente o NIT..."
-                  style={{
-                    width: '100%', boxSizing: 'border-box',
-                    height: 40, borderRadius: 8,
-                    border: '1px solid #E0E0E0', background: '#F5F5F5',
-                    fontSize: 14, fontFamily: 'Montserrat, sans-serif',
-                    color: '#1E1E1E', padding: '0 12px',
-                    outline: 'none', transition: 'border-color 180ms',
-                  }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
-                  onBlur={e => (e.currentTarget.style.borderColor = '#E0E0E0')}
-                />
-                <p style={{ fontSize: 11, color: '#909090', fontFamily: 'Montserrat, sans-serif', marginTop: 6 }}>
-                  Requerido para factura electrónica
-                </p>
-              </div>
-
-              {/* ─── 6. MÉTODO DE PAGO ─── */}
+              {/* ─── 5. MÉTODO DE PAGO ─── */}
               <Divider />
               <div style={{ padding: '16px 24px' }}>
               <SectionLabel label="Método de pago" />
