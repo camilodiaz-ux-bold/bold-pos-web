@@ -153,7 +153,7 @@ const INIT_TIPOS: TipoConf[] = [
 const NAV: { id: SectionId; label: string; icon: React.ElementType }[] = [
   { id:'mapa',  label:'Mapa',  icon: LayoutGrid },
   { id:'zonas', label:'Zonas', icon: MapPin     },
-  { id:'mesas', label:'Mesas', icon: Users      },
+  { id:'mesas', label:'Mesas', icon: LayoutGrid  },
 ];
 
 // ─── Switch ──────────────────────────────────────────────────────────────────────
@@ -1152,7 +1152,7 @@ export function GestionarMesasView({ onBack }: Props) {
                     <table className="w-full min-w-[720px]">
                       <thead>
                         <tr style={{ backgroundColor: '#F7F8FB', borderBottom: '1px solid #E8E9F0' }}>
-                          {['Nombre','Zona','Tipo','Capacidad','Estado',''].map(h => (
+                          {['Nombre','Zona','Capacidad','Estado',''].map(h => (
                             <th key={h} style={{ textAlign: 'left', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#606060', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
                           ))}
                         </tr>
@@ -1173,18 +1173,6 @@ export function GestionarMesasView({ onBack }: Props) {
                                 style={{ fontSize: 14, fontWeight: 500, color: '#1E1E1E', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}>
                                 {zonas.map(z=><option key={z.id} value={z.name}>{z.name}</option>)}
                               </select>
-                            </td>
-                            <td style={{ padding: '14px 16px', lineHeight: 1.5 }}>
-                              <span className={cn(
-                                'text-[11px] font-semibold px-2 py-0.5 rounded-[var(--radius-12)] border',
-                                m.category==='Barra'
-                                  ? 'bg-[var(--feedback-warning-10)] text-[var(--feedback-warning-150)] border-[var(--feedback-warning-10)]'
-                                  : m.shape==='Redonda'
-                                    ? 'bg-[var(--blue-10)] text-[var(--blue-100)] border-[var(--black-10)]'
-                                    : 'bg-[var(--blue-10)] text-[var(--black-60)] border-[var(--black-10)]',
-                              )}>
-                                {typeLabel(m)}
-                              </span>
                             </td>
                             <td style={{ padding: '14px 16px', lineHeight: 1.5 }}>
                               <div className="flex items-center gap-1.5">
