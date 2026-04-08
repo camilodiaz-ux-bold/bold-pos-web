@@ -1043,7 +1043,7 @@ export function GestionarMesasView({ onBack }: Props) {
 
         ) : (
           /* ── SECCIONES TEXTO ── */
-          <div className="flex-1 overflow-y-auto px-8 py-8 min-h-0">
+          <div className="flex-1 overflow-y-auto min-h-0" style={{ padding: 24 }}>
 
             {/* ZONAS */}
             {section === 'zonas' && (
@@ -1102,8 +1102,8 @@ export function GestionarMesasView({ onBack }: Props) {
             {/* MESAS */}
             {section === 'mesas' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
-                  <div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <div style={{ marginBottom: 0 }}>
                     <h2 className="text-[18px] font-bold text-[var(--black-100)]">Mesas</h2>
                     <p className="text-[12px] text-[var(--black-60)] mt-0.5">{tables.length} mesas configuradas.</p>
                   </div>
@@ -1116,13 +1116,13 @@ export function GestionarMesasView({ onBack }: Props) {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                  <div style={{ position: 'relative', width: 260 }}>
+                  <div style={{ position: 'relative', width: 280 }}>
                     <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#969696', pointerEvents: 'none' }} />
                     <input value={srch} onChange={e=>setSrch(e.target.value)} placeholder="Buscar mesa…"
                       style={{ width: '100%', border: '1.5px solid #C7CBE0', borderRadius: 10, padding: '10px 14px 10px 36px', fontSize: 14, fontFamily: "'Montserrat', sans-serif", background: '#F7F8FB', outline: 'none', boxSizing: 'border-box' as const, color: '#1E1E1E' }} />
                   </div>
                   <select value={zoneF} onChange={e=>setZoneF(e.target.value)}
-                    style={{ border: '1.5px solid #C7CBE0', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontFamily: "'Montserrat', sans-serif", background: '#F7F8FB', outline: 'none', color: '#1E1E1E', cursor: 'pointer' }}>
+                    style={{ height: 44, border: '1.5px solid #C7CBE0', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontFamily: "'Montserrat', sans-serif", background: '#F7F8FB', outline: 'none', color: '#1E1E1E', cursor: 'pointer' }}>
                     <option value="Todas">Todas las zonas</option>
                     {zonas.map(z => <option key={z.id} value={z.name}>{z.name}</option>)}
                   </select>
@@ -1148,7 +1148,7 @@ export function GestionarMesasView({ onBack }: Props) {
                         {filtered.length === 0 ? (
                           <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px 0', color: '#969696', fontSize: 13 }}>Sin resultados.</td></tr>
                         ) : filtered.map((m, i) => (
-                          <tr key={m.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid #E8E9F0' : 'none', minHeight: 52 }} className="hover:bg-[#F7F8FB] transition-colors">
+                          <tr key={m.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid #F0F1F5' : 'none', minHeight: 52 }} className="hover:bg-[#F7F8FB] transition-colors">
                             <td style={{ padding: '0 16px', fontSize: 14, color: '#1E1E1E', fontWeight: 500 }}>
                               <input value={m.name} onChange={e=>setTables(p=>p.map(t=>t.id===m.id?{...t,name:e.target.value}:t))}
                                 style={{ width: 80, fontSize: 14, fontWeight: 600, color: '#1E1E1E', background: 'transparent', border: 'none', borderBottom: '1px solid transparent', outline: 'none', padding: '2px 0' }}
@@ -1183,15 +1183,20 @@ export function GestionarMesasView({ onBack }: Props) {
                               </div>
                             </td>
                             <td style={{ padding: '0 16px' }}>
-                              <button
-                                onClick={() => setTables(p => p.map(t => t.id === m.id ? { ...t, status: t.status === 'Activa' ? 'Fuera de servicio' : 'Activa' } : t))}
-                                style={m.status === 'Activa'
-                                  ? { background: '#F4FDF9', color: '#2E7D32', border: '1px solid #2E7D32', borderRadius: 999, padding: '4px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' as const }
-                                  : { background: '#FFF3F4', color: '#FF2947', border: '1px solid #FF2947', borderRadius: 999, padding: '4px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' as const }
-                                }
-                              >
-                                {m.status === 'Activa' ? 'Activa' : 'Fuera de servicio'}
-                              </button>
+                              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                                <select
+                                  value={m.status}
+                                  onChange={e => setTables(p => p.map(t => t.id === m.id ? { ...t, status: e.target.value as TableStatus } : t))}
+                                  style={m.status === 'Activa'
+                                    ? { border: '1px solid #2E7D32', color: '#2E7D32', background: '#F4FDF9', borderRadius: 8, padding: '6px 30px 6px 12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', appearance: 'none' as const, outline: 'none', fontFamily: "'Montserrat', sans-serif" }
+                                    : { border: '1px solid #FF2947', color: '#FF2947', background: '#FFF3F4', borderRadius: 8, padding: '6px 30px 6px 12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', appearance: 'none' as const, outline: 'none', fontFamily: "'Montserrat', sans-serif" }
+                                  }
+                                >
+                                  <option value="Activa">Activa</option>
+                                  <option value="Fuera de servicio">Fuera de servicio</option>
+                                </select>
+                                <ChevronDown size={12} style={{ position: 'absolute', right: 8, pointerEvents: 'none', color: m.status === 'Activa' ? '#2E7D32' : '#FF2947' }} />
+                              </div>
                             </td>
                             <td style={{ padding: '0 16px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
