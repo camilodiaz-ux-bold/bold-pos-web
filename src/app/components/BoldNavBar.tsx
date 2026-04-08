@@ -302,7 +302,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   borderRadius: 8,
                   backgroundColor: isActive ? C.blue10 : 'transparent',
-                  color: C.black100,
+                  color: isActive ? C.blue100 : C.black60,
                   border: 'none', cursor: 'pointer',
                   transition: 'background-color 0.15s ease',
                 }}
@@ -517,25 +517,24 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                     style={{
                       width: '100%',
                       display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '4px 8px',
-                      marginTop: showDivider ? 8 : 0,
-                      marginBottom: 4,
-                      background: 'none', border: 'none', cursor: 'pointer',
+                      padding: '6px 8px',
+                      background: isActive ? C.blue10 : 'none',
+                      border: 'none', cursor: 'pointer',
                       borderRadius: 8,
                     }}
                   >
-                    <span style={{ color: C.black60, display: 'flex', flexShrink: 0 }}>{item.icon}</span>
+                    <span style={{ color: isActive ? C.blue100 : C.black60, display: 'flex', flexShrink: 0 }}>{item.icon}</span>
                     <span style={{
                       flex: 1, textAlign: 'left',
-                      fontSize: 11, fontWeight: 600, color: C.black60,
-                      fontFamily: FONT, lineHeight: '16px',
-                      textTransform: 'uppercase', letterSpacing: '0.5px',
+                      fontSize: 14, fontWeight: isActive ? 600 : 500,
+                      color: isActive ? C.blue100 : C.black100,
+                      fontFamily: FONT, lineHeight: '20px',
                     }}>
                       {item.label}
                     </span>
                     <ChevronDown
                       size={14}
-                      color={C.black60}
+                      color={isActive ? C.blue100 : C.black60}
                       style={{
                         transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                         transition: 'transform 0.2s ease',
@@ -544,7 +543,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                     />
                   </button>
 
-                  {/* Subitems */}
+                  {/* Subitems — text only, no icons */}
                   {isOpen && item.subItems && (
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       {item.subItems.map(sub => (
@@ -553,8 +552,9 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                           onClick={sub.onClick}
                           style={{
                             width: '100%',
-                            display: 'flex', alignItems: 'center', gap: 12,
-                            padding: 8, borderRadius: 8,
+                            display: 'flex', alignItems: 'center',
+                            paddingLeft: 36, paddingRight: 8, paddingTop: 6, paddingBottom: 6,
+                            borderRadius: 8,
                             backgroundColor: sub.active ? C.blue10 : 'transparent',
                             border: 'none', cursor: 'pointer', textAlign: 'left',
                             transition: 'background-color 0.15s ease',
@@ -562,10 +562,9 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                           onMouseOver={e => { if (!sub.active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
                           onMouseOut={e => { if (!sub.active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                         >
-                          <span style={{ color: sub.active ? C.black100 : C.black60, display: 'flex', flexShrink: 0 }}>{sub.icon}</span>
                           <span style={{
-                            fontSize: 14, fontWeight: sub.active ? 600 : 400,
-                            color: C.black100,
+                            fontSize: 13, fontWeight: sub.active ? 600 : 500,
+                            color: sub.active ? C.blue100 : C.black100,
                             fontFamily: FONT, lineHeight: '20px',
                           }}>
                             {sub.label}
@@ -576,14 +575,13 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                   )}
                 </>
               ) : (
-                /* Direct item */
+                /* Direct item — icon + label, no chevron */
                 <button
                   onClick={item.onClick}
                   style={{
                     width: '100%',
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: 8, borderRadius: 8,
-                    marginTop: showDivider ? 8 : 2,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '6px 8px', borderRadius: 8,
                     backgroundColor: isActive ? C.blue10 : 'transparent',
                     border: 'none', cursor: 'pointer', textAlign: 'left',
                     transition: 'background-color 0.15s ease',
@@ -591,10 +589,10 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                   onMouseOver={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
                   onMouseOut={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                 >
-                  <span style={{ color: C.black100, display: 'flex', flexShrink: 0 }}>{item.icon}</span>
+                  <span style={{ color: isActive ? C.blue100 : C.black60, display: 'flex', flexShrink: 0 }}>{item.icon}</span>
                   <span style={{
-                    flex: 1, fontSize: 14, fontWeight: isActive ? 600 : 400,
-                    color: C.black100,
+                    flex: 1, fontSize: 14, fontWeight: isActive ? 600 : 500,
+                    color: isActive ? C.blue100 : C.black100,
                     fontFamily: FONT, lineHeight: '20px',
                   }}>
                     {item.label}
