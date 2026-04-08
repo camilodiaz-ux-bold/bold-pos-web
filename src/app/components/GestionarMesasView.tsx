@@ -312,7 +312,8 @@ export function GestionarMesasView({ onBack }: Props) {
   const [srch,      setSrch]      = useState('');
   const [zoneF,     setZoneF]     = useState('Todas');
   const [showModal, setShowModal] = useState(false);
-  const [showDel,   setShowDel]   = useState(false);
+  const [showDel,        setShowDel]        = useState(false);
+  const [confirmDelZona, setConfirmDelZona] = useState<string | null>(null);
   const [newM, setNewM] = useState<NewMesaState>({
     name:'', zone:'Salón', capacity:4, category:'Mesa', shape:'Rectangular', status:'Activa',
   });
@@ -1079,10 +1080,26 @@ export function GestionarMesasView({ onBack }: Props) {
                           <p style={{ fontSize: 13, color: '#606060', marginTop: 2 }}>{cnt} mesa{cnt!==1?'s':''}</p>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                          <span style={{ background: '#F4FDF9', color: '#2E7D32', borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 500 }}>Activa</span>
+                          <span style={z.active
+                            ? { background: '#F4FDF9', color: '#2E7D32', border: '1px solid #2E7D32', borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 500 }
+                            : { background: '#F3F3F3', color: '#969696', border: '1px solid #D0D0D0', borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 500 }
+                          }>
+                            {z.active ? 'Activa' : 'Inactiva'}
+                          </span>
                           <Switch on={z.active} toggle={() => setZonas(p => p.map(x => x.id===z.id?{...x,active:!x.active}:x))} />
                         </div>
-                        {cnt > 0 ? (
+                        {confirmDelZona === z.id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                            <button
+                              onClick={() => { setZonas(p => p.filter(x => x.id !== z.id)); setConfirmDelZona(null); }}
+                              style={{ fontSize: 12, fontWeight: 600, color: '#FF2947', background: '#FFF3F4', border: '1px solid #FF2947', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}
+                            >Eliminar</button>
+                            <button
+                              onClick={() => setConfirmDelZona(null)}
+                              style={{ fontSize: 12, fontWeight: 600, color: '#606060', background: '#F3F3F3', border: '1px solid #D0D0D0', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}
+                            >Cancelar</button>
+                          </div>
+                        ) : cnt > 0 ? (
                           <div className="relative group">
                             <button disabled className="p-2 rounded-[var(--radius-12)] text-[var(--black-10)] cursor-not-allowed"><Trash2 size={14} /></button>
                             <div className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-2 hidden group-hover:block bg-[var(--black-100)] text-white text-[10px] font-bold px-2 py-1 rounded-[var(--radius-12)] whitespace-nowrap z-20">
@@ -1090,7 +1107,10 @@ export function GestionarMesasView({ onBack }: Props) {
                             </div>
                           </div>
                         ) : (
-                          <button onClick={() => setZonas(p=>p.filter(x=>x.id!==z.id))} className="p-2 rounded-[var(--radius-12)] text-[var(--black-40)] hover:text-[var(--coral-100)] hover:bg-[var(--coral-10)] transition-all"><Trash2 size={14}/></button>
+                          <button
+                            onClick={() => setConfirmDelZona(z.id)}
+                            className="p-2 rounded-[var(--radius-12)] text-[var(--black-40)] hover:text-[var(--coral-100)] hover:bg-[var(--coral-10)] transition-all"
+                          ><Trash2 size={14}/></button>
                         )}
                       </div>
                     );
@@ -1149,19 +1169,19 @@ export function GestionarMesasView({ onBack }: Props) {
                           <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px 0', color: '#969696', fontSize: 13 }}>Sin resultados.</td></tr>
                         ) : filtered.map((m, i) => (
                           <tr key={m.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid #F0F1F5' : 'none', minHeight: 52 }} className="hover:bg-[#F7F8FB] transition-colors">
-                            <td style={{ padding: '0 16px', fontSize: 14, color: '#1E1E1E', fontWeight: 500 }}>
+                            <td style={{ padding: '14px 16px', fontSize: 14, color: '#1E1E1E', fontWeight: 500, lineHeight: 1.5 }}>
                               <input value={m.name} onChange={e=>setTables(p=>p.map(t=>t.id===m.id?{...t,name:e.target.value}:t))}
                                 style={{ width: 80, fontSize: 14, fontWeight: 600, color: '#1E1E1E', background: 'transparent', border: 'none', borderBottom: '1px solid transparent', outline: 'none', padding: '2px 0' }}
                                 onFocus={e => (e.currentTarget.style.borderBottomColor = 'var(--blue-100)')}
                                 onBlur={e => (e.currentTarget.style.borderBottomColor = 'transparent')} />
                             </td>
-                            <td style={{ padding: '0 16px', fontSize: 14, color: '#1E1E1E' }}>
+                            <td style={{ padding: '14px 16px', fontSize: 14, color: '#1E1E1E', lineHeight: 1.5 }}>
                               <select value={m.zone} onChange={e=>setTables(p=>p.map(t=>t.id===m.id?{...t,zone:e.target.value}:t))}
                                 style={{ fontSize: 14, fontWeight: 500, color: '#1E1E1E', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}>
                                 {zonas.map(z=><option key={z.id} value={z.name}>{z.name}</option>)}
                               </select>
                             </td>
-                            <td style={{ padding: '0 16px' }}>
+                            <td style={{ padding: '14px 16px', lineHeight: 1.5 }}>
                               <span className={cn(
                                 'text-[11px] font-semibold px-2 py-0.5 rounded-[var(--radius-12)] border',
                                 m.category==='Barra'
@@ -1173,7 +1193,7 @@ export function GestionarMesasView({ onBack }: Props) {
                                 {typeLabel(m)}
                               </span>
                             </td>
-                            <td style={{ padding: '0 16px' }}>
+                            <td style={{ padding: '14px 16px', lineHeight: 1.5 }}>
                               <div className="flex items-center gap-1.5">
                                 <button onClick={()=>setTables(p=>p.map(t=>t.id===m.id?{...t,capacity:Math.max(1,t.capacity-1),...getTableDims(t.category,t.shape,Math.max(1,t.capacity-1))}:t))}
                                   className="w-6 h-6 rounded-[var(--radius-12)] border border-[var(--black-10)] flex items-center justify-center text-[var(--black-60)] hover:bg-[var(--blue-10)] transition-all"><ChevronDown size={11}/></button>
@@ -1182,7 +1202,7 @@ export function GestionarMesasView({ onBack }: Props) {
                                   className="w-6 h-6 rounded-[var(--radius-12)] border border-[var(--black-10)] flex items-center justify-center text-[var(--black-60)] hover:bg-[var(--blue-10)] transition-all"><ChevronUp size={11}/></button>
                               </div>
                             </td>
-                            <td style={{ padding: '0 16px' }}>
+                            <td style={{ padding: '14px 16px', lineHeight: 1.5 }}>
                               <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                                 <select
                                   value={m.status}
@@ -1198,7 +1218,7 @@ export function GestionarMesasView({ onBack }: Props) {
                                 <ChevronDown size={12} style={{ position: 'absolute', right: 8, pointerEvents: 'none', color: m.status === 'Activa' ? '#2E7D32' : '#FF2947' }} />
                               </div>
                             </td>
-                            <td style={{ padding: '0 16px' }}>
+                            <td style={{ padding: '14px 16px', lineHeight: 1.5 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <button
                                   onClick={() => { setSection('mapa'); setZone(m.zone); setSelId(m.id); }}
