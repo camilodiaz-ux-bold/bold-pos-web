@@ -205,11 +205,20 @@ function DianBadge({ label, variant }: { label: string; variant: DianVariant }) 
   );
 }
 
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+function InfoRow({ label, children, last }: { label: string; children: React.ReactNode; last?: boolean }) {
   return (
-    <div style={{ marginBottom: 12 }}>
-      <p style={infoLabel}>{label}</p>
-      <div style={infoValue}>{children}</div>
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      paddingTop: 10, paddingBottom: 10,
+      borderBottom: last ? 'none' : '1px solid #F0F1F5',
+      gap: 12,
+    }}>
+      <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 14, fontWeight: 400, color: '#606060', flexShrink: 0 }}>
+        {label}
+      </span>
+      <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 14, fontWeight: 600, color: '#1E1E1E', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {children}
+      </span>
     </div>
   );
 }
@@ -285,36 +294,32 @@ export function PedidoDetallePage() {
       {/* ── Section 1: Información general ── */}
       <div style={sectionCard}>
         <p style={sectionTitle}>Información general</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
 
           {/* Left column */}
-          <div>
-            <InfoRow label="No. Documento"><span>{pedido.noDoc}</span></InfoRow>
-            <InfoRow label="Tipo de documento"><span>{pedido.tipoDoc}</span></InfoRow>
-            <InfoRow label="Resolución">
-              <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {pedido.resolucion}
-              </span>
-            </InfoRow>
-            <InfoRow label="Mesa"><span>{pedido.mesa}</span></InfoRow>
-            <InfoRow label="Zona"><span>{pedido.zona}</span></InfoRow>
-            <InfoRow label="Sucursal"><span>{pedido.sucursal}</span></InfoRow>
-            <InfoRow label="Cantidad en mesa"><span>{pedido.personas}</span></InfoRow>
-            <InfoRow label="Hora apertura"><span>{pedido.horaApertura}</span></InfoRow>
-            <InfoRow label="Hora cierre"><span>{pedido.horaCierre}</span></InfoRow>
-            <InfoRow label="Duración"><span>{pedido.duracion}</span></InfoRow>
+          <div style={{ paddingRight: 32, borderRight: '1px solid #F0F1F5' }}>
+            <InfoRow label="No. Documento">{pedido.noDoc}</InfoRow>
+            <InfoRow label="Tipo de documento">{pedido.tipoDoc}</InfoRow>
+            <InfoRow label="Resolución">{pedido.resolucion}</InfoRow>
+            <InfoRow label="Mesa">{pedido.mesa}</InfoRow>
+            <InfoRow label="Zona">{pedido.zona}</InfoRow>
+            <InfoRow label="Sucursal">{pedido.sucursal}</InfoRow>
+            <InfoRow label="Cantidad en mesa">{pedido.personas}</InfoRow>
+            <InfoRow label="Hora apertura">{pedido.horaApertura}</InfoRow>
+            <InfoRow label="Hora cierre">{pedido.horaCierre}</InfoRow>
+            <InfoRow label="Duración" last>{pedido.duracion}</InfoRow>
           </div>
 
           {/* Right column */}
-          <div>
-            <InfoRow label="Vendedor"><span>{pedido.vendedor}</span></InfoRow>
-            <InfoRow label="Cliente"><span>{pedido.cliente}</span></InfoRow>
-            <InfoRow label="Forma de pago"><span>{pedido.formaPago}</span></InfoRow>
-            <InfoRow label="Estado">
+          <div style={{ paddingLeft: 32 }}>
+            <InfoRow label="Vendedor">{pedido.vendedor}</InfoRow>
+            <InfoRow label="Cliente">{pedido.cliente}</InfoRow>
+            <InfoRow label="Forma de pago">{pedido.formaPago}</InfoRow>
+            <InfoRow label="Estado" last={!showDian || !pedido.dian}>
               <EstadoBadge label={pedido.estado.label} variant={pedido.estado.variant} />
             </InfoRow>
             {showDian && pedido.dian && (
-              <InfoRow label="Estado DIAN">
+              <InfoRow label="Estado DIAN" last>
                 <DianBadge label={pedido.dian.label} variant={pedido.dian.variant} />
               </InfoRow>
             )}
