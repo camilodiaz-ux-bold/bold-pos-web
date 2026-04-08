@@ -789,7 +789,7 @@ export function MesaProductSelector({
                         <p style={{ fontSize: 14, fontWeight: 600, color: '#1E1E1E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
                           {item.name}
                         </p>
-                        <p style={{ fontSize: 13, fontWeight: 500, color: '#FF2947', marginTop: 2, margin: '2px 0 0' }}>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: '#1E1E1E', marginTop: 2, margin: '2px 0 0' }}>
                           ${(item.discount ? Math.round(item.price * (1 - item.discount/100)) * item.quantity : item.price * item.quantity).toLocaleString()}
                         </p>
                         {(item.discount ?? 0) > 0 && (
