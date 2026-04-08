@@ -2784,7 +2784,7 @@ export function MesasView() {
                           {selectedTable.status === 'OCUPADA' ? (
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>{item.name}</p>
-                              <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                              <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
                                 ${(item.discount ? Math.round(item.price * (1 - item.discount/100)) * item.quantity : item.price * item.quantity).toLocaleString()}
                               </p>
                               {(item.discount ?? 0) > 0 && (
@@ -2823,7 +2823,7 @@ export function MesasView() {
                           ) : (
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>{item.name}</p>
-                              <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#FF2947', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
+                              <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 500, color: '#1E1E1E', fontFamily: 'var(--font-family, Montserrat, sans-serif)' }}>
                                 ${(item.discount ? Math.round(item.price * (1 - item.discount/100)) * item.quantity : item.price * item.quantity).toLocaleString()}
                               </p>
                               {(item.discount ?? 0) > 0 && (
