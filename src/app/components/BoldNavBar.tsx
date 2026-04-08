@@ -47,7 +47,7 @@ interface SubItem {
 interface MenuItem {
   id: string;
   label: string;
-  icon: React.ReactNode;
+  icon: (isActive: boolean) => React.ReactNode;
   hasSubmenu: boolean;
   subItems?: SubItem[];
   onClick?: () => void;
@@ -84,6 +84,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const inPosView = activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
   const [isExpanded, setIsExpanded] = useState(!inPosView);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['puntodeventa']));
+  const [activeFlyout, setActiveFlyout] = useState<string | null>(null);
 
   // Sync expanded state when navigating between POS ↔ non-POS sections
   const prevInPosView = useRef(inPosView);
@@ -129,14 +130,14 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'inicio',
       label: 'Inicio',
-      icon: <IcHome size={16} />,
+      icon: (a) => <IcHome size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: false,
       onClick: () => onModeChange('Inicio'),
     },
     {
       id: 'puntodeventa',
       label: 'Punto de venta',
-      icon: <IcPosFill size={16} />,
+      icon: (a) => <IcPosFill size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: true,
       subItems: [
         { id: 'mesas',     label: 'Mesas',     icon: <IcMesas size={16} />,     active: activeMode === 'Mesas',     onClick: () => onModeChange('Mesas') },
@@ -147,7 +148,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'ingresos',
       label: 'Ingresos',
-      icon: <IcMoneyFill size={16} />,
+      icon: (a) => <IcMoneyFill size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: true,
       subItems: [
         { id: 'ventas',       label: 'Ventas',             icon: <IcRecibos size={16} />,      active: false, onClick: () => navigate('/ventas') },
@@ -159,7 +160,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'egresos',
       label: 'Egresos',
-      icon: <IcEgresosFill size={16} />,
+      icon: (a) => <IcEgresosFill size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: true,
       subItems: [
         { id: 'gastos',     label: 'Gastos',            icon: <IcGastos size={16} />,     active: false, onClick: () => toast.info('Gastos') },
@@ -169,7 +170,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'items',
       label: 'Ítems',
-      icon: <IcItemsFill size={16} />,
+      icon: (a) => <IcItemsFill size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: true,
       subItems: [
         { id: 'listaitems',   label: 'Lista de ítems',          icon: <IcListaItems size={16} />,   active: false, onClick: () => toast.info('Lista de ítems') },
@@ -181,28 +182,28 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'contactos',
       label: 'Contactos',
-      icon: <IcUsuarios size={16} />,
+      icon: (a) => <IcUsuarios size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Contactos'),
     },
     {
       id: 'reportes',
       label: 'Reportes',
-      icon: <IcReportes size={16} />,
+      icon: (a) => <IcReportes size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: false,
       onClick: () => onModeChange('Reportes'),
     },
     {
       id: 'ajustes',
       label: 'Ajustes',
-      icon: <IcAjustes size={16} />,
+      icon: (a) => <IcAjustes size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Ajustes'),
     },
     {
       id: 'chat',
       label: 'Chat con soporte',
-      icon: <IcChat size={16} />,
+      icon: (a) => <IcChat size={16} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Chat con soporte'),
     },
@@ -281,38 +282,54 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
           <Plus size={16} color={C.white} />
         </button>
 
+        {/* Backdrop to close flyout on outside click */}
+        {activeFlyout && (
+          <div
+            onClick={() => setActiveFlyout(null)}
+            style={{ position: 'fixed', inset: 0, zIndex: 199 }}
+          />
+        )}
+
         {/* Icon-only menu items */}
         {menu.map(item => {
           const isActive = isSectionActive(item);
+          const flyoutOpen = activeFlyout === item.id;
 
           return (
             <div
               key={item.id}
               style={{ position: 'relative', flexShrink: 0 }}
-              onMouseEnter={e => showFlyout(item.id, e.currentTarget.getBoundingClientRect().top)}
-              onMouseLeave={scheduleFlyoutHide}
+              onMouseEnter={!item.subItems ? (e => showFlyout(item.id, e.currentTarget.getBoundingClientRect().top)) : undefined}
+              onMouseLeave={!item.subItems ? scheduleFlyoutHide : undefined}
             >
               <button
-                onClick={() => {
-                  if (item.onClick) { item.onClick(); setHoveredItem(null); }
+                onClick={e => {
+                  if (item.subItems) {
+                    // click-based flyout for parent items with children
+                    const top = (e.currentTarget as HTMLButtonElement).getBoundingClientRect().top;
+                    itemRefs.current[item.id] = top;
+                    setActiveFlyout(prev => prev === item.id ? null : item.id);
+                  } else if (item.onClick) {
+                    item.onClick();
+                    setHoveredItem(null);
+                  }
                 }}
                 style={{
                   width: 44, height: 32,
                   padding: 8,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   borderRadius: 8,
-                  backgroundColor: isActive ? C.blue10 : 'transparent',
-                  color: isActive ? C.blue100 : C.black60,
+                  backgroundColor: isActive || flyoutOpen ? C.blue10 : 'transparent',
                   border: 'none', cursor: 'pointer',
                   transition: 'background-color 0.15s ease',
                 }}
-                onMouseOver={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
-                onMouseOut={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
+                onMouseOver={e => { if (!isActive && !flyoutOpen) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
+                onMouseOut={e => { if (!isActive && !flyoutOpen) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
               >
-                {item.icon}
+                {item.icon(isActive)}
               </button>
 
-              {/* Flyout: simple dark tooltip for leaf items, panel for items with subitems */}
+              {/* Dark tooltip for leaf items (hover) */}
               {hoveredItem === item.id && !item.subItems && (
                 <div
                   style={{
@@ -333,27 +350,26 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                 </div>
               )}
 
-              {hoveredItem === item.id && item.subItems && (
+              {/* Flyout panel for items with subitems (click-based) */}
+              {flyoutOpen && item.subItems && (
                 <div
-                  onMouseEnter={cancelFlyoutHide}
-                  onMouseLeave={scheduleFlyoutHide}
+                  onClick={e => e.stopPropagation()}
                   style={{
                     position: 'fixed',
                     left: 68,
                     top: itemRefs.current[item.id] ?? 0,
                     backgroundColor: C.white,
-                    borderRadius: 8,
-                    boxShadow: '0 4px 24px rgba(0,0,0,0.14)',
-                    border: `1px solid ${C.blue20}`,
+                    borderRadius: 12,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                     padding: 8,
-                    zIndex: 1000,
+                    zIndex: 200,
                     minWidth: 180,
                   }}
                 >
                   <p style={{
-                    fontSize: 12, fontWeight: 600, color: C.black60,
+                    fontSize: 11, fontWeight: 700, color: C.black60,
                     fontFamily: FONT, padding: '4px 8px',
-                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
                     marginBottom: 4,
                   }}>
                     {item.label}
@@ -362,12 +378,12 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                     {item.subItems.map(sub => (
                       <button
                         key={sub.id}
-                        onClick={() => { sub.onClick(); setHoveredItem(null); }}
+                        onClick={() => { sub.onClick(); setActiveFlyout(null); }}
                         style={{
                           textAlign: 'left', width: '100%',
                           padding: '6px 8px', borderRadius: 8,
-                          fontSize: 14, fontWeight: sub.active ? 600 : 400,
-                          color: C.black100,
+                          fontSize: 14, fontWeight: sub.active ? 600 : 500,
+                          color: sub.active ? C.blue100 : C.black100,
                           backgroundColor: sub.active ? C.blue10 : 'transparent',
                           display: 'flex', alignItems: 'center', gap: 8,
                           border: 'none', cursor: 'pointer',
@@ -377,7 +393,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                         onMouseOver={e => { if (!sub.active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
                         onMouseOut={e => { if (!sub.active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                       >
-                        <span style={{ color: sub.active ? C.black100 : C.black60, display: 'flex', flexShrink: 0 }}>{sub.icon}</span>
+                        <span style={{ color: sub.active ? C.blue100 : C.black60, display: 'flex', flexShrink: 0 }}>{sub.icon}</span>
                         {sub.label}
                       </button>
                     ))}
@@ -523,7 +539,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                       borderRadius: 8,
                     }}
                   >
-                    <span style={{ color: isActive ? C.blue100 : C.black60, display: 'flex', flexShrink: 0 }}>{item.icon}</span>
+                    <span style={{ display: 'flex', flexShrink: 0 }}>{item.icon(isActive)}</span>
                     <span style={{
                       flex: 1, textAlign: 'left',
                       fontSize: 14, fontWeight: isActive ? 600 : 500,
@@ -589,7 +605,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                   onMouseOver={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
                   onMouseOut={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                 >
-                  <span style={{ color: isActive ? C.blue100 : C.black60, display: 'flex', flexShrink: 0 }}>{item.icon}</span>
+                  <span style={{ display: 'flex', flexShrink: 0 }}>{item.icon(isActive)}</span>
                   <span style={{
                     flex: 1, fontSize: 14, fontWeight: isActive ? 600 : 500,
                     color: isActive ? C.blue100 : C.black100,
