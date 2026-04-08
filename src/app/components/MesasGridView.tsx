@@ -46,9 +46,9 @@ const STATUS_STYLE: Record<TableStatus, {
   DISPONIBLE: {
     bg:        '#E8F5E9',
     border:    'none',
-    nameColor: '#1E1E1E',
-    infoColor: '#606060',
-    iconColor: '#606060',
+    nameColor: '#1B5E20',
+    infoColor: '#1B5E20',
+    iconColor: '#1B5E20',
     opacity:   1,
     cursor:    'pointer',
   },
@@ -64,9 +64,9 @@ const STATUS_STYLE: Record<TableStatus, {
   CUENTA_SOLICITADA: {
     bg:        '#FFEEF0',
     border:    'none',
-    nameColor: '#B38900',
-    infoColor: '#B38900',
-    iconColor: '#B38900',
+    nameColor: '#FF2947',
+    infoColor: '#FF2947',
+    iconColor: '#FF2947',
     opacity:   1,
     cursor:    'pointer',
   },
@@ -250,32 +250,74 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
     );
   }
 
+  // Compute counts using merged status (habilitada config applied)
+  const counts = sortedTables.reduce((acc, table) => {
+    const cfg = mesas.find(m => m.id === table.id);
+    const status: string = (cfg && !cfg.habilitada) ? 'INHABILITADA' : table.status;
+    acc[status] = (acc[status] ?? 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
-    <div style={{
-      display:             'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      gap:                 12,
-      paddingBottom:       8,
-    }}>
-      {sortedTables.map(table => {
-        // Merge useMesas config: name, capacity, and habilitada override operational state.
-        const cfg = mesas.find(m => m.id === table.id);
-        const merged: MesaTable = {
-          ...table,
-          name:     cfg?.nombre    ?? table.name,
-          capacity: cfg?.capacidad ?? table.capacity,
-          // If marked disabled in config, force INHABILITADA regardless of operational status.
-          status:   (cfg && !cfg.habilitada) ? 'INHABILITADA' : table.status,
-        };
-        return (
-          <MesaCard
-            key={table.id}
-            table={merged}
-            isSelected={table.id === selectedTableId}
-            onClick={() => onSelectMesa(table.id)}
-          />
-        );
-      })}
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{
+        display:             'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap:                 12,
+        paddingBottom:       8,
+      }}>
+        {sortedTables.map(table => {
+          const cfg = mesas.find(m => m.id === table.id);
+          const merged: MesaTable = {
+            ...table,
+            name:     cfg?.nombre    ?? table.name,
+            capacity: cfg?.capacidad ?? table.capacity,
+            status:   (cfg && !cfg.habilitada) ? 'INHABILITADA' : table.status,
+          };
+          return (
+            <MesaCard
+              key={table.id}
+              table={merged}
+              isSelected={table.id === selectedTableId}
+              onClick={() => onSelectMesa(table.id)}
+            />
+          );
+        })}
+      </div>
+
+      {/* ── Leyenda inferior ── */}
+      <div style={{
+        borderTop: '1px solid #E0E0E0',
+        backgroundColor: '#fff',
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 24,
+        flexWrap: 'wrap',
+        marginTop: 8,
+      }}>
+        {[
+          { label: 'Disponibles',      color: '#1B5E20', status: 'DISPONIBLE',        pulse: false },
+          { label: 'Ocupadas',         color: '#FF2947', status: 'OCUPADA',            pulse: false },
+          { label: 'Cuenta solicitada',color: '#FF2947', status: 'CUENTA_SOLICITADA',  pulse: true  },
+          { label: 'Inhabilitadas',    color: '#AAAAAA', status: 'INHABILITADA',       pulse: false },
+        ].map(item => (
+          <div key={item.status} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span
+              className={item.pulse ? 'pulse-dot' : undefined}
+              style={{
+                width: 8, height: 8, borderRadius: '50%',
+                backgroundColor: item.color,
+                flexShrink: 0,
+                display: 'inline-block',
+              }}
+            />
+            <span style={{ fontFamily: FONT, fontSize: 12, color: '#606060' }}>
+              {item.label} ({counts[item.status] ?? 0})
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

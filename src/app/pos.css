@@ -127,9 +127,9 @@ button, a, [role="button"] { cursor: pointer; transition: all 150ms ease; }
 }
 /* CUENTA SOLICITADA */
 .status-badge--billing {
-  background: #FFFBF0;
-  color: #B38900;
-  border-color: #FFC217;
+  background: #FFEEF0;
+  color: #FF2947;
+  border-color: #FF2947;
 }
 /* INHABILITADA / BORRADOR */
 .status-badge--disabled {
