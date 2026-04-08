@@ -315,18 +315,22 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                   }
                 }}
                 style={{
-                  width: 44, height: 32,
-                  padding: 8,
+                  width: 44, height: 40,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  borderRadius: 8,
-                  backgroundColor: isActive || flyoutOpen ? C.blue10 : 'transparent',
+                  backgroundColor: 'transparent',
                   border: 'none', cursor: 'pointer',
-                  transition: 'background-color 0.15s ease',
                 }}
-                onMouseOver={e => { if (!isActive && !flyoutOpen) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
-                onMouseOut={e => { if (!isActive && !flyoutOpen) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
               >
-                {item.icon(isActive)}
+                <div style={{
+                  width: 36, height: 36,
+                  borderRadius: 8,
+                  backgroundColor: isActive || flyoutOpen ? '#E8EAFA' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'background-color 0.15s ease',
+                }}>
+                  {item.icon(isActive)}
+                </div>
               </button>
 
               {/* Dark tooltip for leaf items (hover) */}
@@ -539,7 +543,13 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                       borderRadius: 8,
                     }}
                   >
-                    <span style={{ display: 'flex', flexShrink: 0 }}>{item.icon(isActive)}</span>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, padding: 6, borderRadius: 8,
+                      backgroundColor: isActive ? '#E8EAFA' : 'transparent',
+                    }}>
+                      {item.icon(isActive)}
+                    </span>
                     <span style={{
                       flex: 1, textAlign: 'left',
                       fontSize: 14, fontWeight: isActive ? 600 : 500,
@@ -605,7 +615,13 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                   onMouseOver={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
                   onMouseOut={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                 >
-                  <span style={{ display: 'flex', flexShrink: 0 }}>{item.icon(isActive)}</span>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, padding: 6, borderRadius: 8,
+                    backgroundColor: isActive ? '#E8EAFA' : 'transparent',
+                  }}>
+                    {item.icon(isActive)}
+                  </span>
                   <span style={{
                     flex: 1, fontSize: 14, fontWeight: isActive ? 600 : 500,
                     color: isActive ? C.blue100 : C.black100,
