@@ -12,7 +12,7 @@ import {
   Search, ChevronLeft, ChevronRight,
   Trash2, Receipt, Send, Clock,
   Utensils, CheckCircle2, RefreshCw, X, Star,
-  Pencil, ShoppingBag, ChefHat, Check,
+  Pencil, ShoppingBag, ChefHat, Check, MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
@@ -59,6 +59,8 @@ export function MesaProductSelector({
   const [editItemPrice,    setEditItemPrice]    = useState<number>(0);
   const [editItemNote,     setEditItemNote]     = useState<string>('');
   const [hoveredItemId,    setHoveredItemId]    = useState<string | null>(null);
+  const [noteInputItemId,  setNoteInputItemId]  = useState<string | null>(null);
+  const [inlineNoteText,   setInlineNoteText]   = useState('');
 
   const { favoriteIds, toggleFavorite } = useFavorites();
 
@@ -797,10 +799,32 @@ export function MesaProductSelector({
                             Desc. {item.discount}%
                           </p>
                         )}
-                        {item.note && (
-                          <p style={{ margin: '3px 0 0', fontSize: 11, fontStyle: 'italic', color: '#606060', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {item.note}
-                          </p>
+                        {noteInputItemId === item.id ? (
+                          <input
+                            autoFocus
+                            value={inlineNoteText}
+                            onChange={e => setInlineNoteText(e.target.value)}
+                            onBlur={() => { setTables(prev => prev.map(t => t.id !== tableId ? t : { ...t, items: t.items.map(i => i.id === item.id ? { ...i, note: inlineNoteText || undefined } : i) })); setNoteInputItemId(null); }}
+                            onKeyDown={e => { if (e.key === 'Enter') { setTables(prev => prev.map(t => t.id !== tableId ? t : { ...t, items: t.items.map(i => i.id === item.id ? { ...i, note: inlineNoteText || undefined } : i) })); setNoteInputItemId(null); } if (e.key === 'Escape') setNoteInputItemId(null); }}
+                            onClick={e => e.stopPropagation()}
+                            placeholder="Escribe una nota..."
+                            style={{ width: '100%', border: '1px solid #C7CBE0', borderRadius: 8, padding: '6px 10px', fontSize: 13, fontFamily: 'Montserrat, sans-serif', marginTop: 4, outline: 'none', boxSizing: 'border-box' as const }}
+                          />
+                        ) : item.note ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }} onClick={e => e.stopPropagation()}>
+                            <MessageSquare size={11} style={{ color: '#606060', flexShrink: 0 }} />
+                            <span style={{ fontSize: 12, color: '#606060', fontFamily: 'Montserrat, sans-serif', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.note}</span>
+                            <button onClick={e => { e.stopPropagation(); setInlineNoteText(item.note ?? ''); setNoteInputItemId(item.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', color: '#121E6C', flexShrink: 0 }}>
+                              <Pencil size={11} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={e => { e.stopPropagation(); setInlineNoteText(''); setNoteInputItemId(item.id); }}
+                            style={{ background: 'none', border: 'none', fontSize: 12, color: '#121E6C', fontWeight: 500, fontFamily: 'Montserrat, sans-serif', cursor: 'pointer', padding: '2px 0', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2 }}
+                          >
+                            <MessageSquare size={12} /> Agregar nota
+                          </button>
                         )}
                       </div>
 
