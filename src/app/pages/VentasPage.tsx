@@ -129,40 +129,60 @@ export function VentasPage() {
       </div>
 
       {/* ── Filtros ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* Row 1 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            placeholder="Buscar por No. Pedido"
-            style={filterStyle}
-          />
-          <input
-            type="date"
-            style={{ ...filterStyle, minWidth: 150 }}
-          />
-          <select style={filterStyle}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+
+        <div style={filterGroup}>
+          <label style={labelStyle}>Buscar</label>
+          <input type="text" placeholder="Buscar por No. Pedido" style={filterInput} />
+        </div>
+
+        <div style={filterGroup}>
+          <label style={labelStyle}>Fecha</label>
+          <input type="date" style={filterInput} />
+        </div>
+
+        <div style={filterGroup}>
+          <label style={labelStyle}>Estado</label>
+          <select style={filterInput}>
             {['Todos', 'Pagado', 'Abierto', 'Cancelado'].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
-        {/* Row 2 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <select style={filterStyle}>
+
+        <div style={filterGroup}>
+          <label style={labelStyle}>Usuario</label>
+          <select style={filterInput}>
             {['Todos', 'Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'].map(o => <option key={o}>{o}</option>)}
           </select>
-          <select style={filterStyle}>
+        </div>
+
+        <div style={filterGroup}>
+          <label style={labelStyle}>Zona</label>
+          <select style={filterInput}>
             {['Todos', 'Zona 1', 'Zona 2'].map(o => <option key={o}>{o}</option>)}
           </select>
-          <select style={filterStyle}>
+        </div>
+
+        <div style={filterGroup}>
+          <label style={labelStyle}>Mesa</label>
+          <select style={filterInput}>
             {['Todos', 'Mesa 1', 'Mesa 2', 'Mesa 3', 'Mesa 4', 'Mesa 5', 'Mesa 6', 'Mesa 7', 'Mesa 8', 'Mesa 9'].map(o => <option key={o}>{o}</option>)}
           </select>
-          <select style={filterStyle}>
+        </div>
+
+        <div style={filterGroup}>
+          <label style={labelStyle}>Tipo de documento</label>
+          <select style={filterInput}>
             {['Todos', 'Comprobante', 'Factura electrónica'].map(o => <option key={o}>{o}</option>)}
           </select>
-          <select style={filterStyle}>
+        </div>
+
+        <div style={filterGroup}>
+          <label style={labelStyle}>Estado DIAN</label>
+          <select style={filterInput}>
             {['Todos', 'Enviada', 'Pendiente'].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
+
       </div>
 
       {/* ── Tabla ── */}
@@ -227,15 +247,30 @@ export function VentasPage() {
   );
 }
 
-const filterStyle: React.CSSProperties = {
-  height: 36,
-  border: '1px solid #C7CBE0',
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 600,
+  color: '#606060',
+  fontFamily: "'Montserrat', sans-serif",
+  textTransform: 'uppercase',
+  marginBottom: 4,
+  whiteSpace: 'nowrap',
+};
+
+const filterGroup: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+const filterInput: React.CSSProperties = {
+  border: '1.5px solid #C7CBE0',
   borderRadius: 8,
+  padding: '8px 12px',
   fontSize: 14,
   fontFamily: "'Montserrat', sans-serif",
   color: '#1E1E1E',
-  padding: '0 12px',
-  backgroundColor: 'transparent',
+  backgroundColor: '#FFFFFF',
   outline: 'none',
   cursor: 'pointer',
 };
