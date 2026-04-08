@@ -115,9 +115,9 @@ button, a, [role="button"] { cursor: pointer; transition: all 150ms ease; }
 }
 /* DISPONIBLE */
 .status-badge--available {
-  background: #F1F2F6;
-  color: #606060;
-  border-color: #C7CBE0;
+  background: #F4FDF9;
+  color: #1B5E20;
+  border-color: #2E7D32;
 }
 /* OCUPADA */
 .status-badge--occupied {

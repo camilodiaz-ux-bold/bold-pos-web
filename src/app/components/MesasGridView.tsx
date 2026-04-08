@@ -250,26 +250,32 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
     );
   }
 
-  // Limit to 23 mesas for display
-  const displayTables = sortedTables.slice(0, 23);
-
-  // Compute counts using merged status (habilitada config applied)
-  const counts = displayTables.reduce((acc, table) => {
+  // Merge status for all tables (habilitada config applied)
+  const mergedTables = sortedTables.map(table => {
     const cfg = mesas.find(m => m.id === table.id);
-    const status: string = (cfg && !cfg.habilitada) ? 'INHABILITADA' : table.status;
-    acc[status] = (acc[status] ?? 0) + 1;
+    return {
+      ...table,
+      name:     cfg?.nombre    ?? table.name,
+      capacity: cfg?.capacidad ?? table.capacity,
+      status:   (cfg && !cfg.habilitada) ? 'INHABILITADA' as const : table.status,
+    };
+  });
+
+  // Compute counts
+  const counts = mergedTables.reduce((acc, t) => {
+    acc[t.status] = (acc[t.status] ?? 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const TAGS = [
-    { label: 'Disponibles',       status: 'DISPONIBLE',       dot: '#2E7D32', border: '#2E7D32', bg: '#F4FDF9', text: '#2E7D32', pulse: false },
-    { label: 'Ocupadas',          status: 'OCUPADA',          dot: '#FF2947', border: '#FF2947', bg: '#FFEEF0', text: '#FF2947', pulse: false },
-    { label: 'Cuenta solicitada', status: 'CUENTA_SOLICITADA',dot: '#FF2947', border: '#FF2947', bg: '#FFEEF0', text: '#FF2947', pulse: true  },
-    { label: 'Inhabilitadas',     status: 'INHABILITADA',     dot: '#BDBDBD', border: '#BDBDBD', bg: '#FAFAFA', text: '#9E9E9E', pulse: false },
+    { label: 'Disponibles',       status: 'DISPONIBLE',        border: '#2E7D32', bg: '#F4FDF9', text: '#2E7D32', showDot: false },
+    { label: 'Ocupadas',          status: 'OCUPADA',           border: '#FF2947', bg: '#FFEEF0', text: '#FF2947', showDot: false },
+    { label: 'Cuenta solicitada', status: 'CUENTA_SOLICITADA', border: '#FF2947', bg: '#FFEEF0', text: '#FF2947', showDot: true  },
+    { label: 'Inhabilitadas',     status: 'INHABILITADA',      border: '#BDBDBD', bg: '#FAFAFA', text: '#9E9E9E', showDot: false },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{
         display:             'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
@@ -278,35 +284,27 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
         backgroundColor:     '#FFFFFF',
         flex:                1,
       }}>
-        {displayTables.map(table => {
-          const cfg = mesas.find(m => m.id === table.id);
-          const merged: MesaTable = {
-            ...table,
-            name:     cfg?.nombre    ?? table.name,
-            capacity: cfg?.capacidad ?? table.capacity,
-            status:   (cfg && !cfg.habilitada) ? 'INHABILITADA' : table.status,
-          };
-          return (
-            <MesaCard
-              key={table.id}
-              table={merged}
-              isSelected={table.id === selectedTableId}
-              onClick={() => onSelectMesa(table.id)}
-            />
-          );
-        })}
+        {mergedTables.map(merged => (
+          <MesaCard
+            key={merged.id}
+            table={merged}
+            isSelected={merged.id === selectedTableId}
+            onClick={() => onSelectMesa(merged.id)}
+          />
+        ))}
       </div>
 
       {/* ── Leyenda inferior — pill tags ── */}
       <div style={{
-        borderTop:       '1px solid #F0F0F0',
+        position:        'sticky',
+        bottom:          0,
+        borderTop:       '1px solid #E0E0E0',
         backgroundColor: '#fff',
         padding:         '12px 24px',
         display:         'flex',
         alignItems:      'center',
         gap:             12,
         flexWrap:        'wrap',
-        marginTop:       'auto',
       }}>
         {TAGS.map(item => (
           <div key={item.status} style={{
@@ -316,15 +314,14 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
             border: `1.5px solid ${item.border}`,
             backgroundColor: item.bg,
           }}>
-            <span
-              className={item.pulse ? 'pulse-dot' : undefined}
-              style={{
+            {item.showDot && (
+              <span style={{
                 width: 8, height: 8, borderRadius: '50%',
-                backgroundColor: item.dot,
+                backgroundColor: '#FF2947',
                 flexShrink: 0,
                 display: 'inline-block',
-              }}
-            />
+              }} />
+            )}
             <span style={{ fontFamily: FONT, fontSize: 12, color: item.text, whiteSpace: 'nowrap' }}>
               {item.label} ({counts[item.status] ?? 0})
             </span>
