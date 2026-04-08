@@ -232,7 +232,6 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     if (item.id === 'inicio')       return activeMode === 'Inicio';
     if (item.id === 'puntodeventa') return (activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos') && pathname !== '/ventas';
     if (item.id === 'reportes')     return activeMode === 'Reportes';
-    if (item.id === 'ingresos')     return pathname === '/ventas';
     // Generic: parent is active when any child is active
     if (item.subItems)              return item.subItems.some(sub => sub.active);
     return false;
@@ -394,7 +393,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                           fontSize: 14, fontWeight: sub.active ? 600 : 500,
                           color: sub.active ? C.blue100 : C.black100,
                           backgroundColor: sub.active ? C.blue10 : 'transparent',
-                          display: 'flex', alignItems: 'center', gap: 8,
+                          display: 'flex', alignItems: 'center',
                           border: 'none', cursor: 'pointer',
                           fontFamily: FONT, lineHeight: '20px',
                           transition: 'background-color 0.15s ease',
@@ -402,7 +401,6 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                         onMouseOver={e => { if (!sub.active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
                         onMouseOut={e => { if (!sub.active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                       >
-                        <span style={{ color: sub.active ? C.blue100 : C.black60, display: 'flex', flexShrink: 0 }}>{sub.icon}</span>
                         {sub.label}
                       </button>
                     ))}
