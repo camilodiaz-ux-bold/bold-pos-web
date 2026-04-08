@@ -162,16 +162,9 @@ function Switch({ on, toggle, disabled }: { on: boolean; toggle?: () => void; di
     <button
       onClick={disabled ? undefined : toggle}
       disabled={disabled}
-      className={cn(
-        'w-10 h-5 rounded-full relative shrink-0 transition-colors focus:outline-none',
-        disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer',
-        on ? 'bg-[var(--blue-100)]' : 'bg-[var(--black-40)]',
-      )}
+      style={{ width:40, height:20, borderRadius:999, position:'relative', flexShrink:0, cursor: disabled?'not-allowed':'pointer', opacity: disabled?0.3:1, background: on ? '#121E6C' : '#CCCCCC', border:'none', transition:'background 200ms' }}
     >
-      <span className={cn(
-        'absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all',
-        on ? 'left-[22px]' : 'left-0.5',
-      )} />
+      <span style={{ position:'absolute', top:2, width:16, height:16, background:'white', borderRadius:'50%', boxShadow:'0 1px 3px rgba(0,0,0,0.2)', transition:'left 150ms', left: on ? 22 : 2 }} />
     </button>
   );
 }
@@ -1101,7 +1094,7 @@ export function GestionarMesasView({ onBack }: Props) {
                           </div>
                         ) : cnt > 0 ? (
                           <div className="relative group">
-                            <button disabled className="p-2 rounded-[var(--radius-12)] text-[var(--black-10)] cursor-not-allowed"><Trash2 size={14} /></button>
+                            <button disabled style={{ padding: 8, borderRadius: 8, background: 'none', border: 'none', cursor: 'not-allowed', color: '#CCCCCC', display: 'flex', alignItems: 'center' }}><Trash2 size={14} /></button>
                             <div className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-2 hidden group-hover:block bg-[var(--black-100)] text-white text-[10px] font-bold px-2 py-1 rounded-[var(--radius-12)] whitespace-nowrap z-20">
                               Primero elimina las mesas
                             </div>
