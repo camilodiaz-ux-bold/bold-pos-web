@@ -4,7 +4,7 @@ import {
   ArrowLeft, Save, Plus, Trash2, ChevronUp, ChevronDown,
   LayoutGrid, Layers, SlidersHorizontal, Search, X, Copy,
   Info, MapPin, Users, ZoomIn, ZoomOut, RotateCcw, Maximize2,
-  Move, TriangleAlert, Circle, Square, Map,
+  Move, TriangleAlert, Circle, Square, Map, Expand,
 } from 'lucide-react';
 import { GestionarMesasGrid } from './GestionarMesasGrid';
 import { toast } from 'sonner';
@@ -583,13 +583,15 @@ export function GestionarMesasView({ onBack }: Props) {
     <div className="flex flex-col flex-1 w-full h-full bg-white overflow-hidden">
 
       {/* ── HEADER ── */}
-      <header className="bg-white flex items-center gap-4 shrink-0 z-10" style={{ height: 56, padding: '0 24px', borderBottom: '1px solid var(--black-10)' }}>
-        <button onClick={handleBack} className="btn btn-ghost btn--sm flex items-center gap-2">
-          <ArrowLeft size={15} /> Volver a Mesas
-        </button>
-        <div className="h-5 w-px" style={{ background: 'var(--black-10)' }} />
-        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>Gestionar mesas</span>
-        <div className="ml-auto flex items-center gap-3">
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, padding: '0 24px', borderBottom: '1px solid var(--black-10)', background: '#fff', flexShrink: 0, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={handleBack} className="btn btn-ghost btn--sm flex items-center gap-2">
+            <ArrowLeft size={15} /> Volver a Mesas
+          </button>
+          <div className="h-5 w-px" style={{ background: 'var(--black-10)' }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>Gestionar mesas</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {/* Toggle Grid / Mapa (visible cuando section === 'mapa') */}
           {section === 'mapa' && (
             <div style={{
@@ -622,7 +624,7 @@ export function GestionarMesasView({ onBack }: Props) {
               </button>
             </div>
           )}
-          <button onClick={save} className="btn btn-primary btn--sm flex items-center gap-2">
+          <button onClick={save} style={{ background: '#FF2947', color: '#fff', borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Save size={14} /> Guardar cambios
           </button>
         </div>
@@ -1100,45 +1102,45 @@ export function GestionarMesasView({ onBack }: Props) {
             {/* MESAS */}
             {section === 'mesas' && (
               <div>
-                <div className="flex items-start justify-between mb-6">
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
                   <div>
                     <h2 className="text-[18px] font-bold text-[var(--black-100)]">Mesas</h2>
                     <p className="text-[12px] text-[var(--black-60)] mt-0.5">{tables.length} mesas configuradas.</p>
                   </div>
                   <button
                     onClick={() => setShowModal(true)}
-                    className="btn btn-secondary btn--sm flex items-center gap-1.5 shrink-0"
+                    style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid #121E6C', color: '#121E6C', fontSize: 14, fontWeight: 600, background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
                   >
-                    <Plus size={13} /> Crear mesa
+                    <Plus size={14} /> Crear mesa
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="relative">
-                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--black-40)]" />
-                    <input value={srch} onChange={e=>setSrch(e.target.value)} placeholder="Buscar…"
-                      className="pos-input w-44 text-xs pl-8 pr-3 py-2" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <div style={{ position: 'relative', width: 260 }}>
+                    <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#969696', pointerEvents: 'none' }} />
+                    <input value={srch} onChange={e=>setSrch(e.target.value)} placeholder="Buscar mesa…"
+                      style={{ width: '100%', border: '1.5px solid #C7CBE0', borderRadius: 10, padding: '10px 14px 10px 36px', fontSize: 14, fontFamily: "'Montserrat', sans-serif", background: '#F7F8FB', outline: 'none', boxSizing: 'border-box' as const, color: '#1E1E1E' }} />
                   </div>
                   <select value={zoneF} onChange={e=>setZoneF(e.target.value)}
-                    className="pos-input text-xs py-2 px-3">
+                    style={{ border: '1.5px solid #C7CBE0', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontFamily: "'Montserrat', sans-serif", background: '#F7F8FB', outline: 'none', color: '#1E1E1E', cursor: 'pointer' }}>
                     <option value="Todas">Todas las zonas</option>
                     {zonas.map(z => <option key={z.id} value={z.name}>{z.name}</option>)}
                   </select>
                   {(srch || zoneF !== 'Todas') && (
-                    <button onClick={()=>{setSrch('');setZoneF('Todas');}} className="text-xs font-bold text-[var(--black-40)] hover:text-[var(--black-100)] flex items-center gap-1">
-                      <X size={11} /> Limpiar
+                    <button onClick={()=>{setSrch('');setZoneF('Todas');}} style={{ fontSize: 13, fontWeight: 600, color: '#969696', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <X size={13} /> Limpiar
                     </button>
                   )}
-                  <span className="ml-auto text-xs text-[var(--black-40)] font-bold">{filtered.length} de {tables.length}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 12, color: '#969696', fontWeight: 600 }}>{filtered.length} de {tables.length}</span>
                 </div>
 
                 <div className="bg-white rounded-[var(--radius-16)] border border-[var(--black-10)] shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px]">
                       <thead>
-                        <tr style={{ backgroundColor: '#F7F8FB', borderBottom: '1px solid #F0F1F5' }}>
+                        <tr style={{ backgroundColor: '#F7F8FB', borderBottom: '1px solid #E8E9F0' }}>
                           {['Nombre','Zona','Tipo','Capacidad','Estado',''].map(h => (
-                            <th key={h} style={{ textAlign: 'left', padding: '0 16px', height: 40, fontSize: 12, fontWeight: 600, color: '#606060', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{h}</th>
+                            <th key={h} style={{ textAlign: 'left', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#606060', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -1146,7 +1148,7 @@ export function GestionarMesasView({ onBack }: Props) {
                         {filtered.length === 0 ? (
                           <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px 0', color: '#969696', fontSize: 13 }}>Sin resultados.</td></tr>
                         ) : filtered.map((m, i) => (
-                          <tr key={m.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid #F0F1F5' : 'none', height: 48 }} className="hover:bg-[var(--blue-10)] transition-colors">
+                          <tr key={m.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid #E8E9F0' : 'none', minHeight: 52 }} className="hover:bg-[#F7F8FB] transition-colors">
                             <td style={{ padding: '0 16px', fontSize: 14, color: '#1E1E1E', fontWeight: 500 }}>
                               <input value={m.name} onChange={e=>setTables(p=>p.map(t=>t.id===m.id?{...t,name:e.target.value}:t))}
                                 style={{ width: 80, fontSize: 14, fontWeight: 600, color: '#1E1E1E', background: 'transparent', border: 'none', borderBottom: '1px solid transparent', outline: 'none', padding: '2px 0' }}
@@ -1181,18 +1183,35 @@ export function GestionarMesasView({ onBack }: Props) {
                               </div>
                             </td>
                             <td style={{ padding: '0 16px' }}>
-                              <select value={m.status} onChange={e=>setTables(p=>p.map(t=>t.id===m.id?{...t,status:e.target.value as TableStatus}:t))}
-                                className={cn('text-[11px] font-semibold rounded-[var(--radius-12)] px-2 py-1 border focus:outline-none cursor-pointer',
-                                  m.status==='Activa'?'bg-[var(--feedback-success-10)] text-[var(--feedback-success-200)] border-[var(--feedback-success-100)]':'bg-[var(--coral-10)] text-[var(--coral-100)] border-red-200')}>
-                                <option value="Activa">Activa</option>
-                                <option value="Fuera de servicio">Fuera de servicio</option>
-                              </select>
+                              <button
+                                onClick={() => setTables(p => p.map(t => t.id === m.id ? { ...t, status: t.status === 'Activa' ? 'Fuera de servicio' : 'Activa' } : t))}
+                                style={m.status === 'Activa'
+                                  ? { background: '#F4FDF9', color: '#2E7D32', border: '1px solid #2E7D32', borderRadius: 999, padding: '4px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' as const }
+                                  : { background: '#FFF3F4', color: '#FF2947', border: '1px solid #FF2947', borderRadius: 999, padding: '4px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' as const }
+                                }
+                              >
+                                {m.status === 'Activa' ? 'Activa' : 'Fuera de servicio'}
+                              </button>
                             </td>
                             <td style={{ padding: '0 16px' }}>
-                              <div className="flex items-center gap-1">
-                                <button onClick={()=>{setSection('mapa');setZone(m.zone);setSelId(m.id);}}
-                                  title="Ver en mapa" className="p-1.5 rounded-[var(--radius-12)] text-[var(--black-40)] hover:text-[var(--blue-100)] hover:bg-[var(--blue-10)] transition-all"><LayoutGrid size={12}/></button>
-                                <button onClick={()=>setTables(p=>p.filter(t=>t.id!==m.id))} className="p-1.5 rounded-[var(--radius-12)] text-[var(--black-40)] hover:text-[var(--coral-100)] hover:bg-[var(--coral-10)] transition-all"><Trash2 size={12}/></button>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <button
+                                  onClick={() => { setSection('mapa'); setZone(m.zone); setSelId(m.id); }}
+                                  title="Ver en mapa"
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center', color: '#606060' }}
+                                  onMouseEnter={e => (e.currentTarget.style.color = '#121E6C')}
+                                  onMouseLeave={e => (e.currentTarget.style.color = '#606060')}
+                                >
+                                  <Expand size={16} />
+                                </button>
+                                <button
+                                  onClick={() => setTables(p => p.filter(t => t.id !== m.id))}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center', color: '#606060' }}
+                                  onMouseEnter={e => (e.currentTarget.style.color = '#FF2947')}
+                                  onMouseLeave={e => (e.currentTarget.style.color = '#606060')}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
                               </div>
                             </td>
                           </tr>
