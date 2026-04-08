@@ -279,6 +279,7 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
       <div style={{
         display:             'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
+        alignContent:        'start',
         gap:                 16,
         padding:             24,
         backgroundColor:     '#FFFFFF',
