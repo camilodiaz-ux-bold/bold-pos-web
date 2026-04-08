@@ -232,6 +232,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     if (item.id === 'inicio')       return activeMode === 'Inicio';
     if (item.id === 'puntodeventa') return (activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos') && pathname !== '/ventas';
     if (item.id === 'reportes')     return activeMode === 'Reportes';
+    if (item.id === 'ingresos')     return item.subItems?.some(sub => sub.active) || pathname === '/ventas' || pathname.startsWith('/ventas');
     // Generic: parent is active when any child is active
     if (item.subItems)              return item.subItems.some(sub => sub.active);
     return false;
