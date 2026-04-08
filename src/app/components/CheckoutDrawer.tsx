@@ -143,6 +143,9 @@ export function CheckoutDrawer({
   // ── Comanda post-pago ─────────────────────────────────────────────────────
   const [comandaSentAfterPay, setComandaSentAfterPay] = useState(false);
 
+  // ── Nota general del pedido ───────────────────────────────────────────────
+  const [orderNote, setOrderNote] = useState('');
+
   // ── B. Dividir cuenta ─────────────────────────────────────────────────────
   const [splitBill,    setSplitBill]    = useState(false);
   const [splitMode,    setSplitMode]    = useState<SplitMode>('equal');
@@ -1474,6 +1477,34 @@ export function CheckoutDrawer({
 
               <div style={{ height: 8 }} />
               </div>{/* end payment section */}
+
+              {/* ─── Nota del pedido ─── */}
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #F5F6FA' }}>
+                <p style={{
+                  fontSize: 12, fontWeight: 600, color: '#606060',
+                  textTransform: 'uppercase', fontFamily: 'Montserrat, sans-serif',
+                  marginBottom: 8,
+                }}>
+                  Nota del pedido{' '}
+                  <span style={{ fontSize: 11, color: '#9E9E9E', fontWeight: 400, textTransform: 'none' }}>
+                    (opcional)
+                  </span>
+                </p>
+                <textarea
+                  value={orderNote}
+                  onChange={e => setOrderNote(e.target.value)}
+                  rows={2}
+                  placeholder="Agrega una nota general para el pedido..."
+                  style={{
+                    width: '100%', borderRadius: 10, border: '1.5px solid #C7CBE0',
+                    padding: '10px 12px', fontSize: 13, fontFamily: 'Montserrat, sans-serif',
+                    color: '#1E1E1E', background: '#F7F8FB', resize: 'none',
+                    outline: 'none', boxSizing: 'border-box',
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#121E6C'; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = '#C7CBE0'; }}
+                />
+              </div>
             </>
           )}
         </div>
