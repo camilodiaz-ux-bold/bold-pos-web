@@ -59,25 +59,20 @@ const CATEGORIES: ReportCategory[] = [
     id: 'administrativos',
     title: 'Administrativos',
     items: [
-      { id: 'cierre-caja',          label: 'Cierre de caja',          icon: <LockKeyhole      size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'cierre-caja-gerencial', label: 'Cierre de caja gerencial', icon: <KeyRound         size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'lista-items',          label: 'Lista de ítems',           icon: <List             size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'inventarios',          label: 'Inventarios',              icon: <Package          size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ingresos-egresos',     label: 'Ingresos y egresos',       icon: <ArrowLeftRight   size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'cuentas-cobrar',       label: 'Cuentas por cobrar',       icon: <CircleDollarSign size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'lista-contactos',      label: 'Lista de contactos',       icon: <Users            size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
     ],
   },
   {
     id: 'ventas',
-    title: 'Ventas',
+    title: 'Reportes de ventas',
     items: [
-      { id: 'comprobantes',            label: 'Comprobantes',             icon: <FileText    size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'comprobantes-mensuales',  label: 'Comprobantes mensuales',   icon: <FileCheck   size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'ventas',                  label: 'Ventas',                   icon: <FileText     size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'comprobantes-mensuales',  label: 'Comprobantes mensuales',   icon: <FileCheck    size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ventas-items',            label: 'Ventas por ítems',         icon: <ShoppingCart size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'ganancias-items',         label: 'Ganancias por ítems',      icon: <TrendingUp  size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'comprobantes-vendedor',   label: 'Comprobantes por vendedor', icon: <BarChart2   size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'cotizaciones',            label: 'Cotizaciones',              icon: <Tag         size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'ganancias-items',         label: 'Ganancias por ítems',      icon: <TrendingUp   size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
     ],
   },
   {
@@ -88,16 +83,6 @@ const CATEGORIES: ReportCategory[] = [
       { id: 'notas-credito',      label: 'Notas crédito',       icon: <FileCheck  size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'notas-debito',       label: 'Notas debito',        icon: <FileMinus  size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'documentos-soporte', label: 'Documentos soporte',  icon: <FileArchive size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-    ],
-  },
-  {
-    id: 'restaurantes',
-    title: 'Restaurantes',
-    items: [
-      { id: 'rest-ventas',         label: 'Ventas',               icon: <Receipt       size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'rest-ocupacion',      label: 'Ocupación y Tiempos',  icon: <Clock         size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'rest-propinas',       label: 'Propinas y Recaudo',   icon: <Wallet        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'rest-propinas-turno', label: 'Propinas en Turnos',   icon: <CalendarRange size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
     ],
   },
 ];
@@ -237,10 +222,9 @@ export function ReportesPanel() {
           <CategoryCard category={CATEGORIES[1]} /> {/* Ventas */}
         </div>
 
-        {/* Fila 2: Documentos electrónicos | Restaurantes */}
+        {/* Fila 2: Documentos electrónicos */}
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           <CategoryCard category={CATEGORIES[2]} /> {/* Documentos electrónicos */}
-          <CategoryCard category={CATEGORIES[3]} isRestaurantes /> {/* Restaurantes (nuevo) */}
         </div>
 
       </div>
