@@ -4,7 +4,7 @@ import {
   ArrowLeft, Save, Plus, Trash2, ChevronUp, ChevronDown,
   LayoutGrid, Layers, SlidersHorizontal, Search, X, Copy,
   Info, MapPin, Users, ZoomIn, ZoomOut, RotateCcw, Maximize2,
-  Move, TriangleAlert, Circle, Square, Map, Expand,
+  Move, TriangleAlert, Circle, Square, Map, Expand, TableProperties,
 } from 'lucide-react';
 import { GestionarMesasGrid } from './GestionarMesasGrid';
 import { toast } from 'sonner';
@@ -153,7 +153,7 @@ const INIT_TIPOS: TipoConf[] = [
 const NAV: { id: SectionId; label: string; icon: React.ElementType }[] = [
   { id:'mapa',  label:'Mapa',  icon: LayoutGrid },
   { id:'zonas', label:'Zonas', icon: MapPin     },
-  { id:'mesas', label:'Mesas', icon: LayoutGrid  },
+  { id:'mesas', label:'Mesas', icon: TableProperties },
 ];
 
 // ─── Switch ──────────────────────────────────────────────────────────────────────
