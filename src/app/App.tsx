@@ -7,6 +7,7 @@ import { ReporteDetallePage } from './pages/ReporteDetallePage';
 import { Dashboard } from './pages/Dashboard';
 import { TurnosPage } from './pages/TurnosPage';
 import { VentasPage } from './pages/VentasPage';
+import { PedidoDetallePage } from './pages/PedidoDetallePage';
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
       { path: 'inicio', Component: Dashboard },
       { path: 'turnos', Component: TurnosPage },
       { path: 'ventas', Component: VentasPage },
+      { path: 'ventas/:id', Component: PedidoDetallePage },
     ],
   },
 ], { basename: import.meta.env.BASE_URL });

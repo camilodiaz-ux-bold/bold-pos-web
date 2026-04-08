@@ -163,7 +163,8 @@ export function VentasPage() {
               {rows.map((row, idx) => (
                 <tr
                   key={row.pedido}
-                  style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--black-10)' }}
+                  onClick={() => navigate(`/ventas/${row.pedido}`)}
+                  style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--black-10)', cursor: 'pointer' }}
                   className="hover:bg-[var(--blue-10)] transition-colors"
                 >
                   <td style={tdStyle}>{row.pedido}</td>
