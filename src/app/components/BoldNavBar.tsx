@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import {
   IcHome, IcHomeFill,
-  IcPosFill, IcMesas, IcTurnos,
+  IcMesas, IcTurnos,
   IcRecibos, IcComprobantes, IcCotizaciones,
   IcFacturas, IcNotasCredito, IcNotasDebito,
   IcEgresosFill, IcGastos, IcDocSoporte,
@@ -144,12 +144,12 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'puntodeventa',
       label: 'Punto de venta',
-      icon: (a, sz = 16) => <IcPosFill size={sz} color={a ? C.blue100 : C.black60} />,
+      icon: (a, sz = 16) => <Monitor size={sz} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
       hasSubmenu: true,
       subItems: [
-        { id: 'mesas',     label: 'Mesas',     icon: <IcMesas size={16} />,     active: activeMode === 'Mesas',     onClick: () => onModeChange('Mesas') },
-        { id: 'mostrador', label: 'Mostrador', icon: <MostradorIcon size={16} />, active: activeMode === 'Mostrador', onClick: () => onModeChange('Mostrador') },
-        { id: 'turnos',    label: 'Turnos',    icon: <IcTurnos size={16} />,    active: activeMode === 'Turnos',    onClick: () => onModeChange('Turnos') },
+        { id: 'mesas',     label: 'Mesas',     icon: <IcMesas size={16} />,       active: activeMode === 'Mesas'     && pathname !== '/ventas', onClick: () => onModeChange('Mesas') },
+        { id: 'mostrador', label: 'Mostrador', icon: <MostradorIcon size={16} />, active: activeMode === 'Mostrador' && pathname !== '/ventas', onClick: () => onModeChange('Mostrador') },
+        { id: 'turnos',    label: 'Turnos',    icon: <IcTurnos size={16} />,      active: activeMode === 'Turnos'    && pathname !== '/ventas', onClick: () => onModeChange('Turnos') },
       ],
     },
     {
@@ -230,9 +230,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
 
   const isSectionActive = (item: MenuItem) => {
     if (item.id === 'inicio')       return activeMode === 'Inicio';
-    if (item.id === 'puntodeventa') return activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
+    if (item.id === 'puntodeventa') return (activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos') && pathname !== '/ventas';
     if (item.id === 'reportes')     return activeMode === 'Reportes';
     if (item.id === 'ingresos')     return pathname === '/ventas';
+    // Generic: parent is active when any child is active
+    if (item.subItems)              return item.subItems.some(sub => sub.active);
     return false;
   };
 
