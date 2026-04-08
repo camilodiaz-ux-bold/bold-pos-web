@@ -71,7 +71,7 @@ const STATUS_STYLE: Record<TableStatus, {
     cursor:    'pointer',
   },
   INHABILITADA: {
-    bg:        '#F5F5F5',
+    bg:        '#FAFAFA',
     border:    '1.5px solid #E0E0E0',
     nameColor: '#AAAAAA',
     infoColor: '#AAAAAA',
@@ -120,13 +120,13 @@ function MesaCard({
         alignItems:     'center',
         justifyContent: 'center',
         textAlign:      'center',
-        aspectRatio:    '1 / 1',
+        height:         120,
         padding:        12,
         borderRadius:   12,
         background:     s.bg,
         border:         isSelected ? selectedBorder : s.border,
         boxShadow:      '0 1px 3px rgba(0,0,0,0.04)',
-        cursor:         s.cursor,
+        cursor:         'pointer',
         opacity:        s.opacity,
         transition:     'box-shadow 0.15s ease, transform 0.15s ease',
         gap:            4,
@@ -134,10 +134,8 @@ function MesaCard({
         boxSizing:      'border-box',
       }}
       onMouseEnter={e => {
-        if (!disabled) {
-          (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.10)';
-          (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
-        }
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.10)';
+        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
       }}
       onMouseLeave={e => {
         (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
@@ -268,7 +266,7 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
       <div style={{
         display:             'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
-        gap:                 12,
+        gap:                 16,
         paddingBottom:       8,
         backgroundColor:     '#FFFFFF',
       }}>
@@ -291,34 +289,41 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
         })}
       </div>
 
-      {/* ── Leyenda inferior ── */}
+      {/* ── Leyenda inferior — pill tags ── */}
       <div style={{
-        borderTop: '1px solid #E0E0E0',
+        borderTop:       '1px solid #F0F0F0',
         backgroundColor: '#fff',
-        padding: '12px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 24,
-        flexWrap: 'wrap',
-        marginTop: 8,
+        padding:         '12px 24px',
+        display:         'flex',
+        alignItems:      'center',
+        gap:             12,
+        flexWrap:        'wrap',
+        position:        'sticky',
+        bottom:          0,
       }}>
         {[
-          { label: 'Disponibles',      color: '#1B5E20', status: 'DISPONIBLE',        pulse: false },
-          { label: 'Ocupadas',         color: '#FF2947', status: 'OCUPADA',            pulse: false },
-          { label: 'Cuenta solicitada',color: '#FF2947', status: 'CUENTA_SOLICITADA',  pulse: true  },
-          { label: 'Inhabilitadas',    color: '#AAAAAA', status: 'INHABILITADA',       pulse: false },
+          { label: 'Disponibles',       status: 'DISPONIBLE',       dot: '#2E7D32', border: '#2E7D32', bg: '#F4FDF9', pulse: false },
+          { label: 'Ocupadas',          status: 'OCUPADA',          dot: '#FF2947', border: '#FF2947', bg: '#FFEEF0', pulse: false },
+          { label: 'Cuenta solicitada', status: 'CUENTA_SOLICITADA',dot: '#FF2947', border: '#FF2947', bg: '#FFEEF0', pulse: true  },
+          { label: 'Inhabilitadas',     status: 'INHABILITADA',     dot: '#BDBDBD', border: '#BDBDBD', bg: '#FAFAFA', pulse: false },
         ].map(item => (
-          <div key={item.status} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div key={item.status} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            borderRadius: 999,
+            padding: '4px 12px',
+            border: `1.5px solid ${item.border}`,
+            backgroundColor: item.bg,
+          }}>
             <span
               className={item.pulse ? 'pulse-dot' : undefined}
               style={{
                 width: 8, height: 8, borderRadius: '50%',
-                backgroundColor: item.color,
+                backgroundColor: item.dot,
                 flexShrink: 0,
                 display: 'inline-block',
               }}
             />
-            <span style={{ fontFamily: FONT, fontSize: 12, color: '#606060' }}>
+            <span style={{ fontFamily: FONT, fontSize: 12, color: '#606060', whiteSpace: 'nowrap' }}>
               {item.label} ({counts[item.status] ?? 0})
             </span>
           </div>
