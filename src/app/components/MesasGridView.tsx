@@ -72,11 +72,11 @@ const STATUS_STYLE: Record<TableStatus, {
   },
   INHABILITADA: {
     bg:        '#F5F5F5',
-    border:    'none',
+    border:    '1.5px solid #E0E0E0',
     nameColor: '#AAAAAA',
     infoColor: '#AAAAAA',
     iconColor: '#AAAAAA',
-    opacity:   0.7,
+    opacity:   1,
     cursor:    'default',
   },
 };
@@ -108,7 +108,7 @@ function MesaCard({
     table.status === 'DISPONIBLE'        ? '2px solid #2E7D32' :
     table.status === 'OCUPADA'           ? '2px solid #FF2947' :
     table.status === 'CUENTA_SOLICITADA' ? '2px solid #FF2947' :
-    'none';
+    '1.5px solid #BDBDBD';
 
   return (
     <button
@@ -120,16 +120,18 @@ function MesaCard({
         alignItems:     'center',
         justifyContent: 'center',
         textAlign:      'center',
-        height:         110,
+        aspectRatio:    '1 / 1',
         padding:        12,
         borderRadius:   12,
         background:     s.bg,
-        border:         isSelected ? selectedBorder : 'none',
+        border:         isSelected ? selectedBorder : s.border,
         boxShadow:      '0 1px 3px rgba(0,0,0,0.04)',
         cursor:         s.cursor,
         opacity:        s.opacity,
         transition:     'box-shadow 0.15s ease, transform 0.15s ease',
         gap:            4,
+        width:          '100%',
+        boxSizing:      'border-box',
       }}
       onMouseEnter={e => {
         if (!disabled) {
@@ -153,7 +155,7 @@ function MesaCard({
       {/* ── Nombre de mesa — elemento principal ── */}
       <span style={{
         fontSize:   18,
-        fontWeight: 700,
+        fontWeight: 500,
         lineHeight: '22px',
         color:      s.nameColor,
         fontFamily: FONT,
@@ -197,7 +199,7 @@ function MesaCard({
           </span>
           {total !== null && (
             <span style={{
-              fontSize: 13, fontWeight: 600,
+              fontSize: 13, fontWeight: 500,
               color: s.infoColor, fontFamily: FONT,
             }}>
               {formatCOP(total)}
@@ -209,7 +211,7 @@ function MesaCard({
       {/* INHABILITADA */}
       {disabled && (
         <span style={{
-          fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
+          fontSize: 10, fontWeight: 500, letterSpacing: '0.5px',
           color: s.infoColor, fontFamily: FONT,
           textTransform: 'uppercase',
         }}>
@@ -250,8 +252,11 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
     );
   }
 
+  // Limit to 19 mesas for display
+  const displayTables = sortedTables.slice(0, 19);
+
   // Compute counts using merged status (habilitada config applied)
-  const counts = sortedTables.reduce((acc, table) => {
+  const counts = displayTables.reduce((acc, table) => {
     const cfg = mesas.find(m => m.id === table.id);
     const status: string = (cfg && !cfg.habilitada) ? 'INHABILITADA' : table.status;
     acc[status] = (acc[status] ?? 0) + 1;
@@ -265,8 +270,9 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
         gridTemplateColumns: 'repeat(4, 1fr)',
         gap:                 12,
         paddingBottom:       8,
+        backgroundColor:     '#FFFFFF',
       }}>
-        {sortedTables.map(table => {
+        {displayTables.map(table => {
           const cfg = mesas.find(m => m.id === table.id);
           const merged: MesaTable = {
             ...table,
