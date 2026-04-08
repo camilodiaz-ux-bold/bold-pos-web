@@ -175,7 +175,9 @@ function CategoryCard({ category, isRestaurantes }: { category: ReportCategory; 
             isLast={idx === category.items.length - 1}
             onClick={isRestaurantes
               ? () => navigate('/reportes/restaurantes/' + item.id)
-              : () => toast.info(item.label)
+              : item.id === 'ventas'
+                ? () => navigate('/ventas')
+                : () => toast.info(item.label)
             }
           />
         ))}
