@@ -128,6 +128,43 @@ export function VentasPage() {
         </p>
       </div>
 
+      {/* ── Filtros ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Row 1 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Buscar por No. Pedido"
+            style={filterStyle}
+          />
+          <input
+            type="date"
+            style={{ ...filterStyle, minWidth: 150 }}
+          />
+          <select style={filterStyle}>
+            {['Todos', 'Pagado', 'Abierto', 'Cancelado'].map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+        {/* Row 2 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <select style={filterStyle}>
+            {['Todos', 'Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'].map(o => <option key={o}>{o}</option>)}
+          </select>
+          <select style={filterStyle}>
+            {['Todos', 'Zona 1', 'Zona 2'].map(o => <option key={o}>{o}</option>)}
+          </select>
+          <select style={filterStyle}>
+            {['Todos', 'Mesa 1', 'Mesa 2', 'Mesa 3', 'Mesa 4', 'Mesa 5', 'Mesa 6', 'Mesa 7', 'Mesa 8', 'Mesa 9'].map(o => <option key={o}>{o}</option>)}
+          </select>
+          <select style={filterStyle}>
+            {['Todos', 'Comprobante', 'Factura electrónica'].map(o => <option key={o}>{o}</option>)}
+          </select>
+          <select style={filterStyle}>
+            {['Todos', 'Enviada', 'Pendiente'].map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+      </div>
+
       {/* ── Tabla ── */}
       <div style={{
         backgroundColor: '#fff',
@@ -189,6 +226,19 @@ export function VentasPage() {
     </div>
   );
 }
+
+const filterStyle: React.CSSProperties = {
+  height: 36,
+  border: '1px solid #C7CBE0',
+  borderRadius: 8,
+  fontSize: 14,
+  fontFamily: "'Montserrat', sans-serif",
+  color: '#1E1E1E',
+  padding: '0 12px',
+  backgroundColor: 'transparent',
+  outline: 'none',
+  cursor: 'pointer',
+};
 
 const tdStyle: React.CSSProperties = {
   padding: '14px 16px 14px 0',
