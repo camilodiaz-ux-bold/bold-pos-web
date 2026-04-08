@@ -295,25 +295,32 @@ export function PedidoDetallePage() {
       <div style={sectionCard}>
         <p style={sectionTitle}>Información general</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-
-          {/* Left column */}
           <div style={{ paddingRight: 32, borderRight: '1px solid #F0F1F5' }}>
             <InfoRow label="No. Documento">{pedido.noDoc}</InfoRow>
             <InfoRow label="Tipo de documento">{pedido.tipoDoc}</InfoRow>
             <InfoRow label="Resolución">{pedido.resolucion}</InfoRow>
             <InfoRow label="Mesa">{pedido.mesa}</InfoRow>
-            <InfoRow label="Zona">{pedido.zona}</InfoRow>
+            <InfoRow label="Zona" last>{pedido.zona}</InfoRow>
+          </div>
+          <div style={{ paddingLeft: 32 }}>
             <InfoRow label="Sucursal">{pedido.sucursal}</InfoRow>
             <InfoRow label="Cantidad en mesa">{pedido.personas}</InfoRow>
             <InfoRow label="Hora apertura">{pedido.horaApertura}</InfoRow>
             <InfoRow label="Hora cierre">{pedido.horaCierre}</InfoRow>
             <InfoRow label="Duración" last>{pedido.duracion}</InfoRow>
           </div>
+        </div>
+      </div>
 
-          {/* Right column */}
-          <div style={{ paddingLeft: 32 }}>
+      {/* ── Section 1b: Participantes y pago ── */}
+      <div style={sectionCard}>
+        <p style={sectionTitle}>Participantes y pago</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+          <div style={{ paddingRight: 32, borderRight: '1px solid #F0F1F5' }}>
             <InfoRow label="Vendedor">{pedido.vendedor}</InfoRow>
-            <InfoRow label="Cliente">{pedido.cliente}</InfoRow>
+            <InfoRow label="Cliente" last>{pedido.cliente}</InfoRow>
+          </div>
+          <div style={{ paddingLeft: 32 }}>
             <InfoRow label="Forma de pago">{pedido.formaPago}</InfoRow>
             <InfoRow label="Estado" last={!showDian || !pedido.dian}>
               <EstadoBadge label={pedido.estado.label} variant={pedido.estado.variant} />
@@ -324,7 +331,6 @@ export function PedidoDetallePage() {
               </InfoRow>
             )}
           </div>
-
         </div>
       </div>
 
@@ -365,50 +371,55 @@ export function PedidoDetallePage() {
         </div>
       </div>
 
-      {/* ── Section 3: Totales ── */}
-      <div style={sectionCard}>
-        <p style={sectionTitle}>Totales</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 320 }}>
-          {[
-            { label: 'Subtotal',    value: '$456,000' },
-            { label: 'Descuento',   value: '$0'       },
-            { label: 'IVA 19%',     value: '$86,640'  },
-            { label: 'Propina 10%', value: '$54,264'  },
-          ].map(row => (
-            <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={font(13, 500, C.black60, 20)}>{row.label}</span>
-              <span style={font(13, 600, C.black100, 20)}>{row.value}</span>
-            </div>
-          ))}
-          <div style={{ borderTop: `1.5px solid ${C.black10}`, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-            <span style={font(14, 700, C.blue100, 22)}>Total</span>
-            <span style={font(14, 700, C.blue100, 22)}>$596,904</span>
-          </div>
-        </div>
-      </div>
+      {/* ── Sections 3 + 4: Totales & Método de pago side by side ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
 
-      {/* ── Section 4: Método de pago ── */}
-      <div style={sectionCard}>
-        <p style={sectionTitle}>Método de pago</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 320 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={font(13, 500, C.black60, 20)}>{pedido.formaPago}</span>
-            <span style={font(13, 600, C.black100, 20)}>$596,904</span>
+        {/* Section 3: Totales */}
+        <div style={sectionCard}>
+          <p style={sectionTitle}>Totales</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              { label: 'Subtotal',    value: '$456,000' },
+              { label: 'Descuento',   value: '$0'       },
+              { label: 'IVA 19%',     value: '$86,640'  },
+              { label: 'Propina 10%', value: '$54,264'  },
+            ].map(row => (
+              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={font(13, 500, C.black60, 20)}>{row.label}</span>
+                <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{row.value}</span>
+              </div>
+            ))}
+            <div style={{ borderTop: `1.5px solid ${C.black10}`, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+              <span style={font(14, 700, C.blue100, 22)}>Total</span>
+              <span style={{ ...font(14, 700, C.blue100, 22), textAlign: 'right' }}>$596,904</span>
+            </div>
           </div>
-          {isEfectivo && pedido.efectivo && (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={font(13, 500, C.black60, 20)}>Monto recibido</span>
-                <span style={font(13, 600, C.black100, 20)}>{pedido.efectivo.recibido}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={font(13, 500, C.black60, 20)}>Cambio</span>
-                <span style={font(13, 600, C.black100, 20)}>{pedido.efectivo.cambio}</span>
-              </div>
-            </>
-          )}
         </div>
-      </div>
+
+        {/* Section 4: Método de pago */}
+        <div style={sectionCard}>
+          <p style={sectionTitle}>Método de pago</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={font(13, 500, C.black60, 20)}>{pedido.formaPago}</span>
+              <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>$596,904</span>
+            </div>
+            {isEfectivo && pedido.efectivo && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={font(13, 500, C.black60, 20)}>Monto recibido</span>
+                  <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{pedido.efectivo.recibido}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={font(13, 500, C.black60, 20)}>Cambio</span>
+                  <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{pedido.efectivo.cambio}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+      </div>{/* end grid */}
 
     </div>
   );
