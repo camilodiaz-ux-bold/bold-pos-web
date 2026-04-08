@@ -3,14 +3,15 @@ import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
+  UtensilsCrossed, TrendingUp,
 } from 'lucide-react';
 import {
   IcHome, IcHomeFill,
   IcPosFill, IcMesas, IcTurnos,
-  IcMoneyFill, IcRecibos, IcComprobantes, IcCotizaciones,
+  IcRecibos, IcComprobantes, IcCotizaciones,
   IcFacturas, IcNotasCredito, IcNotasDebito,
   IcEgresosFill, IcGastos, IcDocSoporte,
-  IcItemsFill, IcListaItems, IcAjusteInv, IcFlujoInv, IcVariantesInv,
+  IcListaItems, IcAjusteInv, IcFlujoInv, IcVariantesInv,
   IcUsuarios, IcUsuariosFill,
   IcReportes, IcReportesFill,
   IcAjustes, IcAjustesFill,
@@ -156,9 +157,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'ingresos',
       label: 'Ingresos',
-      icon: (a) => a
-        ? <IcMoneyFill size={16} color={C.blue100} />
-        : <svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/><path d="M12 7v1m0 9v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 10a2.5 2.5 0 015 0c0 1.38-1.12 2-2.5 2.5S9.5 13.62 9.5 15a2.5 2.5 0 005 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+      icon: (a) => <TrendingUp size={16} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
       hasSubmenu: true,
       subItems: [
         { id: 'ventas',       label: 'Ventas',             icon: <IcRecibos size={16} />,      active: false, onClick: () => navigate('/ventas') },
@@ -181,13 +180,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     },
     {
       id: 'items',
-      label: 'Ítems',
-      icon: (a) => a
-        ? <IcItemsFill size={16} color={C.blue100} />
-        : <svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><path d="M6 7h12l-1.5 12h-9L6 7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M9.5 7V5.5A2.5 2.5 0 0112 3v0a2.5 2.5 0 012.5 2.5V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+      label: 'Menú',
+      icon: (a) => <UtensilsCrossed size={16} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
       hasSubmenu: true,
       subItems: [
-        { id: 'listaitems',   label: 'Lista de ítems',          icon: <IcListaItems size={16} />,   active: false, onClick: () => toast.info('Lista de ítems') },
+        { id: 'listaitems',   label: 'Productos',                icon: <IcListaItems size={16} />,   active: false, onClick: () => toast.info('Productos') },
         { id: 'ajusteinv',    label: 'Ajuste de inventario',    icon: <IcAjusteInv size={16} />,    active: false, onClick: () => toast.info('Ajuste de inventario') },
         { id: 'flujoinv',     label: 'Flujo de inventario',     icon: <IcFlujoInv size={16} />,     active: false, onClick: () => toast.info('Flujo de inventario') },
         { id: 'variantesinv', label: 'Variantes de inventario', icon: <IcVariantesInv size={16} />, active: false, onClick: () => toast.info('Variantes de inventario') },
@@ -347,6 +344,8 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                   width: 36, height: 36,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
+                  backgroundColor: (isActive || flyoutOpen) && item.id !== 'puntodeventa' ? C.blue10 : 'transparent',
+                  borderRadius: 8,
                 }}>
                   {item.icon(isActive)}
                 </div>
@@ -557,7 +556,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                       width: '100%',
                       display: 'flex', alignItems: 'center', gap: 8,
                       padding: '6px 8px',
-                      background: isActive ? C.blue10 : 'none',
+                      background: isActive && item.id !== 'puntodeventa' ? C.blue10 : 'none',
                       border: 'none', cursor: 'pointer',
                       borderRadius: 8,
                     }}
