@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { useNavigate } from 'react-router';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
 } from 'lucide-react';
@@ -79,6 +80,7 @@ function MostradorIcon({ size = 20 }: { size?: number }) {
 // ─── Main NavBar component ────────────────────────────────────────────────────
 
 export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
+  const navigate = useNavigate();
   const inPosView = activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
   const [isExpanded, setIsExpanded] = useState(!inPosView);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['puntodeventa']));
@@ -148,10 +150,8 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       icon: <IcMoneyFill size={16} />,
       hasSubmenu: true,
       subItems: [
+        { id: 'ventas',       label: 'Ventas',             icon: <IcRecibos size={16} />,      active: false, onClick: () => navigate('/ventas') },
         { id: 'recibos',      label: 'Recibos',           icon: <IcRecibos size={16} />,      active: false, onClick: () => toast.info('Recibos') },
-        { id: 'comprobantes', label: 'Comprobantes',      icon: <IcComprobantes size={16} />, active: false, onClick: () => toast.info('Comprobantes') },
-        { id: 'cotizaciones', label: 'Cotizaciones',      icon: <IcCotizaciones size={16} />, active: false, onClick: () => toast.info('Cotizaciones') },
-        { id: 'facturas',     label: 'Facturas de venta', icon: <IcFacturas size={16} />,     active: false, onClick: () => toast.info('Facturas de venta') },
         { id: 'notascredito', label: 'Notas crédito',     icon: <IcNotasCredito size={16} />, active: false, onClick: () => toast.info('Notas crédito') },
         { id: 'notasdebito',  label: 'Notas débito',      icon: <IcNotasDebito size={16} />,  active: false, onClick: () => toast.info('Notas débito') },
       ],
