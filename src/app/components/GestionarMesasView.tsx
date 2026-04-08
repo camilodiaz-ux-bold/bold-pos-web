@@ -1459,33 +1459,25 @@ export function GestionarMesasView({ onBack }: Props) {
       {/* ── Modal: cambios sin guardar ── */}
       {showUnsavedModal && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          style={{ background: 'rgba(0,0,0,0.4)', position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowUnsavedModal(false); }}
         >
-          <div className="bg-white rounded-[var(--radius-20)] w-full max-w-md mx-4 p-8 relative" style={{ boxShadow: '0px 8px 32px rgba(0,0,0,0.16)' }}>
-            {/* Close X */}
-            <button
-              onClick={() => setShowUnsavedModal(false)}
-              className="btn--icon absolute top-5 right-5 p-1"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Title */}
-            <h2 className="text-[20px] font-bold text-[var(--black-100)] pr-8">¿Salir sin guardar?</h2>
-
-            {/* Description */}
-            <p className="mt-2 text-[14px] text-[var(--black-60)]">
+          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: 420, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1E1E1E', fontFamily: "'Montserrat', sans-serif", margin: 0 }}>¿Salir sin guardar?</h2>
+            <p style={{ fontSize: 14, color: '#606060', fontFamily: "'Montserrat', sans-serif", margin: 0 }}>
               Tienes cambios sin guardar que se perderán si sales ahora.
             </p>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3 mt-6">
-              <button onClick={handleDiscardAndLeave} className="btn btn-cancel flex-1">
+            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+              <button
+                onClick={handleDiscardAndLeave}
+                style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1.5px solid #C7CBE0', background: '#fff', color: '#1E1E1E', fontSize: 14, fontWeight: 600, fontFamily: "'Montserrat', sans-serif", cursor: 'pointer' }}
+              >
                 Descartar cambios
               </button>
-              <button onClick={handleSaveAndLeave} className="btn btn-primary flex-1">
+              <button
+                onClick={handleSaveAndLeave}
+                style={{ flex: 1, padding: '12px 0', borderRadius: 10, background: '#FF2947', border: 'none', color: '#fff', fontSize: 14, fontWeight: 600, fontFamily: "'Montserrat', sans-serif", cursor: 'pointer' }}
+              >
                 Guardar y salir
               </button>
             </div>
