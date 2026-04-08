@@ -599,7 +599,7 @@ export function CheckoutDrawer({
                   {/* ── Vendedor — MERLin SelectInput ── */}
                   <div>
                     <span style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 600, fontFamily: 'Montserrat, sans-serif', color: '#121E6C', lineHeight: '20px' }}>
-                      Nombre del vendedor
+                      Vendedor
                     </span>
                     <div style={{ position: 'relative' }}>
                       <select
@@ -625,8 +625,36 @@ export function CheckoutDrawer({
                     </div>
                   </div>
 
+                  {/* ── Resolución — MERLin SelectInput ── */}
+                  <div>
+                    <span style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 600, fontFamily: 'Montserrat, sans-serif', color: '#121E6C', lineHeight: '20px' }}>
+                      Resolución
+                    </span>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        defaultValue="Resolution test SP - Resolution 1234509752467"
+                        style={{
+                          width: '100%', height: 40, boxSizing: 'border-box',
+                          borderRadius: 12, border: '1.5px solid #C7CBE0',
+                          background: '#F7F8FB', fontFamily: 'Montserrat, sans-serif', fontSize: 14,
+                          color: '#1E1E1E', padding: '0 36px 0 12px',
+                          outline: 'none', appearance: 'none', cursor: 'pointer',
+                          transition: 'border-color 200ms',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}
+                        onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+                        onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
+                      >
+                        <option>Resolution test SP - Resolution 1234509752467</option>
+                        <option>Resolution Terraza - Resolution 9876543210</option>
+                        <option>Resolution Mostrador - Resolution 1122334455</option>
+                      </select>
+                      <ChevronDown size={16} color="#606060" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+
                   {/* ── Cliente — Combobox ── */}
-                  <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'relative', gridColumn: '1 / -1' }}>
                     <span style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 600, fontFamily: 'Montserrat, sans-serif', color: '#121E6C', lineHeight: '20px' }}>
                       Cliente
                     </span>

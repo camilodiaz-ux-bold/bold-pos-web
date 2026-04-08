@@ -399,7 +399,7 @@ export function MostradorCatalog({
                     <div style={{
                       flexShrink: 0,
                       padding: '8px 10px 10px 10px',
-                      backgroundColor: 'rgba(255,255,255,0.85)',
+                      backgroundColor: 'red',
                       borderTop: '1px solid rgba(0,0,0,0.06)',
                       display: 'flex',
                       flexDirection: 'column',
