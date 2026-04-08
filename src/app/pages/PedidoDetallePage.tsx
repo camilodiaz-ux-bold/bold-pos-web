@@ -7,24 +7,39 @@ import { ArrowLeft, Printer, Send } from 'lucide-react';
 type EstadoVariant = 'success' | 'warning' | 'error';
 type DianVariant   = 'success' | 'warning' | 'neutral';
 
+interface PagoMixtoItem {
+  metodo: string;
+  monto:  string;
+}
+
+interface PagoDivididoPersona {
+  persona: string;
+  metodo:  string;
+  monto:   string;
+}
+
 interface Pedido {
-  id:          string;
-  estado:      { label: string; variant: EstadoVariant };
-  noDoc:       string;
-  tipoDoc:     string;
-  resolucion:  string;
-  mesa:        string;
-  zona:        string;
-  sucursal:    string;
-  personas:    string;
+  id:           string;
+  estado:       { label: string; variant: EstadoVariant };
+  noDoc:        string;
+  tipoDoc:      string;
+  resolucion:   string;
+  mesa:         string;
+  zona:         string;
+  sucursal:     string;
+  personas:     string;
   horaApertura: string;
-  horaCierre:  string;
-  duracion:    string;
-  vendedor:    string;
-  cliente:     string;
-  formaPago:   string;
-  dian?:       { label: string; variant: DianVariant };
-  efectivo?:   { recibido: string; cambio: string };
+  horaCierre:   string;
+  duracion:     string;
+  vendedor:     string;
+  cliente:      string;
+  formaPago:    string;
+  dian?:        { label: string; variant: DianVariant };
+  efectivo?:    { recibido: string; cambio: string };
+  pagoCancelado?: boolean;
+  pagoMixto?:     PagoMixtoItem[];
+  pagoDividido?:  PagoDivididoPersona[];
+  totalPago?:     string;
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -70,20 +85,68 @@ const PEDIDOS: Record<string, Pedido> = {
   },
   'P-005': {
     id: 'P-005',
-    estado:      { label: 'Cancelado', variant: 'error' },
-    noDoc:       'V-001238',
-    tipoDoc:     'Comprobante',
-    resolucion:  RES,
-    mesa:        'Mesa 2',
-    zona:        'Zona 2',
-    sucursal:    'Principal',
-    personas:    '3 personas',
-    horaApertura:'25/03/2026 16:05',
-    horaCierre:  '25/03/2026 17:05',
-    duracion:    '1h 00min',
-    vendedor:    'Carlos Pérez',
-    cliente:     'Consumidor final',
-    formaPago:   'Nequi',
+    estado:       { label: 'Cancelado', variant: 'error' },
+    noDoc:        'V-001238',
+    tipoDoc:      'Comprobante',
+    resolucion:   RES,
+    mesa:         'Mesa 2',
+    zona:         'Zona 2',
+    sucursal:     'Principal',
+    personas:     '3 personas',
+    horaApertura: '25/03/2026 16:05',
+    horaCierre:   '25/03/2026 17:05',
+    duracion:     '1h 00min',
+    vendedor:     'Carlos Pérez',
+    cliente:      'Consumidor final',
+    formaPago:    'Nequi',
+    pagoCancelado: true,
+  },
+  'P-009': {
+    id: 'P-009',
+    estado:       { label: 'Pagado', variant: 'success' },
+    noDoc:        'V-001242',
+    tipoDoc:      'Comprobante',
+    resolucion:   RES,
+    mesa:         'Mesa 6',
+    zona:         'Zona 1',
+    sucursal:     'Principal',
+    personas:     '2 personas',
+    horaApertura: '25/03/2026 18:30',
+    horaCierre:   '25/03/2026 19:15',
+    duracion:     '45min',
+    vendedor:     'Laura Gómez',
+    cliente:      'Consumidor final',
+    formaPago:    'Mixto',
+    pagoMixto: [
+      { metodo: 'Efectivo', monto: '$200,000' },
+      { metodo: 'Tarjeta',  monto: '$396,904' },
+    ],
+    totalPago: '$596,904',
+  },
+  'P-010': {
+    id: 'P-010',
+    estado:       { label: 'Pagado', variant: 'success' },
+    noDoc:        'V-001243',
+    tipoDoc:      'Factura electrónica',
+    resolucion:   RES,
+    mesa:         'Mesa 8',
+    zona:         'Zona 2',
+    sucursal:     'Principal',
+    personas:     '4 personas',
+    horaApertura: '25/03/2026 19:00',
+    horaCierre:   '25/03/2026 20:10',
+    duracion:     '1h 10min',
+    vendedor:     'Miguel Torres',
+    cliente:      'Consumidor final',
+    formaPago:    'Cuenta dividida',
+    dian:         { label: 'Enviada', variant: 'success' },
+    pagoDividido: [
+      { persona: 'Persona 1', metodo: 'Efectivo',                                          monto: '$362,593' },
+      { persona: 'Persona 2', metodo: 'Tarjeta',                                           monto: '$362,593' },
+      { persona: 'Persona 3', metodo: 'Mixto (Efectivo $200,000 + Tarjeta $162,593)',      monto: '$362,593' },
+      { persona: 'Persona 4', metodo: 'Nequi',                                             monto: '$362,593' },
+    ],
+    totalPago: '$1,450,372',
   },
 };
 
@@ -376,24 +439,61 @@ export function PedidoDetallePage() {
         {/* Section 3: Método de pago */}
         <div style={sectionCard}>
           <p style={sectionTitle}>Método de pago</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={font(13, 500, C.black60, 20)}>{pedido.formaPago}</span>
-              <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>$596,904</span>
+
+          {pedido.pagoCancelado ? (
+            <span style={font(13, 500, C.black60, 20)}>Pago no realizado</span>
+
+          ) : pedido.pagoDividido ? (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {pedido.pagoDividido.map((p, idx) => (
+                <div key={p.persona} style={{
+                  display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
+                  paddingTop: 10, paddingBottom: 10,
+                  borderBottom: idx === pedido.pagoDividido!.length - 1 ? 'none' : '1px solid #F0F1F5',
+                }}>
+                  <div>
+                    <span style={{ display: 'block', ...font(13, 600, C.black100, 20) }}>{p.persona}</span>
+                    <span style={{ display: 'block', ...font(12, 400, C.black60, 18) }}>{p.metodo} — {p.monto}</span>
+                  </div>
+                  <EstadoBadge label="Pagada" variant="success" />
+                </div>
+              ))}
+              <div style={{ borderTop: `1.5px solid ${C.black10}`, marginTop: 8, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+                <span style={font(14, 700, C.blue100, 22)}>Total</span>
+                <span style={{ ...font(14, 700, C.blue100, 22), textAlign: 'right' }}>{pedido.totalPago}</span>
+              </div>
             </div>
-            {isEfectivo && pedido.efectivo && (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={font(13, 500, C.black60, 20)}>Monto recibido</span>
-                  <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{pedido.efectivo.recibido}</span>
+
+          ) : pedido.pagoMixto ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {pedido.pagoMixto.map(item => (
+                <div key={item.metodo} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={font(13, 500, C.black60, 20)}>{item.metodo}</span>
+                  <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{item.monto}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={font(13, 500, C.black60, 20)}>Cambio</span>
-                  <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{pedido.efectivo.cambio}</span>
-                </div>
-              </>
-            )}
-          </div>
+              ))}
+            </div>
+
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={font(13, 500, C.black60, 20)}>{pedido.formaPago}</span>
+                <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>$596,904</span>
+              </div>
+              {isEfectivo && pedido.efectivo && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={font(13, 500, C.black60, 20)}>Monto recibido</span>
+                    <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{pedido.efectivo.recibido}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={font(13, 500, C.black60, 20)}>Cambio</span>
+                    <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{pedido.efectivo.cambio}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Section 4: Totales */}
