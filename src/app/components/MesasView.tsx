@@ -224,16 +224,17 @@ function buildMockTables(): MesaTable[] {
     { id:'s19', name:'S19', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:710, y:525, rotationDeg:0,
       items:[ it('s19','a',125,2,false), it('s19','b',153,3,false) ],                            // Pappardelle con Cordero + Tarta Tatín (no enviados)
       openedAtTimestamp:ago(19), guests:3, comandaSent:false, hasPendingChanges:false },
-    { id:'s22', name:'S22', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:865, y:525, rotationDeg:0,
-      items:[ it('s22','a',138,1), it('s22','b',165,4) ],                                        // Tomahawk + Ginger Beer Artesanal
-      openedAtTimestamp:ago(89), guests:4, comandaSent:true, hasPendingChanges:false },
+    { id:'s22', name:'S22', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:865, y:525, rotationDeg:0,
+      items:[], comandaSent:false, hasPendingChanges:false },
     // ── SALÓN: CENTRO Redondas ─────────────────────────────────────────────────
     { id:'s20', name:'S20', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'round', x:400, y:680, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s21', name:'S21', zone:'Salón', status:'OCUPADA',    capacity:4, shape:'round', x:555, y:680, rotationDeg:0,
       items:[ it('s21','a',142,1), it('s21','b',164,2) ],                                        // Lubina en Sal de Mar + Mocktail de Pepino
       openedAtTimestamp:ago(42), guests:2, comandaSent:true, hasPendingChanges:false },
     // ── SALÓN: VENTANA ─────────────────────────────────────────────────────────
-    { id:'s23', name:'S23', zone:'Salón', status:'DISPONIBLE',        capacity:4, shape:'rect', x:1015, y:60,  rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
+    { id:'s23', name:'S23', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:1015, y:60, rotationDeg:0,
+      items:[ it('s23','a',138,2), it('s23','b',131,1) ],
+      openedAtTimestamp:ago(30), guests:3, comandaSent:true, hasPendingChanges:false },
     { id:'s24', name:'S24', zone:'Salón', status:'OCUPADA',           capacity:4, shape:'rect', x:1015, y:215, rotationDeg:0,
       items:[ it('s24','a',117,2), it('s24','b',121,1) ],                                        // Langostinos al Josper + Risotto de Trufa Blanca
       openedAtTimestamp:ago(34), guests:2, comandaSent:true, hasPendingChanges:false },

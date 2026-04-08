@@ -250,8 +250,8 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
     );
   }
 
-  // Limit to 19 mesas for display
-  const displayTables = sortedTables.slice(0, 19);
+  // Limit to 23 mesas for display
+  const displayTables = sortedTables.slice(0, 23);
 
   // Compute counts using merged status (habilitada config applied)
   const counts = displayTables.reduce((acc, table) => {
@@ -261,14 +261,22 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
     return acc;
   }, {} as Record<string, number>);
 
+  const TAGS = [
+    { label: 'Disponibles',       status: 'DISPONIBLE',       dot: '#2E7D32', border: '#2E7D32', bg: '#F4FDF9', text: '#2E7D32', pulse: false },
+    { label: 'Ocupadas',          status: 'OCUPADA',          dot: '#FF2947', border: '#FF2947', bg: '#FFEEF0', text: '#FF2947', pulse: false },
+    { label: 'Cuenta solicitada', status: 'CUENTA_SOLICITADA',dot: '#FF2947', border: '#FF2947', bg: '#FFEEF0', text: '#FF2947', pulse: true  },
+    { label: 'Inhabilitadas',     status: 'INHABILITADA',     dot: '#BDBDBD', border: '#BDBDBD', bg: '#FAFAFA', text: '#9E9E9E', pulse: false },
+  ];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
       <div style={{
         display:             'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
         gap:                 16,
-        paddingBottom:       8,
+        padding:             24,
         backgroundColor:     '#FFFFFF',
+        flex:                1,
       }}>
         {displayTables.map(table => {
           const cfg = mesas.find(m => m.id === table.id);
@@ -298,15 +306,9 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
         alignItems:      'center',
         gap:             12,
         flexWrap:        'wrap',
-        position:        'sticky',
-        bottom:          0,
+        marginTop:       'auto',
       }}>
-        {[
-          { label: 'Disponibles',       status: 'DISPONIBLE',       dot: '#2E7D32', border: '#2E7D32', bg: '#F4FDF9', pulse: false },
-          { label: 'Ocupadas',          status: 'OCUPADA',          dot: '#FF2947', border: '#FF2947', bg: '#FFEEF0', pulse: false },
-          { label: 'Cuenta solicitada', status: 'CUENTA_SOLICITADA',dot: '#FF2947', border: '#FF2947', bg: '#FFEEF0', pulse: true  },
-          { label: 'Inhabilitadas',     status: 'INHABILITADA',     dot: '#BDBDBD', border: '#BDBDBD', bg: '#FAFAFA', pulse: false },
-        ].map(item => (
+        {TAGS.map(item => (
           <div key={item.status} style={{
             display: 'flex', alignItems: 'center', gap: 6,
             borderRadius: 999,
@@ -323,7 +325,7 @@ export function MesasGridView({ tables, selectedTableId, onSelectMesa }: MesasGr
                 display: 'inline-block',
               }}
             />
-            <span style={{ fontFamily: FONT, fontSize: 12, color: '#606060', whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: FONT, fontSize: 12, color: item.text, whiteSpace: 'nowrap' }}>
               {item.label} ({counts[item.status] ?? 0})
             </span>
           </div>
