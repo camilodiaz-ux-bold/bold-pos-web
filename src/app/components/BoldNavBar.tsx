@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
   UtensilsCrossed, TrendingUp,
@@ -52,7 +52,7 @@ interface SubItem {
 interface MenuItem {
   id: string;
   label: string;
-  icon: (isActive: boolean) => React.ReactNode;
+  icon: (isActive: boolean, size?: number) => React.ReactNode;
   hasSubmenu: boolean;
   subItems?: SubItem[];
   onClick?: () => void;
@@ -86,10 +86,10 @@ function MostradorIcon({ size = 20 }: { size?: number }) {
 
 export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const inPosView = activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
   const [isExpanded, setIsExpanded] = useState(!inPosView);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['puntodeventa']));
-  const [activeFlyout, setActiveFlyout] = useState<string | null>(null);
 
   // Sync expanded state when navigating between POS ↔ non-POS sections
   const prevInPosView = useRef(inPosView);
@@ -116,7 +116,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   };
 
   const scheduleFlyoutHide = () => {
-    hideTimerRef.current = setTimeout(() => setHoveredItem(null), 120);
+    hideTimerRef.current = setTimeout(() => setHoveredItem(null), 150);
   };
 
   const cancelFlyoutHide = () => {
@@ -135,18 +135,16 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'inicio',
       label: 'Inicio',
-      icon: (a) => a
-        ? <IcHomeFill size={16} color={C.blue100} />
-        : <IcHome size={16} color={C.black60} />,
+      icon: (a, sz = 16) => a
+        ? <IcHomeFill size={sz} color={C.blue100} />
+        : <IcHome size={sz} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => onModeChange('Inicio'),
     },
     {
       id: 'puntodeventa',
       label: 'Punto de venta',
-      icon: (a) => a
-        ? <IcPosFill size={16} color={C.blue100} />
-        : <svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><rect x="2" y="4" width="20" height="13" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+      icon: (a, sz = 16) => <IcPosFill size={sz} color={a ? C.blue100 : C.black60} />,
       hasSubmenu: true,
       subItems: [
         { id: 'mesas',     label: 'Mesas',     icon: <IcMesas size={16} />,     active: activeMode === 'Mesas',     onClick: () => onModeChange('Mesas') },
@@ -157,10 +155,10 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'ingresos',
       label: 'Ingresos',
-      icon: (a) => <TrendingUp size={16} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
+      icon: (a, sz = 16) => <TrendingUp size={sz} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
       hasSubmenu: true,
       subItems: [
-        { id: 'ventas',       label: 'Ventas',             icon: <IcRecibos size={16} />,      active: false, onClick: () => navigate('/ventas') },
+        { id: 'ventas',       label: 'Ventas',             icon: <IcRecibos size={16} />,      active: pathname === '/ventas', onClick: () => navigate('/ventas') },
         { id: 'recibos',      label: 'Recibos',           icon: <IcRecibos size={16} />,      active: false, onClick: () => toast.info('Recibos') },
         { id: 'notascredito', label: 'Notas crédito',     icon: <IcNotasCredito size={16} />, active: false, onClick: () => toast.info('Notas crédito') },
         { id: 'notasdebito',  label: 'Notas débito',      icon: <IcNotasDebito size={16} />,  active: false, onClick: () => toast.info('Notas débito') },
@@ -169,9 +167,9 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'egresos',
       label: 'Egresos',
-      icon: (a) => a
-        ? <IcEgresosFill size={16} color={C.blue100} />
-        : <svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><path d="M4 3h16v18l-2-1-2 1-2-1-2 1-2-1-2 1V3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 10h8M8 14h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+      icon: (a, sz = 16) => a
+        ? <IcEgresosFill size={sz} color={C.blue100} />
+        : <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><path d="M4 3h16v18l-2-1-2 1-2-1-2 1-2-1-2 1V3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 10h8M8 14h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
       hasSubmenu: true,
       subItems: [
         { id: 'gastos',     label: 'Gastos',            icon: <IcGastos size={16} />,     active: false, onClick: () => toast.info('Gastos') },
@@ -181,7 +179,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'items',
       label: 'Menú',
-      icon: (a) => <UtensilsCrossed size={16} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
+      icon: (a, sz = 16) => <UtensilsCrossed size={sz} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
       hasSubmenu: true,
       subItems: [
         { id: 'listaitems',   label: 'Productos',                icon: <IcListaItems size={16} />,   active: false, onClick: () => toast.info('Productos') },
@@ -193,36 +191,36 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'contactos',
       label: 'Contactos',
-      icon: (a) => a
-        ? <IcUsuariosFill size={16} color={C.blue100} />
-        : <IcUsuarios size={16} color={C.black60} />,
+      icon: (a, sz = 16) => a
+        ? <IcUsuariosFill size={sz} color={C.blue100} />
+        : <IcUsuarios size={sz} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Contactos'),
     },
     {
       id: 'reportes',
       label: 'Reportes',
-      icon: (a) => a
-        ? <IcReportesFill size={16} color={C.blue100} />
-        : <IcReportes size={16} color={C.black60} />,
+      icon: (a, sz = 16) => a
+        ? <IcReportesFill size={sz} color={C.blue100} />
+        : <IcReportes size={sz} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => onModeChange('Reportes'),
     },
     {
       id: 'ajustes',
       label: 'Ajustes',
-      icon: (a) => a
-        ? <IcAjustesFill size={16} color={C.blue100} />
-        : <IcAjustes size={16} color={C.black60} />,
+      icon: (a, sz = 16) => a
+        ? <IcAjustesFill size={sz} color={C.blue100} />
+        : <IcAjustes size={sz} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Ajustes'),
     },
     {
       id: 'chat',
       label: 'Chat con soporte',
-      icon: (a) => a
-        ? <IcChatFill size={16} color={C.blue100} />
-        : <IcChat size={16} color={C.black60} />,
+      icon: (a, sz = 16) => a
+        ? <IcChatFill size={sz} color={C.blue100} />
+        : <IcChat size={sz} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Chat con soporte'),
     },
@@ -231,9 +229,10 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const menu = buildMenu();
 
   const isSectionActive = (item: MenuItem) => {
-    if (item.id === 'inicio')      return activeMode === 'Inicio';
+    if (item.id === 'inicio')       return activeMode === 'Inicio';
     if (item.id === 'puntodeventa') return activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
-    if (item.id === 'reportes')    return activeMode === 'Reportes';
+    if (item.id === 'reportes')     return activeMode === 'Reportes';
+    if (item.id === 'ingresos')     return pathname === '/ventas';
     return false;
   };
 
@@ -301,53 +300,38 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
           <Plus size={16} color={C.white} />
         </button>
 
-        {/* Backdrop to close flyout on outside click */}
-        {activeFlyout && (
-          <div
-            onClick={() => setActiveFlyout(null)}
-            style={{ position: 'fixed', inset: 0, zIndex: 199 }}
-          />
-        )}
-
         {/* Icon-only menu items */}
         {menu.map(item => {
           const isActive = isSectionActive(item);
-          const flyoutOpen = activeFlyout === item.id;
 
           return (
             <div
               key={item.id}
               style={{ position: 'relative', flexShrink: 0 }}
-              onMouseEnter={!item.subItems ? (e => showFlyout(item.id, e.currentTarget.getBoundingClientRect().top)) : undefined}
-              onMouseLeave={!item.subItems ? scheduleFlyoutHide : undefined}
+              onMouseEnter={e => showFlyout(item.id, e.currentTarget.getBoundingClientRect().top)}
+              onMouseLeave={scheduleFlyoutHide}
             >
               <button
-                onClick={e => {
-                  if (item.subItems) {
-                    // click-based flyout for parent items with children
-                    const top = (e.currentTarget as HTMLButtonElement).getBoundingClientRect().top;
-                    itemRefs.current[item.id] = top;
-                    setActiveFlyout(prev => prev === item.id ? null : item.id);
-                  } else if (item.onClick) {
+                onClick={() => {
+                  if (!item.subItems && item.onClick) {
                     item.onClick();
-                    setHoveredItem(null);
                   }
                 }}
                 style={{
-                  width: 44, height: 40,
+                  width: 40, height: 40,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   backgroundColor: 'transparent',
                   border: 'none', cursor: 'pointer',
                 }}
               >
                 <div style={{
-                  width: 36, height: 36,
+                  width: 40, height: 40,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
-                  backgroundColor: (isActive || flyoutOpen) && item.id !== 'puntodeventa' ? C.blue10 : 'transparent',
+                  backgroundColor: isActive && item.id !== 'puntodeventa' ? C.blue10 : 'transparent',
                   borderRadius: 8,
                 }}>
-                  {item.icon(isActive)}
+                  {item.icon(isActive, 20)}
                 </div>
               </button>
 
@@ -372,10 +356,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                 </div>
               )}
 
-              {/* Flyout panel for items with subitems (click-based) */}
-              {flyoutOpen && item.subItems && (
+              {/* Flyout panel for parent items (hover-based) */}
+              {hoveredItem === item.id && item.subItems && (
                 <div
-                  onClick={e => e.stopPropagation()}
+                  onMouseEnter={cancelFlyoutHide}
+                  onMouseLeave={scheduleFlyoutHide}
                   style={{
                     position: 'fixed',
                     left: 68,
@@ -383,8 +368,8 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                     backgroundColor: C.white,
                     borderRadius: 12,
                     boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-                    padding: 8,
-                    zIndex: 200,
+                    padding: 12,
+                    zIndex: 300,
                     minWidth: 180,
                   }}
                 >
@@ -400,7 +385,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                     {item.subItems.map(sub => (
                       <button
                         key={sub.id}
-                        onClick={() => { sub.onClick(); setActiveFlyout(null); }}
+                        onClick={() => { sub.onClick(); setHoveredItem(null); }}
                         style={{
                           textAlign: 'left', width: '100%',
                           padding: '6px 8px', borderRadius: 8,
