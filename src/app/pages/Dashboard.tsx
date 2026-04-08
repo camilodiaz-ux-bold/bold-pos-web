@@ -782,6 +782,15 @@ export function Dashboard() {
   const [customFrom,    setCustomFrom]    = useState('');
   const [customTo,      setCustomTo]      = useState('');
   const [refreshCount,  setRefreshCount]  = useState(0);
+  const [lastUpdated,   setLastUpdated]   = useState<Date>(() => new Date());
+
+  const formatUpdateTime = (d: Date) => {
+    const h = d.getHours();
+    const m = d.getMinutes();
+    const ampm = h >= 12 ? 'p.m.' : 'a.m.';
+    const h12 = h % 12 || 12;
+    return `Actualizado hoy a las ${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+  };
 
   const kpi = period === 'custom' && customFrom && customTo
     ? getCustomKpi(customFrom, customTo, channel)
@@ -981,7 +990,7 @@ export function Dashboard() {
 
             {/* Recargar button */}
             <button
-              onClick={() => setRefreshCount(c => c + 1)}
+              onClick={() => { setRefreshCount(c => c + 1); setLastUpdated(new Date()); }}
               title={`Refrescado ${refreshCount} veces`}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -995,6 +1004,10 @@ export function Dashboard() {
             >
               <RefreshCw size={14} color="#121E6C" /> Recargar
             </button>
+
+            <span style={{ fontSize: 12, color: '#606060', fontFamily: 'Montserrat, sans-serif', whiteSpace: 'nowrap' }}>
+              {formatUpdateTime(lastUpdated)}
+            </span>
 
             {/* Period tabs */}
             <div style={{
