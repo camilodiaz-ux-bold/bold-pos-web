@@ -183,7 +183,7 @@ function buildMockTables(): MesaTable[] {
     { id:'s02', name:'S02', zone:'Salón', status:'OCUPADA',    capacity:2, shape:'round', x:200, y:60,  rotationDeg:0,
       items:[ it('s02','a',164,1), it('s02','b',165,2) ],                                       // Mocktail + Ginger Beer
       openedAtTimestamp:ago(18), guests:2, comandaSent:true, hasPendingChanges:false },
-    { id:'s03', name:'S03', zone:'Salón', status:'INHABILITADA', capacity:4, shape:'rect', x:60,  y:225, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
+    { id:'s03', name:'S03', zone:'Salón', status:'DISPONIBLE',   capacity:4, shape:'rect', x:60,  y:225, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     { id:'s04', name:'S04', zone:'Salón', status:'DISPONIBLE', capacity:4, shape:'rect', x:235, y:225, rotationDeg:0, items:[], comandaSent:false, hasPendingChanges:false },
     // ── SALÓN: CENTRO F1 ───────────────────────────────────────────────────────
     { id:'s05', name:'S05', zone:'Salón', status:'OCUPADA', capacity:4, shape:'rect', x:400, y:60, rotationDeg:0,
