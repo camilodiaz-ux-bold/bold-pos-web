@@ -5,12 +5,16 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
 } from 'lucide-react';
 import {
-  IcHome, IcPosFill, IcMesas, IcTurnos,
+  IcHome, IcHomeFill,
+  IcPosFill, IcMesas, IcTurnos,
   IcMoneyFill, IcRecibos, IcComprobantes, IcCotizaciones,
   IcFacturas, IcNotasCredito, IcNotasDebito,
   IcEgresosFill, IcGastos, IcDocSoporte,
   IcItemsFill, IcListaItems, IcAjusteInv, IcFlujoInv, IcVariantesInv,
-  IcUsuarios, IcReportes, IcAjustes, IcChat,
+  IcUsuarios, IcUsuariosFill,
+  IcReportes, IcReportesFill,
+  IcAjustes, IcAjustesFill,
+  IcChat, IcChatFill,
 } from './BoldPosIcons';
 import { toast } from 'sonner';
 import svgPaths from '../../imports/svg-5yr7pr5zvq';
@@ -130,14 +134,18 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'inicio',
       label: 'Inicio',
-      icon: (a) => <IcHome size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcHomeFill size={16} color={C.blue100} />
+        : <IcHome size={16} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => onModeChange('Inicio'),
     },
     {
       id: 'puntodeventa',
       label: 'Punto de venta',
-      icon: (a) => <IcPosFill size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcPosFill size={16} color={C.blue100} />
+        : <svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><rect x="2" y="4" width="20" height="13" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
       hasSubmenu: true,
       subItems: [
         { id: 'mesas',     label: 'Mesas',     icon: <IcMesas size={16} />,     active: activeMode === 'Mesas',     onClick: () => onModeChange('Mesas') },
@@ -148,7 +156,9 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'ingresos',
       label: 'Ingresos',
-      icon: (a) => <IcMoneyFill size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcMoneyFill size={16} color={C.blue100} />
+        : <svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/><path d="M12 7v1m0 9v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 10a2.5 2.5 0 015 0c0 1.38-1.12 2-2.5 2.5S9.5 13.62 9.5 15a2.5 2.5 0 005 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
       hasSubmenu: true,
       subItems: [
         { id: 'ventas',       label: 'Ventas',             icon: <IcRecibos size={16} />,      active: false, onClick: () => navigate('/ventas') },
@@ -160,7 +170,9 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'egresos',
       label: 'Egresos',
-      icon: (a) => <IcEgresosFill size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcEgresosFill size={16} color={C.blue100} />
+        : <svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><path d="M4 3h16v18l-2-1-2 1-2-1-2 1-2-1-2 1V3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 10h8M8 14h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
       hasSubmenu: true,
       subItems: [
         { id: 'gastos',     label: 'Gastos',            icon: <IcGastos size={16} />,     active: false, onClick: () => toast.info('Gastos') },
@@ -170,7 +182,9 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'items',
       label: 'Ítems',
-      icon: (a) => <IcItemsFill size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcItemsFill size={16} color={C.blue100} />
+        : <svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ color: C.black60 }}><path d="M6 7h12l-1.5 12h-9L6 7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M9.5 7V5.5A2.5 2.5 0 0112 3v0a2.5 2.5 0 012.5 2.5V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
       hasSubmenu: true,
       subItems: [
         { id: 'listaitems',   label: 'Lista de ítems',          icon: <IcListaItems size={16} />,   active: false, onClick: () => toast.info('Lista de ítems') },
@@ -182,28 +196,36 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'contactos',
       label: 'Contactos',
-      icon: (a) => <IcUsuarios size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcUsuariosFill size={16} color={C.blue100} />
+        : <IcUsuarios size={16} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Contactos'),
     },
     {
       id: 'reportes',
       label: 'Reportes',
-      icon: (a) => <IcReportes size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcReportesFill size={16} color={C.blue100} />
+        : <IcReportes size={16} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => onModeChange('Reportes'),
     },
     {
       id: 'ajustes',
       label: 'Ajustes',
-      icon: (a) => <IcAjustes size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcAjustesFill size={16} color={C.blue100} />
+        : <IcAjustes size={16} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Ajustes'),
     },
     {
       id: 'chat',
       label: 'Chat con soporte',
-      icon: (a) => <IcChat size={16} color={a ? C.blue100 : C.black60} />,
+      icon: (a) => a
+        ? <IcChatFill size={16} color={C.blue100} />
+        : <IcChat size={16} color={C.black60} />,
       hasSubmenu: false,
       onClick: () => toast.info('Chat con soporte'),
     },
@@ -323,11 +345,8 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
               >
                 <div style={{
                   width: 36, height: 36,
-                  borderRadius: 8,
-                  backgroundColor: isActive || flyoutOpen ? '#E8EAFA' : 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
-                  transition: 'background-color 0.15s ease',
                 }}>
                   {item.icon(isActive)}
                 </div>
@@ -543,11 +562,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                       borderRadius: 8,
                     }}
                   >
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0, padding: 6, borderRadius: 8,
-                      backgroundColor: isActive ? '#E8EAFA' : 'transparent',
-                    }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {item.icon(isActive)}
                     </span>
                     <span style={{
@@ -615,11 +630,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
                   onMouseOver={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.blue10; }}
                   onMouseOut={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                 >
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, padding: 6, borderRadius: 8,
-                    backgroundColor: isActive ? '#E8EAFA' : 'transparent',
-                  }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {item.icon(isActive)}
                   </span>
                   <span style={{
