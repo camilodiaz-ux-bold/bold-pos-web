@@ -151,11 +151,9 @@ const INIT_TIPOS: TipoConf[] = [
 ];
 
 const NAV: { id: SectionId; label: string; icon: React.ElementType }[] = [
-  { id:'mapa',   label:'Mapa',                  icon: LayoutGrid        },
-  { id:'zonas',  label:'Zonas',                 icon: MapPin            },
-  { id:'mesas',  label:'Mesas',                 icon: Users             },
-  { id:'tipos',  label:'Tipos de mesa',         icon: Layers            },
-  { id:'config', label:'Configuración general', icon: SlidersHorizontal },
+  { id:'mapa',  label:'Mapa',  icon: LayoutGrid },
+  { id:'zonas', label:'Zonas', icon: MapPin     },
+  { id:'mesas', label:'Mesas', icon: Users      },
 ];
 
 // ─── Switch ──────────────────────────────────────────────────────────────────────
@@ -1064,20 +1062,22 @@ export function GestionarMesasView({ onBack }: Props) {
                   {zonas.map(z => {
                     const cnt = tables.filter(t => t.zone === z.name).length;
                     return (
-                      <div key={z.id} className="bg-white rounded-[var(--radius-16)] border border-[var(--black-10)] px-5 py-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                      <div key={z.id} style={{ background: '#FFFFFF', border: '1px solid #E8E9F0', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div className="w-9 h-9 rounded-[var(--radius-12)] bg-[var(--blue-10)] flex items-center justify-center shrink-0">
-                          <MapPin size={14} className="text-[var(--blue-100)]" />
+                          <MapPin size={14} style={{ color: '#121E6C' }} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <input
                             value={z.name}
                             onChange={e => setZonas(p => p.map(x => x.id===z.id ? {...x,name:e.target.value}:x))}
-                            className="w-full text-sm font-bold text-[var(--black-100)] bg-transparent border-b border-transparent hover:border-[var(--black-10)] focus:border-[var(--blue-100)] focus:outline-none py-0.5 transition-all"
+                            style={{ width: '100%', fontSize: 16, fontWeight: 600, color: '#1E1E1E', background: 'transparent', border: 'none', borderBottom: '1px solid transparent', outline: 'none', padding: '2px 0' }}
+                            onFocus={e => (e.currentTarget.style.borderBottomColor = '#121E6C')}
+                            onBlur={e => (e.currentTarget.style.borderBottomColor = 'transparent')}
                           />
-                          <p className="text-xs text-[var(--black-40)] mt-0.5">{cnt} mesa{cnt!==1?'s':''}</p>
+                          <p style={{ fontSize: 13, color: '#606060', marginTop: 2 }}>{cnt} mesa{cnt!==1?'s':''}</p>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs font-bold text-[var(--black-40)]">Activa</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                          <span style={{ background: '#F4FDF9', color: '#2E7D32', borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 500 }}>Activa</span>
                           <Switch on={z.active} toggle={() => setZonas(p => p.map(x => x.id===z.id?{...x,active:!x.active}:x))} />
                         </div>
                         {cnt > 0 ? (
@@ -1136,30 +1136,32 @@ export function GestionarMesasView({ onBack }: Props) {
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px]">
                       <thead>
-                        <tr className="border-b border-[var(--black-10)] bg-[var(--blue-10)]">
+                        <tr style={{ backgroundColor: '#F7F8FB', borderBottom: '1px solid #F0F1F5' }}>
                           {['Nombre','Zona','Tipo','Capacidad','Estado',''].map(h => (
-                            <th key={h} className="text-left px-4 py-3 text-[11px] font-semibold text-[var(--black-40)] uppercase tracking-wide">{h}</th>
+                            <th key={h} style={{ textAlign: 'left', padding: '0 16px', height: 40, fontSize: 12, fontWeight: 600, color: '#606060', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {filtered.length === 0 ? (
-                          <tr><td colSpan={6} className="text-center py-10 text-[var(--black-40)] text-xs">Sin resultados.</td></tr>
+                          <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px 0', color: '#969696', fontSize: 13 }}>Sin resultados.</td></tr>
                         ) : filtered.map((m, i) => (
-                          <tr key={m.id} className={cn('hover:bg-[var(--blue-10)] transition-colors', i<filtered.length-1&&'border-b border-[var(--black-10)]')}>
-                            <td className="px-4 py-3">
+                          <tr key={m.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid #F0F1F5' : 'none', height: 48 }} className="hover:bg-[var(--blue-10)] transition-colors">
+                            <td style={{ padding: '0 16px', fontSize: 14, color: '#1E1E1E', fontWeight: 500 }}>
                               <input value={m.name} onChange={e=>setTables(p=>p.map(t=>t.id===m.id?{...t,name:e.target.value}:t))}
-                                className="w-20 text-xs font-bold text-[var(--black-100)] bg-transparent border-b border-transparent hover:border-[var(--black-10)] focus:border-[var(--blue-100)] focus:outline-none py-0.5 transition-all" />
+                                style={{ width: 80, fontSize: 14, fontWeight: 600, color: '#1E1E1E', background: 'transparent', border: 'none', borderBottom: '1px solid transparent', outline: 'none', padding: '2px 0' }}
+                                onFocus={e => (e.currentTarget.style.borderBottomColor = 'var(--blue-100)')}
+                                onBlur={e => (e.currentTarget.style.borderBottomColor = 'transparent')} />
                             </td>
-                            <td className="px-4 py-3">
+                            <td style={{ padding: '0 16px', fontSize: 14, color: '#1E1E1E' }}>
                               <select value={m.zone} onChange={e=>setTables(p=>p.map(t=>t.id===m.id?{...t,zone:e.target.value}:t))}
-                                className="text-xs font-bold text-[var(--black-60)] bg-transparent focus:outline-none cursor-pointer">
+                                style={{ fontSize: 14, fontWeight: 500, color: '#1E1E1E', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}>
                                 {zonas.map(z=><option key={z.id} value={z.name}>{z.name}</option>)}
                               </select>
                             </td>
-                            <td className="px-4 py-3">
+                            <td style={{ padding: '0 16px' }}>
                               <span className={cn(
-                                'text-[10px] font-bold px-2 py-0.5 rounded-[var(--radius-12)] border',
+                                'text-[11px] font-semibold px-2 py-0.5 rounded-[var(--radius-12)] border',
                                 m.category==='Barra'
                                   ? 'bg-[var(--feedback-warning-10)] text-[var(--feedback-warning-150)] border-[var(--feedback-warning-10)]'
                                   : m.shape==='Redonda'
@@ -1169,27 +1171,27 @@ export function GestionarMesasView({ onBack }: Props) {
                                 {typeLabel(m)}
                               </span>
                             </td>
-                            <td className="px-4 py-3">
+                            <td style={{ padding: '0 16px' }}>
                               <div className="flex items-center gap-1.5">
                                 <button onClick={()=>setTables(p=>p.map(t=>t.id===m.id?{...t,capacity:Math.max(1,t.capacity-1),...getTableDims(t.category,t.shape,Math.max(1,t.capacity-1))}:t))}
                                   className="w-6 h-6 rounded-[var(--radius-12)] border border-[var(--black-10)] flex items-center justify-center text-[var(--black-60)] hover:bg-[var(--blue-10)] transition-all"><ChevronDown size={11}/></button>
-                                <span className="w-5 text-center text-xs font-black text-[var(--black-100)] tabular-nums">{m.capacity}</span>
+                                <span style={{ width: 20, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#1E1E1E' }}>{m.capacity}</span>
                                 <button onClick={()=>setTables(p=>p.map(t=>t.id===m.id?{...t,capacity:Math.min(12,t.capacity+1),...getTableDims(t.category,t.shape,Math.min(12,t.capacity+1))}:t))}
                                   className="w-6 h-6 rounded-[var(--radius-12)] border border-[var(--black-10)] flex items-center justify-center text-[var(--black-60)] hover:bg-[var(--blue-10)] transition-all"><ChevronUp size={11}/></button>
                               </div>
                             </td>
-                            <td className="px-4 py-3">
+                            <td style={{ padding: '0 16px' }}>
                               <select value={m.status} onChange={e=>setTables(p=>p.map(t=>t.id===m.id?{...t,status:e.target.value as TableStatus}:t))}
-                                className={cn('text-[10px] font-black rounded-[var(--radius-12)] px-2 py-1 border focus:outline-none cursor-pointer',
+                                className={cn('text-[11px] font-semibold rounded-[var(--radius-12)] px-2 py-1 border focus:outline-none cursor-pointer',
                                   m.status==='Activa'?'bg-[var(--feedback-success-10)] text-[var(--feedback-success-200)] border-[var(--feedback-success-100)]':'bg-[var(--coral-10)] text-[var(--coral-100)] border-red-200')}>
                                 <option value="Activa">Activa</option>
                                 <option value="Fuera de servicio">Fuera de servicio</option>
                               </select>
                             </td>
-                            <td className="px-4 py-3">
+                            <td style={{ padding: '0 16px' }}>
                               <div className="flex items-center gap-1">
                                 <button onClick={()=>{setSection('mapa');setZone(m.zone);setSelId(m.id);}}
-                                  title="Ver en mapa" className="p-1.5 rounded-[var(--radius-12)] text-[var(--black-40)] hover:text-[var(--blue-100)] hover:bg-[var(--blue-10)] transition-all"><Maximize2 size={12}/></button>
+                                  title="Ver en mapa" className="p-1.5 rounded-[var(--radius-12)] text-[var(--black-40)] hover:text-[var(--blue-100)] hover:bg-[var(--blue-10)] transition-all"><LayoutGrid size={12}/></button>
                                 <button onClick={()=>setTables(p=>p.filter(t=>t.id!==m.id))} className="p-1.5 rounded-[var(--radius-12)] text-[var(--black-40)] hover:text-[var(--coral-100)] hover:bg-[var(--coral-10)] transition-all"><Trash2 size={12}/></button>
                               </div>
                             </td>
