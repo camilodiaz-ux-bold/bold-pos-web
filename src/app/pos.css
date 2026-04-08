@@ -5,6 +5,17 @@
  * Naming convention: [block]__[element]--[modifier]
  */
 
+/* ─── Mesa card — pulse dot animation ───────────────────────────────────── */
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.4); }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
 /* ─── Base reset helpers ─────────────────────────────────────────────────── */
 
 /* Global font enforcement */

@@ -44,8 +44,8 @@ const STATUS_STYLE: Record<TableStatus, {
   cursor:      string;
 }> = {
   DISPONIBLE: {
-    bg:        '#F1F2F6',
-    border:    '1.5px solid #C7CBE0',
+    bg:        '#E8F5E9',
+    border:    'none',
     nameColor: '#1E1E1E',
     infoColor: '#606060',
     iconColor: '#606060',
@@ -53,8 +53,8 @@ const STATUS_STYLE: Record<TableStatus, {
     cursor:    'pointer',
   },
   OCUPADA: {
-    bg:        '#FFF0F2',
-    border:    '1.5px solid #FF2947',
+    bg:        '#FFEEF0',
+    border:    'none',
     nameColor: '#FF2947',
     infoColor: '#FF2947',
     iconColor: '#FF2947',
@@ -62,8 +62,8 @@ const STATUS_STYLE: Record<TableStatus, {
     cursor:    'pointer',
   },
   CUENTA_SOLICITADA: {
-    bg:        '#FFFBF0',
-    border:    '1.5px solid #FFC217',
+    bg:        '#FFEEF0',
+    border:    'none',
     nameColor: '#B38900',
     infoColor: '#B38900',
     iconColor: '#B38900',
@@ -72,7 +72,7 @@ const STATUS_STYLE: Record<TableStatus, {
   },
   INHABILITADA: {
     bg:        '#F5F5F5',
-    border:    '1.5px dashed #C0C0C0',
+    border:    'none',
     nameColor: '#AAAAAA',
     infoColor: '#AAAAAA',
     iconColor: '#AAAAAA',
@@ -104,13 +104,17 @@ function MesaCard({
 
   const total = isActive && table.items.length > 0 ? calcTotal(table.items) : null;
 
-  const selectedBorder = '3px solid #121E6C';
-  const selectedShadow = '0 0 0 1px #121E6C';
+  const selectedBorder =
+    table.status === 'DISPONIBLE'        ? '2px solid #2E7D32' :
+    table.status === 'OCUPADA'           ? '2px solid #FF2947' :
+    table.status === 'CUENTA_SOLICITADA' ? '2px solid #FF2947' :
+    'none';
 
   return (
     <button
       onClick={onClick}
       style={{
+        position:       'relative',
         display:        'flex',
         flexDirection:  'column',
         alignItems:     'center',
@@ -120,8 +124,8 @@ function MesaCard({
         padding:        12,
         borderRadius:   12,
         background:     s.bg,
-        border:         isSelected ? selectedBorder : s.border,
-        boxShadow:      isSelected ? selectedShadow : '0 1px 3px rgba(0,0,0,0.04)',
+        border:         isSelected ? selectedBorder : 'none',
+        boxShadow:      '0 1px 3px rgba(0,0,0,0.04)',
         cursor:         s.cursor,
         opacity:        s.opacity,
         transition:     'box-shadow 0.15s ease, transform 0.15s ease',
@@ -129,17 +133,23 @@ function MesaCard({
       }}
       onMouseEnter={e => {
         if (!disabled) {
-          (e.currentTarget as HTMLButtonElement).style.boxShadow =
-            isSelected ? selectedShadow : '0 2px 8px rgba(0,0,0,0.10)';
+          (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.10)';
           (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
         }
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLButtonElement).style.boxShadow =
-          isSelected ? selectedShadow : '0 1px 3px rgba(0,0,0,0.04)';
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
         (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
       }}
     >
+      {/* Pulse dot — CUENTA_SOLICITADA only */}
+      {table.status === 'CUENTA_SOLICITADA' && (
+        <span className="pulse-dot" style={{
+          position: 'absolute', top: 8, right: 8,
+          width: 10, height: 10, borderRadius: '50%',
+          backgroundColor: '#FF2947',
+        }} />
+      )}
       {/* ── Nombre de mesa — elemento principal ── */}
       <span style={{
         fontSize:   18,
