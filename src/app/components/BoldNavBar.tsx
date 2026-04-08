@@ -423,13 +423,13 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
             fontFamily: FONT, lineHeight: '20px',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
-            Inversiones Tech SAS
+            Rafael Arango
           </div>
           <div style={{
             fontSize: 11, fontWeight: 400, color: C.black40,
             fontFamily: FONT, lineHeight: '14px',
           }}>
-            Plan PLUS
+            Administrador
           </div>
         </div>
         <button
