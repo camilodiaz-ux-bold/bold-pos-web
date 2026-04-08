@@ -146,7 +146,6 @@ const sectionCard: React.CSSProperties = {
   backgroundColor: C.white,
   borderRadius: 16,
   padding: '20px 24px',
-  boxShadow: '0px 4px 12px 0px rgba(18,30,108,0.08)',
 };
 
 const sectionTitle: React.CSSProperties = {
@@ -237,7 +236,7 @@ export function PedidoDetallePage() {
   return (
     <div style={{
       flex: 1,
-      backgroundColor: C.bgPage,
+      backgroundColor: 'transparent',
       overflowY: 'auto',
       padding: 24,
       display: 'flex',
@@ -304,7 +303,7 @@ export function PedidoDetallePage() {
           </div>
           <div style={{ paddingLeft: 32 }}>
             <InfoRow label="Sucursal">{pedido.sucursal}</InfoRow>
-            <InfoRow label="Cantidad en mesa">{pedido.personas}</InfoRow>
+            <InfoRow label="Personas en mesa">{pedido.personas}</InfoRow>
             <InfoRow label="Hora apertura">{pedido.horaApertura}</InfoRow>
             <InfoRow label="Hora cierre">{pedido.horaCierre}</InfoRow>
             <InfoRow label="Duración" last>{pedido.duracion}</InfoRow>
@@ -371,32 +370,10 @@ export function PedidoDetallePage() {
         </div>
       </div>
 
-      {/* ── Sections 3 + 4: Totales & Método de pago side by side ── */}
+      {/* ── Sections 3 + 4: Método de pago & Totales side by side ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
 
-        {/* Section 3: Totales */}
-        <div style={sectionCard}>
-          <p style={sectionTitle}>Totales</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              { label: 'Subtotal',    value: '$456,000' },
-              { label: 'Descuento',   value: '$0'       },
-              { label: 'IVA 19%',     value: '$86,640'  },
-              { label: 'Propina 10%', value: '$54,264'  },
-            ].map(row => (
-              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={font(13, 500, C.black60, 20)}>{row.label}</span>
-                <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{row.value}</span>
-              </div>
-            ))}
-            <div style={{ borderTop: `1.5px solid ${C.black10}`, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-              <span style={font(14, 700, C.blue100, 22)}>Total</span>
-              <span style={{ ...font(14, 700, C.blue100, 22), textAlign: 'right' }}>$596,904</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 4: Método de pago */}
+        {/* Section 3: Método de pago */}
         <div style={sectionCard}>
           <p style={sectionTitle}>Método de pago</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -416,6 +393,28 @@ export function PedidoDetallePage() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+
+        {/* Section 4: Totales */}
+        <div style={sectionCard}>
+          <p style={sectionTitle}>Totales</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              { label: 'Subtotal',    value: '$456,000' },
+              { label: 'Descuento',   value: '$0'       },
+              { label: 'IVA 19%',     value: '$86,640'  },
+              { label: 'Propina 10%', value: '$54,264'  },
+            ].map(row => (
+              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={font(13, 500, C.black60, 20)}>{row.label}</span>
+                <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{row.value}</span>
+              </div>
+            ))}
+            <div style={{ borderTop: `1.5px solid ${C.black10}`, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+              <span style={font(14, 700, C.blue100, 22)}>Total</span>
+              <span style={{ ...font(14, 700, C.blue100, 22), textAlign: 'right' }}>$596,904</span>
+            </div>
           </div>
         </div>
 
