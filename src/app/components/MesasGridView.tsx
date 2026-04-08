@@ -44,7 +44,7 @@ const STATUS_STYLE: Record<TableStatus, {
   cursor:      string;
 }> = {
   DISPONIBLE: {
-    bg:        '#E8F5E9',
+    bg:        '#F4FDF9',
     border:    'none',
     nameColor: '#1B5E20',
     infoColor: '#1B5E20',
