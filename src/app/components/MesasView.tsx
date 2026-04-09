@@ -1757,6 +1757,8 @@ export function MesasView() {
           setTables={setTables}
           onBack={() => setShowProductSelector(false)}
           onOpenKitchenPreview={() => setShowKitchenPreview(true)}
+          confirmedMesas={confirmedMesas}
+          onConfirmarPedido={handleConfirmarPedido}
         />
         {showKitchenPreview && selectedTable && (() => {
           const isAdjust     = (selectedTable.comandaSent ?? false) && (selectedTable.hasPendingChanges ?? false);

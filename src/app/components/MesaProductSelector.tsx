@@ -43,12 +43,15 @@ interface MesaProductSelectorProps {
   setTables:             React.Dispatch<React.SetStateAction<MesaTable[]>>;
   onBack:                () => void;
   onOpenKitchenPreview?: () => void;
+  confirmedMesas?:       Set<string>;
+  onConfirmarPedido?:    () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function MesaProductSelector({
   tableId, tables, setTables, onBack, onOpenKitchenPreview,
+  confirmedMesas, onConfirmarPedido,
 }: MesaProductSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -291,6 +294,9 @@ export function MesaProductSelector({
   const totalItems = table.items.reduce((a, i) => a + i.quantity, 0);
   const isComandaSent     = table.comandaSent ?? false;
   const hasPendingChanges = table.hasPendingChanges ?? false;
+
+  const isMesaConfirmed = (confirmedMesas?.has(tableId) ?? false) || table.items.some(i => i.isSent);
+  const hasPendingItems = isMesaConfirmed && table.items.some(i => !i.isSent && i.quantity > 0);
 
   // ── Render ────────────────────────────────────────────────────────────────
   const MFONT = 'Montserrat, sans-serif';
@@ -893,35 +899,33 @@ export function MesaProductSelector({
             {/* CTAs */}
             {table.items.length > 0 && (
               <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {(!isComandaSent || hasPendingChanges) ? (
-                  <>
-                    {/* Estado A: comanda no enviada o hay cambios pendientes → Enviar comanda + link Solicitar */}
-                    <button
-                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
-                      style={{
-                        width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
-                        background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
-                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', gap: 8,
-                      }}
-                    >
-                      <Send size={16} /> Enviar comanda
-                    </button>
-                    <button
-                      onClick={requestBill}
-                      style={{
-                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: 13, fontWeight: 500, color: '#FF2947',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
-                      }}
-                    >
-                      <Receipt size={14} color="#FF2947" /> Solicitar cuenta
-                    </button>
-                  </>
+                {!isMesaConfirmed ? (
+                  /* STATE 1 — no confirmado: solo "Confirmar pedido" */
+                  <button
+                    onClick={onConfirmarPedido}
+                    style={{
+                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    <Send size={16} /> Confirmar pedido
+                  </button>
                 ) : (
+                  /* STATE 2 / 3 — confirmado */
                   <>
-                    {/* Estado B: comanda enviada sin cambios → Solicitar cuenta (coral) + link Reenviar */}
+                    {hasPendingItems && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '6px 10px', borderRadius: 8, backgroundColor: '#FFF3D1',
+                      }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#FFC217', flexShrink: 0 }} />
+                        <span style={{ fontSize: 12, color: '#7A5A00', fontFamily: 'Montserrat, sans-serif', fontWeight: 500 }}>
+                          Cambios pendientes de envío
+                        </span>
+                      </div>
+                    )}
                     <button
                       onClick={requestBill}
                       style={{
