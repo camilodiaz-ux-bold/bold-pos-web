@@ -1294,6 +1294,7 @@ export function MesasView() {
   const [showCheckout,          setShowCheckout]           = useState(false);
   const [showKitchenPreview,    setShowKitchenPreview]     = useState(false);
   const [showGestionarMesas, setShowGestionarMesas] = useState(false);
+  const [confirmedMesas, setConfirmedMesas] = useState<Set<string>>(() => new Set());
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [editingPriceId,  setEditingPriceId]  = useState<string | null>(null);
   const [editingPriceVal, setEditingPriceVal] = useState<string>('');
@@ -1415,6 +1416,15 @@ export function MesasView() {
 
   const isComandaSent     = selectedTable?.comandaSent ?? false;
   const hasPendingChanges = selectedTable?.hasPendingChanges ?? false;
+
+  // ── Three-state button logic ───────────────────────────────────────────────
+  // A mesa is "confirmed" if explicitly confirmed by the user OR if it already
+  // has items with isSent=true (i.e. comanda was sent in a previous session).
+  const isMesaConfirmed = selectedTableId
+    ? confirmedMesas.has(selectedTableId) || (selectedTable?.items.some(i => i.isSent) ?? false)
+    : false;
+  // STATE 3 indicator: mesa is confirmed but has new unsent items
+  const hasPendingItems = isMesaConfirmed && (selectedTable?.items.some(i => !i.isSent && i.quantity > 0) ?? false);
 
   // Counters globales para la barra de leyenda inferior
   const totalDisponibles  = tables.filter(t => t.status === 'DISPONIBLE').length;
@@ -1561,6 +1571,13 @@ export function MesasView() {
         };
       }),
     );
+  };
+
+  // ── Confirmar pedido ──────────────────────────────────────────────────────
+  const handleConfirmarPedido = () => {
+    if (!selectedTableId) return;
+    setConfirmedMesas(prev => new Set(prev).add(selectedTableId));
+    toast.success('Pedido confirmado');
   };
 
   // ── Reenviar comanda: usa el mismo showKitchenPreview ─────────────────────
@@ -2917,23 +2934,30 @@ export function MesasView() {
                 {/* ── OCUPADA ── */}
                 {selectedTable.status === 'OCUPADA' && selectedTable.items.length > 0 && (
                   <>
-                    {/* Estado A: comanda no enviada o hay cambios pendientes → Enviar comanda (coral) + link Solicitar */}
-                    {(!isComandaSent || hasPendingChanges) ? (
-                      <>
-                        <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
-                          <Send size={16} color="#fff" /> Enviar comanda
-                        </PanelCoralBtn>
-                        <SolicitarLink onClick={requestBill} />
-                      </>
+                    {!isMesaConfirmed ? (
+                      /* STATE 1 — no confirmado: solo "Confirmar pedido" */
+                      <PanelCoralBtn onClick={handleConfirmarPedido}>
+                        <Send size={16} color="#fff" /> Confirmar pedido
+                      </PanelCoralBtn>
                     ) : (
-                      /* Estado B: comanda ya enviada, sin cambios → Solicitar cuenta (coral) + link Reenviar */
+                      /* STATE 2 / 3 — confirmado */
                       <>
+                        {hasPendingItems && (
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '6px 10px', borderRadius: 8,
+                            backgroundColor: '#FFF3D1', marginBottom: 4,
+                          }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#FFC217', flexShrink: 0 }} />
+                            <span style={{ fontSize: 12, color: '#7A5A00', fontFamily: 'Montserrat, sans-serif', fontWeight: 500 }}>
+                              Cambios pendientes de envío
+                            </span>
+                          </div>
+                        )}
                         <PanelCoralBtn onClick={requestBill}>
                           <Receipt size={16} color="#fff" /> Solicitar cuenta
                         </PanelCoralBtn>
-                        {selectedTable.items.some(i => i.isSent) && (
-                          <ReenviarLink onClick={handleReenviarComanda} />
-                        )}
+                        <ReenviarLink onClick={handleReenviarComanda} />
                       </>
                     )}
                   </>
