@@ -2957,7 +2957,7 @@ export function MesasView() {
                           </div>
                         )}
                         <PanelCoralBtn onClick={handleReenviarComanda}>
-                          <Send size={16} color="#fff" /> Reenviar comanda
+                          <Send size={16} color="#fff" /> Enviar comanda
                         </PanelCoralBtn>
                         <button
                           onClick={requestBill}

@@ -924,7 +924,7 @@ export function MesaProductSelector({
                         justifyContent: 'center', gap: 8,
                       }}
                     >
-                      <Send size={16} /> Reenviar comanda
+                      <Send size={16} /> Enviar comanda
                     </button>
                     <button
                       onClick={requestBill}
