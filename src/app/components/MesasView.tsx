@@ -2942,7 +2942,7 @@ export function MesasView() {
                         <Send size={16} color="#fff" /> Confirmar pedido
                       </PanelCoralBtn>
                     ) : (
-                      /* STATE 2 / 3 — confirmado */
+                      /* STATE 2 / 3 — confirmado: Reenviar comanda primario + Solicitar cuenta secundario */
                       <>
                         {hasPendingItems && (
                           <div style={{
@@ -2956,10 +2956,20 @@ export function MesasView() {
                             </span>
                           </div>
                         )}
-                        <PanelCoralBtn onClick={requestBill}>
-                          <Receipt size={16} color="#fff" /> Solicitar cuenta
+                        <PanelCoralBtn onClick={handleReenviarComanda}>
+                          <Send size={16} color="#fff" /> Reenviar comanda
                         </PanelCoralBtn>
-                        <ReenviarLink onClick={handleReenviarComanda} />
+                        <button
+                          onClick={requestBill}
+                          style={{
+                            width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                            fontSize: 14, fontWeight: 600, color: '#121E6C',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                          }}
+                        >
+                          <Receipt size={14} color="#121E6C" /> Solicitar cuenta
+                        </button>
                       </>
                     )}
                   </>

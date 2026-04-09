@@ -913,21 +913,10 @@ export function MesaProductSelector({
                     <Send size={16} /> Confirmar pedido
                   </button>
                 ) : (
-                  /* STATE 2 / 3 — confirmado */
+                  /* STATE 2 / 3 — confirmado: Reenviar comanda primario + Solicitar cuenta secundario */
                   <>
-                    {hasPendingItems && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '6px 10px', borderRadius: 8, backgroundColor: '#FFF3D1',
-                      }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#FFC217', flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: '#7A5A00', fontFamily: 'Montserrat, sans-serif', fontWeight: 500 }}>
-                          Cambios pendientes de envío
-                        </span>
-                      </div>
-                    )}
                     <button
-                      onClick={requestBill}
+                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
                       style={{
                         width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
                         background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
@@ -935,18 +924,18 @@ export function MesaProductSelector({
                         justifyContent: 'center', gap: 8,
                       }}
                     >
-                      <Receipt size={16} /> Solicitar cuenta
+                      <Send size={16} /> Reenviar comanda
                     </button>
                     <button
-                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                      onClick={requestBill}
                       style={{
                         width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: 13, fontWeight: 500, color: '#FF2947',
+                        fontSize: 14, fontWeight: 600, color: '#121E6C',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
                       }}
                     >
-                      <RefreshCw size={13} color="#FF2947" /> Reenviar comanda
+                      <Receipt size={14} color="#121E6C" /> Solicitar cuenta
                     </button>
                   </>
                 )}
