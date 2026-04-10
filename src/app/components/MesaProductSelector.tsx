@@ -44,6 +44,7 @@ interface MesaProductSelectorProps {
   onBack:                () => void;
   onOpenKitchenPreview?: () => void;
   confirmedMesas?:       Set<string>;
+  comandaSentMesas?:     Set<string>;
   onConfirmarPedido?:    () => void;
 }
 
@@ -51,7 +52,7 @@ interface MesaProductSelectorProps {
 
 export function MesaProductSelector({
   tableId, tables, setTables, onBack, onOpenKitchenPreview,
-  confirmedMesas, onConfirmarPedido,
+  confirmedMesas, comandaSentMesas, onConfirmarPedido,
 }: MesaProductSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -295,8 +296,8 @@ export function MesaProductSelector({
   const isComandaSent     = table.comandaSent ?? false;
   const hasPendingChanges = table.hasPendingChanges ?? false;
 
-  const isMesaConfirmed = (confirmedMesas?.has(tableId) ?? false) || table.items.some(i => i.isSent);
-  const hasPendingItems = isMesaConfirmed && table.items.some(i => !i.isSent && i.quantity > 0);
+  const isComandaSentForMesa = (comandaSentMesas?.has(tableId) ?? false) || (table.comandaSent ?? false);
+  const isMesaConfirmed      = (confirmedMesas?.has(tableId) ?? false) || isComandaSentForMesa;
 
   // ── Render ────────────────────────────────────────────────────────────────
   const MFONT = 'Montserrat, sans-serif';
@@ -900,7 +901,7 @@ export function MesaProductSelector({
             {table.items.length > 0 && (
               <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {!isMesaConfirmed ? (
-                  /* STATE 1 — no confirmado: solo "Confirmar pedido" */
+                  /* STATE 1 — no confirmado */
                   <button
                     onClick={onConfirmarPedido}
                     style={{
@@ -912,8 +913,8 @@ export function MesaProductSelector({
                   >
                     <Send size={16} /> Confirmar pedido
                   </button>
-                ) : (
-                  /* STATE 2 / 3 — confirmado: Reenviar comanda primario + Solicitar cuenta secundario */
+                ) : !isComandaSentForMesa ? (
+                  /* STATE 2 — confirmado, comanda aún no enviada */
                   <>
                     <button
                       onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
@@ -936,6 +937,32 @@ export function MesaProductSelector({
                       }}
                     >
                       <Receipt size={14} color="#121E6C" /> Solicitar cuenta
+                    </button>
+                  </>
+                ) : (
+                  /* STATE 3 — comanda enviada */
+                  <>
+                    <button
+                      onClick={requestBill}
+                      style={{
+                        width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 8,
+                      }}
+                    >
+                      <Receipt size={16} /> Solicitar cuenta
+                    </button>
+                    <button
+                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 14, fontWeight: 600, color: '#121E6C',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                      }}
+                    >
+                      <RefreshCw size={14} color="#121E6C" /> Reenviar comanda
                     </button>
                   </>
                 )}

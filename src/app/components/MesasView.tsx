@@ -1265,7 +1265,8 @@ export function MesasView() {
   const [showCheckout,          setShowCheckout]           = useState(false);
   const [showKitchenPreview,    setShowKitchenPreview]     = useState(false);
   const [showGestionarMesas, setShowGestionarMesas] = useState(false);
-  const [confirmedMesas, setConfirmedMesas] = useState<Set<string>>(() => new Set());
+  const [confirmedMesas, setConfirmedMesas]       = useState<Set<string>>(() => new Set());
+  const [comandaSentMesas, setComandaSentMesas]   = useState<Set<string>>(() => new Set());
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [editingPriceId,  setEditingPriceId]  = useState<string | null>(null);
   const [editingPriceVal, setEditingPriceVal] = useState<string>('');
@@ -1389,13 +1390,15 @@ export function MesasView() {
   const hasPendingChanges = selectedTable?.hasPendingChanges ?? false;
 
   // ── Three-state button logic ───────────────────────────────────────────────
-  // A mesa is "confirmed" if explicitly confirmed by the user OR if it already
-  // has items with isSent=true (i.e. comanda was sent in a previous session).
-  const isMesaConfirmed = selectedTableId
-    ? confirmedMesas.has(selectedTableId) || (selectedTable?.items.some(i => i.isSent) ?? false)
+  // STATE 3: comanda has been sent (via comandaSentMesas or table.comandaSent from mock data)
+  const isComandaSentForMesa = selectedTableId
+    ? (comandaSentMesas.has(selectedTableId) || (selectedTable?.comandaSent ?? false))
     : false;
-  // STATE 3 indicator: mesa is confirmed but has new unsent items
-  const hasPendingItems = isMesaConfirmed && (selectedTable?.items.some(i => !i.isSent && i.quantity > 0) ?? false);
+  // STATE 2: confirmed but comanda not yet sent
+  // STATE 1: not confirmed
+  const isMesaConfirmed = selectedTableId
+    ? (confirmedMesas.has(selectedTableId) || isComandaSentForMesa)
+    : false;
 
   // Counters globales para la barra de leyenda inferior
   const totalDisponibles  = tables.filter(t => t.status === 'DISPONIBLE').length;
@@ -1729,6 +1732,7 @@ export function MesasView() {
           onBack={() => setShowProductSelector(false)}
           onOpenKitchenPreview={() => setShowKitchenPreview(true)}
           confirmedMesas={confirmedMesas}
+          comandaSentMesas={comandaSentMesas}
           onConfirmarPedido={handleConfirmarPedido}
         />
         {showKitchenPreview && selectedTable && (() => {
@@ -1754,6 +1758,7 @@ export function MesasView() {
               onCancel={() => setShowKitchenPreview(false)}
               onConfirm={() => {
                 sendComanda();
+                if (selectedTableId) setComandaSentMesas(prev => new Set(prev).add(selectedTableId));
                 setShowKitchenPreview(false);
               }}
             />
@@ -2355,6 +2360,7 @@ export function MesasView() {
             onCancel={() => setShowKitchenPreview(false)}
             onConfirm={() => {
               sendComanda();
+              if (selectedTableId) setComandaSentMesas(prev => new Set(prev).add(selectedTableId));
               setShowKitchenPreview(false);
             }}
           />
@@ -2908,26 +2914,14 @@ export function MesasView() {
                 {selectedTable.status === 'OCUPADA' && selectedTable.items.length > 0 && (
                   <>
                     {!isMesaConfirmed ? (
-                      /* STATE 1 — no confirmado: solo "Confirmar pedido" */
+                      /* STATE 1 — no confirmado */
                       <PanelCoralBtn onClick={handleConfirmarPedido}>
                         <Send size={16} color="#fff" /> Confirmar pedido
                       </PanelCoralBtn>
-                    ) : (
-                      /* STATE 2 / 3 — confirmado: Reenviar comanda primario + Solicitar cuenta secundario */
+                    ) : !isComandaSentForMesa ? (
+                      /* STATE 2 — confirmado, comanda aún no enviada */
                       <>
-                        {hasPendingItems && (
-                          <div style={{
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            padding: '6px 10px', borderRadius: 8,
-                            backgroundColor: '#FFF3D1', marginBottom: 4,
-                          }}>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#FFC217', flexShrink: 0 }} />
-                            <span style={{ fontSize: 12, color: '#7A5A00', fontFamily: 'Montserrat, sans-serif', fontWeight: 500 }}>
-                              Cambios pendientes de envío
-                            </span>
-                          </div>
-                        )}
-                        <PanelCoralBtn onClick={handleReenviarComanda}>
+                        <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
                           <Send size={16} color="#fff" /> Enviar comanda
                         </PanelCoralBtn>
                         <button
@@ -2940,6 +2934,24 @@ export function MesasView() {
                           }}
                         >
                           <Receipt size={14} color="#121E6C" /> Solicitar cuenta
+                        </button>
+                      </>
+                    ) : (
+                      /* STATE 3 — comanda enviada */
+                      <>
+                        <PanelCoralBtn onClick={requestBill}>
+                          <Receipt size={16} color="#fff" /> Solicitar cuenta
+                        </PanelCoralBtn>
+                        <button
+                          onClick={handleReenviarComanda}
+                          style={{
+                            width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                            fontSize: 14, fontWeight: 600, color: '#121E6C',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                          }}
+                        >
+                          <RefreshCw size={14} color="#121E6C" /> Reenviar comanda
                         </button>
                       </>
                     )}
