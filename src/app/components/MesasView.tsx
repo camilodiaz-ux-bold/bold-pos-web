@@ -2928,16 +2928,34 @@ export function MesasView() {
                           onClick={requestBill}
                           style={{
                             width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                            fontSize: 14, fontWeight: 600, color: '#121E6C',
+                            fontSize: 14, fontWeight: 600, color: '#FF2947',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                             padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
                           }}
                         >
-                          <Receipt size={14} color="#121E6C" /> Solicitar cuenta
+                          <Receipt size={14} color="#FF2947" /> Solicitar cuenta
+                        </button>
+                      </>
+                    ) : hasPendingChanges ? (
+                      /* STATE 4 — comanda enviada + cambios pendientes */
+                      <>
+                        <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
+                          <Send size={16} color="#fff" /> Enviar comanda
+                        </PanelCoralBtn>
+                        <button
+                          onClick={requestBill}
+                          style={{
+                            width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                            fontSize: 14, fontWeight: 600, color: '#FF2947',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                          }}
+                        >
+                          <Receipt size={14} color="#FF2947" /> Solicitar cuenta
                         </button>
                       </>
                     ) : (
-                      /* STATE 3 — comanda enviada */
+                      /* STATE 3 — comanda enviada, sin cambios */
                       <>
                         <PanelCoralBtn onClick={requestBill}>
                           <Receipt size={16} color="#fff" /> Solicitar cuenta
@@ -2946,12 +2964,12 @@ export function MesasView() {
                           onClick={handleReenviarComanda}
                           style={{
                             width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                            fontSize: 14, fontWeight: 600, color: '#121E6C',
+                            fontSize: 14, fontWeight: 600, color: '#FF2947',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                             padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
                           }}
                         >
-                          <RefreshCw size={14} color="#121E6C" /> Reenviar comanda
+                          <RefreshCw size={14} color="#FF2947" /> Reenviar comanda
                         </button>
                       </>
                     )}

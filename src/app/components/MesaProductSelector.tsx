@@ -931,16 +931,42 @@ export function MesaProductSelector({
                       onClick={requestBill}
                       style={{
                         width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: 14, fontWeight: 600, color: '#121E6C',
+                        fontSize: 14, fontWeight: 600, color: '#FF2947',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
                       }}
                     >
-                      <Receipt size={14} color="#121E6C" /> Solicitar cuenta
+                      <Receipt size={14} color="#FF2947" /> Solicitar cuenta
+                    </button>
+                  </>
+                ) : hasPendingChanges ? (
+                  /* STATE 4 — comanda enviada + cambios pendientes */
+                  <>
+                    <button
+                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                      style={{
+                        width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 8,
+                      }}
+                    >
+                      <Send size={16} /> Enviar comanda
+                    </button>
+                    <button
+                      onClick={requestBill}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 14, fontWeight: 600, color: '#FF2947',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                      }}
+                    >
+                      <Receipt size={14} color="#FF2947" /> Solicitar cuenta
                     </button>
                   </>
                 ) : (
-                  /* STATE 3 — comanda enviada */
+                  /* STATE 3 — comanda enviada, sin cambios */
                   <>
                     <button
                       onClick={requestBill}
@@ -957,12 +983,12 @@ export function MesaProductSelector({
                       onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
                       style={{
                         width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: 14, fontWeight: 600, color: '#121E6C',
+                        fontSize: 14, fontWeight: 600, color: '#FF2947',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
                       }}
                     >
-                      <RefreshCw size={14} color="#121E6C" /> Reenviar comanda
+                      <RefreshCw size={14} color="#FF2947" /> Reenviar comanda
                     </button>
                   </>
                 )}
