@@ -45,7 +45,7 @@ const STATUS_STYLE: Record<TableStatus, {
 }> = {
   DISPONIBLE: {
     bg:        '#F4FDF9',
-    border:    'none',
+    border:    '1.5px solid rgba(0,0,0,0.08)',
     nameColor: '#1B5E20',
     infoColor: '#1B5E20',
     iconColor: '#1B5E20',
@@ -54,7 +54,7 @@ const STATUS_STYLE: Record<TableStatus, {
   },
   OCUPADA: {
     bg:        '#FFEEF0',
-    border:    'none',
+    border:    '1.5px solid rgba(0,0,0,0.08)',
     nameColor: '#FF2947',
     infoColor: '#FF2947',
     iconColor: '#FF2947',
@@ -63,7 +63,7 @@ const STATUS_STYLE: Record<TableStatus, {
   },
   CUENTA_SOLICITADA: {
     bg:        '#FFEEF0',
-    border:    'none',
+    border:    '1.5px solid rgba(0,0,0,0.08)',
     nameColor: '#FF2947',
     infoColor: '#FF2947',
     iconColor: '#FF2947',
@@ -72,7 +72,7 @@ const STATUS_STYLE: Record<TableStatus, {
   },
   INHABILITADA: {
     bg:        '#FAFAFA',
-    border:    '1.5px solid #E0E0E0',
+    border:    '1.5px solid rgba(0,0,0,0.08)',
     nameColor: '#AAAAAA',
     infoColor: '#AAAAAA',
     iconColor: '#AAAAAA',
