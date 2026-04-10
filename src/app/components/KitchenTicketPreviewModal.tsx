@@ -213,12 +213,13 @@ export function KitchenTicketPreviewModal({
           <div
             style={{
               width: 280,
-              backgroundColor: '#F9F7F4',
-              border: '1px solid var(--black-10)',
-              boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04)',
-              borderRadius: 4,
-              padding: '18px 0',
-              ...MONO,
+              backgroundColor: '#fff',
+              border: '1px solid #E0E0E0',
+              borderRadius: 8,
+              padding: '24px',
+              fontFamily: '"Courier New", Courier, monospace',
+              fontSize: 13,
+              lineHeight: 1.6,
             }}
           >
             {/* ─ Encabezado del ticket ─ */}
@@ -233,42 +234,42 @@ export function KitchenTicketPreviewModal({
             )}
 
             {/* ─ Separador ==== ─ */}
-            <p style={{ ...TXT.sep, marginBottom: 8, paddingInline: 16 }}>
+            <p style={{ ...TXT.sep, color: '#CCCCCC', display: 'block', marginTop: 8, marginBottom: 8 }}>
               {'===================='}
             </p>
 
             {/* ─ Identificador + hora ─ */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2, paddingInline: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={TXT.base}>{headerLabel}: {headerValue}</span>
               <span style={TXT.base}>{timeStr}</span>
             </div>
 
             {/* ─ Staff ─ */}
-            <p style={{ ...TXT.base, marginBottom: 2, paddingInline: 16 }}>
-              {staffLabel}: RA
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={TXT.base}>{staffLabel}: RA</span>
+            </div>
 
             {/* ─ Personas (solo mesas) ─ */}
             {showPersonas && (
-              <p style={{ ...TXT.base, marginBottom: isResend ? 2 : 8, paddingInline: 16 }}>
-                Personas: {guests ?? '—'}
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={TXT.base}>Personas: {guests ?? '—'}</span>
+              </div>
             )}
 
             {/* ─ Referencia comanda original (solo reenvío) ─ */}
             {isResend && (
-              <p style={{ ...TXT.base, marginBottom: 8, paddingInline: 16, ...(!showPersonas && { marginTop: 6 }) }}>
-                Comanda original: {originalComandaTime}
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={TXT.base}>Comanda original: {originalComandaTime}</span>
+              </div>
             )}
 
             {/* ─ Separador --- ─ */}
-            <p style={{ ...TXT.sep, marginBottom: 10, paddingInline: 16 }}>
+            <p style={{ ...TXT.sep, color: '#CCCCCC', display: 'block', marginTop: 8, marginBottom: 8 }}>
               {'--------------------'}
             </p>
 
             {/* ─ Productos ─ */}
-            <div style={{ paddingInline: 16 }}>
+            <div>
               {isAdjustMode ? (
                 adjustmentLines!.length === 0 ? (
                   <p style={{ ...TXT.small, textAlign: 'center', marginBottom: 10 }}>
@@ -286,13 +287,14 @@ export function KitchenTicketPreviewModal({
                   (sin productos)
                 </p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
-                  {printItems.map(item => {
+                <div style={{ marginBottom: 4 }}>
+                  {printItems.map((item, idx) => {
                     // En reenvío mostramos el snapshot de lo último enviado
                     const displayQty  = isResend ? (item.sentQuantity ?? item.quantity) : item.quantity;
                     const displayNote = isResend ? (item.sentNote ?? '') : (item.note ?? '');
+                    const isLast = idx === printItems.length - 1;
                     return (
-                      <div key={item.id}>
+                      <div key={item.id} style={{ paddingTop: 6, paddingBottom: 6, borderBottom: isLast ? 'none' : '1px solid #F0F0F0' }}>
                         <p style={{ ...TXT.bold, fontWeight: 600 }}>
                           {String(displayQty).padEnd(3, ' ')} {item.name}
                         </p>
@@ -309,12 +311,12 @@ export function KitchenTicketPreviewModal({
             </div>
 
             {/* ─ Separador --- ─ */}
-            <p style={{ ...TXT.sep, marginBottom: 8, paddingInline: 16 }}>
+            <p style={{ ...TXT.sep, color: '#CCCCCC', display: 'block', marginTop: 8, marginBottom: 8 }}>
               {'--------------------'}
             </p>
 
             {/* ─ Timestamp enviado ─ */}
-            <p style={{ ...TXT.small, textAlign: 'center', paddingInline: 16 }}>
+            <p style={{ ...TXT.small, marginTop: 12, color: '#606060', fontSize: 12, textAlign: 'center' }}>
               Enviado: {fullDateStr}
             </p>
           </div>
