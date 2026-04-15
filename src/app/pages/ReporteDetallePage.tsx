@@ -12,7 +12,7 @@ import { ArrowLeft, RefreshCw, X, ChevronDown, Download } from 'lucide-react';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
-type StatusVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
+type StatusVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'dian-aceptado' | 'dian-enviado' | 'dian-pendiente' | 'dian-rechazado';
 
 interface Column {
   key: string;
@@ -50,6 +50,10 @@ const BADGE_STYLES: Record<StatusVariant, React.CSSProperties> = {
   error:   { backgroundColor: 'var(--feedback-error-10)',   color: 'var(--feedback-error-100)',   border: '1px solid var(--feedback-error-100)'   },
   info:    { backgroundColor: 'var(--feedback-informative-10)', color: 'var(--feedback-informative-150)', border: '1px solid var(--feedback-informative-100)' },
   neutral: { backgroundColor: 'var(--black-10)', color: 'var(--black-60)', border: '1px solid var(--blue-20)' },
+  'dian-aceptado':  { backgroundColor: '#f0faf5', color: '#2e7d5e' },
+  'dian-enviado':   { backgroundColor: '#ebf5ff', color: '#1a56db' },
+  'dian-pendiente': { backgroundColor: '#fff8e6', color: '#b07d00' },
+  'dian-rechazado': { backgroundColor: '#fde8e8', color: '#c0392b' },
 };
 
 // ─── Datos mock por reporte ───────────────────────────────────────────────────
@@ -70,28 +74,28 @@ const CONFIGS: Record<string, ReportConfig> = {
     ],
     propinasWidget: { label: 'Total Propinas', value: '$58,000' },
     columns: [
-      { key: 'fecha',       label: 'Fecha',           width: '160px' },
-      { key: 'comprobante', label: 'No. Documento',   width: '140px' },
+      { key: 'comprobante', label: 'No. Documento',     width: '140px' },
       { key: 'tipoDoc',     label: 'Tipo de documento', width: '160px' },
-      { key: 'mesa',        label: 'Mesa',            width: '80px'  },
-      { key: 'usuario',     label: 'Usuario',         width: '160px' },
-      { key: 'formaPago',   label: 'Forma de pago',   width: '130px' },
-      { key: 'total',       label: 'Total',           width: '110px' },
-      { key: 'subtotal',    label: 'Subtotal',        width: '110px' },
-      { key: 'descuento',   label: 'Descuento',       width: '100px' },
-      { key: 'impuestos',   label: 'Impuestos',       width: '100px' },
-      { key: 'estado',      label: 'Estado',          width: '110px' },
+      { key: 'mesa',        label: 'Mesa',              width: '80px'  },
+      { key: 'usuario',     label: 'Usuario',           width: '160px' },
+      { key: 'formaPago',   label: 'Forma de pago',     width: '130px' },
+      { key: 'subtotal',    label: 'Subtotal',          width: '110px' },
+      { key: 'descuento',   label: 'Descuento',         width: '100px' },
+      { key: 'impuestos',   label: 'Impuestos',         width: '100px' },
+      { key: 'total',       label: 'Total sin propina', width: '130px' },
+      { key: 'estado',      label: 'Estado',            width: '110px' },
+      { key: 'estadoDian',  label: 'Estado DIAN',       width: '120px' },
     ],
     propinasColumn: { key: 'propina', label: 'Propina', width: '100px' },
     rows: [
-      { fecha: '25/03/2026 – 13:42', comprobante: 'V-001234', tipoDoc: 'Comprobante',          mesa: 'Mesa 3',  usuario: 'Carlos Pérez',  formaPago: 'Efectivo',  total: '$85,000',  subtotal: '$71,429',  descuento: '$0',     impuestos: '$13,571', propina: '$8,500',  estado: { label: 'Pagada',    variant: 'success' } },
-      { fecha: '25/03/2026 – 14:10', comprobante: 'V-001235', tipoDoc: 'Factura electrónica',  mesa: 'Mesa 7',  usuario: 'Laura Gómez',   formaPago: 'Tarjeta',   total: '$120,500', subtotal: '$101,261', descuento: '$5,063', impuestos: '$19,239', propina: '$12,000', estado: { label: 'Pagada',    variant: 'success' } },
-      { fecha: '25/03/2026 – 14:55', comprobante: 'V-001236', tipoDoc: 'Comprobante',          mesa: 'Mesa 1',  usuario: 'Miguel Torres', formaPago: 'Tarjeta',   total: '$47,000',  subtotal: '$39,496',  descuento: '$0',     impuestos: '$7,504',  propina: '$0',      estado: { label: 'Pendiente', variant: 'warning' } },
-      { fecha: '25/03/2026 – 15:30', comprobante: 'V-001237', tipoDoc: 'Comprobante',          mesa: 'Mesa 5',  usuario: 'Ana Ruiz',      formaPago: 'Efectivo',  total: '$210,000', subtotal: '$176,471', descuento: '$8,824', impuestos: '$33,529', propina: '$21,000', estado: { label: 'Pagada',    variant: 'success' } },
-      { fecha: '25/03/2026 – 16:05', comprobante: 'V-001238', tipoDoc: 'Comprobante',          mesa: 'Mesa 2',  usuario: 'Carlos Pérez',  formaPago: 'Nequi',     total: '$65,500',  subtotal: '$55,042',  descuento: '$0',     impuestos: '$10,458', propina: '$0',      estado: { label: 'Cancelada', variant: 'error'   } },
-      { fecha: '25/03/2026 – 16:48', comprobante: 'V-001239', tipoDoc: 'Factura electrónica',  mesa: 'Mesa 9',  usuario: 'Laura Gómez',   formaPago: 'Tarjeta',   total: '$95,000',  subtotal: '$79,832',  descuento: '$0',     impuestos: '$15,168', propina: '$9,500',  estado: { label: 'Pagada',    variant: 'success' } },
-      { fecha: '25/03/2026 – 17:20', comprobante: 'V-001240', tipoDoc: 'Comprobante',          mesa: 'Mesa 4',  usuario: 'Miguel Torres', formaPago: 'Efectivo',  total: '$158,000', subtotal: '$132,773', descuento: '$0',     impuestos: '$25,227', propina: '$0',      estado: { label: 'Pendiente', variant: 'warning' } },
-      { fecha: '25/03/2026 – 18:00', comprobante: 'V-001241', tipoDoc: 'Comprobante',          mesa: 'Mesa 6',  usuario: 'Ana Ruiz',      formaPago: 'Daviplata', total: '$73,500',  subtotal: '$61,765',  descuento: '$0',     impuestos: '$11,735', propina: '$7,000',  estado: { label: 'Pagada',    variant: 'success' } },
+      { fecha: '25/03/2026 – 13:42', comprobante: 'V-001234', tipoDoc: 'Comprobante',          mesa: 'Mesa 3',  usuario: 'Carlos Pérez',  formaPago: 'Efectivo',  total: '$85,000',  subtotal: '$71,429',  descuento: '$0',     impuestos: '$13,571', propina: '$8,500',  estado: { label: 'Pagada',    variant: 'success' }, estadoDian: { label: 'Aceptado', variant: 'dian-aceptado'  } },
+      { fecha: '25/03/2026 – 14:10', comprobante: 'V-001235', tipoDoc: 'Factura electrónica',  mesa: 'Mesa 7',  usuario: 'Laura Gómez',   formaPago: 'Tarjeta',   total: '$120,500', subtotal: '$101,261', descuento: '$5,063', impuestos: '$19,239', propina: '$12,000', estado: { label: 'Pagada',    variant: 'success' }, estadoDian: { label: 'Enviado',   variant: 'dian-enviado'   } },
+      { fecha: '25/03/2026 – 14:55', comprobante: 'V-001236', tipoDoc: 'Comprobante',          mesa: 'Mesa 1',  usuario: 'Miguel Torres', formaPago: 'Tarjeta',   total: '$47,000',  subtotal: '$39,496',  descuento: '$0',     impuestos: '$7,504',  propina: '$0',      estado: { label: 'Pendiente', variant: 'warning' }, estadoDian: { label: 'Pendiente', variant: 'dian-pendiente' } },
+      { fecha: '25/03/2026 – 15:30', comprobante: 'V-001237', tipoDoc: 'Comprobante',          mesa: 'Mesa 5',  usuario: 'Ana Ruiz',      formaPago: 'Efectivo',  total: '$210,000', subtotal: '$176,471', descuento: '$8,824', impuestos: '$33,529', propina: '$21,000', estado: { label: 'Pagada',    variant: 'success' }, estadoDian: { label: 'Aceptado', variant: 'dian-aceptado'  } },
+      { fecha: '25/03/2026 – 16:05', comprobante: 'V-001238', tipoDoc: 'Comprobante',          mesa: 'Mesa 2',  usuario: 'Carlos Pérez',  formaPago: 'Nequi',     total: '$65,500',  subtotal: '$55,042',  descuento: '$0',     impuestos: '$10,458', propina: '$0',      estado: { label: 'Cancelada', variant: 'error'   }, estadoDian: { label: 'Rechazado', variant: 'dian-rechazado' } },
+      { fecha: '25/03/2026 – 16:48', comprobante: 'V-001239', tipoDoc: 'Factura electrónica',  mesa: 'Mesa 9',  usuario: 'Laura Gómez',   formaPago: 'Tarjeta',   total: '$95,000',  subtotal: '$79,832',  descuento: '$0',     impuestos: '$15,168', propina: '$9,500',  estado: { label: 'Pagada',    variant: 'success' }, estadoDian: { label: 'Enviado',   variant: 'dian-enviado'   } },
+      { fecha: '25/03/2026 – 17:20', comprobante: 'V-001240', tipoDoc: 'Comprobante',          mesa: 'Mesa 4',  usuario: 'Miguel Torres', formaPago: 'Efectivo',  total: '$158,000', subtotal: '$132,773', descuento: '$0',     impuestos: '$25,227', propina: '$0',      estado: { label: 'Pendiente', variant: 'warning' }, estadoDian: { label: 'Pendiente', variant: 'dian-pendiente' } },
+      { fecha: '25/03/2026 – 18:00', comprobante: 'V-001241', tipoDoc: 'Comprobante',          mesa: 'Mesa 6',  usuario: 'Ana Ruiz',      formaPago: 'Daviplata', total: '$73,500',  subtotal: '$61,765',  descuento: '$0',     impuestos: '$11,735', propina: '$7,000',  estado: { label: 'Pagada',    variant: 'success' }, estadoDian: { label: 'Aceptado', variant: 'dian-aceptado'  } },
     ],
   },
 
