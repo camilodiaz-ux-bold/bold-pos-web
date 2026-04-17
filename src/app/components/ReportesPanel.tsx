@@ -87,7 +87,7 @@ const CATEGORIES: ReportCategory[] = [
   },
   {
     id: 'restaurantes',
-    title: 'Restaurantes',
+    title: 'Operación',
     items: [
       { id: 'rest-ocupacion',      label: 'Ocupación y Tiempos', icon: <Clock         size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'rest-propinas',       label: 'Propinas y Recaudo',  icon: <Wallet        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
