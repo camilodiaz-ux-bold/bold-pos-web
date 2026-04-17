@@ -85,6 +85,16 @@ const CATEGORIES: ReportCategory[] = [
       { id: 'documentos-soporte', label: 'Documentos soporte',  icon: <FileArchive size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
     ],
   },
+  {
+    id: 'restaurantes',
+    title: 'Restaurantes',
+    items: [
+      { id: 'rest-ventas',         label: 'Ventas',              icon: <Receipt       size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'rest-ocupacion',      label: 'Ocupación y Tiempos', icon: <Clock         size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'rest-propinas',       label: 'Propinas y Recaudo',  icon: <Wallet        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'rest-propinas-turno', label: 'Propinas en Turnos',  icon: <CalendarRange size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+    ],
+  },
 ];
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
@@ -224,9 +234,10 @@ export function ReportesPanel() {
           <CategoryCard category={CATEGORIES[1]} /> {/* Ventas */}
         </div>
 
-        {/* Fila 2: Documentos electrónicos */}
+        {/* Fila 2: Documentos electrónicos | Restaurantes */}
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           <CategoryCard category={CATEGORIES[2]} /> {/* Documentos electrónicos */}
+          <CategoryCard category={CATEGORIES[3]} isRestaurantes /> {/* Restaurantes */}
         </div>
 
       </div>
