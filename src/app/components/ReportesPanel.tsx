@@ -89,7 +89,6 @@ const CATEGORIES: ReportCategory[] = [
     id: 'restaurantes',
     title: 'Restaurantes',
     items: [
-      { id: 'rest-ventas',         label: 'Ventas',              icon: <Receipt       size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'rest-ocupacion',      label: 'Ocupación y Tiempos', icon: <Clock         size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'rest-propinas',       label: 'Propinas y Recaudo',  icon: <Wallet        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'rest-propinas-turno', label: 'Propinas en Turnos',  icon: <CalendarRange size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
