@@ -10,7 +10,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search, ChevronLeft, ChevronRight,
-  Trash2, Receipt, Send, Clock,
+  Trash2, Receipt, Send, Clock, Save,
   Utensils, CheckCircle2, RefreshCw, X, Star,
   Pencil, ShoppingBag, ChefHat, Check, MessageSquare,
 } from 'lucide-react';
@@ -188,6 +188,15 @@ export function MesaProductSelector({
         };
       }),
     );
+  };
+
+  const saveOrder = () => {
+    setTables(prev =>
+      prev.map(t =>
+        t.id !== tableId ? t : { ...t, hasPendingChanges: false },
+      ),
+    );
+    toast.success('Cambios del pedido guardados');
   };
 
   const sendToKitchen = () => {
@@ -741,7 +750,7 @@ export function MesaProductSelector({
                 : { background: '#F0FDF4', color: '#059669' }),
             }}>
               {hasPendingChanges
-                ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de envío</span></>
+                ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de confirmar en el pedido</span></>
                 : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
               }
             </div>
@@ -928,56 +937,44 @@ export function MesaProductSelector({
                   </>
                 ) : hasPendingChanges ? (
                   /* STATE 4 — comanda enviada + cambios pendientes */
-                  <>
-                    <button
-                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
-                      style={{
-                        width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
-                        background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
-                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', gap: 8,
-                      }}
-                    >
-                      <Send size={16} /> Enviar comanda
-                    </button>
+                  <button
+                    onClick={saveOrder}
+                    style={{
+                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    <Save size={16} /> Guardar cambios del pedido
+                  </button>
+                ) : (
+                  /* STATE 3 — comanda enviada, sin cambios */
+                  <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       onClick={requestBill}
                       style={{
-                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: 14, fontWeight: 600, color: '#FF2947',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                        flex: 1, height: 44, borderRadius: 8, cursor: 'pointer',
+                        background: 'none', border: '1.5px solid #FF2947',
+                        fontSize: 13, fontWeight: 700, color: '#FF2947',
+                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 6,
                       }}
                     >
                       <Receipt size={14} color="#FF2947" /> Solicitar cuenta
                     </button>
-                  </>
-                ) : (
-                  /* STATE 3 — comanda enviada, sin cambios */
-                  <>
-                    <button
-                      onClick={requestBill}
-                      style={{
-                        width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
-                        background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
-                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', gap: 8,
-                      }}
-                    >
-                      <Receipt size={16} /> Solicitar cuenta
-                    </button>
                     <button
                       onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
                       style={{
-                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: 14, fontWeight: 600, color: '#FF2947',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        padding: '6px 0', fontFamily: 'Montserrat, sans-serif',
+                        flex: 1, height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: '#FF2947', color: '#fff', fontSize: 13, fontWeight: 700,
+                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 6,
                       }}
                     >
-                      <RefreshCw size={14} color="#FF2947" /> Reenviar comanda
+                      <RefreshCw size={14} color="#fff" /> Reenviar comanda
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
             )}
