@@ -1065,11 +1065,13 @@ export function GestionarMesasView({ onBack }: Props) {
                         <div className="flex-1 min-w-0">
                           <input
                             value={z.name}
+                            maxLength={15}
                             onChange={e => setZonas(p => p.map(x => x.id===z.id ? {...x,name:e.target.value}:x))}
                             style={{ width: '100%', fontSize: 16, fontWeight: 600, color: '#1E1E1E', background: 'transparent', border: 'none', borderBottom: '1px solid transparent', outline: 'none', padding: '2px 0' }}
                             onFocus={e => (e.currentTarget.style.borderBottomColor = '#121E6C')}
                             onBlur={e => (e.currentTarget.style.borderBottomColor = 'transparent')}
                           />
+                          <p style={{ fontSize: 12, color: z.name.length >= 15 ? '#FF4759' : '#969696', textAlign: 'right', margin: '2px 0 0' }}>{z.name.length}/15</p>
                           <p style={{ fontSize: 13, color: '#606060', marginTop: 2 }}>{cnt} mesa{cnt!==1?'s':''}</p>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
