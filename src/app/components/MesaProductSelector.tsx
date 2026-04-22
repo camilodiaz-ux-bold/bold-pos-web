@@ -104,24 +104,12 @@ export function MesaProductSelector({
     setTables(prev =>
       prev.map(t => {
         if (t.id !== tableId) return t;
-        const existing = t.items.find(i => i.productId === product.id);
-        if (existing) {
-          return {
-            ...t,
-            items: t.items.map(i =>
-              i.id === existing.id
-                ? { ...i, quantity: i.quantity + qty, note: note || i.note }
-                : i,
-            ),
-            hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
-          };
-        }
         return {
           ...t,
           items: [
             ...t.items,
             {
-              id: Math.random().toString(36).slice(2, 9),
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
               productId: product.id,
               name: product.name,
               price: product.price,
@@ -610,8 +598,7 @@ export function MesaProductSelector({
                   <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {mesaCatProducts.map(item => {
                       const def     = CAT_DEFS.find(c => c.id === item.catId) ?? CAT_DEFS[0];
-                      const inOrder = table.items.find(i => i.productId === item.id);
-                      const qty     = inOrder?.quantity ?? 0;
+                      const qty     = table.items.filter(i => i.productId === item.id).reduce((s, i) => s + i.quantity, 0);
                       const prod    = toProduct(item);
                       const isFav   = favoriteIds.has(item.id);
                       return (
