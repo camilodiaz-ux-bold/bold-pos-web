@@ -2931,8 +2931,13 @@ export function MesasView() {
                       <PanelCoralBtn onClick={handleConfirmarPedido}>
                         <Send size={16} color="#fff" /> Confirmar pedido
                       </PanelCoralBtn>
+                    ) : hasPendingChanges ? (
+                      /* STATE 4 — cambios pendientes sin guardar (confirmado o con comanda enviada) */
+                      <PanelCoralBtn onClick={saveOrder}>
+                        <Save size={16} color="#fff" /> Guardar cambios del pedido
+                      </PanelCoralBtn>
                     ) : !isComandaSentForMesa ? (
-                      /* STATE 2 — confirmado, comanda aún no enviada */
+                      /* STATE 2 — confirmado, comanda aún no enviada, sin cambios pendientes */
                       <>
                         <PanelCoralBtn onClick={() => setShowKitchenPreview(true)}>
                           <Send size={16} color="#fff" /> Enviar comanda
@@ -2949,16 +2954,33 @@ export function MesasView() {
                           <Receipt size={14} color="#FF2947" /> Solicitar cuenta
                         </button>
                       </>
-                    ) : hasPendingChanges ? (
-                      /* STATE 4 — comanda enviada + cambios pendientes sin guardar */
-                      <PanelCoralBtn onClick={saveOrder}>
-                        <Save size={16} color="#fff" /> Guardar cambios del pedido
-                      </PanelCoralBtn>
                     ) : savedPendingResend ? (
                       /* STATE 4b — guardado en POS, pendiente de reenviar a cocina */
-                      <PanelCoralBtn onClick={handleReenviarComanda}>
-                        <RefreshCw size={16} color="#fff" /> Reenviar comanda
-                      </PanelCoralBtn>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={requestBill}
+                          style={{
+                            flex: 1, height: 44, borderRadius: 8, cursor: 'pointer',
+                            background: 'none', border: '1.5px solid #FF2947',
+                            fontSize: 13, fontWeight: 700, color: '#FF2947',
+                            fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', gap: 6,
+                          }}
+                        >
+                          <Receipt size={14} color="#FF2947" /> Solicitar cuenta
+                        </button>
+                        <button
+                          onClick={handleReenviarComanda}
+                          style={{
+                            flex: 1, height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                            background: '#FF2947', color: '#fff', fontSize: 13, fontWeight: 700,
+                            fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', gap: 6,
+                          }}
+                        >
+                          <RefreshCw size={14} color="#fff" /> Reenviar comanda
+                        </button>
+                      </div>
                     ) : (
                       /* STATE 3 — comanda enviada, sin cambios */
                       <div style={{ display: 'flex', gap: 8 }}>

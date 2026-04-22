@@ -911,8 +911,21 @@ export function MesaProductSelector({
                   >
                     <Send size={16} /> Confirmar pedido
                   </button>
+                ) : hasPendingChanges ? (
+                  /* STATE 4 — cambios pendientes sin guardar (confirmado o con comanda enviada) */
+                  <button
+                    onClick={saveOrder}
+                    style={{
+                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    <Save size={16} /> Guardar cambios del pedido
+                  </button>
                 ) : !isComandaSentForMesa ? (
-                  /* STATE 2 — confirmado, comanda aún no enviada */
+                  /* STATE 2 — confirmado, comanda aún no enviada, sin cambios pendientes */
                   <>
                     <button
                       onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
@@ -937,32 +950,33 @@ export function MesaProductSelector({
                       <Receipt size={14} color="#FF2947" /> Solicitar cuenta
                     </button>
                   </>
-                ) : hasPendingChanges ? (
-                  /* STATE 4 — comanda enviada + cambios pendientes sin guardar */
-                  <button
-                    onClick={saveOrder}
-                    style={{
-                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
-                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
-                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', gap: 8,
-                    }}
-                  >
-                    <Save size={16} /> Guardar cambios del pedido
-                  </button>
                 ) : savedPendingResend ? (
                   /* STATE 4b — guardado en POS, pendiente de reenviar a cocina */
-                  <button
-                    onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
-                    style={{
-                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
-                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
-                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', gap: 8,
-                    }}
-                  >
-                    <RefreshCw size={16} /> Reenviar comanda
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={requestBill}
+                      style={{
+                        flex: 1, height: 44, borderRadius: 8, cursor: 'pointer',
+                        background: 'none', border: '1.5px solid #FF2947',
+                        fontSize: 13, fontWeight: 700, color: '#FF2947',
+                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 6,
+                      }}
+                    >
+                      <Receipt size={14} color="#FF2947" /> Solicitar cuenta
+                    </button>
+                    <button
+                      onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                      style={{
+                        flex: 1, height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: '#FF2947', color: '#fff', fontSize: 13, fontWeight: 700,
+                        fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 6,
+                      }}
+                    >
+                      <RefreshCw size={14} color="#fff" /> Reenviar comanda
+                    </button>
+                  </div>
                 ) : (
                   /* STATE 3 — comanda enviada, sin cambios */
                   <div style={{ display: 'flex', gap: 8 }}>
