@@ -751,9 +751,11 @@ export function MesaProductSelector({
                 ? { background: '#FFFBF0', color: '#B38900' }
                 : { background: '#F0FDF4', color: '#059669' }),
             }}>
-              {(hasPendingChanges || savedPendingResend)
+              {hasPendingChanges
                 ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de confirmar en el pedido</span></>
-                : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
+                : savedPendingResend
+                  ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios guardados — pendiente reenviar comanda a cocina</span></>
+                  : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
               }
             </div>
           )}
