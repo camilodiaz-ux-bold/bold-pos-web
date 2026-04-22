@@ -73,6 +73,7 @@ export interface MesaTable {
   guests?: number;
   comandaSent?: boolean;
   hasPendingChanges?: boolean;
+  savedPendingResend?: boolean;     // guardado en POS, aún no reenviado a cocina
   pendingChanges?: PendingChange[];  // modificaciones post-primera-comanda
   frozenElapsedMs?: number;      // ms transcurridos al momento de finalizar (congelado)
 }
@@ -1386,8 +1387,9 @@ export function MesasView() {
   const total      = subtotal + tax;
   const totalItems = selectedTable?.items.reduce((acc, i) => acc + i.quantity, 0) ?? 0;
 
-  const isComandaSent     = selectedTable?.comandaSent ?? false;
-  const hasPendingChanges = selectedTable?.hasPendingChanges ?? false;
+  const isComandaSent       = selectedTable?.comandaSent ?? false;
+  const hasPendingChanges   = selectedTable?.hasPendingChanges ?? false;
+  const savedPendingResend  = selectedTable?.savedPendingResend ?? false;
 
   // ── Three-state button logic ───────────────────────────────────────────────
   // STATE 3: comanda has been sent (via comandaSentMesas or table.comandaSent from mock data)
@@ -1431,7 +1433,7 @@ export function MesasView() {
     if (!selectedTableId) return;
     setTables(prev =>
       prev.map(t =>
-        t.id !== selectedTableId ? t : { ...t, hasPendingChanges: false },
+        t.id !== selectedTableId ? t : { ...t, hasPendingChanges: false, savedPendingResend: true },
       ),
     );
     toast.success('Cambios del pedido guardados');
@@ -1440,7 +1442,7 @@ export function MesasView() {
   const sendComanda = () => {
     if (!selectedTableId || !selectedTable) return;
     const isResend = selectedTable.comandaSent;
-    if (isResend && !selectedTable.hasPendingChanges) {
+    if (isResend && !selectedTable.hasPendingChanges && !selectedTable.savedPendingResend) {
       toast.info('No hay cambios pendientes'); return;
     }
     const now = Date.now();
@@ -1448,10 +1450,11 @@ export function MesasView() {
       prev.map(t =>
         t.id !== selectedTableId ? t : {
           ...t,
-          comandaSent:       true,
-          hasPendingChanges: false,
-          pendingChanges:    [],
-          firstComandaSentAt: t.firstComandaSentAt ?? now,
+          comandaSent:         true,
+          hasPendingChanges:   false,
+          savedPendingResend:  false,
+          pendingChanges:      [],
+          firstComandaSentAt:  t.firstComandaSentAt ?? now,
           items: t.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
         },
       ),
@@ -1518,7 +1521,7 @@ export function MesasView() {
         return {
           ...t,
           items:             t.items.map(i => i.id === itemId ? { ...i, quantity: newQty } : i),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || confirmedMesas.has(t.id)) ? true : t.hasPendingChanges,
           pendingChanges:    newPendingChanges,
         };
       }),
@@ -1550,7 +1553,7 @@ export function MesasView() {
         return {
           ...t,
           items:             t.items.filter(i => i.id !== itemId),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || confirmedMesas.has(t.id)) ? true : t.hasPendingChanges,
           pendingChanges:    newPendingChanges,
         };
       }),
@@ -1613,7 +1616,7 @@ export function MesasView() {
               ? { ...i, quantity: editItemQty, price: editItemPrice, note: newNote || undefined, discount: parseInt(editItemDiscount) || undefined }
               : i,
           ),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || confirmedMesas.has(t.id)) ? true : t.hasPendingChanges,
           pendingChanges:    newPendingChanges,
         };
       }),
@@ -1628,7 +1631,7 @@ export function MesasView() {
         t.id !== selectedTableId ? t : {
           ...t,
           items: t.items.map(i => i.id === itemId ? { ...i, price: Math.max(0, newPrice) } : i),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || confirmedMesas.has(t.id)) ? true : t.hasPendingChanges,
         },
       ),
     );
@@ -1642,7 +1645,7 @@ export function MesasView() {
         return {
           ...t,
           items: t.items.map(i => i.id === itemId ? { ...i, note: note || undefined } : i),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || confirmedMesas.has(t.id)) ? true : t.hasPendingChanges,
         };
       }),
     );
@@ -2742,11 +2745,11 @@ export function MesasView() {
                       display: 'flex', alignItems: 'center', gap: 6,
                       padding: '6px 16px',
                       fontFamily: MFONT,
-                      ...(hasPendingChanges
+                      ...((hasPendingChanges || savedPendingResend)
                         ? { background: '#FFFBF0', color: '#B38900' }
                         : { background: '#F0FDF4', color: '#059669' }),
                     }}>
-                      {hasPendingChanges
+                      {(hasPendingChanges || savedPendingResend)
                         ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de confirmar en el pedido</span></>
                         : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
                       }
@@ -2947,9 +2950,14 @@ export function MesasView() {
                         </button>
                       </>
                     ) : hasPendingChanges ? (
-                      /* STATE 4 — comanda enviada + cambios pendientes */
+                      /* STATE 4 — comanda enviada + cambios pendientes sin guardar */
                       <PanelCoralBtn onClick={saveOrder}>
                         <Save size={16} color="#fff" /> Guardar cambios del pedido
+                      </PanelCoralBtn>
+                    ) : savedPendingResend ? (
+                      /* STATE 4b — guardado en POS, pendiente de reenviar a cocina */
+                      <PanelCoralBtn onClick={handleReenviarComanda}>
+                        <RefreshCw size={16} color="#fff" /> Reenviar comanda
                       </PanelCoralBtn>
                     ) : (
                       /* STATE 3 — comanda enviada, sin cambios */

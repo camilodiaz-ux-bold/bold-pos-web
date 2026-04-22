@@ -120,7 +120,7 @@ export function MesaProductSelector({
               catId: product.catId,
             },
           ],
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || (confirmedMesas?.has(t.id) ?? false)) ? true : t.hasPendingChanges,
         };
       }),
     );
@@ -153,7 +153,7 @@ export function MesaProductSelector({
         return {
           ...t,
           items:             t.items.map(i => i.id === itemId ? { ...i, quantity: newQty } : i),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || (confirmedMesas?.has(t.id) ?? false)) ? true : t.hasPendingChanges,
           pendingChanges:    newPendingChanges,
         };
       }),
@@ -183,7 +183,7 @@ export function MesaProductSelector({
         return {
           ...t,
           items:             t.items.filter(i => i.id !== itemId),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || (confirmedMesas?.has(t.id) ?? false)) ? true : t.hasPendingChanges,
           pendingChanges:    newPendingChanges,
         };
       }),
@@ -193,7 +193,7 @@ export function MesaProductSelector({
   const saveOrder = () => {
     setTables(prev =>
       prev.map(t =>
-        t.id !== tableId ? t : { ...t, hasPendingChanges: false },
+        t.id !== tableId ? t : { ...t, hasPendingChanges: false, savedPendingResend: true },
       ),
     );
     toast.success('Cambios del pedido guardados');
@@ -202,15 +202,16 @@ export function MesaProductSelector({
   const sendToKitchen = () => {
     if (!table) return;
     const isResend = table.comandaSent;
-    if (isResend && !table.hasPendingChanges) { toast.info('No hay cambios pendientes'); return; }
+    if (isResend && !table.hasPendingChanges && !table.savedPendingResend) { toast.info('No hay cambios pendientes'); return; }
     const now = Date.now();
     setTables(prev =>
       prev.map(t =>
         t.id !== tableId ? t : {
           ...t,
-          comandaSent: true,
-          hasPendingChanges: false,
-          pendingChanges: [],
+          comandaSent:        true,
+          hasPendingChanges:  false,
+          savedPendingResend: false,
+          pendingChanges:     [],
           firstComandaSentAt: t.firstComandaSentAt ?? now,
           items: t.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
         },
@@ -271,7 +272,7 @@ export function MesaProductSelector({
               ? { ...i, quantity: editItemQty, price: editItemPrice, note: newNote || undefined, discount: parseInt(editItemDiscount) || undefined }
               : i,
           ),
-          hasPendingChanges: t.comandaSent ? true : t.hasPendingChanges,
+          hasPendingChanges: (t.comandaSent || (confirmedMesas?.has(t.id) ?? false)) ? true : t.hasPendingChanges,
           pendingChanges:    newPendingChanges,
         };
       }),
@@ -290,8 +291,9 @@ export function MesaProductSelector({
   const tax        = subtotal * 0.19;
   const total      = subtotal + tax;
   const totalItems = table.items.reduce((a, i) => a + i.quantity, 0);
-  const isComandaSent     = table.comandaSent ?? false;
-  const hasPendingChanges = table.hasPendingChanges ?? false;
+  const isComandaSent      = table.comandaSent ?? false;
+  const hasPendingChanges  = table.hasPendingChanges ?? false;
+  const savedPendingResend = table.savedPendingResend ?? false;
 
   const isComandaSentForMesa = (comandaSentMesas?.has(tableId) ?? false) || (table.comandaSent ?? false);
   const isMesaConfirmed      = (confirmedMesas?.has(tableId) ?? false) || isComandaSentForMesa;
@@ -745,11 +747,11 @@ export function MesaProductSelector({
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '6px 16px', flexShrink: 0,
               fontFamily: 'Montserrat, sans-serif',
-              ...(hasPendingChanges
+              ...((hasPendingChanges || savedPendingResend)
                 ? { background: '#FFFBF0', color: '#B38900' }
                 : { background: '#F0FDF4', color: '#059669' }),
             }}>
-              {hasPendingChanges
+              {(hasPendingChanges || savedPendingResend)
                 ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de confirmar en el pedido</span></>
                 : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
               }
@@ -936,7 +938,7 @@ export function MesaProductSelector({
                     </button>
                   </>
                 ) : hasPendingChanges ? (
-                  /* STATE 4 — comanda enviada + cambios pendientes */
+                  /* STATE 4 — comanda enviada + cambios pendientes sin guardar */
                   <button
                     onClick={saveOrder}
                     style={{
@@ -947,6 +949,19 @@ export function MesaProductSelector({
                     }}
                   >
                     <Save size={16} /> Guardar cambios del pedido
+                  </button>
+                ) : savedPendingResend ? (
+                  /* STATE 4b — guardado en POS, pendiente de reenviar a cocina */
+                  <button
+                    onClick={() => onOpenKitchenPreview ? onOpenKitchenPreview() : sendToKitchen()}
+                    style={{
+                      width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700,
+                      fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    <RefreshCw size={16} /> Reenviar comanda
                   </button>
                 ) : (
                   /* STATE 3 — comanda enviada, sin cambios */
