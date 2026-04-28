@@ -47,6 +47,15 @@ type TipMode       = '0' | '10' | 'manual';
 type DiscountMode  = '0' | '5' | '10' | '15' | 'custom';
 type PaymentMethod = 'cash' | 'card' | 'transfer' | 'mixed';
 
+interface TipManualLine {
+  id: string;
+  method: string;
+  amount: string;
+}
+
+const TIP_METHODS = ['Efectivo', 'Tarj. Débito', 'Tarj. Crédito', 'Transferencia'] as const;
+const EMPTY_TIP_LINE = (): TipManualLine => ({ id: Date.now().toString() + Math.random(), method: 'Efectivo', amount: '' });
+
 // ─── Palette for up to 6 split accounts ──────────────────────────────────────
 
 const ACCT = [
@@ -181,8 +190,8 @@ export function CheckoutDrawer({
   const [discountCustom, setDiscountCustom] = useState('');
 
   // ── C. Propina ────────────────────────────────────────────────────────────
-  const [tipMode,   setTipMode]   = useState<TipMode>('10');
-  const [tipManual, setTipManual] = useState('');
+  const [tipMode,        setTipMode]        = useState<TipMode>('10');
+  const [tipManualLines, setTipManualLines] = useState<TipManualLine[]>([EMPTY_TIP_LINE()]);
 
   // ── D. Método de pago ─────────────────────────────────────────────────────
   const [paymentMethod,      setPaymentMethod]      = useState<PaymentMethod>('card');
@@ -226,9 +235,11 @@ export function CheckoutDrawer({
   const tipAmount = useMemo(() => {
     if (tipMode === '0')  return 0;
     if (tipMode === '10') return Math.round(subtotalWithTax * 0.10);
-    const n = parseFloat(tipManual.replace(/[^0-9.]/g, ''));
-    return isNaN(n) ? 0 : Math.round(n);
-  }, [tipMode, tipManual, subtotalWithTax]);
+    return tipManualLines.reduce((sum, line) => {
+      const n = parseFloat(line.amount.replace(/[^0-9.]/g, ''));
+      return sum + (isNaN(n) ? 0 : Math.round(n));
+    }, 0);
+  }, [tipMode, tipManualLines, subtotalWithTax]);
 
   const grandTotal = subtotalWithTax + tipAmount;
 
@@ -1184,7 +1195,10 @@ export function CheckoutDrawer({
               <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
                 {([['0', '0%'], ['10', 'Sugerida 10%'], ['manual', 'Manual']] as [TipMode, string][]).map(([m, l]) => (
                   <button key={m}
-                    onClick={() => setTipMode(m)}
+                    onClick={() => {
+                      if (m !== 'manual' && tipMode === 'manual') setTipManualLines([EMPTY_TIP_LINE()]);
+                      setTipMode(m as TipMode);
+                    }}
                     style={{
                       background: 'none', border: 'none',
                       borderBottom: tipMode === m ? '2px solid #121E6C' : '2px solid transparent',
@@ -1199,9 +1213,64 @@ export function CheckoutDrawer({
               </div>
 
               {tipMode === 'manual' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-                  <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', lineHeight: '20px' }}>Monto</span>
-                  <MoneyInput value={tipManual} onChange={setTipManual} placeholder="0" autoFocus />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  {tipManualLines.map((line, idx) => (
+                    <div key={line.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      {/* Método de pago */}
+                      <div style={{ position: 'relative', flexShrink: 0, width: 148 }}>
+                        <select
+                          value={line.method}
+                          onChange={e => setTipManualLines(prev => prev.map(l => l.id === line.id ? { ...l, method: e.target.value } : l))}
+                          style={{
+                            width: '100%', height: 40, paddingLeft: 10, paddingRight: 28,
+                            border: '1.5px solid #C7CBE0', borderRadius: 8,
+                            fontSize: 13, fontWeight: 500, color: '#1E1E1E',
+                            fontFamily: 'Montserrat, sans-serif',
+                            background: '#fff', appearance: 'none', WebkitAppearance: 'none',
+                            cursor: 'pointer', outline: 'none', boxSizing: 'border-box',
+                          }}
+                        >
+                          {TIP_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <ChevronDown size={14} color="#606060" style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      </div>
+                      {/* Monto */}
+                      <div style={{ flex: 1 }}>
+                        <MoneyInput
+                          value={line.amount}
+                          onChange={v => setTipManualLines(prev => prev.map(l => l.id === line.id ? { ...l, amount: v } : l))}
+                          placeholder="0"
+                          autoFocus={idx === 0}
+                        />
+                      </div>
+                      {/* Eliminar fila */}
+                      <button
+                        onClick={() => tipManualLines.length > 1 && setTipManualLines(prev => prev.filter(l => l.id !== line.id))}
+                        disabled={tipManualLines.length === 1}
+                        style={{
+                          width: 32, height: 32, borderRadius: 8, border: '1px solid #E0E0E0',
+                          background: tipManualLines.length === 1 ? '#F5F5F5' : '#fff',
+                          cursor: tipManualLines.length === 1 ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0, color: tipManualLines.length === 1 ? '#CCCCCC' : '#606060',
+                        }}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {/* Agregar fila */}
+                  <button
+                    onClick={() => setTipManualLines(prev => [...prev, EMPTY_TIP_LINE()])}
+                    style={{
+                      alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 4,
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 13, fontWeight: 600, color: '#121E6C',
+                      fontFamily: 'Montserrat, sans-serif', padding: '2px 0',
+                    }}
+                  >
+                    <Plus size={14} /> Agregar propina
+                  </button>
                 </div>
               )}
 
