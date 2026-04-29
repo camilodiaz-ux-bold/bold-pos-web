@@ -8,6 +8,7 @@ type StatusType = 'ok' | 'warn' | 'error' | 'maint';
 interface Service {
   name: string;
   status: StatusType;
+  icon: string;
 }
 
 interface Section {
@@ -54,38 +55,38 @@ const SECTIONS: Section[] = [
   {
     title: 'Venta Presente — Datáfonos',
     services: [
-      { name: 'Procesamiento de tarjetas físico', status: 'ok' },
-      { name: 'Pagos con QR Breb físico', status: 'ok' },
-      { name: 'Terminales de Pago Bold', status: 'ok' },
-      { name: 'App Bold iOS/Android', status: 'ok' },
-      { name: 'Proveedor sim Claro', status: 'ok' },
-      { name: 'Proveedor sim Movistar', status: 'warn' },
+      { name: 'Procesamiento de tarjetas físico', status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/b9035932-cddd-4cc3-93e8-4f39d0e73fa0' },
+      { name: 'Pagos con QR Breb físico',          status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/ed4881d0-2018-4091-9c7b-a202c27b8016' },
+      { name: 'Terminales de Pago Bold',            status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/e4b35c6a-ae41-4175-8c93-89736760ce87' },
+      { name: 'App Bold iOS/Android',               status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/6c2053a5-6d19-48dc-9c04-e61c7195582f' },
+      { name: 'Proveedor sim Claro',                status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/4ef50260-bb1d-4b87-b729-6d0150305084' },
+      { name: 'Proveedor sim Movistar',             status: 'warn', icon: 'https://www.figma.com/api/mcp/asset/3e2864bf-7a75-400f-8c81-314d6eaaee78' },
     ],
   },
   {
     title: 'Venta No Presente — Online',
     services: [
-      { name: 'Link de Pago', status: 'ok' },
-      { name: 'Botón de Pagos', status: 'ok' },
-      { name: 'API Online', status: 'ok' },
-      { name: 'Servicio de API Integrations', status: 'ok' },
+      { name: 'Link de Pago',                  status: 'ok', icon: 'https://www.figma.com/api/mcp/asset/099589b5-7d18-4ac6-8f3c-df31f4fe2152' },
+      { name: 'Botón de Pagos',                status: 'ok', icon: 'https://www.figma.com/api/mcp/asset/d65bfe26-7eb5-4119-8bfc-4629a94a8836' },
+      { name: 'API Online',                    status: 'ok', icon: 'https://www.figma.com/api/mcp/asset/fc0290ab-7e84-4065-9e94-2fedd4219e05' },
+      { name: 'Servicio de API Integrations',  status: 'ok', icon: 'https://www.figma.com/api/mcp/asset/ca10df11-4daa-44de-b400-5b64a28f9b17' },
     ],
   },
   {
     title: 'Métodos de Pago — Pasarela',
     services: [
-      { name: 'Tarjetas crédito/débito', status: 'ok' },
-      { name: 'Pagos con PSE', status: 'warn' },
-      { name: 'Pagos con Botón Bancolombia', status: 'ok' },
-      { name: 'Pagos con Nequi push', status: 'ok' },
-      { name: 'Pagos con QR Breb online', status: 'ok' },
+      { name: 'Tarjetas crédito/débito',       status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/aa1aeff3-eb5d-4b1f-be2d-aa28768c2744' },
+      { name: 'Pagos con PSE',                 status: 'warn', icon: 'https://www.figma.com/api/mcp/asset/b57b88c9-7a88-43b9-8769-fa71a6c9b87b' },
+      { name: 'Pagos con Botón Bancolombia',   status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/45e96a8c-6f18-4b41-b3ed-cd7caf2dffab' },
+      { name: 'Pagos con Nequi push',          status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/91a5c750-bb62-47a9-9668-06dd35642f73' },
+      { name: 'Pagos con QR Breb online',      status: 'ok',   icon: 'https://www.figma.com/api/mcp/asset/1f3d68d2-b10e-4377-a0e6-5842ea6d1c4e' },
     ],
   },
   {
     title: 'Soporte y Reportes',
     services: [
-      { name: 'Reportes Diarios', status: 'ok' },
-      { name: 'Reportes Mensuales', status: 'maint' },
+      { name: 'Reportes Diarios',   status: 'ok',    icon: 'https://www.figma.com/api/mcp/asset/b0fec28c-af90-4ea0-bee8-916f6bff992c' },
+      { name: 'Reportes Mensuales', status: 'maint', icon: 'https://www.figma.com/api/mcp/asset/d1391823-ef36-49cf-810b-407cc9b6befc' },
     ],
   },
 ];
@@ -272,9 +273,16 @@ export function StatusPage() {
                         : 'none',
                     }}
                   >
-                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--black-100)' }}>
-                      {service.name}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <img
+                        src={service.icon}
+                        alt=""
+                        style={{ width: 20, height: 20, flexShrink: 0, color: 'var(--black-60)' }}
+                      />
+                      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--black-100)' }}>
+                        {service.name}
+                      </span>
+                    </div>
                     <StatusBadge status={service.status} />
                   </div>
                 ))}
