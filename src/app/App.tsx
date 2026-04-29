@@ -8,6 +8,7 @@ import { Dashboard } from './pages/Dashboard';
 import { TurnosPage } from './pages/TurnosPage';
 import { VentasPage } from './pages/VentasPage';
 import { PedidoDetallePage } from './pages/PedidoDetallePage';
+import { StatusPage } from '../pages/StatusPage';
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
       { path: 'ventas/:id', Component: PedidoDetallePage },
     ],
   },
+  { path: '/status', Component: StatusPage },
 ], { basename: import.meta.env.BASE_URL });
 
 export default function App() {
