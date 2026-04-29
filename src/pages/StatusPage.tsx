@@ -182,19 +182,20 @@ export function StatusPage() {
         gap: 16,
       }}>
         <BoldLogo width={71} height={31} />
-        <div style={{ width: 1, height: 32, backgroundColor: 'var(--black-10)', flexShrink: 0 }} />
-        <div>
-          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--black-100)', lineHeight: 1.2 }}>
-            Estado de servicios Bold
-          </h1>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: 'var(--black-40)', marginTop: 2 }}>
-            Actualizado en tiempo real
-          </p>
-        </div>
       </header>
 
       {/* ── Main ── */}
       <main style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px' }}>
+
+        {/* Page title */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--black-100)', lineHeight: 1.2 }}>
+            Estado de servicios Bold
+          </h1>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: 'var(--black-40)', marginTop: 4 }}>
+            Actualizado en tiempo real
+          </p>
+        </div>
 
         {/* Summary banner */}
         <div style={{
