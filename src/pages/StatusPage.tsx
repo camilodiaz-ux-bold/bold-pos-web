@@ -172,16 +172,10 @@ export function StatusPage() {
       fontFamily: "'Montserrat', sans-serif",
     }}>
       {/* ── Header ── */}
-      <header style={{
-        backgroundColor: '#fff',
-        borderBottom: '1px solid var(--black-10)',
-        padding: '20px 40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 16,
-      }}>
-        <BoldLogo width={71} height={31} />
+      <header style={{ backgroundColor: '#fff', borderBottom: '1px solid var(--black-10)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', padding: '20px 24px' }}>
+          <BoldLogo width={71} height={31} />
+        </div>
       </header>
 
       {/* ── Main ── */}
