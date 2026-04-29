@@ -178,6 +178,7 @@ export function StatusPage() {
         padding: '20px 40px',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 16,
       }}>
         <BoldLogo width={71} height={31} />
