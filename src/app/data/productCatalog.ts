@@ -33,20 +33,24 @@ export interface CatalogProduct {
 // ─── Categorías ───────────────────────────────────────────────────────────────
 
 export const CAT_DEFS: CatDef[] = [
-  // Merlin: Informative palette
-  { id: 'entradas-frias',     name: 'Entradas Frías',    color: '#227AD1', lightBg: '#DBEAFE', darkText: '#1F2937', darkColor: '#2563EB', merlinBg: '#F1F9FF', merlinNameColor: '#052D65', merlinCountColor: '#0A53A5', lineColor: '#227AD1' },
-  // Bold Brand/60 gradient purple — diferenciado del coral de botones principales
-  { id: 'entradas-calientes', name: 'Entradas Calientes',color: '#6B2D60', lightBg: 'rgba(107,45,96,0.10)', darkText: '#1F2937', darkColor: '#6B2D60', merlinBg: 'rgba(107,45,96,0.20)', merlinNameColor: '#3D1A37', merlinCountColor: '#6B2D60', lineColor: '#6B2D60' },
-  // Merlin: Warning palette
-  { id: 'pastas',             name: 'Pastas & Risottos', color: '#FFC217', lightBg: '#FEF9C3', darkText: '#1F2937', darkColor: '#CA8A04', merlinBg: '#FFF3D1', merlinNameColor: '#5B3100', merlinCountColor: '#A16B00', lineColor: '#FFC217' },
-  // Merlin: Error palette
-  { id: 'carnes',             name: 'Carnes',            color: '#C31A2F', lightBg: '#FEE2E2', darkText: '#1F2937', darkColor: '#DC2626', merlinBg: '#FBF3F5', merlinNameColor: '#610017', merlinCountColor: '#910022', lineColor: '#C31A2F' },
-  // Merlin: Informative palette (variant)
-  { id: 'pescados',           name: 'Pescados',          color: '#0A53A5', lightBg: '#E0F2FE', darkText: '#1F2937', darkColor: '#0284C7', merlinBg: '#F1F9FF', merlinNameColor: '#0A53A5', merlinCountColor: '#227AD1', lineColor: '#0A53A5' },
-  // Merlin: Coral/30 palette
-  { id: 'postres',            name: 'Postres',           color: '#EC4899', lightBg: '#FCE7F3', darkText: '#1F2937', darkColor: '#DB2777', merlinBg: '#FCDFE2', merlinNameColor: '#E4102E', merlinCountColor: '#FF2947', lineColor: '#F48990' },
-  // Merlin: Success palette
-  { id: 'bebidas',            name: 'Bebidas',           color: '#10B981', lightBg: '#D1FAE5', darkText: '#1F2937', darkColor: '#059669', merlinBg: '#F4FDF9', merlinNameColor: '#0B3B26', merlinCountColor: '#1B8959', lineColor: '#6CDCAB' },
+  // Figma: #080eff
+  { id: 'entradas-frias',     name: 'Entradas Frías',      color: '#080eff', lightBg: 'rgba(8,14,255,0.07)',   darkText: '#1F2937', darkColor: '#0407b3', merlinBg: 'rgba(8,14,255,0.04)',   merlinNameColor: '#030480', merlinCountColor: '#080eff', lineColor: '#080eff' },
+  // Figma: #ff5500
+  { id: 'entradas-calientes', name: 'Entradas Calientes',  color: '#ff5500', lightBg: 'rgba(255,85,0,0.07)',   darkText: '#1F2937', darkColor: '#cc4400', merlinBg: 'rgba(255,85,0,0.04)',   merlinNameColor: '#7a2900', merlinCountColor: '#cc4400', lineColor: '#ff5500' },
+  // Figma: #ff9400
+  { id: 'pastas',             name: 'Pastas & Risottos',   color: '#ff9400', lightBg: 'rgba(255,148,0,0.07)',  darkText: '#1F2937', darkColor: '#cc7600', merlinBg: 'rgba(255,148,0,0.04)',  merlinNameColor: '#7a4700', merlinCountColor: '#cc7600', lineColor: '#ff9400' },
+  // Figma: #ff2dc8
+  { id: 'carnes',             name: 'Carnes',               color: '#ff2dc8', lightBg: 'rgba(255,45,200,0.07)', darkText: '#1F2937', darkColor: '#cc24a0', merlinBg: 'rgba(255,45,200,0.04)', merlinNameColor: '#7a1560', merlinCountColor: '#cc24a0', lineColor: '#ff2dc8' },
+  // Figma: #4401a9
+  { id: 'pescados',           name: 'Pescados y Mariscos', color: '#4401a9', lightBg: 'rgba(68,1,169,0.07)',   darkText: '#1F2937', darkColor: '#360187', merlinBg: 'rgba(68,1,169,0.04)',   merlinNameColor: '#1a0052', merlinCountColor: '#360187', lineColor: '#4401a9' },
+  // Figma: #b710de
+  { id: 'postres',            name: 'Postres',              color: '#b710de', lightBg: 'rgba(183,16,222,0.07)', darkText: '#1F2937', darkColor: '#920db2', merlinBg: 'rgba(183,16,222,0.04)', merlinNameColor: '#570869', merlinCountColor: '#920db2', lineColor: '#b710de' },
+  // Figma: #1c70d3
+  { id: 'bebidas',            name: 'Bebidas',              color: '#1c70d3', lightBg: 'rgba(28,112,211,0.07)', darkText: '#1F2937', darkColor: '#1559aa', merlinBg: 'rgba(28,112,211,0.04)', merlinNameColor: '#0b3066', merlinCountColor: '#1559aa', lineColor: '#1c70d3' },
+  // Figma: #b01207
+  { id: 'sushi',              name: 'Sushi',                color: '#b01207', lightBg: 'rgba(176,18,7,0.07)',   darkText: '#1F2937', darkColor: '#8d0e06', merlinBg: 'rgba(176,18,7,0.04)',   merlinNameColor: '#540904', merlinCountColor: '#8d0e06', lineColor: '#b01207' },
+  // Figma: #606060
+  { id: 'desayunos',          name: 'Desayunos',            color: '#606060', lightBg: 'rgba(96,96,96,0.07)',   darkText: '#1F2937', darkColor: '#404040', merlinBg: 'rgba(96,96,96,0.04)',   merlinNameColor: '#2a2a2a', merlinCountColor: '#404040', lineColor: '#606060' },
 ];
 
 // ─── Productos (56 total: 51 con imagen, 5 sin imagen) ────────────────────────
@@ -121,6 +125,18 @@ export const CAT_PRODUCTS: Record<string, CatalogProduct[]> = {
     { id: 164, name: 'Mocktail de Pepino',        price: 48000,  description: 'Refresco botánico sin alcohol macerado en frío',   catId: 'bebidas', image: 'https://images.unsplash.com/photo-1686753544049-659939f6038f?q=80&w=800' },
     { id: 165, name: 'Ginger Beer Artesanal',     price: 36000,  description: 'Elaborada en casa con fermentación natural',       catId: 'bebidas', image: 'https://images.unsplash.com/photo-1635232613883-5624a74048c4?q=80&w=800' },
     { id: 166, name: 'Néctar de Pera',            price: 44000,  description: 'Zumo natural especiado con cardamomo verde',       catId: 'bebidas', image: 'https://images.unsplash.com/photo-1619506147154-01717498fc26?q=80&w=800' },
+  ],
+  'sushi': [
+    { id: 171, name: 'Nigiri de Salmón',          price: 48000,  description: 'Arroz de sushi con láminas de salmón fresco',      catId: 'sushi', image: 'https://images.unsplash.com/photo-1553621042-f6e147245754?q=80&w=800' },
+    { id: 172, name: 'Roll Philadelphia',         price: 56000,  description: 'Salmón, queso crema y pepino en alga nori',        catId: 'sushi', image: 'https://images.unsplash.com/photo-1617196034183-421b4040ed20?q=80&w=800' },
+    { id: 173, name: 'Sashimi de Atún',           price: 64000,  description: 'Láminas de atún rojo con salsa ponzu',             catId: 'sushi', image: 'https://images.unsplash.com/photo-1559410545-0bdcd187e0a6?q=80&w=800' },
+    { id: 174, name: 'Tempura Roll',              price: 60000,  description: 'Langostino tempura con aguacate y sriracha mayo',  catId: 'sushi', image: 'https://images.unsplash.com/photo-1617196034099-ab50f436a5a3?q=80&w=800' },
+  ],
+  'desayunos': [
+    { id: 181, name: 'Huevos Benedictinos',       price: 68000,  description: 'Con jamón ibérico, salsa holandesa y pan brioche',  catId: 'desayunos', image: 'https://images.unsplash.com/photo-1608039858788-667850f129f9?q=80&w=800' },
+    { id: 182, name: 'Pancakes de Avena',         price: 52000,  description: 'Con arándanos frescos, miel y mantequilla de avellana', catId: 'desayunos', image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=800' },
+    { id: 183, name: 'Croissant de Mantequilla', price: 36000,  description: 'Hojaldrado artesanal con mermelada de frambuesa',   catId: 'desayunos', image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=800' },
+    { id: 184, name: 'Granola Artesanal',         price: 48000,  description: 'Con yogur griego, frutas frescas y semillas tostadas', catId: 'desayunos', image: 'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?q=80&w=800' },
   ],
 };
 

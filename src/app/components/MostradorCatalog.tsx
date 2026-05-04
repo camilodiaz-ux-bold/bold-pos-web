@@ -444,11 +444,11 @@ export function MostradorCatalog({
                 transition: 'all 150ms ease',
                 display: 'flex', alignItems: 'center', gap: 6,
                 ...(gridCat === 'Favoritos'
-                  ? { background: '#F59E0B', color: '#fff', borderColor: '#F59E0B' }
+                  ? { background: '#121e6c', color: '#fff', borderColor: '#121e6c' }
                   : { background: 'var(--blue-10)', color: 'var(--black-60)', borderColor: 'var(--black-10)' })
               }}
             >
-              <Star size={11} style={{ fill: gridCat === 'Favoritos' ? '#fff' : '#F59E0B', color: gridCat === 'Favoritos' ? '#fff' : '#F59E0B' }} />
+              <Star size={11} style={{ fill: gridCat === 'Favoritos' ? '#fff' : '#121e6c', color: gridCat === 'Favoritos' ? '#fff' : '#121e6c' }} />
               Favoritos
             </button>
             {CAT_DEFS.map(cat => (
