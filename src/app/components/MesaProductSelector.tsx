@@ -527,64 +527,57 @@ export function MesaProductSelector({
           </div>
 
           {/* ══════════════════════════════════════════════════════════════════
-              Vista categorías — sidebar + bloques sin imagen
+              Vista categorías — tabs horizontales + grid de cards
               ══════════════════════════════════════════════════════════════ */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden">
 
-              {/* Sidebar categorías — cat-item con color siempre visible */}
-              <div className="cat-sidebar w-[200px] shrink-0 flex-col">
-
-                {/* ── Favoritos — categoría especial (primera posición) ── */}
-                {(() => {
-                  const isFavActive = activeCatMesa === 'favoritos' && !isSearchingMesa;
-                  return (
-                    <button
-                      onClick={() => { setActiveCatMesa('favoritos'); setSearchQuery(''); }}
-                      className="cat-item w-full text-left flex items-center justify-between gap-2"
-                      style={{
-                        borderLeft: isFavActive ? '4px solid #121e6c' : '3px solid #121e6c',
-                        backgroundColor: isFavActive ? 'rgba(18,30,108,0.08)' : 'transparent',
-                        color: '#121e6c',
-                        fontWeight: isFavActive ? 700 : 500,
-                        padding: '10px 12px',
-                        borderBottom: '1px solid #F0F0F0',
-                      }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <span style={{ display: 'block', fontSize: 14 }}>Favoritos</span>
-                        <span style={{ display: 'block', fontSize: 11, color: '#909090', marginTop: 2 }}>
-                          {favoriteIds.size} producto{favoriteIds.size !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <Star size={12} style={{ flexShrink: 0 }} strokeWidth={1.5} />
-                    </button>
-                  );
-                })()}
-
-                {CAT_DEFS.map((cat, index) => {
-                  const isActive = cat.id === activeCatMesa && !isSearchingMesa;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => { setActiveCatMesa(cat.id); setSearchQuery(''); }}
-                      className="cat-item w-full text-left"
-                      style={{
-                        borderLeft: isActive ? `4px solid ${cat.color}` : `3px solid ${cat.color}`,
-                        backgroundColor: isActive ? `${cat.color}1A` : 'transparent',
-                        color: isActive ? cat.darkColor : cat.color,
-                        fontWeight: isActive ? 700 : 500,
-                        padding: '10px 12px',
-                        borderBottom: index < CAT_DEFS.length - 1 ? '1px solid #F0F0F0' : undefined,
-                      }}
-                    >
-                      <span style={{ display: 'block', fontSize: 14 }}>{cat.name}</span>
-                      <span style={{ display: 'block', fontSize: 11, color: '#909090', marginTop: 2 }}>
-                        {CAT_PRODUCTS[cat.id]?.length ?? 0} productos
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+            {/* ── Tabs horizontales de categorías — Figma nodo 26252:12686 ── */}
+            <div className="no-scrollbar shrink-0" style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', padding: '12px 16px', borderBottom: '1px solid #F0F0F0', background: 'white' }}>
+              {/* Favoritos */}
+              {(() => {
+                const isFavActive = activeCatMesa === 'favoritos' && !isSearchingMesa;
+                return (
+                  <button
+                    onClick={() => { setActiveCatMesa('favoritos'); setSearchQuery(''); }}
+                    style={{
+                      height: 32, padding: '0 16px', borderRadius: 100,
+                      border: '2px solid #121e6c', flexShrink: 0,
+                      background: isFavActive ? '#121e6c' : 'transparent',
+                      color: isFavActive ? 'white' : '#121e6c',
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      whiteSpace: 'nowrap', cursor: 'pointer',
+                      fontSize: 14, fontWeight: isFavActive ? 500 : 400,
+                      fontFamily: 'Montserrat, sans-serif', transition: 'all 150ms ease',
+                    }}
+                  >
+                    <Star size={14} style={{ flexShrink: 0, fill: isFavActive ? 'white' : '#121e6c', color: isFavActive ? 'white' : '#121e6c' }} />
+                    Favoritos
+                  </button>
+                );
+              })()}
+              {/* Categorías */}
+              {CAT_DEFS.map(cat => {
+                const isActive = cat.id === activeCatMesa && !isSearchingMesa;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setActiveCatMesa(cat.id); setSearchQuery(''); }}
+                    style={{
+                      height: 32, padding: '0 16px', borderRadius: 100,
+                      border: `2px solid ${cat.color}`, flexShrink: 0,
+                      background: isActive ? cat.color : 'transparent',
+                      color: isActive ? 'white' : cat.color,
+                      display: 'flex', alignItems: 'center',
+                      whiteSpace: 'nowrap', cursor: 'pointer',
+                      fontSize: 14, fontWeight: isActive ? 500 : 400,
+                      fontFamily: 'Montserrat, sans-serif', transition: 'all 150ms ease',
+                    }}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
 
               {/* Bloques LightSpeed — sin imágenes, nombre grande + precio */}
               <div className="flex-1 overflow-y-auto no-scrollbar p-3">
