@@ -542,9 +542,9 @@ export function MesaProductSelector({
                       onClick={() => { setActiveCatMesa('favoritos'); setSearchQuery(''); }}
                       className="cat-item w-full text-left flex items-center justify-between gap-2"
                       style={{
-                        borderLeft: isFavActive ? '4px solid #1E1E1E' : '3px solid #1E1E1E',
-                        backgroundColor: isFavActive ? 'rgba(0,0,0,0.06)' : 'transparent',
-                        color: '#1E1E1E',
+                        borderLeft: isFavActive ? '4px solid #121e6c' : '3px solid #121e6c',
+                        backgroundColor: isFavActive ? 'rgba(18,30,108,0.08)' : 'transparent',
+                        color: '#121e6c',
                         fontWeight: isFavActive ? 700 : 500,
                         padding: '10px 12px',
                         borderBottom: '1px solid #F0F0F0',
@@ -569,9 +569,9 @@ export function MesaProductSelector({
                       onClick={() => { setActiveCatMesa(cat.id); setSearchQuery(''); }}
                       className="cat-item w-full text-left"
                       style={{
-                        borderLeft: isActive ? `4px solid ${cat.lineColor}` : `3px solid ${cat.lineColor}`,
+                        borderLeft: isActive ? `4px solid ${cat.color}` : `3px solid ${cat.color}`,
                         backgroundColor: isActive ? `${cat.color}1A` : 'transparent',
-                        color: '#1E1E1E',
+                        color: isActive ? cat.darkColor : cat.color,
                         fontWeight: isActive ? 700 : 500,
                         padding: '10px 12px',
                         borderBottom: index < CAT_DEFS.length - 1 ? '1px solid #F0F0F0' : undefined,
@@ -620,9 +620,12 @@ export function MesaProductSelector({
                           style={{
                             backgroundColor: def.lightBg,
                             display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                            padding: '10px 12px', position: 'relative', height: '96px',
+                            padding: '10px 12px 10px 16px', position: 'relative', height: '96px',
+                            overflow: 'hidden',
                           }}
                         >
+                          {/* Barra vertical izquierda de categoría (4px, full height) */}
+                          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 4, backgroundColor: def.color }} />
                           {/* Estrella favorito — absoluta, no interfiere con el texto */}
                           <div
                             role="button"
@@ -649,11 +652,11 @@ export function MesaProductSelector({
                             />
                           </div>
 
-                          {/* Badge cantidad — absoluto, no interfiere con el texto */}
+                          {/* Badge cantidad — color de categoría */}
                           {qty > 0 && (
                             <div
                               className="min-w-[22px] h-5 px-1.5 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm"
-                              style={{ position: 'absolute', bottom: '8px', right: '8px', backgroundColor: 'var(--coral-100)' }}
+                              style={{ position: 'absolute', bottom: '8px', right: '8px', backgroundColor: def.color }}
                             >
                               {qty}
                             </div>
