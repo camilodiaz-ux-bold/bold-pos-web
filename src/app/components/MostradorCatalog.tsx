@@ -273,11 +273,11 @@ export function MostradorCatalog({
                       className="relative text-left flex flex-col justify-between p-4 min-h-[110px] rounded-[var(--radius-12)] transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
                       style={{ backgroundColor: def.lightBg }}
                     >
-                      {/* Badge cantidad en orden — esquina inferior derecha */}
+                      {/* Badge cantidad en orden — esquina inferior derecha (color de categoría) */}
                       {qty > 0 && (
                         <div
                           className="absolute bottom-2 right-2 min-w-[22px] h-5 px-1.5 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm"
-                          style={{ backgroundColor: 'var(--coral-100)' }}
+                          style={{ backgroundColor: def.color }}
                         >
                           {qty}
                         </div>
@@ -389,17 +389,17 @@ export function MostradorCatalog({
                         <Plus size={12} />
                       </div>
 
-                      {/* Badge cantidad en orden */}
+                      {/* Badge cantidad en orden — color de categoría */}
                       {qty > 0 && (
-                        <div className="absolute top-1.5 left-1.5 min-w-[18px] h-4 px-1 bg-[var(--coral-100)] text-white text-[9px] font-semibold rounded-full flex items-center justify-center shadow-sm">
+                        <div className="absolute top-1.5 left-1.5 min-w-[18px] h-4 px-1 text-white text-[9px] font-semibold rounded-full flex items-center justify-center shadow-sm" style={{ backgroundColor: def.color }}>
                           {qty}
                         </div>
                       )}
                     </div>
                     <div style={{
                       flexShrink: 0,
-                      padding: '8px 10px 10px 10px',
-                      backgroundColor: 'red',
+                      padding: '8px 10px 10px 14px',
+                      backgroundColor: 'white',
                       borderTop: '1px solid rgba(0,0,0,0.06)',
                       display: 'flex',
                       flexDirection: 'column',
@@ -412,10 +412,10 @@ export function MostradorCatalog({
                         ${p.price.toLocaleString()}
                       </p>
                     </div>
-                    {/* Línea inferior de categoría — color Merlin */}
+                    {/* Barra vertical izquierda de categoría (4px, full height) */}
                     <div
-                      className="absolute bottom-0 left-0 right-0 h-[3px]"
-                      style={{ backgroundColor: def.lineColor }}
+                      className="absolute top-0 left-0 bottom-0 w-[4px]"
+                      style={{ backgroundColor: def.color }}
                     />
                   </div>
                 );
@@ -445,7 +445,7 @@ export function MostradorCatalog({
                 display: 'flex', alignItems: 'center', gap: 6,
                 ...(gridCat === 'Favoritos'
                   ? { background: '#121e6c', color: '#fff', borderColor: '#121e6c' }
-                  : { background: 'var(--blue-10)', color: 'var(--black-60)', borderColor: 'var(--black-10)' })
+                  : { background: 'transparent', color: '#121e6c', borderColor: '#121e6c' })
               }}
             >
               <Star size={11} style={{ fill: gridCat === 'Favoritos' ? '#fff' : '#121e6c', color: gridCat === 'Favoritos' ? '#fff' : '#121e6c' }} />
@@ -465,7 +465,7 @@ export function MostradorCatalog({
                   transition: 'all 150ms ease',
                   ...(gridCat === cat.id
                     ? { background: cat.color, color: '#fff', borderColor: cat.color }
-                    : { background: 'var(--blue-10)', color: 'var(--black-60)', borderColor: 'var(--black-10)' })
+                    : { background: 'transparent', color: cat.color, borderColor: cat.color })
                 }}
               >
                 {cat.name}
