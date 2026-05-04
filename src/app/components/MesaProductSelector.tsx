@@ -616,67 +616,67 @@ export function MesaProductSelector({
                         <button
                           key={item.id}
                           onClick={() => addItem(prod)}
-                          className="text-left rounded-[var(--radius-16)] transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
+                          className="text-left transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
                           style={{
-                            backgroundColor: def.lightBg,
-                            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                            padding: '10px 12px 10px 16px', position: 'relative', height: '96px',
-                            overflow: 'hidden',
+                            backgroundColor: 'white',
+                            display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+                            padding: 12, gap: 12, borderRadius: 12,
                           }}
                         >
-                          {/* Barra vertical izquierda de categoría (4px, full height) */}
-                          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 4, backgroundColor: def.color }} />
-                          {/* Estrella favorito — absoluta, no interfiere con el texto */}
-                          <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={(e) => toggleFavorite(item.id, e)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleFavorite(item.id, e as unknown as React.MouseEvent); }}
-                            className="w-6 h-6 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 cursor-pointer"
-                            style={{
-                              position: 'absolute', top: '8px', right: '8px',
-                              ...(isFav
-                                ? { backgroundColor: '#FFFFFF', opacity: 1, boxShadow: '0px 1px 3px rgba(0,0,0,0.12)' }
-                                : { backgroundColor: '#FFFFFF', opacity: 0.6 }),
-                            }}
-                            title={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                          >
-                            <Star
-                              size={13}
-                              strokeWidth={1.5}
-                              style={{
-                                display: 'block',
-                                color: isFav ? 'var(--black-60)' : 'var(--black-40)',
-                                fill: isFav ? 'var(--black-60)' : 'none',
-                              }}
-                            />
+                          {/* Barra izquierda 4px — color de categoría, full height */}
+                          <div style={{ alignSelf: 'stretch', width: 4, flexShrink: 0, borderRadius: 2, backgroundColor: def.color }} />
+
+                          {/* Texto: nombre + precio */}
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
+                            <span style={{
+                              fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14,
+                              lineHeight: '20px', color: '#1e1e1e',
+                              overflow: 'hidden', display: '-webkit-box',
+                              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                            }}>
+                              {item.name}
+                            </span>
+                            <span style={{
+                              fontFamily: 'Montserrat, sans-serif', fontWeight: 400, fontSize: 14,
+                              lineHeight: '20px', color: '#1e1e1e', whiteSpace: 'nowrap',
+                            }}>
+                              ${item.price.toLocaleString('es-CO')}
+                            </span>
                           </div>
 
-                          {/* Badge cantidad — color de categoría */}
-                          {qty > 0 && (
+                          {/* Columna derecha: badge (arriba, solo si qty > 0) + estrella (abajo) */}
+                          <div style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            justifyContent: qty > 0 ? 'space-between' : 'flex-end',
+                            alignSelf: 'stretch', width: 24, flexShrink: 0,
+                          }}>
+                            {qty > 0 && (
+                              <div style={{
+                                width: 24, height: 24, borderRadius: 100, flexShrink: 0,
+                                backgroundColor: def.color,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}>
+                                <span style={{ color: 'white', fontSize: 12, fontWeight: 700, lineHeight: '16px' }}>{qty}</span>
+                              </div>
+                            )}
                             <div
-                              className="min-w-[22px] h-5 px-1.5 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm"
-                              style={{ position: 'absolute', bottom: '8px', right: '8px', backgroundColor: def.color }}
+                              role="button"
+                              tabIndex={0}
+                              onClick={(e) => toggleFavorite(item.id, e)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleFavorite(item.id, e as unknown as React.MouseEvent); }}
+                              style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                              title={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                             >
-                              {qty}
+                              <Star
+                                size={14}
+                                strokeWidth={1.5}
+                                style={{
+                                  color: isFav ? 'var(--black-60)' : 'var(--black-40)',
+                                  fill: isFav ? 'var(--black-60)' : 'none',
+                                }}
+                              />
                             </div>
-                          )}
-
-                          {/* Nombre — arriba, con padding para no solaparse con la estrella */}
-                          <span
-                            style={{
-                              color: 'var(--black-100)', fontSize: '15px', fontWeight: 600,
-                              lineHeight: '1.2', paddingRight: '24px',
-                              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                            }}
-                          >
-                            {item.name}
-                          </span>
-
-                          {/* Precio — abajo */}
-                          <span style={{ color: 'var(--black-100)', fontSize: '13px', fontWeight: 500, marginTop: 'auto' }}>
-                            ${item.price.toLocaleString('es-CO')}
-                          </span>
+                          </div>
                         </button>
                       );
                     })}
