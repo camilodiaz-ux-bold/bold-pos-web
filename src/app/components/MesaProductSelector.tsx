@@ -549,8 +549,7 @@ export function MesaProductSelector({
                       boxShadow: isFavActive ? '0px 4px 12px 0px rgba(18,30,108,0.08)' : 'none',
                     }}
                   >
-                    {/* Left bar */}
-                    <div style={{ width: 4, height: 16, borderRadius: 16, flexShrink: 0, backgroundColor: isFavActive ? 'white' : '#121E6C' }} />
+                    <Star size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: isFavActive ? 'white' : '#121E6C', fill: isFavActive ? 'white' : 'none' }} />
                     <span style={{ fontSize: 12, fontWeight: 400, lineHeight: '16px', color: isFavActive ? 'white' : '#1E1E1E' }}>
                       Favoritos
                     </span>
@@ -574,8 +573,8 @@ export function MesaProductSelector({
                       boxShadow: isActive ? '0px 4px 12px 0px rgba(18,30,108,0.08)' : 'none',
                     }}
                   >
-                    {/* Left bar — category color when unselected, white when selected */}
-                    <div style={{ width: 4, height: 16, borderRadius: 16, flexShrink: 0, backgroundColor: isActive ? 'white' : cat.color }} />
+                    {/* Left bar — only in default state */}
+                    {!isActive && <div style={{ width: 4, height: 16, borderRadius: 16, flexShrink: 0, backgroundColor: cat.color }} />}
                     <span style={{ fontSize: 12, fontWeight: 400, lineHeight: '16px', color: isActive ? 'white' : '#1E1E1E' }}>
                       {cat.name}
                     </span>
