@@ -543,14 +543,14 @@ export function MesaProductSelector({
                       height: 32, padding: '0 16px', borderRadius: 100,
                       border: '2px solid #121e6c', flexShrink: 0,
                       background: isFavActive ? '#121e6c' : 'transparent',
-                      color: isFavActive ? 'white' : '#121e6c',
+                      color: isFavActive ? 'white' : '#1E1E1E',
                       display: 'flex', alignItems: 'center', gap: 8,
                       whiteSpace: 'nowrap', cursor: 'pointer',
                       fontSize: 14, fontWeight: isFavActive ? 500 : 400,
                       fontFamily: 'Montserrat, sans-serif', transition: 'all 150ms ease',
                     }}
                   >
-                    <Star size={14} style={{ flexShrink: 0, fill: isFavActive ? 'white' : '#121e6c', color: isFavActive ? 'white' : '#121e6c' }} />
+                    <Star size={14} style={{ flexShrink: 0, fill: isFavActive ? 'white' : '#1E1E1E', color: isFavActive ? 'white' : '#1E1E1E' }} />
                     Favoritos
                   </button>
                 );
@@ -566,7 +566,7 @@ export function MesaProductSelector({
                       height: 32, padding: '0 16px', borderRadius: 100,
                       border: `2px solid ${cat.color}`, flexShrink: 0,
                       background: isActive ? cat.color : 'transparent',
-                      color: isActive ? 'white' : cat.color,
+                      color: isActive ? 'white' : '#1E1E1E',
                       display: 'flex', alignItems: 'center',
                       whiteSpace: 'nowrap', cursor: 'pointer',
                       fontSize: 14, fontWeight: isActive ? 500 : 400,
@@ -646,7 +646,7 @@ export function MesaProductSelector({
                             {qty > 0 && (
                               <div style={{
                                 width: 24, height: 24, borderRadius: 100, flexShrink: 0,
-                                backgroundColor: def.color,
+                                backgroundColor: '#121E6C',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                               }}>
                                 <span style={{ color: 'white', fontSize: 12, fontWeight: 700, lineHeight: '16px' }}>{qty}</span>
