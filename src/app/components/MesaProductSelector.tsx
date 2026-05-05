@@ -531,8 +531,8 @@ export function MesaProductSelector({
               ══════════════════════════════════════════════════════════════ */}
           <div className="flex-1 flex flex-col overflow-hidden">
 
-            {/* ── Tabs horizontales de categorías — Figma nodo 26252:12686 ── */}
-            <div className="no-scrollbar shrink-0" style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', padding: '12px 16px', borderBottom: '1px solid #F0F0F0', background: 'white' }}>
+            {/* ── Tabs horizontales de categorías — Figma .atom/dropdown_status 26260:12691 ── */}
+            <div className="no-scrollbar shrink-0" style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', padding: '12px 16px', borderBottom: '1px solid #F0F0F0', background: '#F1F2F6' }}>
               {/* Favoritos */}
               {(() => {
                 const isFavActive = activeCatMesa === 'favoritos' && !isSearchingMesa;
@@ -540,18 +540,20 @@ export function MesaProductSelector({
                   <button
                     onClick={() => { setActiveCatMesa('favoritos'); setSearchQuery(''); }}
                     style={{
-                      height: 32, padding: '0 16px', borderRadius: 100,
-                      border: '2px solid #121e6c', flexShrink: 0,
-                      background: isFavActive ? '#121e6c' : 'transparent',
-                      color: isFavActive ? 'white' : '#1E1E1E',
+                      height: 40, padding: '12px 16px', borderRadius: 100,
+                      border: 'none', flexShrink: 0,
+                      background: isFavActive ? '#121E6C' : 'white',
                       display: 'flex', alignItems: 'center', gap: 8,
                       whiteSpace: 'nowrap', cursor: 'pointer',
-                      fontSize: 14, fontWeight: isFavActive ? 500 : 400,
                       fontFamily: 'Montserrat, sans-serif', transition: 'all 150ms ease',
+                      boxShadow: isFavActive ? '0px 4px 12px 0px rgba(18,30,108,0.08)' : 'none',
                     }}
                   >
-                    <Star size={14} style={{ flexShrink: 0, fill: isFavActive ? 'white' : '#1E1E1E', color: isFavActive ? 'white' : '#1E1E1E' }} />
-                    Favoritos
+                    {/* Left bar */}
+                    <div style={{ width: 4, height: 16, borderRadius: 16, flexShrink: 0, backgroundColor: isFavActive ? 'white' : '#121E6C' }} />
+                    <span style={{ fontSize: 12, fontWeight: 400, lineHeight: '16px', color: isFavActive ? 'white' : '#1E1E1E' }}>
+                      Favoritos
+                    </span>
                   </button>
                 );
               })()}
@@ -563,17 +565,20 @@ export function MesaProductSelector({
                     key={cat.id}
                     onClick={() => { setActiveCatMesa(cat.id); setSearchQuery(''); }}
                     style={{
-                      height: 32, padding: '0 16px', borderRadius: 100,
-                      border: `2px solid ${cat.color}`, flexShrink: 0,
-                      background: isActive ? cat.color : 'transparent',
-                      color: isActive ? 'white' : '#1E1E1E',
-                      display: 'flex', alignItems: 'center',
+                      height: 40, padding: '12px 16px', borderRadius: 100,
+                      border: 'none', flexShrink: 0,
+                      background: isActive ? cat.color : 'white',
+                      display: 'flex', alignItems: 'center', gap: 8,
                       whiteSpace: 'nowrap', cursor: 'pointer',
-                      fontSize: 14, fontWeight: isActive ? 500 : 400,
                       fontFamily: 'Montserrat, sans-serif', transition: 'all 150ms ease',
+                      boxShadow: isActive ? '0px 4px 12px 0px rgba(18,30,108,0.08)' : 'none',
                     }}
                   >
-                    {cat.name}
+                    {/* Left bar — category color when unselected, white when selected */}
+                    <div style={{ width: 4, height: 16, borderRadius: 16, flexShrink: 0, backgroundColor: isActive ? 'white' : cat.color }} />
+                    <span style={{ fontSize: 12, fontWeight: 400, lineHeight: '16px', color: isActive ? 'white' : '#1E1E1E' }}>
+                      {cat.name}
+                    </span>
                   </button>
                 );
               })}
