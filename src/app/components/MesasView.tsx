@@ -1749,7 +1749,7 @@ export function MesasView() {
           onConfirmarPedido={handleConfirmarPedido}
         />
         {showKitchenPreview && selectedTable && (() => {
-          const isAdjust     = (selectedTable.comandaSent ?? false) && (selectedTable.hasPendingChanges ?? false);
+          const isAdjust     = (selectedTable.comandaSent ?? false) && ((selectedTable.hasPendingChanges ?? false) || (selectedTable.pendingChanges?.length ?? 0) > 0);
           const isFullResend = (selectedTable.comandaSent ?? false) && !(selectedTable.hasPendingChanges ?? false);
           const adjLines     = isAdjust
             ? formatAdjustmentLines(selectedTable.items, selectedTable.pendingChanges ?? [])
@@ -2351,7 +2351,7 @@ export function MesasView() {
 
       {/* ── Modal preview ticket de cocina / ajuste / reenvío ── */}
       {showKitchenPreview && selectedTable && (() => {
-        const isAdjust     = (selectedTable.comandaSent ?? false) && (selectedTable.hasPendingChanges ?? false);
+        const isAdjust     = (selectedTable.comandaSent ?? false) && ((selectedTable.hasPendingChanges ?? false) || (selectedTable.pendingChanges?.length ?? 0) > 0);
         const isFullResend = (selectedTable.comandaSent ?? false) && !(selectedTable.hasPendingChanges ?? false);
         const adjLines     = isAdjust
           ? formatAdjustmentLines(selectedTable.items, selectedTable.pendingChanges ?? [])
