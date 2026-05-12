@@ -698,7 +698,7 @@ export function MesaProductSelector({
             {/* Fila 1: título + badge estado */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <h2 style={{ fontSize: 15, fontWeight: 700, color: '#1E1E1E', margin: 0 }}>
-                Pedido Mesa {table.name}
+                Orden Mesa {table.name}
               </h2>
               {table.status === 'OCUPADA' && (
                 <span style={{

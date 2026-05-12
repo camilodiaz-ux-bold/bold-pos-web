@@ -61,20 +61,20 @@ function DianBadge({ label, variant }: { label: string; variant: DianVariant }) 
 }
 
 const rows = [
-  { pedido: 'P-001', horaInicio: '25/03/2026 13:42', horaCierre: '25/03/2026 14:42', zona: 'Zona 1', mesa: 'Mesa 3',  usuario: 'Carlos Pérez',  total: '$85,000',  tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'P-002', horaInicio: '25/03/2026 14:10', horaCierre: '25/03/2026 15:10', zona: 'Zona 1', mesa: 'Mesa 7',  usuario: 'Laura Gómez',   total: '$120,500', tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
-  { pedido: 'P-003', horaInicio: '25/03/2026 14:55', horaCierre: '25/03/2026 15:55', zona: 'Zona 1', mesa: 'Mesa 1',  usuario: 'Miguel Torres', total: '$47,000',  tipoDoc: 'Factura electrónica', estado: { label: 'Abierto',   variant: 'warning' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
-  { pedido: 'P-004', horaInicio: '25/03/2026 15:30', horaCierre: '25/03/2026 16:30', zona: 'Zona 1', mesa: 'Mesa 5',  usuario: 'Ana Ruiz',      total: '$210,000', tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'P-005', horaInicio: '25/03/2026 16:05', horaCierre: '25/03/2026 17:05', zona: 'Zona 2', mesa: 'Mesa 2',  usuario: 'Carlos Pérez',  total: '$65,500',  tipoDoc: 'Comprobante',         estado: { label: 'Cancelado', variant: 'error'   as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'P-006', horaInicio: '25/03/2026 16:48', horaCierre: '25/03/2026 17:48', zona: 'Zona 2', mesa: 'Mesa 9',  usuario: 'Laura Gómez',   total: '$95,000',  tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Pendiente', variant: 'warning' as DianVariant } },
-  { pedido: 'P-007', horaInicio: '25/03/2026 17:20', horaCierre: '25/03/2026 18:20', zona: 'Zona 2', mesa: 'Mesa 4',  usuario: 'Miguel Torres', total: '$158,000', tipoDoc: 'Comprobante',         estado: { label: 'Abierto',   variant: 'warning' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'P-008', horaInicio: '25/03/2026 18:00', horaCierre: '25/03/2026 19:00', zona: 'Zona 2', mesa: 'Mesa 6',  usuario: 'Ana Ruiz',      total: '$73,500',    tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'P-009', horaInicio: '25/03/2026 18:30', horaCierre: '25/03/2026 19:15', zona: 'Zona 1', mesa: 'Mesa 6',  usuario: 'Laura Gómez',   total: '$596,904',   tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'P-010', horaInicio: '25/03/2026 19:00', horaCierre: '25/03/2026 20:10', zona: 'Zona 2', mesa: 'Mesa 8',  usuario: 'Miguel Torres', total: '$1,450,372', tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
+  { pedido: 'O-001', horaInicio: '25/03/2026 13:42', horaCierre: '25/03/2026 14:42', zona: 'Zona 1', mesa: 'Mesa 3',  usuario: 'Carlos Pérez',  total: '$85,000',  tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
+  { pedido: 'O-002', horaInicio: '25/03/2026 14:10', horaCierre: '25/03/2026 15:10', zona: 'Zona 1', mesa: 'Mesa 7',  usuario: 'Laura Gómez',   total: '$120,500', tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
+  { pedido: 'O-003', horaInicio: '25/03/2026 14:55', horaCierre: '25/03/2026 15:55', zona: 'Zona 1', mesa: 'Mesa 1',  usuario: 'Miguel Torres', total: '$47,000',  tipoDoc: 'Factura electrónica', estado: { label: 'Abierto',   variant: 'warning' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
+  { pedido: 'O-004', horaInicio: '25/03/2026 15:30', horaCierre: '25/03/2026 16:30', zona: 'Zona 1', mesa: 'Mesa 5',  usuario: 'Ana Ruiz',      total: '$210,000', tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
+  { pedido: 'O-005', horaInicio: '25/03/2026 16:05', horaCierre: '25/03/2026 17:05', zona: 'Zona 2', mesa: 'Mesa 2',  usuario: 'Carlos Pérez',  total: '$65,500',  tipoDoc: 'Comprobante',         estado: { label: 'Cancelado', variant: 'error'   as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
+  { pedido: 'O-006', horaInicio: '25/03/2026 16:48', horaCierre: '25/03/2026 17:48', zona: 'Zona 2', mesa: 'Mesa 9',  usuario: 'Laura Gómez',   total: '$95,000',  tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Pendiente', variant: 'warning' as DianVariant } },
+  { pedido: 'O-007', horaInicio: '25/03/2026 17:20', horaCierre: '25/03/2026 18:20', zona: 'Zona 2', mesa: 'Mesa 4',  usuario: 'Miguel Torres', total: '$158,000', tipoDoc: 'Comprobante',         estado: { label: 'Abierto',   variant: 'warning' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
+  { pedido: 'O-008', horaInicio: '25/03/2026 18:00', horaCierre: '25/03/2026 19:00', zona: 'Zona 2', mesa: 'Mesa 6',  usuario: 'Ana Ruiz',      total: '$73,500',    tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
+  { pedido: 'O-009', horaInicio: '25/03/2026 18:30', horaCierre: '25/03/2026 19:15', zona: 'Zona 1', mesa: 'Mesa 6',  usuario: 'Laura Gómez',   total: '$596,904',   tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
+  { pedido: 'O-010', horaInicio: '25/03/2026 19:00', horaCierre: '25/03/2026 20:10', zona: 'Zona 2', mesa: 'Mesa 8',  usuario: 'Miguel Torres', total: '$1,450,372', tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
 ];
 
 const columns = [
-  { key: 'pedido',     label: 'No. Pedido',          width: '100px' },
+  { key: 'pedido',     label: 'No. Orden',            width: '100px' },
   { key: 'horaInicio', label: 'Hora Inicio',         width: '160px' },
   { key: 'horaCierre', label: 'Hora Cierre',         width: '160px' },
   { key: 'zona',       label: 'Zona',                width: '80px'  },
@@ -133,7 +133,7 @@ export function VentasPage() {
 
         <div style={filterGroup}>
           <label style={labelStyle}>Buscar</label>
-          <input type="text" placeholder="Buscar por No. Pedido" style={filterInput} />
+          <input type="text" placeholder="Buscar por No. Orden" style={filterInput} />
         </div>
 
         <div style={filterGroup}>

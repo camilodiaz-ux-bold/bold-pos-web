@@ -813,7 +813,7 @@ export function CheckoutDrawer({
               {/* ─── 1. RESUMEN DEL PEDIDO ─── */}
               <div style={{ padding: '16px 24px' }}>
                 <SectionLabel
-                  label="Resumen del pedido"
+                  label="Resumen de la orden"
                   hint={<span style={{
                     background: '#F1F2F6', color: '#606060', borderRadius: 4,
                     padding: '1px 6px', fontSize: 11, fontWeight: 600,
@@ -1554,7 +1554,7 @@ export function CheckoutDrawer({
                   textTransform: 'uppercase', fontFamily: 'Montserrat, sans-serif',
                   marginBottom: 8,
                 }}>
-                  Nota del pedido{' '}
+                  Nota de la orden{' '}
                   <span style={{ fontSize: 11, color: '#9E9E9E', fontWeight: 400, textTransform: 'none' }}>
                     (opcional)
                   </span>
