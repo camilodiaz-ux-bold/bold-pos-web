@@ -114,8 +114,7 @@ function formatAdjustmentLines(items: TableItem[], pendingChanges: PendingChange
     if (c.type === 'ELIMINAR') {
       lines.push(`CANCELAR: ${c.prevQty} ${c.name}`);
     } else if (c.type === 'CANTIDAD') {
-      const sign = c.newQty > c.prevQty ? '+' : '-';
-      lines.push(`${sign} ${c.newQty} ${c.name} (era ${c.prevQty})`);
+      lines.push(`${c.name}: ${c.prevQty} → ${c.newQty}`);
     } else if (c.type === 'NOTA') {
       lines.push(`NOTA ${c.name}: ${c.newNote}`);
     }
@@ -1772,8 +1771,8 @@ export function MesasView() {
               subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
               actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
               adjustmentLines={adjLines}
-              orderSeq={selectedTable.orderSeq}
-              orderVersion={selectedTable.comandaVersion}
+              orderSeq={selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)}
+              orderVersion={(selectedTable.comandaVersion ?? 0) + 1}
               onCancel={() => setShowKitchenPreview(false)}
               onConfirm={() => {
                 sendComanda();
@@ -2376,8 +2375,8 @@ export function MesasView() {
             subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
             actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
             adjustmentLines={adjLines}
-            orderSeq={selectedTable.orderSeq}
-            orderVersion={selectedTable.comandaVersion}
+            orderSeq={selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)}
+            orderVersion={(selectedTable.comandaVersion ?? 0) + 1}
             onCancel={() => setShowKitchenPreview(false)}
             onConfirm={() => {
               sendComanda();
