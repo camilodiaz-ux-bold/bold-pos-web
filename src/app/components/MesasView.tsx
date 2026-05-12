@@ -1436,7 +1436,7 @@ export function MesasView() {
         t.id !== selectedTableId ? t : { ...t, hasPendingChanges: false, savedPendingResend: true },
       ),
     );
-    toast.success('Cambios del pedido guardados');
+    toast.success('Cambios de la orden guardados');
   };
 
   const sendComanda = () => {
@@ -1481,7 +1481,7 @@ export function MesasView() {
       ),
     );
     setShowCancelModal(false);
-    toast.success(`Pedido cancelado, Mesa ${name} disponible`);
+    toast.success(`Orden cancelada, Mesa ${name} disponible`);
   };
 
   const revertToOcupada = () => {
@@ -1564,7 +1564,7 @@ export function MesasView() {
   const handleConfirmarPedido = () => {
     if (!selectedTableId) return;
     setConfirmedMesas(prev => new Set(prev).add(selectedTableId));
-    toast.success('Pedido confirmado');
+    toast.success('Orden confirmada');
   };
 
   // ── Reenviar comanda: usa el mismo showKitchenPreview ─────────────────────
@@ -1668,7 +1668,7 @@ export function MesasView() {
     setSelectedTableId(changeMesaTarget);
     setChangeMesaTarget(null);
     setShowChangeMesa(false);
-    toast.success(`Pedido movido a mesa ${targetName}`);
+    toast.success(`Orden movida a mesa ${targetName}`);
   };
 
   // ── Zoom / Pan handlers ───────────────────────────────────────────────────
@@ -1855,8 +1855,8 @@ export function MesasView() {
                 <AlertTriangle size={20} style={{ color: 'var(--coral-100)' }} />
               </div>
               <div>
-                <h3 className="text-[20px] font-bold text-[var(--black-100)]">¿Cancelar pedido y liberar mesa?</h3>
-                <p className="text-[14px] text-[var(--black-60)] mt-1">Esta acción elimina los ítems del pedido y deja la mesa disponible.</p>
+                <h3 className="text-[20px] font-bold text-[var(--black-100)]">¿Cancelar orden y liberar mesa?</h3>
+                <p className="text-[14px] text-[var(--black-60)] mt-1">Esta acción elimina los ítems de la orden y deja la mesa disponible.</p>
               </div>
             </div>
             <div className="flex gap-3">
@@ -1885,7 +1885,7 @@ export function MesasView() {
               </button>
             </div>
             <p className="text-[12px] text-[var(--black-60)] mb-5">
-              El pedido de <span className="font-semibold text-[var(--black-100)]">Mesa {selectedTable?.name}</span> se moverá a la mesa que selecciones.
+              La orden de <span className="font-semibold text-[var(--black-100)]">Mesa {selectedTable?.name}</span> se moverá a la mesa que selecciones.
             </p>
             {availableForChange.length === 0 ? (
               <div className="py-10 text-center text-[var(--black-40)]"><p className="text-sm">No hay mesas disponibles para el cambio.</p></div>
@@ -2550,7 +2550,7 @@ export function MesasView() {
                   }}
                 >
                   <Trash2 size={14} color="#FF2947" />
-                  Eliminar del pedido
+                  Eliminar de la orden
                 </button>
                 <button
                   onClick={saveItemEdit}
@@ -2702,7 +2702,7 @@ export function MesasView() {
                   <p className="empty-state__title" style={{ fontSize: 15 }}>Mesa disponible</p>
                   <p className="empty-state__body">Capacidad para {selectedTable.capacity} personas</p>
                   <button onClick={handleIniciarPedido} className="btn btn-primary" style={{ marginTop: 8 }}>
-                    <Plus size={16} /> Iniciar pedido
+                    <Plus size={16} /> Iniciar orden
                   </button>
                 </div>
               )}
@@ -2720,7 +2720,7 @@ export function MesasView() {
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FFC217', display: 'inline-block', flexShrink: 0 }} />
                         )}
                         <span className="panel-section-label" style={{ marginBottom: 0 }}>
-                          Pedido · {totalItems} ítem{totalItems !== 1 ? 's' : ''}
+                          Orden · {totalItems} ítem{totalItems !== 1 ? 's' : ''}
                         </span>
                       </div>
                       {selectedTable.status === 'OCUPADA' && (
@@ -2750,7 +2750,7 @@ export function MesasView() {
                         : { background: '#F0FDF4', color: '#059669' }),
                     }}>
                       {hasPendingChanges
-                        ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de confirmar en el pedido</span></>
+                        ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de confirmar en la orden</span></>
                         : savedPendingResend
                           ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios guardados — pendiente reenviar comanda a cocina</span></>
                           : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
@@ -2764,7 +2764,7 @@ export function MesasView() {
                       <div className="empty-state__icon">
                         <Utensils size={24} style={{ opacity: 0.35 }} />
                       </div>
-                      <p className="empty-state__title">Sin ítems en el pedido</p>
+                      <p className="empty-state__title">Sin ítems en la orden</p>
                       <p className="empty-state__body">Agrega productos para comenzar</p>
                     </div>
                   ) : (
@@ -2931,12 +2931,12 @@ export function MesasView() {
                     {!isMesaConfirmed ? (
                       /* STATE 1 — no confirmado */
                       <PanelCoralBtn onClick={handleConfirmarPedido}>
-                        <Send size={16} color="#fff" /> Confirmar pedido
+                        <Send size={16} color="#fff" /> Confirmar orden
                       </PanelCoralBtn>
                     ) : hasPendingChanges ? (
                       /* STATE 4 — cambios pendientes sin guardar (confirmado o con comanda enviada) */
                       <PanelCoralBtn onClick={saveOrder}>
-                        <Save size={16} color="#fff" /> Guardar cambios del pedido
+                        <Save size={16} color="#fff" /> Guardar cambios de la orden
                       </PanelCoralBtn>
                     ) : !isComandaSentForMesa ? (
                       /* STATE 2 — confirmado, comanda aún no enviada, sin cambios pendientes */

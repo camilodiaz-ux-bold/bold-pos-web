@@ -196,7 +196,7 @@ export function MesaProductSelector({
         t.id !== tableId ? t : { ...t, hasPendingChanges: false, savedPendingResend: true },
       ),
     );
-    toast.success('Cambios del pedido guardados');
+    toast.success('Cambios de la orden guardados');
   };
 
   const sendToKitchen = () => {
@@ -422,7 +422,7 @@ export function MesaProductSelector({
                   onClick={() => { removeItem(editItemTarget.id); setEditItemTarget(null); }}
                   style={{ flex: 1, height: 44, borderRadius: 8, border: '1.5px solid #FF2947', color: '#FF2947', background: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: MFONT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 >
-                  <Trash2 size={14} color="#FF2947" /> Eliminar del pedido
+                  <Trash2 size={14} color="#FF2947" /> Eliminar de la orden
                 </button>
                 <button
                   onClick={saveItemEdit}
@@ -752,7 +752,7 @@ export function MesaProductSelector({
                 : { background: '#F0FDF4', color: '#059669' }),
             }}>
               {hasPendingChanges
-                ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de confirmar en el pedido</span></>
+                ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios pendientes de confirmar en la orden</span></>
                 : savedPendingResend
                   ? <><Clock size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Cambios guardados — pendiente reenviar comanda a cocina</span></>
                   : <><CheckCircle2 size={12} /><span style={{ fontSize: 12, fontWeight: 400 }}>Todos los ítems enviados a cocina</span></>
@@ -768,7 +768,7 @@ export function MesaProductSelector({
                   <Utensils size={24} style={{ opacity: 0.3 }} />
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>Pedido vacío</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: '#606060', fontFamily: 'Montserrat, sans-serif' }}>Orden vacía</p>
                   <p style={{ fontSize: 12, color: '#C7CBE0', marginTop: 4, fontFamily: 'Montserrat, sans-serif' }}>Selecciona productos del catálogo</p>
                 </div>
               </div>
@@ -911,7 +911,7 @@ export function MesaProductSelector({
                       justifyContent: 'center', gap: 8,
                     }}
                   >
-                    <Send size={16} /> Confirmar pedido
+                    <Send size={16} /> Confirmar orden
                   </button>
                 ) : hasPendingChanges ? (
                   /* STATE 4 — cambios pendientes sin guardar (confirmado o con comanda enviada) */
@@ -924,7 +924,7 @@ export function MesaProductSelector({
                       justifyContent: 'center', gap: 8,
                     }}
                   >
-                    <Save size={16} /> Guardar cambios del pedido
+                    <Save size={16} /> Guardar cambios de la orden
                   </button>
                 ) : !isComandaSentForMesa ? (
                   /* STATE 2 — confirmado, comanda aún no enviada, sin cambios pendientes */

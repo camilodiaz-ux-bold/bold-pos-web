@@ -204,7 +204,7 @@ export function KitchenTicketPreviewModal({
         {/* ── Subtítulo ── */}
         <p className="px-6 pb-5 shrink-0" style={{ fontSize: 14, color: 'var(--black-60)' }}>
           {subtitle ?? (isResend
-            ? 'Se reimprimirá el pedido completo en cocina'
+            ? 'Se reimprimirá la orden completa en cocina'
             : 'Se imprimirá el siguiente ticket en cocina')}
         </p>
 

@@ -324,7 +324,7 @@ export function PedidoDetallePage() {
           </button>
 
           <p style={{ ...font(20, 700, C.black100, 28), margin: 0 }}>
-            Pedido No. {pedido.id}
+            Orden No. {pedido.id}
           </p>
 
           <EstadoBadge label={pedido.estado.label} variant={pedido.estado.variant} />

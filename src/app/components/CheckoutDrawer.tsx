@@ -1563,7 +1563,7 @@ export function CheckoutDrawer({
                   value={orderNote}
                   onChange={e => setOrderNote(e.target.value)}
                   rows={2}
-                  placeholder="Agrega una nota general para el pedido..."
+                  placeholder="Agrega una nota general para la orden..."
                   style={{
                     width: '100%', borderRadius: 10, border: '1.5px solid #C7CBE0',
                     padding: '10px 12px', fontSize: 13, fontFamily: 'Montserrat, sans-serif',
