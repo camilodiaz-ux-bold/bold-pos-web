@@ -75,6 +75,8 @@ export interface MesaTable {
   hasPendingChanges?: boolean;
   savedPendingResend?: boolean;     // guardado en POS, aún no reenviado a cocina
   pendingChanges?: PendingChange[];  // modificaciones post-primera-comanda
+  comandaVersion?: number;           // contador de veces que se ha enviado comanda, empieza en 0
+  orderSeq?: number;                 // número secuencial de orden del día, asignado al primer envío
   frozenElapsedMs?: number;      // ms transcurridos al momento de finalizar (congelado)
 }
 
@@ -1455,6 +1457,8 @@ export function MesasView() {
           savedPendingResend:  false,
           pendingChanges:      [],
           firstComandaSentAt:  t.firstComandaSentAt ?? now,
+          comandaVersion:      (t.comandaVersion ?? 0) + 1,
+          orderSeq:            t.orderSeq ?? (Date.now() % 1000),
           items: t.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
         },
       ),
@@ -1768,6 +1772,8 @@ export function MesasView() {
               subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
               actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
               adjustmentLines={adjLines}
+              orderSeq={selectedTable.orderSeq}
+              orderVersion={selectedTable.comandaVersion}
               onCancel={() => setShowKitchenPreview(false)}
               onConfirm={() => {
                 sendComanda();
@@ -2370,6 +2376,8 @@ export function MesasView() {
             subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
             actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
             adjustmentLines={adjLines}
+            orderSeq={selectedTable.orderSeq}
+            orderVersion={selectedTable.comandaVersion}
             onCancel={() => setShowKitchenPreview(false)}
             onConfirm={() => {
               sendComanda();

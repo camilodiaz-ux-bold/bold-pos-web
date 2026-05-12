@@ -53,6 +53,8 @@ export interface KitchenTicketPreviewModalProps {
   /** Líneas pre-formateadas para modo comanda de ajuste.
    *  Cuando se proveen, el ticket muestra estas líneas en lugar del listado normal. */
   adjustmentLines?: string[];
+  orderSeq?: number;
+  orderVersion?: number;
   onCancel:  () => void;
   onConfirm: () => void;
 }
@@ -142,6 +144,8 @@ export function KitchenTicketPreviewModal({
   subtitle,
   actionLabel,
   adjustmentLines,
+  orderSeq,
+  orderVersion,
   onCancel,
   onConfirm,
 }: KitchenTicketPreviewModalProps) {
@@ -243,6 +247,11 @@ export function KitchenTicketPreviewModal({
               <span style={TXT.base}>{headerLabel}: {headerValue}</span>
               <span style={TXT.base}>{timeStr}</span>
             </div>
+            {(orderSeq || orderVersion) && (
+              <div style={{ marginBottom: 4 }}>
+                <span style={TXT.base}>{orderSeq ? `Orden #${String(orderSeq).padStart(3, '0')}` : ''}   {orderVersion ? `v${orderVersion}` : ''}</span>
+              </div>
+            )}
 
             {/* ─ Staff ─ */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
