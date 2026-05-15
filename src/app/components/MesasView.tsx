@@ -2044,8 +2044,8 @@ export function MesasView() {
         {/* ── Toolbar: zona tabs + gestionar ── */}
         <div className="zone-tabs shrink-0">
           {zonesConfig.map(zone => {
-            const zTotal  = tables.filter(t => t.zone === zone).length;
-            const zActive = tables.filter(t => t.zone === zone && t.status !== 'DISPONIBLE').length;
+            const zTotal  = tables.filter(t => t.zone === zone && t.status !== 'INHABILITADA').length;
+            const zActive = tables.filter(t => t.zone === zone && (t.status === 'OCUPADA' || t.status === 'CUENTA_SOLICITADA')).length;
             return (
               <button
                 key={zone}
