@@ -80,7 +80,7 @@ export const INITIAL_MESAS_CONFIG: MesaConfig[] = [
   // ═══════════════════════════════════════════════════════
   { id:'s01', name:'S01', zone:'Salón', capacity:2,  category:'Mesa',  shape:'Redonda',     status:'Fuera de servicio', x:60,  y:60,  ...R(2)  },
   { id:'s02', name:'S02', zone:'Salón', capacity:2,  category:'Mesa',  shape:'Redonda',     status:'Activa', x:200, y:60,  ...R(2)  },
-  { id:'s03', name:'S03', zone:'Salón', capacity:4,  category:'Mesa',  shape:'Rectangular', status:'Activa', x:60,  y:225, ...M(4)  },
+  { id:'s03', name:'S03', zone:'Salón', capacity:4,  category:'Mesa',  shape:'Rectangular', status:'Fuera de servicio', x:60,  y:225, ...M(4)  },
   { id:'s04', name:'S04', zone:'Salón', capacity:4,  category:'Mesa',  shape:'Rectangular', status:'Activa', x:235, y:225, ...M(4)  },
 
   // ═══════════════════════════════════════════════════════
@@ -142,7 +142,7 @@ export const INITIAL_MESAS_CONFIG: MesaConfig[] = [
   { id:'t04', name:'T04', zone:'Terraza', capacity:4, category:'Mesa', shape:'Redonda', status:'Activa', x:650, y:80,  ...R(4) },
   { id:'t05', name:'T05', zone:'Terraza', capacity:4, category:'Mesa', shape:'Redonda', status:'Activa', x:80,  y:290, ...R(4) },
   { id:'t06', name:'T06', zone:'Terraza', capacity:4, category:'Mesa', shape:'Redonda', status:'Activa', x:270, y:290, ...R(4) },
-  { id:'t07', name:'T07', zone:'Terraza', capacity:4, category:'Mesa', shape:'Redonda', status:'Activa', x:460, y:290, ...R(4) },
+  { id:'t07', name:'T07', zone:'Terraza', capacity:4, category:'Mesa', shape:'Redonda', status:'Fuera de servicio', x:460, y:290, ...R(4) },
   { id:'t08', name:'T08', zone:'Terraza', capacity:4, category:'Mesa', shape:'Redonda', status:'Activa', x:650, y:290, ...R(4) },
 
   // ═══════════════════════════════════════════════════════
