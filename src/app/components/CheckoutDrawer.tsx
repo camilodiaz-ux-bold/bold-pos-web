@@ -86,10 +86,13 @@ function SelectField({ label, value, onChange, options }: {
           onChange={e => onChange(e.target.value)}
           style={{
             width: '100%', height: 40, boxSizing: 'border-box',
-            borderRadius: 12, border: 'none', background: '#F7F8FB',
+            borderRadius: 12, border: '1.5px solid #C7CBE0', background: '#F7F8FB',
             fontFamily: MFONT, fontSize: 14, fontWeight: 500, color: '#1E1E1E',
             padding: '0 36px 0 12px', outline: 'none', appearance: 'none', cursor: 'pointer',
+            transition: 'border-color 150ms ease',
           }}
+          onFocus={e => (e.currentTarget.style.borderColor = '#121E6C')}
+          onBlur={e => (e.currentTarget.style.borderColor = '#C7CBE0')}
         >
           {options.map(o => <option key={o} value={o}>{o}</option>)}
         </select>
@@ -237,10 +240,12 @@ export function CheckoutDrawer({
               onClick={() => { setClienteOpen(o => !o); setShowAddCliente(false); }}
               style={{
                 height: 40, borderRadius: 12, background: '#F7F8FB',
-                border: 'none', display: 'flex', alignItems: 'center',
+                border: clienteOpen ? '1.5px solid #121E6C' : '1.5px solid #C7CBE0',
+                display: 'flex', alignItems: 'center',
                 padding: '0 36px 0 12px', cursor: 'pointer',
                 position: 'relative', userSelect: 'none',
                 fontFamily: MFONT, fontSize: 14, fontWeight: 500, color: '#1E1E1E',
+                transition: 'border-color 150ms ease',
               }}
             >
               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente}</span>
@@ -322,7 +327,7 @@ export function CheckoutDrawer({
 
       {/* ── Propina — placeholder (Prompt 2) ── */}
       <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span style={{ fontSize: 12, fontWeight: 500, color: '#606060', fontFamily: MFONT }}>Propina</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#969696', fontFamily: MFONT, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Propina</span>
         <button
           onClick={() => {}}
           style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: MFONT, fontSize: 12, fontWeight: 600, color: '#FF2947', textDecoration: 'underline', textUnderlineOffset: 2 }}
@@ -335,7 +340,7 @@ export function CheckoutDrawer({
 
       {/* ── Métodos de cobro — placeholder (Prompt 3) ── */}
       <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span style={{ fontSize: 12, fontWeight: 500, color: '#606060', fontFamily: MFONT }}>¿Cómo quieres cobrar?</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#969696', fontFamily: MFONT, textTransform: 'uppercase', letterSpacing: '0.05em' }}>¿Cómo quieres cobrar?</span>
         <button
           onClick={() => {}}
           style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: MFONT, fontSize: 12, fontWeight: 600, color: '#FF2947', textDecoration: 'underline', textUnderlineOffset: 2 }}
@@ -377,7 +382,7 @@ export function CheckoutDrawer({
   return (
     <div style={{
       flex: 1, display: 'flex', flexDirection: 'column',
-      overflow: 'hidden', minHeight: 0, background: '#F7F8FB',
+      overflow: 'hidden', minHeight: 0, background: 'transparent',
       fontFamily: MFONT,
     }}>
       <div style={{ display: 'flex', flex: 1, gap: 16, padding: 16, overflow: 'hidden', minHeight: 0 }}>
@@ -467,11 +472,11 @@ export function CheckoutDrawer({
 
             {/* Encabezado lista */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, paddingBottom: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 500, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '20px' }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#969696', fontFamily: MFONT, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Pedido
               </span>
-              <span style={{ fontSize: 14, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '20px' }}>
-                {items.length} producto{items.length !== 1 ? 's' : ''}
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#969696', fontFamily: MFONT }}>
+                · {items.length} producto{items.length !== 1 ? 's' : ''}
               </span>
             </div>
 
@@ -483,7 +488,7 @@ export function CheckoutDrawer({
                 return (
                   <div key={item.id} style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <p style={{ fontSize: 14, fontWeight: 500, color: '#1E1E1E', margin: 0, fontFamily: MFONT, lineHeight: '20px' }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1E1E1E', margin: 0, fontFamily: MFONT, lineHeight: '20px' }}>
                         {item.name}
                         {(item.discount ?? 0) > 0 && (
                           <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: '#1B8959' }}>
@@ -491,7 +496,7 @@ export function CheckoutDrawer({
                           </span>
                         )}
                       </p>
-                      <p style={{ fontSize: 14, fontWeight: 400, color: '#1E1E1E', margin: 0, fontFamily: MFONT, lineHeight: '20px' }}>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: '#1E1E1E', margin: 0, fontFamily: MFONT, lineHeight: '20px' }}>
                         ${lineTotal.toLocaleString('es-CO')}
                       </p>
                       {item.note && (
@@ -514,26 +519,26 @@ export function CheckoutDrawer({
           {/* ── Totales ── */}
           <div style={{ padding: 16, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14, fontWeight: 400, color: '#606060', fontFamily: MFONT, lineHeight: '20px' }}>Subtotal</span>
-              <span style={{ fontSize: 14, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '20px' }}>${subtotal.toLocaleString('es-CO')}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+              <span style={{ fontSize: 13, fontWeight: 400, color: '#606060', fontFamily: MFONT }}>Subtotal</span>
+              <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT }}>${subtotal.toLocaleString('es-CO')}</span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14, fontWeight: 400, color: '#606060', fontFamily: MFONT, lineHeight: '20px' }}>IVA (19%)</span>
-              <span style={{ fontSize: 14, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '20px' }}>${tax.toLocaleString('es-CO')}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+              <span style={{ fontSize: 13, fontWeight: 400, color: '#606060', fontFamily: MFONT }}>IVA 19%</span>
+              <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT }}>${tax.toLocaleString('es-CO')}</span>
             </div>
 
             {tipAmount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 14, fontWeight: 400, color: '#606060', fontFamily: MFONT, lineHeight: '20px' }}>Propina 10%</span>
-                <span style={{ fontSize: 14, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '20px' }}>${tipAmount.toLocaleString('es-CO')}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                <span style={{ fontSize: 13, fontWeight: 400, color: '#606060', fontFamily: MFONT }}>Propina 10%</span>
+                <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT }}>${tipAmount.toLocaleString('es-CO')}</span>
               </div>
             )}
 
             {/* Descuento + CTA Agregar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p style={{ margin: 0, fontSize: 14, fontFamily: MFONT, color: '#606060', lineHeight: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+              <p style={{ margin: 0, fontSize: 13, fontFamily: MFONT, color: '#606060' }}>
                 Descuento{' '}
                 <span
                   style={{ color: '#121E6C', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer' }}
@@ -542,7 +547,7 @@ export function CheckoutDrawer({
                   Agregar
                 </span>
               </p>
-              <span style={{ fontSize: 14, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT }}>$0</span>
+              <span style={{ fontSize: 13, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT }}>$0</span>
             </div>
 
             {/* Total */}
