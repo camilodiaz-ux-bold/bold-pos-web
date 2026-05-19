@@ -376,9 +376,9 @@ export function CheckoutDrawer({
   // ════════════════════════════════════════════════════════════════════════════
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      background: '#F7F8FB', fontFamily: MFONT,
-      display: 'flex', flexDirection: 'column',
+      flex: 1, display: 'flex', flexDirection: 'column',
+      overflow: 'hidden', minHeight: 0, background: '#F7F8FB',
+      fontFamily: MFONT,
     }}>
       <div style={{ display: 'flex', flex: 1, gap: 16, padding: 16, overflow: 'hidden', minHeight: 0 }}>
 

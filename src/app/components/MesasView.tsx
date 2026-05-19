@@ -1791,6 +1791,30 @@ export function MesasView() {
     return <GestionarMesasView onBack={() => setShowGestionarMesas(false)} />;
   }
 
+  if (showCheckout && selectedTable) {
+    return (
+      <CheckoutDrawer
+        title={`Mesa ${selectedTable.name}`}
+        subtitle={selectedTable.zone}
+        guests={selectedTable.guests}
+        openedAtTimestamp={selectedTable.openedAtTimestamp}
+        items={selectedTable.items}
+        hideSendToKitchen
+        onClose={() => setShowCheckout(false)}
+        onConfirmPay={(_method, _total) => {
+          setTables(prev =>
+            prev.map(t =>
+              t.id === selectedTableId
+                ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+                : t,
+            ),
+          );
+          setShowCheckout(false);
+        }}
+      />
+    );
+  }
+
   return (
     <>
       {/* ════════════════════════════════════════════════════
@@ -2330,30 +2354,6 @@ export function MesasView() {
         </> )} {/* fin viewMode === 'map' */}
       </div>
 
-      {/* ════════════════════════════════════════════════════
-          Checkout Drawer — solo CUENTA_SOLICITADA
-          ════════════════════════════════════════════════════ */}
-      {showCheckout && selectedTable && (
-        <CheckoutDrawer
-          title={`Mesa ${selectedTable.name}`}
-          subtitle={selectedTable.zone}
-          guests={selectedTable.guests}
-          openedAtTimestamp={selectedTable.openedAtTimestamp}
-          items={selectedTable.items}
-          hideSendToKitchen
-          onClose={() => setShowCheckout(false)}
-          onConfirmPay={(_method, _total) => {
-            // Pago confirmado → mesa vuelve directamente a DISPONIBLE
-            setTables(prev =>
-              prev.map(t =>
-                t.id === selectedTableId
-                  ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
-                  : t,
-              ),
-            );
-          }}
-        />
-      )}
 
       {/* ── Modal preview ticket de cocina / ajuste / reenvío ── */}
       {showKitchenPreview && selectedTable && (() => {
