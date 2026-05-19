@@ -2337,7 +2337,8 @@ export function MesasView() {
         <CheckoutDrawer
           title={`Mesa ${selectedTable.name}`}
           subtitle={selectedTable.zone}
-          meta={selectedTable.guests ? `${selectedTable.guests} persona${selectedTable.guests !== 1 ? 's' : ''}` : undefined}
+          guests={selectedTable.guests}
+          openedAtTimestamp={selectedTable.openedAtTimestamp}
           items={selectedTable.items}
           hideSendToKitchen
           onClose={() => setShowCheckout(false)}
