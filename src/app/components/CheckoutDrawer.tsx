@@ -297,13 +297,14 @@ export function CheckoutDrawer({
   const [newClienteNit,    setNewClienteNit]    = useState('');
 
   // ── Propina state ──────────────────────────────────────────────────────────
-  const [tipRows,   setTipRows]   = useState<PayRow[]>([]);
+  const [tipRows,   setTipRows]   = useState<PayRow[]>(() => [{ id: uid(), method: 'Efectivo', amount: '' }]);
   const [tipAuto,   setTipAuto]   = useState(true);   // toggle "Propina con el 10%"
   const [methodPanel, setMethodPanel] = useState<'tip' | 'pay' | null>(null);
 
   // ── Cobro state ────────────────────────────────────────────────────────────
-  const [payRows,     setPayRows]     = useState<PayRow[]>([]);
-  const [splitEqual,  setSplitEqual]  = useState(false);
+  // splitEqual=true con 1 fila → monto se recalcula automáticamente con grandTotal
+  const [payRows,     setPayRows]     = useState<PayRow[]>(() => [{ id: uid(), method: 'Efectivo', amount: '' }]);
+  const [splitEqual,  setSplitEqual]  = useState(true);
 
   // ── Base totals ────────────────────────────────────────────────────────────
   const subtotal = useMemo(
