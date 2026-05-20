@@ -53,8 +53,6 @@ export interface CheckoutDrawerProps {
   hideSendToKitchen?: boolean;
 }
 
-type Phase = 'checkout' | 'completed';
-
 interface PayRow {
   id: string;
   method: string;
@@ -322,11 +320,10 @@ export function CheckoutDrawer({
   items, onClose, onConfirmPay, hideSendToKitchen = false,
 }: CheckoutDrawerProps) {
 
-  // ── Phase ──────────────────────────────────────────────────────────────────
-  const [phase, setPhase]               = useState<Phase>('checkout');
-  const [completedAt, setCompletedAt]   = useState<Date | null>(null);
+  // ── Receipt visibility ─────────────────────────────────────────────────────
+  const [showReceipt, setShowReceipt]         = useState(false);
   const [comandaSentAfterPay, setComandaSentAfterPay] = useState(false);
-  const [receiptSnap, setReceiptSnap]   = useState<ReceiptSnap | null>(null);
+  const [receiptSnap, setReceiptSnap]         = useState<ReceiptSnap | null>(null);
 
   // ── Form fields ────────────────────────────────────────────────────────────
   const [orderNote,   setOrderNote]   = useState('');
@@ -413,7 +410,7 @@ export function CheckoutDrawer({
     return null;
   }, [tipRows, payRows, tipAuto, tipAutoTotal, splitEqual, grandTotal]);
 
-  const canConfirm = phase === 'completed' || (payRows.length > 0 && pendiente === 0 && !tipWarning);
+  const canConfirm = showReceipt || (payRows.length > 0 && pendiente === 0 && !tipWarning);
 
   // ── Tip actions ────────────────────────────────────────────────────────────
   const addTipRow = (method: string) => setTipRows(prev => [...prev, { id: uid(), method, amount: '' }]);
@@ -454,13 +451,12 @@ export function CheckoutDrawer({
   // ── Confirm ────────────────────────────────────────────────────────────────
   const finalizePay = () => {
     if (!canConfirm) return;
-    const methods = [...new Set(payRows.map(r => r.method))].join(', ') || 'Pendiente';
     const now = new Date();
-    // Snapshot del estado exacto al momento del cobro
     const payEntries = payRows.map((r, i) => ({
       method: r.method,
       amount: splitEqual ? payEqualAmounts[i] : (parseFloat(r.amount) || 0),
     }));
+    // Snapshot: captura el estado exacto; onConfirmPay se llama al cerrar
     setReceiptSnap({
       total:       grandTotal,
       subtotalAmt: subtotal,
@@ -474,17 +470,22 @@ export function CheckoutDrawer({
       cliente,
       date:        formatComprobante(now),
     });
-    setCompletedAt(now);
-    setPhase('completed');
+    setShowReceipt(true);
     toast.success(`Pago registrado · ${title} · $${fmtCOP(grandTotal)}`, { duration: 5000 });
-    onConfirmPay(methods, grandTotal);
+  };
+
+  // Finaliza y cierra — llamado desde el comprobante; acá sí ejecuta onConfirmPay
+  const handleFinalize = () => {
+    if (!receiptSnap) { onClose(); return; }
+    const methods = [...new Set(receiptSnap.payEntries.map(e => e.method))].join(', ') || 'Pendiente';
+    onConfirmPay(methods, receiptSnap.total);
   };
 
   // ════════════════════════════════════════════════════════════════════════════
   // LEFT PANEL
   // ════════════════════════════════════════════════════════════════════════════
 
-  const leftContent = phase === 'completed' ? (
+  const leftContent = showReceipt ? (
     /* ── COMPROBANTE DE PAGO (Figma 26419:17133) ──────────────────────────── */
     <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 16px 32px', gap: 20, background: '#F7F8FB' }}>
 
@@ -577,7 +578,7 @@ export function CheckoutDrawer({
           <Mail size={16} color="#FF2947" /> Enviar por correo
         </button>
         <button
-          onClick={onClose}
+          onClick={handleFinalize}
           style={{ flex: 1, height: 44, borderRadius: 32, border: 'none', background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: MFONT }}
         >
           Finalizar orden
@@ -865,10 +866,10 @@ export function CheckoutDrawer({
               Cancelar
             </button>
             <button
-              onClick={phase === 'completed' ? onClose : finalizePay}
+              onClick={showReceipt ? handleFinalize : finalizePay}
               disabled={!canConfirm}
               style={{ flex: 1, height: 44, borderRadius: 32, border: 'none', background: canConfirm ? '#FF2947' : '#FCDDE1', color: '#fff', fontSize: 16, fontWeight: 700, cursor: canConfirm ? 'pointer' : 'not-allowed', fontFamily: MFONT, transition: 'background 200ms' }}>
-              {phase === 'completed' ? 'Finalizar orden' : 'Confirmar pago'}
+              {showReceipt ? 'Finalizar orden' : 'Confirmar pago'}
             </button>
           </div>
         </div>
