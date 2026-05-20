@@ -510,7 +510,7 @@ export function CheckoutDrawer({
             <DashedDivider />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <ReceiptRow label="Vendedor" value={receiptSnap.vendedor} />
+              <ReceiptRow label="Mesero" value={receiptSnap.vendedor} />
               <ReceiptRow label="Cliente"  value={receiptSnap.cliente}  />
             </div>
 
@@ -562,13 +562,13 @@ export function CheckoutDrawer({
               onClick={() => toast.info('Comprobante enviado por correo')}
               style={{ flex: 1, height: 48, borderRadius: 32, border: '1.5px solid #FF2947', background: '#fff', color: '#FF2947', fontSize: 16, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
-              <Mail size={16} color="#FF2947" /> Enviar por correo
+              <Mail size={16} color="#FF2947" /> Enviar
             </button>
             <button
               onClick={handleFinalize}
               style={{ flex: 1, height: 48, borderRadius: 32, border: 'none', background: '#FF2947', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
             >
-              Finalizar orden
+              Nueva venta
             </button>
           </div>
           {!hideSendToKitchen && (
@@ -606,7 +606,7 @@ export function CheckoutDrawer({
       {/* ── Vendedor | Resolución | Cliente ── */}
       <div style={{ padding: 16, flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 16 }}>
-          <SelectField label="Vendedor" value={vendedor} onChange={setVendedor} options={['Carlos Méndez', 'Laura Torres', 'Miguel García', 'Ana Ruiz']} />
+          <SelectField label="Mesero" value={vendedor} onChange={setVendedor} options={['Carlos Méndez', 'Laura Torres', 'Miguel García', 'Ana Ruiz']} />
           <SelectField label="Resolución" value={resolucion} onChange={setResolucion} options={['Resolution - Rest Demo 2026', 'Resolution Terraza - 9876543210', 'Resolution Mostrador - 1122334455']} />
 
           {/* Cliente combobox */}
@@ -876,7 +876,7 @@ export function CheckoutDrawer({
               onClick={showReceipt ? handleFinalize : finalizePay}
               disabled={!canConfirm}
               style={{ flex: 1, height: 44, borderRadius: 32, border: 'none', background: canConfirm ? '#FF2947' : '#FCDDE1', color: '#fff', fontSize: 16, fontWeight: 700, cursor: canConfirm ? 'pointer' : 'not-allowed', fontFamily: MFONT, transition: 'background 200ms' }}>
-              {showReceipt ? 'Finalizar orden' : 'Confirmar pago'}
+              {showReceipt ? 'Nueva venta' : 'Confirmar pago'}
             </button>
           </div>
         </div>
