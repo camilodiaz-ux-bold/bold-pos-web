@@ -10,6 +10,7 @@ import {
   Printer, Plus, CheckCircle2, Send,
   Banknote, CreditCard, Smartphone, ArrowLeftRight,
   Monitor, X, Trash2, AlertTriangle, Mail,
+  Facebook, Instagram, Linkedin,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -482,38 +483,32 @@ export function CheckoutDrawer({
   };
 
   // ════════════════════════════════════════════════════════════════════════════
-  // LEFT PANEL
+  // COMPROBANTE FULL-SCREEN — early return cuando showReceipt es true
   // ════════════════════════════════════════════════════════════════════════════
 
-  const leftContent = showReceipt ? (
-    /* ── COMPROBANTE DE PAGO (Figma 26419:17133) ──────────────────────────── */
-    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 16px 32px', gap: 20, background: '#F7F8FB' }}>
+  if (showReceipt && receiptSnap) {
+    return (
+      <div style={{ flex: 1, overflowY: 'auto', background: '#F7F8FB', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 16px 48px', gap: 24, minHeight: 0, fontFamily: MFONT }}>
 
-      {receiptSnap && (
-        <div style={{ width: '100%', maxWidth: 580 }}>
-          {/* Zigzag / borde rasgado */}
+        {/* ── Card ── */}
+        <div style={{ width: '100%', maxWidth: 480 }}>
           <WaveTop />
-
-          {/* Cuerpo del comprobante */}
           <div style={{ background: '#fff', boxShadow: '0 8px 20px rgba(18,30,108,0.08)', borderRadius: '0 0 16px 16px', padding: '24px 20px' }}>
 
-            {/* ─ Hero: check + monto + fecha + mesa + resolución ─ */}
+            {/* Hero */}
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 20 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F4FDF9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CheckCircle2 size={22} color="#6CDCAB" />
               </div>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: '#1E1E1E', fontFamily: MFONT }}>¡Completaste el pago!</p>
-              <p style={{ margin: 0, fontSize: 32, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '40px' }}>
-                ${fmtCOP(receiptSnap.total)}
-              </p>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#969696', fontFamily: MFONT }}>{receiptSnap.date}</p>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#606060', fontFamily: MFONT }}>{title}</p>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 400, color: '#969696', fontFamily: MFONT }}>{receiptSnap.resolucion}</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: '#1E1E1E' }}>¡Completaste el pago!</p>
+              <p style={{ margin: 0, fontSize: 32, fontWeight: 400, color: '#1E1E1E', lineHeight: '40px' }}>${fmtCOP(receiptSnap.total)}</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#969696' }}>{receiptSnap.date}</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#606060' }}>{title}</p>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 400, color: '#969696' }}>{receiptSnap.resolucion}</p>
             </div>
 
             <DashedDivider />
 
-            {/* ─ Vendedor + Cliente ─ */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <ReceiptRow label="Vendedor" value={receiptSnap.vendedor} />
               <ReceiptRow label="Cliente"  value={receiptSnap.cliente}  />
@@ -521,23 +516,17 @@ export function CheckoutDrawer({
 
             <DashedDivider />
 
-            {/* ─ Productos ─ */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {items.map(item => {
                 const unit = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
                 return (
-                  <ReceiptRow
-                    key={item.id}
-                    label={`${item.name} x${item.quantity}`}
-                    value={`$${fmtCOP(unit * item.quantity)}`}
-                  />
+                  <ReceiptRow key={item.id} label={`${item.name} x${item.quantity}`} value={`$${fmtCOP(unit * item.quantity)}`} />
                 );
               })}
             </div>
 
             <DashedDivider />
 
-            {/* ─ Métodos de cobro ─ */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {receiptSnap.payEntries.map((e, i) => (
                 <ReceiptRow key={i} label={e.method} value={`$${fmtCOP(e.amount)}`} />
@@ -549,10 +538,9 @@ export function CheckoutDrawer({
 
             <DashedDivider />
 
-            {/* ─ Totales ─ */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <ReceiptRow label="Subtotal"      value={`$${fmtCOP(receiptSnap.subtotalAmt)}`} />
-              <ReceiptRow label="IVA (19%)"     value={`$${fmtCOP(receiptSnap.taxAmt)}`}      />
+              <ReceiptRow label="Subtotal"  value={`$${fmtCOP(receiptSnap.subtotalAmt)}`} />
+              <ReceiptRow label="IVA (19%)" value={`$${fmtCOP(receiptSnap.taxAmt)}`}      />
               {receiptSnap.tipAmt > 0 && (
                 <ReceiptRow label={receiptSnap.tipLabel} value={`$${fmtCOP(receiptSnap.tipAmt)}`} />
               )}
@@ -560,41 +548,60 @@ export function CheckoutDrawer({
 
             <DashedDivider />
 
-            {/* ─ Total ─ */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E', fontFamily: MFONT }}>Total</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E', fontFamily: MFONT }}>${fmtCOP(receiptSnap.total)} COP</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E' }}>Total</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E' }}>${fmtCOP(receiptSnap.total)} COP</span>
             </div>
           </div>
         </div>
-      )}
 
-      {/* ── Botones de acción del comprobante ── */}
-      <div style={{ width: '100%', maxWidth: 580, display: 'flex', gap: 8 }}>
-        <button
-          onClick={() => toast.info('Comprobante enviado por correo')}
-          style={{ flex: 1, height: 44, borderRadius: 32, border: '1.5px solid #FF2947', background: '#fff', color: '#FF2947', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: MFONT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-        >
-          <Mail size={16} color="#FF2947" /> Enviar por correo
-        </button>
-        <button
-          onClick={handleFinalize}
-          style={{ flex: 1, height: 44, borderRadius: 32, border: 'none', background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: MFONT }}
-        >
-          Finalizar orden
-        </button>
+        {/* ── Botones ── */}
+        <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => toast.info('Comprobante enviado por correo')}
+              style={{ flex: 1, height: 48, borderRadius: 32, border: '1.5px solid #FF2947', background: '#fff', color: '#FF2947', fontSize: 16, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              <Mail size={16} color="#FF2947" /> Enviar por correo
+            </button>
+            <button
+              onClick={handleFinalize}
+              style={{ flex: 1, height: 48, borderRadius: 32, border: 'none', background: '#FF2947', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+            >
+              Finalizar orden
+            </button>
+          </div>
+          {!hideSendToKitchen && (
+            <button
+              onClick={() => { setComandaSentAfterPay(true); toast.success('Comanda enviada a cocina'); }}
+              style={{ width: '100%', height: 44, borderRadius: 32, background: comandaSentAfterPay ? '#F4FDF9' : 'transparent', border: `1.5px solid ${comandaSentAfterPay ? '#6CDCAB' : '#C7CBE0'}`, color: comandaSentAfterPay ? '#1B8959' : '#606060', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              <Send size={14} />{comandaSentAfterPay ? 'Comanda enviada' : 'Enviar comanda a cocina'}
+            </button>
+          )}
+        </div>
+
+        {/* ── Footer ── */}
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#969BBD' }}>Bold.co S.A.S NIT 901281572-4</p>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#969BBD' }}>www.bold.co</p>
+          <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
+            {([Facebook, Instagram, Linkedin] as const).map((Icon, i) => (
+              <div key={i} style={{ width: 24, height: 24, borderRadius: '50%', background: '#969BBD', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={12} color="#fff" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+    );
+  }
 
-      {!hideSendToKitchen && (
-        <button
-          onClick={() => { setComandaSentAfterPay(true); toast.success('Comanda enviada a cocina'); }}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', maxWidth: 580, height: 44, borderRadius: 32, background: comandaSentAfterPay ? '#F4FDF9' : 'transparent', border: `1.5px solid ${comandaSentAfterPay ? '#6CDCAB' : '#C7CBE0'}`, color: comandaSentAfterPay ? '#1B8959' : '#606060', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: MFONT }}
-        >
-          <Send size={14} />{comandaSentAfterPay ? 'Comanda enviada' : 'Enviar comanda a cocina'}
-        </button>
-      )}
-    </div>
-  ) : (
+  // ════════════════════════════════════════════════════════════════════════════
+  // LEFT PANEL (formulario de checkout)
+  // ════════════════════════════════════════════════════════════════════════════
+
+  const leftContent = (
     <>
       {/* ── Vendedor | Resolución | Cliente ── */}
       <div style={{ padding: 16, flexShrink: 0 }}>
