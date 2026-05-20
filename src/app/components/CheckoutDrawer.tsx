@@ -302,9 +302,13 @@ export function CheckoutDrawer({
   const [methodPanel, setMethodPanel] = useState<'tip' | 'pay' | null>(null);
 
   // ── Cobro state ────────────────────────────────────────────────────────────
-  // splitEqual=true con 1 fila → monto se recalcula automáticamente con grandTotal
-  const [payRows,     setPayRows]     = useState<PayRow[]>(() => [{ id: uid(), method: 'Efectivo', amount: '' }]);
-  const [splitEqual,  setSplitEqual]  = useState(true);
+  const [payRows, setPayRows] = useState<PayRow[]>(() => {
+    const sub  = items.reduce((s, i) => s + (i.discount ? Math.round(i.price * (1 - i.discount / 100)) : i.price) * i.quantity, 0);
+    const tip  = Math.round(sub * 0.10);
+    const total = sub + Math.round(sub * 0.19) + tip;
+    return [{ id: uid(), method: 'Efectivo', amount: String(total) }];
+  });
+  const [splitEqual, setSplitEqual] = useState(false);
 
   // ── Base totals ────────────────────────────────────────────────────────────
   const subtotal = useMemo(
@@ -544,12 +548,10 @@ export function CheckoutDrawer({
         </div>
       )}
 
-      {payRows.map((row, i) => (
+      {payRows.map((row) => (
         <PayRowLine
           key={row.id}
           row={row}
-          amountReadonly={splitEqual}
-          amountDisplayValue={splitEqual ? payEqualAmounts[i] : undefined}
           onMethod={m => updatePayMethod(row.id, m)}
           onAmount={v => updatePayAmount(row.id, v)}
           onDelete={() => deletePayRow(row.id)}
