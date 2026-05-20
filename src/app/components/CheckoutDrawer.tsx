@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronDown, ChevronUp,
   Printer, Plus, CheckCircle2, Send,
   Banknote, CreditCard, Smartphone, ArrowLeftRight,
-  Monitor, X, Trash2, AlertTriangle,
+  Monitor, X, Trash2, AlertTriangle, Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -85,9 +85,52 @@ function distrib(total: number, n: number): number[] {
   return Array.from({ length: n }, (_, i) => base + (i === n - 1 ? rem : 0));
 }
 
+function formatComprobante(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+// ─── Receipt snapshot (captura el estado exacto al confirmar el pago) ─────────
+
+interface ReceiptSnap {
+  total:       number;
+  subtotalAmt: number;
+  taxAmt:      number;
+  tipAmt:      number;
+  tipLabel:    string;
+  payEntries:  { method: string; amount: number }[];
+  cambioAmt:   number;
+  resolucion:  string;
+  vendedor:    string;
+  cliente:     string;
+  date:        string;
+}
+
 // ─── Tiny components ──────────────────────────────────────────────────────────
 
 const HSep = () => <div style={{ height: 1, background: '#F0F0F0', flexShrink: 0 }} />;
+
+const DashedDivider = () => <div style={{ borderTop: '1px dashed #E0E0E0', margin: '16px 0' }} />;
+
+function WaveTop() {
+  return (
+    <svg width="100%" height="18" viewBox="0 0 600 18" preserveAspectRatio="none" style={{ display: 'block' }}>
+      <path
+        d="M0,18 L0,10 Q15,2 30,10 Q45,18 60,10 Q75,2 90,10 Q105,18 120,10 Q135,2 150,10 Q165,18 180,10 Q195,2 210,10 Q225,18 240,10 Q255,2 270,10 Q285,18 300,10 Q315,2 330,10 Q345,18 360,10 Q375,2 390,10 Q405,18 420,10 Q435,2 450,10 Q465,18 480,10 Q495,2 510,10 Q525,18 540,10 Q555,2 570,10 Q585,18 600,10 L600,18 Z"
+        fill="#F7F8FB"
+      />
+    </svg>
+  );
+}
+
+function ReceiptRow({ label, value, valueColor, bold }: { label: string; value: string; valueColor?: string; bold?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+      <span style={{ fontSize: 12, fontWeight: bold ? 600 : 400, color: '#606060', fontFamily: MFONT, lineHeight: '16px' }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: bold ? 600 : 500, color: valueColor ?? '#1E1E1E', fontFamily: MFONT, lineHeight: '16px', textAlign: 'right' }}>{value}</span>
+    </div>
+  );
+}
 
 function SectionBar({ label, cta, onCta }: { label: string; cta: string; onCta: () => void }) {
   return (
@@ -283,6 +326,7 @@ export function CheckoutDrawer({
   const [phase, setPhase]               = useState<Phase>('checkout');
   const [completedAt, setCompletedAt]   = useState<Date | null>(null);
   const [comandaSentAfterPay, setComandaSentAfterPay] = useState(false);
+  const [receiptSnap, setReceiptSnap]   = useState<ReceiptSnap | null>(null);
 
   // ── Form fields ────────────────────────────────────────────────────────────
   const [orderNote,   setOrderNote]   = useState('');
@@ -411,7 +455,26 @@ export function CheckoutDrawer({
   const finalizePay = () => {
     if (!canConfirm) return;
     const methods = [...new Set(payRows.map(r => r.method))].join(', ') || 'Pendiente';
-    setCompletedAt(new Date());
+    const now = new Date();
+    // Snapshot del estado exacto al momento del cobro
+    const payEntries = payRows.map((r, i) => ({
+      method: r.method,
+      amount: splitEqual ? payEqualAmounts[i] : (parseFloat(r.amount) || 0),
+    }));
+    setReceiptSnap({
+      total:       grandTotal,
+      subtotalAmt: subtotal,
+      taxAmt:      tax,
+      tipAmt:      tipTotal,
+      tipLabel:    tipAuto && tipRows.length > 0 ? 'Propina (10%)' : 'Propina',
+      payEntries,
+      cambioAmt:   cambio,
+      resolucion,
+      vendedor,
+      cliente,
+      date:        formatComprobante(now),
+    });
+    setCompletedAt(now);
     setPhase('completed');
     toast.success(`Pago registrado · ${title} · $${fmtCOP(grandTotal)}`, { duration: 5000 });
     onConfirmPay(methods, grandTotal);
@@ -422,22 +485,109 @@ export function CheckoutDrawer({
   // ════════════════════════════════════════════════════════════════════════════
 
   const leftContent = phase === 'completed' ? (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 20, padding: '32px 24px' }}>
-      <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#F4FDF9', border: '4px solid #6CDCAB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <CheckCircle2 size={40} color="#1B8959" />
+    /* ── COMPROBANTE DE PAGO (Figma 26419:17133) ──────────────────────────── */
+    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 16px 32px', gap: 20, background: '#F7F8FB' }}>
+
+      {receiptSnap && (
+        <div style={{ width: '100%', maxWidth: 580 }}>
+          {/* Zigzag / borde rasgado */}
+          <WaveTop />
+
+          {/* Cuerpo del comprobante */}
+          <div style={{ background: '#fff', boxShadow: '0 8px 20px rgba(18,30,108,0.08)', borderRadius: '0 0 16px 16px', padding: '24px 20px' }}>
+
+            {/* ─ Hero: check + monto + fecha + mesa + resolución ─ */}
+            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 20 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F4FDF9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CheckCircle2 size={22} color="#6CDCAB" />
+              </div>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: '#1E1E1E', fontFamily: MFONT }}>¡Completaste el pago!</p>
+              <p style={{ margin: 0, fontSize: 32, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '40px' }}>
+                ${fmtCOP(receiptSnap.total)}
+              </p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#969696', fontFamily: MFONT }}>{receiptSnap.date}</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#606060', fontFamily: MFONT }}>{title}</p>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 400, color: '#969696', fontFamily: MFONT }}>{receiptSnap.resolucion}</p>
+            </div>
+
+            <DashedDivider />
+
+            {/* ─ Vendedor + Cliente ─ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <ReceiptRow label="Vendedor" value={receiptSnap.vendedor} />
+              <ReceiptRow label="Cliente"  value={receiptSnap.cliente}  />
+            </div>
+
+            <DashedDivider />
+
+            {/* ─ Productos ─ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {items.map(item => {
+                const unit = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
+                return (
+                  <ReceiptRow
+                    key={item.id}
+                    label={`${item.name} x${item.quantity}`}
+                    value={`$${fmtCOP(unit * item.quantity)}`}
+                  />
+                );
+              })}
+            </div>
+
+            <DashedDivider />
+
+            {/* ─ Métodos de cobro ─ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {receiptSnap.payEntries.map((e, i) => (
+                <ReceiptRow key={i} label={e.method} value={`$${fmtCOP(e.amount)}`} />
+              ))}
+              {receiptSnap.cambioAmt > 0 && (
+                <ReceiptRow label="Cambio" value={`$${fmtCOP(receiptSnap.cambioAmt)}`} valueColor="#1B8959" />
+              )}
+            </div>
+
+            <DashedDivider />
+
+            {/* ─ Totales ─ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <ReceiptRow label="Subtotal"      value={`$${fmtCOP(receiptSnap.subtotalAmt)}`} />
+              <ReceiptRow label="IVA (19%)"     value={`$${fmtCOP(receiptSnap.taxAmt)}`}      />
+              {receiptSnap.tipAmt > 0 && (
+                <ReceiptRow label={receiptSnap.tipLabel} value={`$${fmtCOP(receiptSnap.tipAmt)}`} />
+              )}
+            </div>
+
+            <DashedDivider />
+
+            {/* ─ Total ─ */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E', fontFamily: MFONT }}>Total</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E', fontFamily: MFONT }}>${fmtCOP(receiptSnap.total)} COP</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Botones de acción del comprobante ── */}
+      <div style={{ width: '100%', maxWidth: 580, display: 'flex', gap: 8 }}>
+        <button
+          onClick={() => toast.info('Comprobante enviado por correo')}
+          style={{ flex: 1, height: 44, borderRadius: 32, border: '1.5px solid #FF2947', background: '#fff', color: '#FF2947', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: MFONT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        >
+          <Mail size={16} color="#FF2947" /> Enviar por correo
+        </button>
+        <button
+          onClick={onClose}
+          style={{ flex: 1, height: 44, borderRadius: 32, border: 'none', background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: MFONT }}
+        >
+          Finalizar orden
+        </button>
       </div>
-      <div style={{ textAlign: 'center' }}>
-        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#1E1E1E', margin: 0, fontFamily: MFONT }}>Pago completado</h3>
-        {completedAt && (
-          <p style={{ fontSize: 13, color: '#606060', marginTop: 4, fontFamily: MFONT }}>
-            {title} · {completedAt.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })} {completedAt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        )}
-      </div>
+
       {!hideSendToKitchen && (
         <button
           onClick={() => { setComandaSentAfterPay(true); toast.success('Comanda enviada a cocina'); }}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', maxWidth: 320, height: 44, borderRadius: 32, background: comandaSentAfterPay ? '#F4FDF9' : '#FF2947', border: comandaSentAfterPay ? '1px solid #6CDCAB' : 'none', color: comandaSentAfterPay ? '#1B8959' : '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: MFONT }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', maxWidth: 580, height: 44, borderRadius: 32, background: comandaSentAfterPay ? '#F4FDF9' : 'transparent', border: `1.5px solid ${comandaSentAfterPay ? '#6CDCAB' : '#C7CBE0'}`, color: comandaSentAfterPay ? '#1B8959' : '#606060', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: MFONT }}
         >
           <Send size={14} />{comandaSentAfterPay ? 'Comanda enviada' : 'Enviar comanda a cocina'}
         </button>
