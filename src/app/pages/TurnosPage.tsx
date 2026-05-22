@@ -783,58 +783,99 @@ function TurnoDetail({ turno }: { turno: Turno }) {
         </div>
       </div>
 
-      {/* ── Info cards — 3 paneles en fila con separadores ── */}
+      {/* ── Info cards — 2 si abierto, 3 si cerrado ── */}
       {(() => {
         const { fecha: fi, hora: hi } = splitDateTime(turno.inicio);
         const open = turno.estado === 'abierto';
-        return (
-          <div style={{ display: 'flex', backgroundColor: C.white, borderRadius: 14, border: `1px solid ${C.divider}`, overflow: 'hidden', boxShadow: C.shadow }}>
 
-            {/* Panel 1: Inicio del turno */}
-            <div style={{ flex: 1, padding: '16px 20px', borderRight: `1px solid ${C.divider}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        const card: React.CSSProperties = {
+          backgroundColor: C.white, borderRadius: 12,
+          border: '1px solid #E0E0E0', padding: 16,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          display: 'flex', flexDirection: 'column', gap: 10,
+        };
+        const lbl: React.CSSProperties = {
+          fontSize: 11, fontWeight: 500, color: C.black40, fontFamily: FONT, margin: '0 0 2px',
+        };
+        const fecha: React.CSSProperties = {
+          fontSize: 15, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px',
+        };
+        const hora: React.CSSProperties = {
+          fontSize: 12, fontWeight: 400, color: C.black60, fontFamily: FONT, margin: 0,
+        };
+        const monto: React.CSSProperties = {
+          fontSize: 20, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px', lineHeight: '26px',
+        };
+
+        if (open) {
+          return (
+            <div style={{ display: 'flex', gap: 12 }}>
+              {/* Card 1 — Inicio del turno (más ancha) */}
+              <div style={{ ...card, flex: '1.4 0 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Calendar size={20} color={C.blue100} />
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, backgroundColor: '#E8F5E9', borderRadius: 100, padding: '3px 10px' }}>
+                    <Sun size={13} color="#2E7D32" />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#2E7D32', fontFamily: FONT }}>Abierto</span>
+                  </div>
+                </div>
+                <div>
+                  <p style={lbl}>Inicio del turno</p>
+                  <p style={fecha}>{fi}</p>
+                  <p style={hora}>{hi}</p>
+                </div>
+              </div>
+
+              {/* Card 2 — Total sin propinas */}
+              <div style={{ ...card, flex: '1 0 0' }}>
+                <DollarSign size={20} color={C.blue100} />
+                <div>
+                  <p style={lbl}>Total sin incluir propinas</p>
+                  <p style={monto}>{cop(d.ventasRegistradas)}</p>
+                  <p style={hora}>{d.numVentas} ventas</p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // ── Cerrado: 3 cards ──────────────────────────────────────────────────
+        const { fecha: fc, hora: hc } = splitDateTime(turno.cierre ?? '');
+        return (
+          <div style={{ display: 'flex', gap: 12 }}>
+            {/* Card 1 — Inicio del turno */}
+            <div style={{ ...card, flex: '1 0 0' }}>
               <Calendar size={20} color={C.blue100} />
               <div>
-                <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 4px' }}>
-                  Inicio del turno
-                </p>
-                <p style={{ fontSize: 14, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px' }}>{fi}</p>
-                <p style={{ fontSize: 12, fontWeight: 400, color: C.black60, fontFamily: FONT, margin: 0 }}>{hi}</p>
+                <p style={lbl}>Inicio del turno</p>
+                <p style={fecha}>{fi}</p>
+                <p style={hora}>{hi}</p>
               </div>
             </div>
 
-            {/* Panel 2: Estado del turno */}
-            <div style={{ flex: 1, padding: '16px 20px', borderRight: `1px solid ${C.divider}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Card 2 — Fin del turno */}
+            <div style={{ ...card, flex: '1 0 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                {open ? <Sun size={20} color="#f59e0b" /> : <Moon size={20} color={C.black40} />}
-                <StatusBadge estado={turno.estado} />
+                <Calendar size={20} color={C.blue100} />
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, backgroundColor: '#F5F5F5', borderRadius: 100, padding: '3px 10px' }}>
+                  <Moon size={13} color="#424242" />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: '#424242', fontFamily: FONT }}>Cerrado</span>
+                </div>
               </div>
-              {!open && turno.cierre && ((): React.ReactNode => {
-                const { fecha: fc, hora: hc } = splitDateTime(turno.cierre);
-                return (
-                  <div>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 4px' }}>
-                      Fin del turno
-                    </p>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px' }}>{fc}</p>
-                    <p style={{ fontSize: 12, fontWeight: 400, color: C.black60, fontFamily: FONT, margin: 0 }}>{hc}</p>
-                  </div>
-                );
-              })()}
+              <div>
+                <p style={lbl}>Fin del turno</p>
+                <p style={fecha}>{fc}</p>
+                <p style={hora}>{hc}</p>
+              </div>
             </div>
 
-            {/* Panel 3: Total sin propinas */}
-            <div style={{ flex: 1, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Card 3 — Total sin propinas */}
+            <div style={{ ...card, flex: '1 0 0' }}>
               <DollarSign size={20} color={C.blue100} />
               <div>
-                <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 4px' }}>
-                  Total sin incluir propinas
-                </p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px', lineHeight: '26px' }}>
-                  {cop(d.ventasRegistradas)}
-                </p>
-                <p style={{ fontSize: 12, color: C.black60, fontFamily: FONT, margin: 0 }}>
-                  {d.numVentas} Ventas
-                </p>
+                <p style={lbl}>Total sin incluir propinas</p>
+                <p style={monto}>{cop(d.ventasRegistradas)}</p>
+                <p style={hora}>{d.numVentas} Ventas</p>
               </div>
             </div>
           </div>
