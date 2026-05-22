@@ -8,7 +8,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import React, { useState } from 'react';
-import { Calendar, Clock, ChevronRight, ChevronLeft, Sun, TrendingUp } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, ChevronLeft, Sun, Moon, DollarSign, Plus, Info } from 'lucide-react';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -184,6 +184,12 @@ const PAGE_SIZE = 9;
 
 function cop(n: number): string {
   return '$' + n.toLocaleString('es-CO');
+}
+
+function splitDateTime(s: string): { fecha: string; hora: string } {
+  const idx = s.indexOf(' - ');
+  if (idx === -1) return { fecha: s, hora: '' };
+  return { fecha: s.slice(0, idx).trim(), hora: s.slice(idx + 3).trim() };
 }
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
@@ -491,92 +497,82 @@ function TurnoListItem({
 
 function TabResumen({ turno }: { turno: Turno }) {
   const d = turno.detalle;
-  const propinas          = turno.ventas.propinas;
-  const ventasEfectivo    = d.ingresos.find(i => i.metodo === 'Efectivo')?.monto ?? 0;
-  const ingEfectivoNoRel  = d.ingresosNoRelacionados.find(i => i.metodo === 'Efectivo')?.monto ?? 0;
+  const propinas            = turno.ventas.propinas;
+  const efectivoBase        = d.ingresos.find(i => i.metodo === 'Efectivo')?.monto ?? 0;
+  const ingEfectivoNoRel    = d.ingresosNoRelacionados.find(i => i.metodo === 'Efectivo')?.monto ?? 0;
   const totalNoRelacionados = d.ingresosNoRelacionados.reduce((s, r) => s + r.monto, 0);
-  const totalEgresos      = d.egresos.reduce((s, r) => s + r.monto, 0);
-  const comprobantes      = d.comprobantes ?? Math.round(d.ventasRegistradas * 0.765);
-  const facturasVenta     = d.facturasVenta ?? (d.ventasRegistradas - comprobantes);
-  const numComp           = d.numComprobantes ?? Math.round(d.numVentas * 0.74);
-  const numFact           = d.numVentas - numComp;
-  const resultadoNeto     = d.ventasRegistradas + totalNoRelacionados - totalEgresos;
-  const totalConPropinas  = resultadoNeto + propinas;
+  const totalEgresos        = d.egresos.reduce((s, r) => s + r.monto, 0);
+  const comprobantes        = d.comprobantes ?? Math.round(d.ventasRegistradas * 0.765);
+  const facturasVenta       = d.facturasVenta ?? (d.ventasRegistradas - comprobantes);
+  const numComp             = d.numComprobantes ?? Math.round(d.numVentas * 0.74);
+  const numFact             = d.numVentas - numComp;
+  const efectivoEsperado    = efectivoBase + d.saldoInicial - d.egresosEfectivo;
+  const resultadoNeto       = d.ventasRegistradas + totalNoRelacionados + propinas - totalEgresos;
+  const { fecha: fi, hora: hi } = splitDateTime(turno.inicio);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      {/* ── Resumen de ventas ── */}
-      <SectionTitle>Resumen de ventas</SectionTitle>
+      <SectionTitle>Resumen del turno</SectionTitle>
       <Card style={{ padding: '16px 20px' }}>
 
-        {/* Inicio / Cierre del turno */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0 12px' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: C.blue100, fontFamily: FONT }}>Inicio del turno</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: C.blue100, fontFamily: FONT }}>{turno.inicio}</span>
+        {/* Inicio del turno — bold, coral */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 0' }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: C.black100, fontFamily: FONT }}>Inicio del turno</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#F4574E', fontFamily: FONT }}>{fi} - {hi}</span>
         </div>
-        {turno.cierre && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0 12px' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: C.blue100, fontFamily: FONT }}>Cierre del turno</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: C.blue100, fontFamily: FONT }}>{turno.cierre}</span>
-          </div>
-        )}
 
         <Divider />
-
-        <SummaryRow label="Saldo inicial en caja"                         value={cop(d.saldoInicial)} />
+        <SummaryRow label="Saldo inicial en caja" value={cop(d.saldoInicial)} />
         <Divider />
-        <SummaryRow label="Ventas cobradas en efectivo"                   value={cop(ventasEfectivo)} />
+        <SummaryRow label="Ventas cobradas en efectivo" value={cop(efectivoBase)} />
         <Divider />
-        <SummaryRow label="Ingreso en efectivo no relacionado al turno"   value={ingEfectivoNoRel === 0 ? '—' : cop(ingEfectivoNoRel)} />
+        <SummaryRow label="Ingreso en efectivo no relacionado al turno" value={ingEfectivoNoRel === 0 ? '$0' : cop(ingEfectivoNoRel)} />
         <Divider />
         <SummaryRow
           label="Gastos en efectivo"
-          value={cop(d.egresosEfectivo)}
+          value={d.egresosEfectivo === 0 ? '$0' : cop(d.egresosEfectivo)}
           labelColor={d.egresosEfectivo > 0 ? C.coral100 : undefined}
           valueColor={d.egresosEfectivo > 0 ? C.coral100 : undefined}
         />
         <Divider />
-        <SummaryRow label={`Comprobantes (${numComp} comprobantes)`}      value={cop(comprobantes)} />
+        <SummaryRow label="Efectivo esperado en caja" value={cop(efectivoEsperado)} bold />
+
+        {/* Separador de bloque */}
+        <div style={{ height: 1, backgroundColor: C.blue20, margin: '12px -20px' }} />
+
+        <SummaryRow label="Comprobantes" value={`${cop(comprobantes)} (${numComp} comprobantes)`} />
         <Divider />
-        <SummaryRow label={`Facturas de venta (${numFact} facturas)`}     value={cop(facturasVenta)} />
+        <SummaryRow label="Facturas de venta" value={`${cop(facturasVenta)} (${numFact} facturas)`} />
+        <Divider />
+        <SummaryRow label="Ventas realizadas a crédito" value={cop(d.ventasCredito)} />
         <Divider />
         <SummaryRow
-          label={`Ventas (Comprobantes + Facturas de venta) (${d.numVentas} ventas)`}
-          value={cop(d.ventasRegistradas)}
+          label="Ventas (comprobantes + facturas)"
+          value={`${cop(d.ventasRegistradas)} (${d.numVentas} ventas)`}
           bold
         />
         <Divider />
-        <SummaryRow label="Ingresos no relacionados a ventas del turno"   value={cop(totalNoRelacionados)} />
+        <SummaryRow label="Ingresos no relacionados a ventas del turno" value={cop(totalNoRelacionados)} />
         <Divider />
         <SummaryRow
-          label="Gastos"
-          value={cop(totalEgresos)}
+          label="Gastos realizados"
+          value={totalEgresos === 0 ? `$0 (${d.egresos.length} gastos)` : `${cop(totalEgresos)} (${d.egresos.length} gastos)`}
           labelColor={totalEgresos > 0 ? C.coral100 : undefined}
           valueColor={totalEgresos > 0 ? C.coral100 : undefined}
         />
         <Divider />
-        <SummaryRow
-          label="Propinas recaudadas"
-          value={cop(propinas)}
-          labelColor={C.blue100}
-          valueColor={C.blue100}
-        />
-        <Divider />
-        <SummaryRow label="Resultado neto del turno" value={cop(resultadoNeto)} bold />
-        <SummaryRow label="Total con propinas"       value={cop(totalConPropinas)} bold highlight />
+        <SummaryRow label="Propinas recaudadas" value={cop(propinas)} />
 
-        <p style={{ fontSize: 11, color: C.black60, fontFamily: FONT, margin: '8px 0 0', lineHeight: '16px' }}>
-          ({cop(d.ventasRegistradas)} ingresos + {cop(totalNoRelacionados)} no relacionados − {cop(totalEgresos)} egresos = {cop(resultadoNeto)})
-        </p>
-      </Card>
+        <SummaryRow label="Resultado neto del turno" value={cop(resultadoNeto)} bold highlight />
 
-      {/* ── Transacciones anuladas ── */}
-      <SectionTitle>Transacciones anuladas</SectionTitle>
-      <Card style={{ padding: '16px 20px' }}>
-        <SummaryRow label="Ventas anuladas"  value="$0" />
-        <Divider />
-        <SummaryRow label="Recibos anulados" value="$0" />
+        {/* Nota informativa */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginTop: 8 }}>
+          <Info size={13} color={C.blue100} style={{ flexShrink: 0, marginTop: 1 }} />
+          <p style={{ fontSize: 11, color: C.black60, fontFamily: FONT, margin: 0, lineHeight: '16px' }}>
+            ({cop(d.ventasRegistradas)} ingresos + {cop(totalNoRelacionados)} no relacionados + {cop(propinas)} propinas − {cop(totalEgresos)} egresos = {cop(resultadoNeto)})
+          </p>
+        </div>
       </Card>
     </div>
   );
@@ -758,16 +754,22 @@ function TurnoDetail({ turno }: { turno: Turno }) {
           </span>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          {(['Historial', 'Agregar gasto'] as const).map(label => (
-            <button key={label} style={{
-              fontSize: 12, fontWeight: 500, color: C.blue60,
-              backgroundColor: C.white, border: `1px solid ${C.blue20}`,
-              borderRadius: 100, padding: '6px 14px', cursor: 'pointer',
-              fontFamily: FONT,
-            }}>
-              {label}
-            </button>
-          ))}
+          <button style={{
+            fontSize: 12, fontWeight: 500, color: C.blue60,
+            backgroundColor: C.white, border: `1px solid ${C.blue20}`,
+            borderRadius: 100, padding: '6px 14px', cursor: 'pointer',
+            fontFamily: FONT, display: 'flex', alignItems: 'center', gap: 5,
+          }}>
+            <Clock size={13} color={C.blue60} /> Historial
+          </button>
+          <button style={{
+            fontSize: 12, fontWeight: 500, color: C.blue60,
+            backgroundColor: C.white, border: `1px solid ${C.blue20}`,
+            borderRadius: 100, padding: '6px 14px', cursor: 'pointer',
+            fontFamily: FONT, display: 'flex', alignItems: 'center', gap: 5,
+          }}>
+            <Plus size={13} color={C.blue60} /> Agregar gasto
+          </button>
           {turno.estado === 'abierto' && (
             <button style={{
               fontSize: 12, fontWeight: 700, color: C.white,
@@ -781,96 +783,63 @@ function TurnoDetail({ turno }: { turno: Turno }) {
         </div>
       </div>
 
-      {/* ── Info cards — top row (3 cards) ── */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+      {/* ── Info cards — 3 paneles en fila con separadores ── */}
+      {(() => {
+        const { fecha: fi, hora: hi } = splitDateTime(turno.inicio);
+        const open = turno.estado === 'abierto';
+        return (
+          <div style={{ display: 'flex', backgroundColor: C.white, borderRadius: 14, border: `1px solid ${C.divider}`, overflow: 'hidden', boxShadow: C.shadow }}>
 
-        {/* Card 1: Inicio del turno */}
-        <Card style={{ flex: '1 0 200px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Calendar size={20} color={C.blue100} />
-            <StatusBadge estado={turno.estado} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div>
-              <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 2px' }}>
-                Inicio del turno
-              </p>
-              <p style={{ fontSize: 12, fontWeight: 600, color: C.black100, fontFamily: FONT, margin: 0 }}>
-                {turno.inicio}
-              </p>
-            </div>
-            {turno.cierre && (
+            {/* Panel 1: Inicio del turno */}
+            <div style={{ flex: 1, padding: '16px 20px', borderRight: `1px solid ${C.divider}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Calendar size={20} color={C.blue100} />
               <div>
-                <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 2px' }}>
-                  Cierre del turno
+                <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 4px' }}>
+                  Inicio del turno
                 </p>
-                <p style={{ fontSize: 12, fontWeight: 600, color: C.black100, fontFamily: FONT, margin: 0 }}>
-                  {turno.cierre}
+                <p style={{ fontSize: 14, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px' }}>{fi}</p>
+                <p style={{ fontSize: 12, fontWeight: 400, color: C.black60, fontFamily: FONT, margin: 0 }}>{hi}</p>
+              </div>
+            </div>
+
+            {/* Panel 2: Estado del turno */}
+            <div style={{ flex: 1, padding: '16px 20px', borderRight: `1px solid ${C.divider}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                {open ? <Sun size={20} color="#f59e0b" /> : <Moon size={20} color={C.black40} />}
+                <StatusBadge estado={turno.estado} />
+              </div>
+              {!open && turno.cierre && ((): React.ReactNode => {
+                const { fecha: fc, hora: hc } = splitDateTime(turno.cierre);
+                return (
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 4px' }}>
+                      Fin del turno
+                    </p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px' }}>{fc}</p>
+                    <p style={{ fontSize: 12, fontWeight: 400, color: C.black60, fontFamily: FONT, margin: 0 }}>{hc}</p>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Panel 3: Total sin propinas */}
+            <div style={{ flex: 1, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <DollarSign size={20} color={C.blue100} />
+              <div>
+                <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 4px' }}>
+                  Total sin incluir propinas
+                </p>
+                <p style={{ fontSize: 20, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px', lineHeight: '26px' }}>
+                  {cop(d.ventasRegistradas)}
+                </p>
+                <p style={{ fontSize: 12, color: C.black60, fontFamily: FONT, margin: 0 }}>
+                  {d.numVentas} Ventas
                 </p>
               </div>
-            )}
+            </div>
           </div>
-        </Card>
-
-        {/* Card 2: Ventas registradas */}
-        <Card style={{ flex: '1 0 180px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            {turno.estado === 'abierto'
-              ? <Sun size={20} color="#f59e0b" />
-              : <Clock size={20} color={C.black60} />
-            }
-            <span style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-              Ventas registradas
-            </span>
-          </div>
-          <div>
-            <p style={{ fontSize: 20, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px', lineHeight: '26px' }}>
-              {cop(d.ventasRegistradas)}
-            </p>
-            <p style={{ fontSize: 12, color: C.black60, fontFamily: FONT, margin: 0 }}>
-              {d.numVentas} ventas
-            </p>
-            <p style={{ fontSize: 10, color: '#909090', fontFamily: FONT, margin: '4px 0 0' }}>
-              No incluye propinas
-            </p>
-          </div>
-        </Card>
-
-        {/* Card 3: Total con propinas */}
-        <Card style={{ flex: '1 0 200px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TrendingUp size={20} color={C.successText} />
-            <span style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-              Total con propinas
-            </span>
-          </div>
-          <div>
-            <p style={{ fontSize: 20, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '0 0 2px', lineHeight: '26px' }}>
-              {cop(d.ventasRegistradas + turno.ventas.propinas)}
-            </p>
-            <p style={{ fontSize: 11, color: '#606060', fontFamily: FONT, margin: '4px 0 0' }}>
-              Ventas {cop(d.ventasRegistradas)} + Propinas {cop(turno.ventas.propinas)}
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      {/* ── Info cards — bottom row (Efectivo en caja, full width) ── */}
-      {turno.estado === 'abierto' && (
-        <Card style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <p style={{ fontSize: 10, fontWeight: 600, color: C.black40, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: '0.4px', margin: 0 }}>
-              Efectivo en caja
-            </p>
-            <p style={{ fontSize: 20, fontWeight: 700, color: C.black100, fontFamily: FONT, margin: '4px 0 0', lineHeight: '26px' }}>
-              {cop(turno.ventas.efectivo)}
-            </p>
-            <p style={{ fontSize: 12, color: C.black60, fontFamily: FONT, margin: 0 }}>
-              Saldo inicial: {cop(d.saldoInicial)}
-            </p>
-          </div>
-        </Card>
-      )}
+        );
+      })()}
 
       {/* ── Tabs ── */}
       <div style={{
