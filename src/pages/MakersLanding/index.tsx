@@ -665,105 +665,176 @@ export function MakersLanding() {
         }}
       >
 
-        {/* — Contenido — nodo 1:1129
-             Figma: bottom:70.65px · left:343.26px · w:593.484px · h:195.345px
-             (= centered: (1280-593.484)/2 = 343.258)
-        — */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 70.65,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 593.484,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 22,
-          }}
-        >
-          {/* Badge + título — nodo 1:1043 · gap:25px · h:129px */}
+        {/* ── Dos columnas — izquierda (badge+título+subtítulo) · derecha (card nodo 10:285) ── */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
           <div
             style={{
+              maxWidth: 1200,
+              margin: '0 auto',
+              width: '100%',
+              padding: '0 64px',
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: 25,
-              height: 129,
+              gap: 48,
             }}
           >
-            {/* "AI - PROYECTS" — nodo 1:1055
-                 Figma: bg white (opacado por máscara) · w:180 · h:28 · px:12 · gap:11
-                 Simulamos con rgba + borde para el efecto frosted
+
+            {/* ── Izquierda: badge · título · subtítulo ── */}
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 22,
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 25 }}>
+                {/* "AI - PROYECTS" badge */}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 11,
+                    width: 180,
+                    height: 28,
+                    padding: '0 12px',
+                    borderRadius: 100,
+                    backgroundColor: 'rgba(255,255,255,0.14)',
+                    border: '1px solid rgba(255,255,255,0.36)',
+                    flexShrink: 0,
+                  }}
+                >
+                  <img src={FIGMA_IX_AI_HERO} alt="" style={{ width: 14, height: 14, flexShrink: 0, display: 'block' }} />
+                  <span
+                    style={{
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontWeight: 400,
+                      fontSize: 12,
+                      color: '#FFFFFF',
+                      letterSpacing: '2.76px',
+                      whiteSpace: 'nowrap',
+                      lineHeight: '20px',
+                    }}
+                  >
+                    AI - PROYECTS
+                  </span>
+                </div>
+
+                {/* "b-makers" title image */}
+                <img
+                  src={FIGMA_HERO_TITLE}
+                  alt="b-makers"
+                  style={{ height: 79, width: 'auto', maxWidth: '100%', display: 'block' }}
+                />
+              </div>
+
+              {/* Subtítulo */}
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontWeight: 500,
+                  fontSize: 18,
+                  color: '#FFFFFF',
+                  lineHeight: '24px',
+                }}
+              >
+                Proyectos con IA para resolver retos en Bold
+              </p>
+            </div>
+
+            {/* ── Derecha: card Próximamente disponible — nodo 10:285 ──
+                 backdrop-blur:16px · bg:rgba(255,255,255,0.2) · border-radius:20px
+                 padding:20px · gap:32px entre bloque de contenido y botón
             */}
             <div
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 11,
-                width: 180,
-                height: 28,
-                padding: '0 12px',
-                borderRadius: 100,
-                backgroundColor: 'rgba(255,255,255,0.14)',
-                border: '1px solid rgba(255,255,255,0.36)',
+                width: 340,
                 flexShrink: 0,
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                borderRadius: 20,
+                padding: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 32,
+                alignItems: 'flex-start',
               }}
             >
-              <img
-                src={FIGMA_IX_AI_HERO}
-                alt=""
-                style={{ width: 14, height: 14, flexShrink: 0, display: 'block' }}
-              />
-              <span
+              {/* Título + bullets — gap:20px */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%' }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontFamily: "'Montserrat', sans-serif",
+                    fontWeight: 400,
+                    fontSize: 24,
+                    color: '#FFFFFF',
+                    lineHeight: '28px',
+                  }}
+                >
+                  Próximamente disponible
+                </p>
+
+                {/* Bullets — list-disc ms:24px · gap:8px · 16px Regular white lh:24px */}
+                <ul style={{ margin: 0, paddingLeft: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    'Crea prototipos funcionales con nuestro Chatbot UX creator.',
+                    'Automatiza procesos de tu equipo.',
+                    'Crea Dashboard para visualizar datos de forma interactiva.',
+                  ].map(item => (
+                    <li
+                      key={item}
+                      style={{
+                        fontFamily: "'Montserrat', sans-serif",
+                        fontWeight: 400,
+                        fontSize: 16,
+                        color: '#FFFFFF',
+                        lineHeight: '24px',
+                      }}
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Botón — bg:#F7F8FB · h:36 · px:20 py:8 · border-radius:32 · opacity:0.7
+                   texto: 14px Montserrat Medium #BABDD3 (Blue/30) lh:20px */}
+              <div
                 style={{
-                  fontFamily: "'Montserrat', sans-serif",
-                  fontWeight: 400,
-                  fontSize: 12,
-                  color: '#FFFFFF',
-                  letterSpacing: '2.76px',
-                  whiteSpace: 'nowrap',
-                  lineHeight: '20px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  height: 36,
+                  padding: '8px 20px',
+                  borderRadius: 32,
+                  backgroundColor: '#F7F8FB',
+                  opacity: 0.7,
+                  cursor: 'default',
                 }}
               >
-                AI - PROYECTS
-              </span>
+                <span
+                  style={{
+                    fontFamily: "'Montserrat', sans-serif",
+                    fontWeight: 500,
+                    fontSize: 14,
+                    color: '#BABDD3',
+                    lineHeight: '20px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Crear proyecto con IA
+                </span>
+              </div>
             </div>
 
-            {/* "b-makers" — nodo 1:1120 · w:494.776 · h:79 */}
-            <img
-              src={FIGMA_HERO_TITLE}
-              alt="b-makers"
-              style={{
-                width: 494.776,
-                height: 79,
-                display: 'block',
-                flexShrink: 0,
-              }}
-            />
           </div>
-
-          {/* Subtítulo — nodo 1:1063
-               Figma: Montserrat Medium 500 · 18px · white · lh:52px · h:44.345px
-          */}
-          <p
-            style={{
-              margin: 0,
-              fontFamily: "'Montserrat', sans-serif",
-              fontWeight: 500,
-              fontSize: 18,
-              color: '#FFFFFF',
-              textAlign: 'center',
-              lineHeight: '52px',
-              height: 44.345,
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Proyectos con IA para resolver retos en Bold
-          </p>
         </div>
       </section>
 
