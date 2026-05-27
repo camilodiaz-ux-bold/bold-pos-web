@@ -460,59 +460,16 @@ export function MakersLanding() {
         </div>
       </header>
 
-      {/* ── Hero — Figma nodo 1:1019 · 1280×336px ── */}
-      {/*
-        Estructura Figma:
-        - bg: imgEfecto1 (1197px ancho, top:0 left:0, desborda bottom)
-          enmascarado por imgGradientRadialV2 (radial fade center-bottom)
-        - contenido: absolute bottom:70.65px, width:593.484px, centrado
-          ↳ col gap:22px → [badge+título gap:25px] + [subtítulo]
-      */}
+      {/* ── Hero — 1280×336px ── */}
       <section
         style={{
           position: 'relative',
+          width: '100%',
           height: 336,
           overflow: 'hidden',
-          backgroundColor: '#121E6C',   /* fallback mientras carga la imagen */
+          background: 'linear-gradient(to right, #0407F5 0%, #121E6C 45%, #FF013E 90%)',
         }}
       >
-        {/* — Fondo: imgEfecto1 posicionado como en Figma (top:0 left:0 w:1197px) — */}
-        <img
-          src={FIGMA_HERO_BG}
-          alt=""
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: 1197,
-            height: '110%',           /* bottom-[-10.76%] de Figma */
-            objectFit: 'fill',
-            display: 'block',
-            pointerEvents: 'none',
-          }}
-        />
-        {/* — Overflow derecho: extiende el coral hasta el borde — */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: 83,                /* 1280 - 1197 */
-            height: '100%',
-            background: 'linear-gradient(to right, transparent, #FF2947)',
-            pointerEvents: 'none',
-          }}
-        />
-        {/* — Máscara radial: fade a blanco en centro-bottom (simula imgGradientRadialV2) — */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'radial-gradient(ellipse 55% 60% at 50% 110%, rgba(255,255,255,0.30) 0%, transparent 70%)',
-            pointerEvents: 'none',
-          }}
-        />
 
         {/* — Contenido — nodo 1:1129
              Figma: bottom:70.65px · left:343.26px · w:593.484px · h:195.345px
