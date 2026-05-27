@@ -1,6 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { makersProjects, type MakersProject } from '../../data/makersProjects';
 
+// ─── Figma assets (nodo 1:1131 — expiran ~7 días) ────────────────────────────
+const FIGMA_LOGOTYPE_BOLD   = 'https://www.figma.com/api/mcp/asset/4e35fbe2-04e0-44f5-a694-dd2ad89c69b4';
+const FIGMA_IX_AI_NAVBAR    = 'https://www.figma.com/api/mcp/asset/77d57979-b10d-4b9b-a6fe-82f7a3ef4cef';
+const FIGMA_IX_AI_HERO      = 'https://www.figma.com/api/mcp/asset/b49a40ee-f549-4018-811c-937379ac4ded';
+const FIGMA_HERO_TITLE      = 'https://www.figma.com/api/mcp/asset/56b61163-8103-4bfe-9978-1691eff640f6';
+const FIGMA_HERO_BG         = 'https://www.figma.com/api/mcp/asset/a3e526b5-fb50-4251-bc6a-708d39f6deec';
+
 // ─── MERLin Icon ──────────────────────────────────────────────────────────────
 
 function MerlinIcon() {
@@ -366,23 +373,6 @@ function FilterRow({ label, options, active, onChange }: FilterRowProps) {
   );
 }
 
-// ─── Bold Gradient Logo ───────────────────────────────────────────────────────
-
-function GradientWordmark() {
-  return (
-    <span
-      style={{
-        background: 'var(--gradient-horizontal)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
-      }}
-    >
-      Bold
-    </span>
-  );
-}
-
 // ─── MakersLanding ────────────────────────────────────────────────────────────
 
 const TEAM_OPTIONS = ['Todos', 'UX', 'CS', 'SaaS', 'Data', 'Plataforma'];
@@ -414,92 +404,162 @@ export function MakersLanding() {
         fontFamily: "'Montserrat', sans-serif",
       }}
     >
-      {/* ── Top bar ── */}
-      <header
-        style={{
-          backgroundColor: 'var(--black-0)',
-          borderBottom: '1px solid var(--black-10)',
-        }}
-      >
+      {/* ── Navbar — Figma nodo 1:931 ── */}
+      <header style={{ backgroundColor: 'var(--black-0)', position: 'relative', zIndex: 2 }}>
         <div
           style={{
-            maxWidth: 1200,
+            maxWidth: 1280,
             margin: '0 auto',
-            padding: '16px 32px',
+            padding: '0 24px',
+            height: 52,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: 24,
           }}
         >
-          {/* Logo wordmark */}
-          <span
-            style={{
-              fontSize: 15,
-              fontWeight: 700,
-              color: 'var(--blue-100)',
-              fontFamily: "'Montserrat', sans-serif",
-              letterSpacing: '-0.2px',
-            }}
-          >
-            Bold
-          </span>
-          {/* Pill badge */}
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              height: 28,
-              padding: '0 12px',
-              borderRadius: 100,
-              backgroundColor: 'var(--blue-10)',
-              fontSize: 11,
-              fontWeight: 600,
-              color: 'var(--blue-60)',
-              fontFamily: "'Montserrat', sans-serif",
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path
-                d="M5 0.5L5.91 3.59L9 5L5.91 6.41L5 9.5L4.09 6.41L1 5L4.09 3.59L5 0.5Z"
-                fill="var(--blue-60)"
-              />
-            </svg>
-            Hecho con IA
-          </span>
+          {/* Logotype Bold */}
+          <img
+            src={FIGMA_LOGOTYPE_BOLD}
+            alt="Bold"
+            style={{ width: 79, height: 28, flexShrink: 0, display: 'block' }}
+          />
+
+          {/* Spacer + "Hecho con IA" tag */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 11,
+                height: 28,
+                padding: '0 12px',
+                borderRadius: 100,
+                backgroundColor: 'var(--background-page)',
+                flexShrink: 0,
+              }}
+            >
+              <img src={FIGMA_IX_AI_NAVBAR} alt="" style={{ width: 14, height: 14, flexShrink: 0, display: 'block' }} />
+              <span
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontWeight: 400,
+                  fontSize: 12,
+                  color: 'var(--blue-100)',
+                  letterSpacing: '2.76px',
+                  whiteSpace: 'nowrap',
+                  lineHeight: '20px',
+                }}
+              >
+                Hecho con IA
+              </span>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* ── Hero ── */}
+      {/* ── Hero — Figma nodo 1:1019 ── */}
       <section
         style={{
-          background: 'var(--gradient-horizontal)',
-          padding: '64px 32px',
-          textAlign: 'center',
+          position: 'relative',
+          height: 336,
+          overflow: 'hidden',
         }}
       >
-        <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          <h1
+        {/* Gradient background image (Efecto 1) */}
+        <img
+          src={FIGMA_HERO_BG}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            display: 'block',
+          }}
+        />
+
+        {/* Centered content column */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 122,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 594,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 22,
+          }}
+        >
+          {/* Badge + title group */}
+          <div
             style={{
-              margin: '0 0 12px 0',
-              fontSize: 40,
-              fontWeight: 700,
-              color: 'var(--black-0)',
-              fontFamily: "'Montserrat', sans-serif",
-              lineHeight: '48px',
-              letterSpacing: '-0.5px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 25,
             }}
           >
-            Bold Makers
-          </h1>
+            {/* "AI - PROYECTS" pill badge */}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 11,
+                height: 28,
+                padding: '0 12px',
+                borderRadius: 100,
+                backgroundColor: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.38)',
+                flexShrink: 0,
+              }}
+            >
+              <img src={FIGMA_IX_AI_HERO} alt="" style={{ width: 14, height: 14, flexShrink: 0, display: 'block' }} />
+              <span
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontWeight: 400,
+                  fontSize: 12,
+                  color: 'var(--black-0)',
+                  letterSpacing: '2.76px',
+                  whiteSpace: 'nowrap',
+                  lineHeight: '20px',
+                }}
+              >
+                AI - PROYECTS
+              </span>
+            </div>
+
+            {/* "b-makers" title — vector image from Figma */}
+            <img
+              src={FIGMA_HERO_TITLE}
+              alt="b-makers"
+              style={{
+                width: 495,
+                maxWidth: '100%',
+                height: 'auto',
+                display: 'block',
+              }}
+            />
+          </div>
+
+          {/* Subtitle */}
           <p
             style={{
               margin: 0,
-              fontSize: 16,
-              fontWeight: 400,
-              color: 'rgba(255,255,255,0.82)',
               fontFamily: "'Montserrat', sans-serif",
+              fontWeight: 500,
+              fontSize: 18,
+              color: 'var(--black-0)',
+              textAlign: 'center',
               lineHeight: '24px',
+              whiteSpace: 'nowrap',
             }}
           >
             Proyectos creados con inteligencia artificial en Bold
