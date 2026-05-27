@@ -2,11 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { makersProjects, type MakersProject } from '../../data/makersProjects';
 
 // ─── Figma assets (nodo 1:1131 — expiran ~7 días) ────────────────────────────
+// Navbar (nodo 1:931) — no cambian con cada extracción
 const FIGMA_LOGOTYPE_BOLD   = 'https://www.figma.com/api/mcp/asset/4e35fbe2-04e0-44f5-a694-dd2ad89c69b4';
 const FIGMA_IX_AI_NAVBAR    = 'https://www.figma.com/api/mcp/asset/77d57979-b10d-4b9b-a6fe-82f7a3ef4cef';
-const FIGMA_IX_AI_HERO      = 'https://www.figma.com/api/mcp/asset/b49a40ee-f549-4018-811c-937379ac4ded';
-const FIGMA_HERO_TITLE      = 'https://www.figma.com/api/mcp/asset/56b61163-8103-4bfe-9978-1691eff640f6';
-const FIGMA_HERO_BG         = 'https://www.figma.com/api/mcp/asset/a3e526b5-fb50-4251-bc6a-708d39f6deec';
+// Hero (nodo 1:1019) — actualizados 2026-05-27
+const FIGMA_IX_AI_HERO      = 'https://www.figma.com/api/mcp/asset/b8b9c1c2-0225-4dce-b1a8-8ef173a96534';
+const FIGMA_HERO_TITLE      = 'https://www.figma.com/api/mcp/asset/ff86a6f8-3272-4df5-b085-44d5228ef19c';
+const FIGMA_HERO_BG         = 'https://www.figma.com/api/mcp/asset/2857d491-91f6-43d6-8c91-ec5a2c9dcfdd';
 
 // ─── MERLin Icon ──────────────────────────────────────────────────────────────
 
@@ -458,75 +460,118 @@ export function MakersLanding() {
         </div>
       </header>
 
-      {/* ── Hero — Figma nodo 1:1019 ── */}
+      {/* ── Hero — Figma nodo 1:1019 · 1280×336px ── */}
+      {/*
+        Estructura Figma:
+        - bg: imgEfecto1 (1197px ancho, top:0 left:0, desborda bottom)
+          enmascarado por imgGradientRadialV2 (radial fade center-bottom)
+        - contenido: absolute bottom:70.65px, width:593.484px, centrado
+          ↳ col gap:22px → [badge+título gap:25px] + [subtítulo]
+      */}
       <section
         style={{
           position: 'relative',
           height: 336,
           overflow: 'hidden',
+          backgroundColor: '#121E6C',   /* fallback mientras carga la imagen */
         }}
       >
-        {/* Gradient background image (Efecto 1) */}
+        {/* — Fondo: imgEfecto1 posicionado como en Figma (top:0 left:0 w:1197px) — */}
         <img
           src={FIGMA_HERO_BG}
           alt=""
           aria-hidden="true"
           style={{
             position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center',
+            top: 0,
+            left: 0,
+            width: 1197,
+            height: '110%',           /* bottom-[-10.76%] de Figma */
+            objectFit: 'fill',
             display: 'block',
+            pointerEvents: 'none',
           }}
         />
-
-        {/* Centered content column */}
+        {/* — Overflow derecho: extiende el coral hasta el borde — */}
         <div
           style={{
             position: 'absolute',
-            top: 122,
+            top: 0,
+            right: 0,
+            width: 83,                /* 1280 - 1197 */
+            height: '100%',
+            background: 'linear-gradient(to right, transparent, #FF2947)',
+            pointerEvents: 'none',
+          }}
+        />
+        {/* — Máscara radial: fade a blanco en centro-bottom (simula imgGradientRadialV2) — */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(ellipse 55% 60% at 50% 110%, rgba(255,255,255,0.30) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* — Contenido — nodo 1:1129
+             Figma: bottom:70.65px · left:343.26px · w:593.484px · h:195.345px
+             (= centered: (1280-593.484)/2 = 343.258)
+        — */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 70.65,
             left: '50%',
             transform: 'translateX(-50%)',
-            width: 594,
+            width: 593.484,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             gap: 22,
           }}
         >
-          {/* Badge + title group */}
+          {/* Badge + título — nodo 1:1043 · gap:25px · h:129px */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: 25,
+              height: 129,
             }}
           >
-            {/* "AI - PROYECTS" pill badge */}
+            {/* "AI - PROYECTS" — nodo 1:1055
+                 Figma: bg white (opacado por máscara) · w:180 · h:28 · px:12 · gap:11
+                 Simulamos con rgba + borde para el efecto frosted
+            */}
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 11,
+                width: 180,
                 height: 28,
                 padding: '0 12px',
                 borderRadius: 100,
-                backgroundColor: 'rgba(255,255,255,0.12)',
-                border: '1px solid rgba(255,255,255,0.38)',
+                backgroundColor: 'rgba(255,255,255,0.14)',
+                border: '1px solid rgba(255,255,255,0.36)',
                 flexShrink: 0,
               }}
             >
-              <img src={FIGMA_IX_AI_HERO} alt="" style={{ width: 14, height: 14, flexShrink: 0, display: 'block' }} />
+              <img
+                src={FIGMA_IX_AI_HERO}
+                alt=""
+                style={{ width: 14, height: 14, flexShrink: 0, display: 'block' }}
+              />
               <span
                 style={{
                   fontFamily: "'Montserrat', sans-serif",
                   fontWeight: 400,
                   fontSize: 12,
-                  color: 'var(--black-0)',
+                  color: '#FFFFFF',
                   letterSpacing: '2.76px',
                   whiteSpace: 'nowrap',
                   lineHeight: '20px',
@@ -536,29 +581,33 @@ export function MakersLanding() {
               </span>
             </div>
 
-            {/* "b-makers" title — vector image from Figma */}
+            {/* "b-makers" — nodo 1:1120 · w:494.776 · h:79 */}
             <img
               src={FIGMA_HERO_TITLE}
               alt="b-makers"
               style={{
-                width: 495,
-                maxWidth: '100%',
-                height: 'auto',
+                width: 494.776,
+                height: 79,
                 display: 'block',
+                flexShrink: 0,
               }}
             />
           </div>
 
-          {/* Subtitle */}
+          {/* Subtítulo — nodo 1:1063
+               Figma: Montserrat Medium 500 · 18px · white · lh:52px · h:44.345px
+          */}
           <p
             style={{
               margin: 0,
               fontFamily: "'Montserrat', sans-serif",
               fontWeight: 500,
               fontSize: 18,
-              color: 'var(--black-0)',
+              color: '#FFFFFF',
               textAlign: 'center',
-              lineHeight: '24px',
+              lineHeight: '52px',
+              height: 44.345,
+              overflow: 'hidden',
               whiteSpace: 'nowrap',
             }}
           >
