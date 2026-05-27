@@ -762,7 +762,7 @@ export function MakersLanding() {
               whiteSpace: 'nowrap',
             }}
           >
-            Proyectos creados con inteligencia artificial en Bold
+            Proyectos con IA para resolver retos en Bold
           </p>
         </div>
       </section>
