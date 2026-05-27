@@ -55,7 +55,7 @@ export const makersProjects: MakersProject[] = [
     icon: 'cs',
     iconName: 'GraduationCap',
     makers: [
-      { name: 'Jeffrey Martinez', role: 'Customer Experience Expert Bold POS' },
+      { name: 'Jeffrey Martinez', role: 'CX Expert SaaS' },
       { name: 'Nicolas Baquero',  role: 'CS Manager SaaS' },
       { name: 'Camilo Diaz',      role: 'Senior UX Designer' },
     ],
