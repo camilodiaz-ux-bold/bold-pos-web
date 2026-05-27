@@ -754,10 +754,11 @@ export function MakersLanding() {
               style={{
                 width: 340,
                 flexShrink: 0,
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                borderRadius: 20,
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.20)',
+                borderRadius: 16,
                 padding: 20,
                 display: 'flex',
                 flexDirection: 'column',
@@ -803,8 +804,8 @@ export function MakersLanding() {
                 </ul>
               </div>
 
-              {/* Botón — bg:#F7F8FB · h:36 · px:20 py:8 · border-radius:32 · opacity:0.7
-                   texto: 14px Montserrat Medium #BABDD3 (Blue/30) lh:20px */}
+              {/* Botón — bg:rgba(255,255,255,0.20) · h:36 · px:20 py:8 · border-radius:32
+                   texto: 14px Montserrat Medium #FFFFFF lh:20px */}
               <div
                 style={{
                   display: 'inline-flex',
@@ -814,8 +815,7 @@ export function MakersLanding() {
                   height: 36,
                   padding: '8px 20px',
                   borderRadius: 32,
-                  backgroundColor: '#F7F8FB',
-                  opacity: 0.7,
+                  backgroundColor: 'rgba(255,255,255,0.20)',
                   cursor: 'default',
                 }}
               >
@@ -824,7 +824,7 @@ export function MakersLanding() {
                     fontFamily: "'Montserrat', sans-serif",
                     fontWeight: 500,
                     fontSize: 14,
-                    color: '#BABDD3',
+                    color: '#FFFFFF',
                     lineHeight: '20px',
                     whiteSpace: 'nowrap',
                   }}
