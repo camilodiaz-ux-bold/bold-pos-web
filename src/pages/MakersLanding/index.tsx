@@ -213,8 +213,8 @@ function DropdownPill({ icon, label, value, options, onChange }: DropdownPillPro
 //   Bar:  h:40px · gap:12px · search(flex:1) + 3 dropdown pills
 
 interface SearchBarProps {
-  searchText: string;
-  onSearch: (v: string) => void;
+  searchQuery: string;
+  onSearchQuery: (v: string) => void;
   teamFilter: string;
   onTeam: (v: string) => void;
   toolFilter: string;
@@ -224,7 +224,7 @@ interface SearchBarProps {
 }
 
 function SearchBar({
-  searchText, onSearch,
+  searchQuery, onSearchQuery,
   teamFilter, onTeam,
   toolFilter, onTool,
   processFilter, onProcess,
@@ -267,8 +267,8 @@ function SearchBar({
             <IconSearch />
             <input
               type="text"
-              value={searchText}
-              onChange={e => onSearch(e.target.value)}
+              value={searchQuery}
+              onChange={e => onSearchQuery(e.target.value)}
               placeholder="Buscar por palabra clave"
               style={{
                 flex: 1,
@@ -282,9 +282,9 @@ function SearchBar({
                 lineHeight: '20px',
               }}
             />
-            {searchText && (
+            {searchQuery && (
               <button
-                onClick={() => onSearch('')}
+                onClick={() => onSearchQuery('')}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
                   color: 'var(--black-40)', fontSize: 16, lineHeight: 1, padding: '0 2px',
@@ -570,25 +570,27 @@ const TOOLS_OPTIONS = ['Todos', 'Claude Code', 'Figma', 'Cursor', 'Notion AI'];
 const PROCESS_OPTIONS = ['Todos', 'Capacitación', 'Ventas', 'Soporte', 'Onboarding'];
 
 export function MakersLanding() {
-  const [searchText,    setSearchText]    = useState('');
+  const [searchQuery,   setSearchQuery]   = useState('');
   const [teamFilter,    setTeamFilter]    = useState('Todos');
   const [toolFilter,    setToolFilter]    = useState('Todos');
   const [processFilter, setProcessFilter] = useState('Todos');
 
   const filtered = useMemo(() => {
-    const q = searchText.toLowerCase().trim();
+    const q = searchQuery.toLowerCase().trim();
     return makersProjects.filter(p => {
       const matchSearch = !q
         || p.name.toLowerCase().includes(q)
         || p.description.toLowerCase().includes(q)
         || p.makers.some(m => m.name.toLowerCase().includes(q))
-        || p.tools.some(t => t.toLowerCase().includes(q));
+        || p.teams.some(t => t.toLowerCase().includes(q))
+        || p.tools.some(t => t.toLowerCase().includes(q))
+        || p.process.toLowerCase().includes(q);
       const matchTeam    = teamFilter    === 'Todos' || p.teams.includes(teamFilter);
       const matchTool    = toolFilter    === 'Todos' || p.tools.includes(toolFilter);
       const matchProcess = processFilter === 'Todos' || p.process === processFilter;
       return matchSearch && matchTeam && matchTool && matchProcess;
     });
-  }, [searchText, teamFilter, toolFilter, processFilter]);
+  }, [searchQuery, teamFilter, toolFilter, processFilter]);
 
   return (
     <div
@@ -778,8 +780,8 @@ export function MakersLanding() {
         }}
       >
         <SearchBar
-          searchText={searchText}
-          onSearch={setSearchText}
+          searchQuery={searchQuery}
+          onSearchQuery={setSearchQuery}
           teamFilter={teamFilter}
           onTeam={setTeamFilter}
           toolFilter={toolFilter}
@@ -807,10 +809,10 @@ export function MakersLanding() {
               ? 'Sin resultados'
               : `${filtered.length} proyecto${filtered.length !== 1 ? 's' : ''}`}
           </p>
-          {(searchText !== '' || teamFilter !== 'Todos' || toolFilter !== 'Todos' || processFilter !== 'Todos') && (
+          {(searchQuery !== '' || teamFilter !== 'Todos' || toolFilter !== 'Todos' || processFilter !== 'Todos') && (
             <button
               onClick={() => {
-                setSearchText('');
+                setSearchQuery('');
                 setTeamFilter('Todos');
                 setToolFilter('Todos');
                 setProcessFilter('Todos');
