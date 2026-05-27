@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { makersProjects, type MakersProject } from '../../data/makersProjects';
 
 // ─── Figma assets (nodo 1:1131 — expiran ~7 días) ────────────────────────────
@@ -43,40 +43,259 @@ function MerlinIcon() {
   );
 }
 
-// ─── Chip ─────────────────────────────────────────────────────────────────────
+// ─── Search bar icons (inline SVG — no deps externas) ────────────────────────
 
-interface ChipProps {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  small?: boolean;
+function IconSearch() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+      <circle cx="11" cy="11" r="7" stroke="#606060" strokeWidth="1.8" />
+      <path d="M16.5 16.5L21 21" stroke="#606060" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
 }
 
-function Chip({ label, active, onClick, small = false }: ChipProps) {
+function IconUsers() {
   return (
-    <button
-      onClick={onClick}
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+      <circle cx="6" cy="5" r="2.5" stroke="#3E4983" strokeWidth="1.4" />
+      <path d="M1 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="#3E4983" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="12" cy="5.5" r="2" stroke="#3E4983" strokeWidth="1.4" />
+      <path d="M10.5 12.5c.3-1.5 1.4-2.5 2.5-2.5" stroke="#3E4983" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconSettings() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+      <circle cx="8" cy="8" r="2.2" stroke="#3E4983" strokeWidth="1.4" />
+      <path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M11.54 4.46l1.06-1.06M3.4 12.6l1.06-1.06" stroke="#3E4983" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconMovements() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+      <path d="M2 4h12M2 8h8M2 12h5" stroke="#3E4983" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M12 10l2.5 2-2.5 2" stroke="#3E4983" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconChevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16" height="16" viewBox="0 0 16 16" fill="none"
+      style={{ flexShrink: 0, transition: 'transform 0.15s ease', transform: open ? 'rotate(180deg)' : 'none' }}
+    >
+      <path d="M4 6L8 10L12 6" stroke="#3E4983" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// ─── Dropdown pill (nodo 4:58 / 4:59 / 4:60) ─────────────────────────────────
+
+interface DropdownPillProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}
+
+function DropdownPill({ icon, label, value, options, onChange }: DropdownPillProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const displayLabel = value === 'Todos' ? label : value;
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          height: 40,
+          padding: '8px 12px',
+          borderRadius: 100,
+          backgroundColor: value !== 'Todos' ? 'var(--blue-10)' : 'var(--background-page)',
+          border: 'none',
+          cursor: 'pointer',
+          opacity: value !== 'Todos' ? 1 : 0.8,
+          fontFamily: "'Montserrat', sans-serif",
+          outline: 'none',
+          transition: 'background-color 0.15s',
+        }}
+      >
+        {icon}
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            color: value !== 'Todos' ? 'var(--blue-100)' : 'var(--blue-60)',
+            whiteSpace: 'nowrap',
+            lineHeight: '16px',
+          }}
+        >
+          {displayLabel}
+        </span>
+        <IconChevron open={open} />
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 48,
+            right: 0,
+            backgroundColor: 'white',
+            borderRadius: 12,
+            boxShadow: '0px 8px 20px 0px rgba(18,30,108,0.12)',
+            overflow: 'hidden',
+            zIndex: 50,
+            minWidth: 160,
+          }}
+        >
+          {options.map(opt => (
+            <button
+              key={opt}
+              onClick={() => { onChange(opt); setOpen(false); }}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '10px 16px',
+                textAlign: 'left',
+                backgroundColor: value === opt ? 'var(--blue-10)' : 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: value === opt ? 600 : 400,
+                color: value === opt ? 'var(--blue-100)' : 'var(--black-60)',
+                fontFamily: "'Montserrat', sans-serif",
+                transition: 'background-color 0.1s',
+              }}
+              onMouseEnter={e => {
+                if (value !== opt) (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--background-page)';
+              }}
+              onMouseLeave={e => {
+                if (value !== opt) (e.currentTarget as HTMLElement).style.backgroundColor = 'white';
+              }}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Search bar (nodo 4:87) ───────────────────────────────────────────────────
+//   Card: bg-white · h:72px · border-radius:14px · shadow Blue/8
+//   Bar:  h:40px · gap:12px · search(flex:1) + 3 dropdown pills
+
+interface SearchBarProps {
+  searchText: string;
+  onSearch: (v: string) => void;
+  teamFilter: string;
+  onTeam: (v: string) => void;
+  toolFilter: string;
+  onTool: (v: string) => void;
+  processFilter: string;
+  onProcess: (v: string) => void;
+}
+
+function SearchBar({
+  searchText, onSearch,
+  teamFilter, onTeam,
+  toolFilter, onTool,
+  processFilter, onProcess,
+}: SearchBarProps) {
+  return (
+    <div
       style={{
-        display: 'inline-flex',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        boxShadow: '0px 8px 20px 0px rgba(18,30,108,0.08)',
+        height: 72,
+        display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        height: small ? 28 : 36,
-        padding: small ? '0 10px' : '0 16px',
-        borderRadius: 100,
-        border: active ? 'none' : '1.5px solid var(--black-40)',
-        backgroundColor: active ? 'var(--blue-100)' : 'transparent',
-        color: active ? 'var(--black-0)' : 'var(--black-60)',
-        fontSize: small ? 11 : 13,
-        fontWeight: 600,
-        fontFamily: "'Montserrat', sans-serif",
-        cursor: 'pointer',
-        whiteSpace: 'nowrap',
-        transition: 'all 0.15s ease',
-        outline: 'none',
+        padding: '0 16px',
       }}
     >
-      {label}
-    </button>
+      {/* Filter options row — gap:12px */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          width: '100%',
+          height: 40,
+        }}
+      >
+        {/* Search input — flex:1 · bg:#F7F8FB · border-radius:30px */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              height: 40,
+              padding: '0 12px',
+              borderRadius: 30,
+              backgroundColor: 'var(--background-page)',
+            }}
+          >
+            <IconSearch />
+            <input
+              type="text"
+              value={searchText}
+              onChange={e => onSearch(e.target.value)}
+              placeholder="Buscar por palabra clave"
+              style={{
+                flex: 1,
+                border: 'none',
+                background: 'transparent',
+                outline: 'none',
+                fontSize: 14,
+                fontWeight: 400,
+                color: 'var(--black-100)',
+                fontFamily: "'Montserrat', sans-serif",
+                lineHeight: '20px',
+              }}
+            />
+            {searchText && (
+              <button
+                onClick={() => onSearch('')}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--black-40)', fontSize: 16, lineHeight: 1, padding: '0 2px',
+                  flexShrink: 0,
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Dropdown pills */}
+        <DropdownPill icon={<IconUsers />}     label="Equipo"  value={teamFilter}    options={TEAM_OPTIONS}    onChange={onTeam}    />
+        <DropdownPill icon={<IconSettings />}  label="Tools"   value={toolFilter}    options={TOOLS_OPTIONS}   onChange={onTool}    />
+        <DropdownPill icon={<IconMovements />} label="Proceso" value={processFilter} options={PROCESS_OPTIONS} onChange={onProcess} />
+      </div>
+    </div>
   );
 }
 
@@ -337,44 +556,6 @@ function ProjectCard({ project }: { project: MakersProject }) {
   );
 }
 
-// ─── Filter Row ───────────────────────────────────────────────────────────────
-
-interface FilterRowProps {
-  label: string;
-  options: string[];
-  active: string;
-  onChange: (value: string) => void;
-}
-
-function FilterRow({ label, options, active, onChange }: FilterRowProps) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-      <span
-        style={{
-          fontSize: 12,
-          fontWeight: 700,
-          color: 'var(--black-40)',
-          fontFamily: "'Montserrat', sans-serif",
-          minWidth: 60,
-          flexShrink: 0,
-        }}
-      >
-        {label}
-      </span>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        {options.map(opt => (
-          <Chip
-            key={opt}
-            label={opt}
-            active={active === opt}
-            onClick={() => onChange(opt)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── MakersLanding ────────────────────────────────────────────────────────────
 
 const TEAM_OPTIONS = ['Todos', 'UX', 'CS', 'SaaS', 'Data', 'Plataforma'];
@@ -382,21 +563,25 @@ const TOOLS_OPTIONS = ['Todos', 'Claude Code', 'Figma', 'Cursor', 'Notion AI'];
 const PROCESS_OPTIONS = ['Todos', 'Capacitación', 'Ventas', 'Soporte', 'Onboarding'];
 
 export function MakersLanding() {
-  const [teamFilter, setTeamFilter] = useState('Todos');
-  const [toolFilter, setToolFilter] = useState('Todos');
+  const [searchText,    setSearchText]    = useState('');
+  const [teamFilter,    setTeamFilter]    = useState('Todos');
+  const [toolFilter,    setToolFilter]    = useState('Todos');
   const [processFilter, setProcessFilter] = useState('Todos');
 
   const filtered = useMemo(() => {
+    const q = searchText.toLowerCase().trim();
     return makersProjects.filter(p => {
-      const matchTeam =
-        teamFilter === 'Todos' || p.teams.includes(teamFilter);
-      const matchTool =
-        toolFilter === 'Todos' || p.tools.includes(toolFilter);
-      const matchProcess =
-        processFilter === 'Todos' || p.process === processFilter;
-      return matchTeam && matchTool && matchProcess;
+      const matchSearch = !q
+        || p.name.toLowerCase().includes(q)
+        || p.description.toLowerCase().includes(q)
+        || p.makers.some(m => m.name.toLowerCase().includes(q))
+        || p.tools.some(t => t.toLowerCase().includes(q));
+      const matchTeam    = teamFilter    === 'Todos' || p.teams.includes(teamFilter);
+      const matchTool    = toolFilter    === 'Todos' || p.tools.includes(toolFilter);
+      const matchProcess = processFilter === 'Todos' || p.process === processFilter;
+      return matchSearch && matchTeam && matchTool && matchProcess;
     });
-  }, [teamFilter, toolFilter, processFilter]);
+  }, [searchText, teamFilter, toolFilter, processFilter]);
 
   return (
     <div
@@ -573,43 +758,32 @@ export function MakersLanding() {
         </div>
       </section>
 
-      {/* ── Main content ── */}
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px' }}>
+      {/* ── Search bar — nodo 4:87 · flota sobre el pie del hero ── */}
+      {/* top:304px en frame 336px → sobresale 32px antes del fin del hero */}
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          padding: '0 32px',
+          marginTop: -32,
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
+        <SearchBar
+          searchText={searchText}
+          onSearch={setSearchText}
+          teamFilter={teamFilter}
+          onTeam={setTeamFilter}
+          toolFilter={toolFilter}
+          onTool={setToolFilter}
+          processFilter={processFilter}
+          onProcess={setProcessFilter}
+        />
+      </div>
 
-        {/* Filters panel */}
-        <div
-          style={{
-            backgroundColor: 'var(--black-0)',
-            borderRadius: 16,
-            boxShadow: '0px 4px 12px 0px rgba(18,30,108,0.08)',
-            padding: '20px 24px',
-            marginBottom: 32,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
-          }}
-        >
-          <FilterRow
-            label="Equipo"
-            options={TEAM_OPTIONS}
-            active={teamFilter}
-            onChange={setTeamFilter}
-          />
-          <div style={{ height: 1, backgroundColor: 'var(--black-10)' }} />
-          <FilterRow
-            label="Tools"
-            options={TOOLS_OPTIONS}
-            active={toolFilter}
-            onChange={setToolFilter}
-          />
-          <div style={{ height: 1, backgroundColor: 'var(--black-10)' }} />
-          <FilterRow
-            label="Proceso"
-            options={PROCESS_OPTIONS}
-            active={processFilter}
-            onChange={setProcessFilter}
-          />
-        </div>
+      {/* ── Main content ── */}
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 32px 40px' }}>
 
         {/* Results count */}
         <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -626,9 +800,10 @@ export function MakersLanding() {
               ? 'Sin resultados'
               : `${filtered.length} proyecto${filtered.length !== 1 ? 's' : ''}`}
           </p>
-          {(teamFilter !== 'Todos' || toolFilter !== 'Todos' || processFilter !== 'Todos') && (
+          {(searchText !== '' || teamFilter !== 'Todos' || toolFilter !== 'Todos' || processFilter !== 'Todos') && (
             <button
               onClick={() => {
+                setSearchText('');
                 setTeamFilter('Todos');
                 setToolFilter('Todos');
                 setProcessFilter('Todos');
