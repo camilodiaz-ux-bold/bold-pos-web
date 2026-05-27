@@ -8,6 +8,7 @@ export interface MakersProject {
   name: string;
   description: string;
   icon?: string;          // categoría visual: restaurant | cs | finance | tools | research | data | process
+  iconName: string;       // nombre del componente Lucide
   makers: Maker[];
   teams: string[];
   tools: string[];
@@ -22,6 +23,7 @@ export const makersProjects: MakersProject[] = [
     name: 'Bold POS Restaurantes WEB V1.0',
     description: 'Sistema POS especializado para restaurantes.',
     icon: 'restaurant',
+    iconName: 'UtensilsCrossed',
     makers: [
       { name: 'Camilo Diaz',  role: 'Senior UX Designer' },
       { name: 'Bryan Nazar',  role: 'PM Bold POS Restaurantes' },
@@ -36,6 +38,7 @@ export const makersProjects: MakersProject[] = [
     name: 'Bold POS Restaurantes App V1.0',
     description: 'Sistema POS especializado para restaurantes para dispositivos móviles.',
     icon: 'restaurant',
+    iconName: 'Smartphone',
     makers: [
       { name: 'Camilo Diaz', role: 'Senior UX Designer' },
       { name: 'Bryan Nazar', role: 'PM Bold POS Restaurantes' },
@@ -50,6 +53,7 @@ export const makersProjects: MakersProject[] = [
     name: 'Academia Bold POS',
     description: 'Sistema para capacitación interna y apoyo para clientes de Bold POS.',
     icon: 'cs',
+    iconName: 'GraduationCap',
     makers: [
       { name: 'Jeffrey Martinez', role: 'Customer Experience Expert Bold POS' },
       { name: 'Nicolas Baquero',  role: 'CS Manager SaaS' },
@@ -67,6 +71,7 @@ export const makersProjects: MakersProject[] = [
     name: 'FinOps Tool Deck',
     description: 'Herramienta financiera para equipos Bold.',
     icon: 'finance',
+    iconName: 'TrendingUp',
     makers:  [],
     teams:   [],
     tools:   [],
@@ -78,6 +83,7 @@ export const makersProjects: MakersProject[] = [
     name: 'Bold Tools',
     description: 'Herramientas internas Bold.',
     icon: 'tools',
+    iconName: 'Wrench',
     makers:  [],
     teams:   [],
     tools:   [],
@@ -89,6 +95,7 @@ export const makersProjects: MakersProject[] = [
     name: 'Bold Research',
     description: 'Plataforma de investigación Bold.',
     icon: 'research',
+    iconName: 'FlaskConical',
     makers:  [],
     teams:   [],
     tools:   [],
@@ -100,6 +107,7 @@ export const makersProjects: MakersProject[] = [
     name: 'Análisis SDR',
     description: 'Dashboard de análisis para equipo SDR.',
     icon: 'data',
+    iconName: 'BarChart3',
     makers:  [],
     teams:   ['Data'],
     tools:   [],
@@ -111,6 +119,7 @@ export const makersProjects: MakersProject[] = [
     name: 'Roadmap Process Automation',
     description: 'Hoja de ruta de automatización de procesos Bold.',
     icon: 'process',
+    iconName: 'GitBranch',
     makers:  [],
     teams:   [],
     tools:   [],
@@ -122,6 +131,7 @@ export const makersProjects: MakersProject[] = [
     name: 'Boletín Procesos',
     description: 'Boletín interno del equipo de procesos Bold.',
     icon: 'process',
+    iconName: 'Newspaper',
     makers:  [],
     teams:   [],
     tools:   [],

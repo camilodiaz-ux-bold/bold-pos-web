@@ -1,5 +1,23 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import {
+  UtensilsCrossed, Smartphone, GraduationCap, TrendingUp,
+  Wrench, FlaskConical, BarChart3, GitBranch, Newspaper,
+  type LucideIcon,
+} from 'lucide-react';
 import { makersProjects, type MakersProject } from '../../data/makersProjects';
+
+// ─── Mapa iconName → componente Lucide ────────────────────────────────────────
+const ICON_MAP: Record<string, LucideIcon> = {
+  UtensilsCrossed,
+  Smartphone,
+  GraduationCap,
+  TrendingUp,
+  Wrench,
+  FlaskConical,
+  BarChart3,
+  GitBranch,
+  Newspaper,
+};
 
 // ─── Figma assets (nodo 1:1131 — expiran ~7 días) ────────────────────────────
 // Navbar (nodo 1:931) — no cambian con cada extracción
@@ -10,9 +28,10 @@ const FIGMA_IX_AI_HERO      = 'https://www.figma.com/api/mcp/asset/b8b9c1c2-0225
 const FIGMA_HERO_TITLE      = 'https://www.figma.com/api/mcp/asset/ff86a6f8-3272-4df5-b085-44d5228ef19c';
 const FIGMA_HERO_BG         = 'https://www.figma.com/api/mcp/asset/2857d491-91f6-43d6-8c91-ec5a2c9dcfdd';
 
-// ─── MERLin Icon ──────────────────────────────────────────────────────────────
+// ─── Project Icon ─────────────────────────────────────────────────────────────
 
-function MerlinIcon() {
+function ProjectIcon({ iconName }: { iconName: string }) {
+  const Icon = ICON_MAP[iconName] ?? UtensilsCrossed;
   return (
     <div
       style={{
@@ -26,19 +45,7 @@ function MerlinIcon() {
         flexShrink: 0,
       }}
     >
-      {/* Sparkle / AI star icon */}
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path
-          d="M11 2L12.545 7.908L18 11L12.545 14.092L11 20L9.455 14.092L4 11L9.455 7.908L11 2Z"
-          fill="white"
-          fillOpacity="0.95"
-        />
-        <path
-          d="M17.5 3L18.25 5.75L21 6.5L18.25 7.25L17.5 10L16.75 7.25L14 6.5L16.75 5.75L17.5 3Z"
-          fill="white"
-          fillOpacity="0.7"
-        />
-      </svg>
+      <Icon size={24} color="#FFFFFF" strokeWidth={1.8} />
     </div>
   );
 }
@@ -349,7 +356,7 @@ function ProjectCard({ project }: { project: MakersProject }) {
     >
       {/* Card header: icon + name */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <MerlinIcon />
+        <ProjectIcon iconName={project.iconName} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3
             style={{
