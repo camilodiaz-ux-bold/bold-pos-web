@@ -999,7 +999,7 @@ export function MakersLanding() {
             fontFamily: "'Montserrat', sans-serif",
           }}
         >
-          Bold Makers · Proyectos internos creados con IA · 2025
+          Bold Makers · Proyectos internos creados con IA · 2026
         </p>
       </footer>
     </div>
