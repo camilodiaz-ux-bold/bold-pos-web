@@ -32,4 +32,4 @@ src/
 
 ## Diseño
 - Figma: https://www.figma.com/design/bU77l4k96jRMtG70DUWSqt/POS-Restaurantes-V1
-- Design System: Merlin (Bold)
+- Design System: Merlin (Bold) — ver MERLIN-SYSTEM.md
