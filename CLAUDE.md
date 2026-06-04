@@ -21,7 +21,7 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 - Fuente siempre Montserrat
 - Nunca hardcodear colores, usar siempre variables CSS del sistema
 - Variables clave: --blue-10, --blue-20, --blue-100, --black-10, --black-100
-- Referencia visual en MERLIN-WEB.md
+- Referencia visual en MERLIN-SYSTEM.md
 
 ## Reglas críticas
 - NO modificar el router ni el basename
