@@ -40,19 +40,22 @@ interface Pedido {
   pagoMixto?:     PagoMixtoItem[];
   pagoDividido?:  PagoDivididoPersona[];
   totalPago?:     string;
+  usuario:        string;
+  cufe:           string;
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
 const RES = 'Resolution test SP - Resolution 1234509752467';
+const CODCUFE = 'eefa31ca5cdaf0422bab155a0c1b6e4341cd07236510741cd041cd0...';
 
 const PEDIDOS: Record<string, Pedido> = {
-  'P-001': {
-    id: 'P-001',
+  'O-001': {
+    id: 'O-001',
     estado:      { label: 'Pagado',    variant: 'success' },
     noDoc:       'V-001234',
     tipoDoc:     'Comprobante',
-    resolucion:  RES,
+    resolucion:  '---',
     mesa:        'Mesa 3',
     zona:        'Zona 1',
     sucursal:    'Principal',
@@ -64,9 +67,11 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:     'Consumidor final',
     formaPago:   'Efectivo',
     efectivo:    { recibido: '$600,000', cambio: '$3,096' },
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
-  'P-003': {
-    id: 'P-003',
+  'O-002': {
+    id: 'O-002',
     estado:      { label: 'Abierto',   variant: 'warning' },
     noDoc:       'V-001236',
     tipoDoc:     'Factura electrónica',
@@ -82,13 +87,35 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:     'Juan García NIT 900123456',
     formaPago:   'Tarjeta',
     dian:        { label: 'Enviada', variant: 'success' },
+    usuario:     'Juan Perez',
+    cufe:         CODCUFE,
   },
-  'P-005': {
-    id: 'P-005',
+  'O-003': {
+    id: 'O-003',
+    estado:      { label: 'Abierto',   variant: 'warning' },
+    noDoc:       'V-001236',
+    tipoDoc:     'Factura electrónica',
+    resolucion:  RES,
+    mesa:        'Mesa 1',
+    zona:        'Zona 1',
+    sucursal:    'Principal',
+    personas:    '4 personas',
+    horaApertura:'25/03/2026 14:55',
+    horaCierre:  '---',
+    duracion:    '---',
+    vendedor:    'Miguel Torres',
+    cliente:     'Juan García NIT 900123456',
+    formaPago:   'Tarjeta',
+    dian:        { label: 'Enviada', variant: 'success' },
+    usuario: 'Juan Perez',
+    cufe:         CODCUFE,
+  },
+  'O-004': {
+    id: 'O-004',
     estado:       { label: 'Cancelado', variant: 'error' },
     noDoc:        'V-001238',
     tipoDoc:      'Comprobante',
-    resolucion:   RES,
+    resolucion:   '---',
     mesa:         'Mesa 2',
     zona:         'Zona 2',
     sucursal:     'Principal',
@@ -100,31 +127,31 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:      'Consumidor final',
     formaPago:    'Nequi',
     pagoCancelado: true,
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
-  'P-009': {
-    id: 'P-009',
-    estado:       { label: 'Pagado', variant: 'success' },
-    noDoc:        'V-001242',
+  'O-005': {
+    id: 'O-005',
+    estado:       { label: 'Cancelado', variant: 'error' },
+    noDoc:        'V-001238',
     tipoDoc:      'Comprobante',
-    resolucion:   RES,
-    mesa:         'Mesa 6',
-    zona:         'Zona 1',
+    resolucion:   '---',
+    mesa:         'Mesa 2',
+    zona:         'Zona 2',
     sucursal:     'Principal',
-    personas:     '2 personas',
-    horaApertura: '25/03/2026 18:30',
-    horaCierre:   '25/03/2026 19:15',
-    duracion:     '45min',
-    vendedor:     'Laura Gómez',
+    personas:     '3 personas',
+    horaApertura: '25/03/2026 16:05',
+    horaCierre:   '25/03/2026 17:05',
+    duracion:     '1h 00min',
+    vendedor:     'Carlos Pérez',
     cliente:      'Consumidor final',
-    formaPago:    'Mixto',
-    pagoMixto: [
-      { metodo: 'Efectivo', monto: '$200,000' },
-      { metodo: 'Tarjeta',  monto: '$396,904' },
-    ],
-    totalPago: '$596,904',
+    formaPago:    'Nequi',
+    pagoCancelado: true,
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
-  'P-010': {
-    id: 'P-010',
+  'O-006': {
+    id: 'O-006',
     estado:       { label: 'Pagado', variant: 'success' },
     noDoc:        'V-001243',
     tipoDoc:      'Factura electrónica',
@@ -147,10 +174,107 @@ const PEDIDOS: Record<string, Pedido> = {
       { persona: 'Persona 4', metodo: 'Nequi',                                             monto: '$362,593' },
     ],
     totalPago: '$1,450,372',
+    usuario: 'Juan Perez',
+    cufe:         CODCUFE,
+  },
+  'O-007': {
+    id: 'O-007',
+    estado:       { label: 'Cancelado', variant: 'error' },
+    noDoc:        'V-001238',
+    tipoDoc:      'Comprobante',
+    resolucion:   '---',
+    mesa:         'Mesa 2',
+    zona:         'Zona 2',
+    sucursal:     'Principal',
+    personas:     '3 personas',
+    horaApertura: '25/03/2026 16:05',
+    horaCierre:   '25/03/2026 17:05',
+    duracion:     '1h 00min',
+    vendedor:     'Carlos Pérez',
+    cliente:      'Consumidor final',
+    formaPago:    'Nequi',
+    pagoCancelado: true,
+    usuario: 'Juan Perez',
+    cufe: '---',
+  },
+  'O-008': {
+    id: 'O-008',
+    estado:       { label: 'Pagado', variant: 'success' },
+    noDoc:        'V-001242',
+    tipoDoc:      'Comprobante',
+    resolucion:   '---',
+    mesa:         'Mesa 6',
+    zona:         'Zona 1',
+    sucursal:     'Principal',
+    personas:     '2 personas',
+    horaApertura: '25/03/2026 18:30',
+    horaCierre:   '25/03/2026 19:15',
+    duracion:     '45min',
+    vendedor:     'Laura Gómez',
+    cliente:      'Consumidor final',
+    formaPago:    'Mixto',
+    pagoMixto: [
+      { metodo: 'Efectivo', monto: '$200,000' },
+      { metodo: 'Tarjeta',  monto: '$396,904' },
+    ],
+    totalPago: '$596,904',
+    usuario: 'Juan Perez',
+    cufe: '---',
+  },
+  'O-009': {
+    id: 'O-009',
+    estado:       { label: 'Pagado', variant: 'success' },
+    noDoc:        'V-001242',
+    tipoDoc:      'Comprobante',
+    resolucion:   '---',
+    mesa:         'Mesa 6',
+    zona:         'Zona 1',
+    sucursal:     'Principal',
+    personas:     '2 personas',
+    horaApertura: '25/03/2026 18:30',
+    horaCierre:   '25/03/2026 19:15',
+    duracion:     '45min',
+    vendedor:     'Laura Gómez',
+    cliente:      'Consumidor final',
+    formaPago:    'Mixto',
+    pagoMixto: [
+      { metodo: 'Efectivo', monto: '$200,000' },
+      { metodo: 'Tarjeta',  monto: '$396,904' },
+    ],
+    totalPago: '$596,904',
+    usuario: 'Juan Perez',
+    cufe: '---',
+  },
+  'O-010': {
+    id: 'O-010',
+    estado:       { label: 'Pagado', variant: 'success' },
+    noDoc:        'V-001243',
+    tipoDoc:      'Factura electrónica',
+    resolucion:   RES,
+    mesa:         'Mesa 8',
+    zona:         'Zona 2',
+    sucursal:     'Principal',
+    personas:     '4 personas',
+    horaApertura: '25/03/2026 19:00',
+    horaCierre:   '25/03/2026 20:10',
+    duracion:     '1h 10min',
+    vendedor:     'Miguel Torres',
+    cliente:      'Consumidor final',
+    formaPago:    'Cuenta dividida',
+    dian:         { label: 'Enviada', variant: 'success' },
+    pagoDividido: [
+      { persona: 'Persona 1', metodo: 'Efectivo',                                          monto: '$362,593' },
+      { persona: 'Persona 2', metodo: 'Tarjeta',                                           monto: '$362,593' },
+      { persona: 'Persona 3', metodo: 'Mixto (Efectivo $200,000 + Tarjeta $162,593)',      monto: '$362,593' },
+      { persona: 'Persona 4', metodo: 'Nequi',                                             monto: '$362,593' },
+    ],
+    totalPago: '$1,450,372',
+    usuario: 'Juan Perez',
+    cufe:         CODCUFE,
   },
 };
 
-const FALLBACK = PEDIDOS['P-001'];
+const FALLBACK = PEDIDOS['O-001'];
 
 // ─── Products ─────────────────────────────────────────────────────────────────
 
@@ -361,6 +485,7 @@ export function PedidoDetallePage() {
             <InfoRow label="No. Documento">{pedido.noDoc}</InfoRow>
             <InfoRow label="Tipo de documento">{pedido.tipoDoc}</InfoRow>
             <InfoRow label="Resolución">{pedido.resolucion}</InfoRow>
+            <InfoRow label="CUFE">{pedido.cufe}</InfoRow>
             <InfoRow label="Mesa">{pedido.mesa}</InfoRow>
             <InfoRow label="Zona" last>{pedido.zona}</InfoRow>
           </div>
@@ -383,7 +508,7 @@ export function PedidoDetallePage() {
             <InfoRow label="Cliente" last>{pedido.cliente}</InfoRow>
           </div>
           <div style={{ paddingLeft: 32 }}>
-            <InfoRow label="Forma de pago">{pedido.formaPago}</InfoRow>
+            <InfoRow label="Emitido Por">{pedido.usuario}</InfoRow>
             <InfoRow label="Estado" last={!showDian || !pedido.dian}>
               <EstadoBadge label={pedido.estado.label} variant={pedido.estado.variant} />
             </InfoRow>

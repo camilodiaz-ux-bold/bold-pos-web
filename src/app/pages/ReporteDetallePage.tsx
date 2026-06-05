@@ -82,8 +82,9 @@ const CONFIGS: Record<string, ReportConfig> = {
       { key: 'subtotal',    label: 'Subtotal',          width: '110px' },
       { key: 'descuento',   label: 'Descuento',         width: '100px' },
       { key: 'impuestos',   label: 'Impuestos',         width: '100px' },
-      { key: 'total',       label: 'Total sin propina', width: '130px' },
-      { key: 'estado',      label: 'Estado',            width: '110px' },
+      { key: 'total',            label: 'Total sin propina', width: '130px' },
+      { key: 'totalConPropina', label: 'Total con propina', width: '130px' },
+      { key: 'estado',           label: 'Estado',            width: '110px' },
       { key: 'estadoDian',  label: 'Estado DIAN',       width: '120px' },
     ],
     propinasColumn: { key: 'propina', label: 'Propina', width: '100px' },
@@ -184,6 +185,14 @@ const CONFIGS: Record<string, ReportConfig> = {
 
 function isBadge(val: unknown): val is { label: string; variant: StatusVariant } {
   return typeof val === 'object' && val !== null && 'label' in val && 'variant' in val;
+}
+
+function parseCOP(s: string): number {
+  return parseInt(s.replace(/[$,]/g, ''), 10) || 0;
+}
+
+function formatCOP(n: number): string {
+  return '$' + n.toLocaleString('en-US');
 }
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
@@ -552,6 +561,9 @@ export function ReporteDetallePage() {
                 >
                   {effectiveColumns.map(col => {
                     const val = row[col.key];
+                    const displayValue = col.key === 'totalConPropina'
+                      ? formatCOP(parseCOP(row['total'] as string) + parseCOP(row['propina'] as string))
+                      : val;
                     return (
                       <td
                         key={col.key}
@@ -564,9 +576,9 @@ export function ReporteDetallePage() {
                           lineHeight: '18px',
                         }}
                       >
-                        {isBadge(val)
-                          ? <StatusBadge label={val.label} variant={val.variant} />
-                          : (val as string) ?? '—'
+                        {isBadge(displayValue)
+                          ? <StatusBadge label={displayValue.label} variant={displayValue.variant} />
+                          : (displayValue as string) ?? '—'
                         }
                       </td>
                     );
