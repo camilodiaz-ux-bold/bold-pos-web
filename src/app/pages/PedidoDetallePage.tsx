@@ -40,11 +40,14 @@ interface Pedido {
   pagoMixto?:     PagoMixtoItem[];
   pagoDividido?:  PagoDivididoPersona[];
   totalPago?:     string;
+  usuario:        string;
+  cufe:           string;
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
 const RES = 'Resolution test SP - Resolution 1234509752467';
+const CODCUFE = 'eefa31ca5cdaf0422bab155a0c1b6e4341cd07236510741cd041cd0...';
 
 const PEDIDOS: Record<string, Pedido> = {
   'O-001': {
@@ -52,7 +55,7 @@ const PEDIDOS: Record<string, Pedido> = {
     estado:      { label: 'Pagado',    variant: 'success' },
     noDoc:       'V-001234',
     tipoDoc:     'Comprobante',
-    resolucion:  RES,
+    resolucion:  '---',
     mesa:        'Mesa 3',
     zona:        'Zona 1',
     sucursal:    'Principal',
@@ -64,6 +67,8 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:     'Consumidor final',
     formaPago:   'Efectivo',
     efectivo:    { recibido: '$600,000', cambio: '$3,096' },
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
   'O-002': {
     id: 'O-002',
@@ -82,6 +87,8 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:     'Juan García NIT 900123456',
     formaPago:   'Tarjeta',
     dian:        { label: 'Enviada', variant: 'success' },
+    usuario:     'Juan Perez',
+    cufe:         CODCUFE,
   },
   'O-003': {
     id: 'O-003',
@@ -100,13 +107,15 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:     'Juan García NIT 900123456',
     formaPago:   'Tarjeta',
     dian:        { label: 'Enviada', variant: 'success' },
+    usuario: 'Juan Perez',
+    cufe:         CODCUFE,
   },
   'O-004': {
     id: 'O-004',
     estado:       { label: 'Cancelado', variant: 'error' },
     noDoc:        'V-001238',
     tipoDoc:      'Comprobante',
-    resolucion:   RES,
+    resolucion:   '---',
     mesa:         'Mesa 2',
     zona:         'Zona 2',
     sucursal:     'Principal',
@@ -118,13 +127,15 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:      'Consumidor final',
     formaPago:    'Nequi',
     pagoCancelado: true,
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
   'O-005': {
     id: 'O-005',
     estado:       { label: 'Cancelado', variant: 'error' },
     noDoc:        'V-001238',
     tipoDoc:      'Comprobante',
-    resolucion:   RES,
+    resolucion:   '---',
     mesa:         'Mesa 2',
     zona:         'Zona 2',
     sucursal:     'Principal',
@@ -136,6 +147,8 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:      'Consumidor final',
     formaPago:    'Nequi',
     pagoCancelado: true,
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
   'O-006': {
     id: 'O-006',
@@ -161,13 +174,15 @@ const PEDIDOS: Record<string, Pedido> = {
       { persona: 'Persona 4', metodo: 'Nequi',                                             monto: '$362,593' },
     ],
     totalPago: '$1,450,372',
+    usuario: 'Juan Perez',
+    cufe:         CODCUFE,
   },
   'O-007': {
     id: 'O-007',
     estado:       { label: 'Cancelado', variant: 'error' },
     noDoc:        'V-001238',
     tipoDoc:      'Comprobante',
-    resolucion:   RES,
+    resolucion:   '---',
     mesa:         'Mesa 2',
     zona:         'Zona 2',
     sucursal:     'Principal',
@@ -179,13 +194,15 @@ const PEDIDOS: Record<string, Pedido> = {
     cliente:      'Consumidor final',
     formaPago:    'Nequi',
     pagoCancelado: true,
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
   'O-008': {
     id: 'O-008',
     estado:       { label: 'Pagado', variant: 'success' },
     noDoc:        'V-001242',
     tipoDoc:      'Comprobante',
-    resolucion:   RES,
+    resolucion:   '---',
     mesa:         'Mesa 6',
     zona:         'Zona 1',
     sucursal:     'Principal',
@@ -201,13 +218,15 @@ const PEDIDOS: Record<string, Pedido> = {
       { metodo: 'Tarjeta',  monto: '$396,904' },
     ],
     totalPago: '$596,904',
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
   'O-009': {
     id: 'O-009',
     estado:       { label: 'Pagado', variant: 'success' },
     noDoc:        'V-001242',
     tipoDoc:      'Comprobante',
-    resolucion:   RES,
+    resolucion:   '---',
     mesa:         'Mesa 6',
     zona:         'Zona 1',
     sucursal:     'Principal',
@@ -223,6 +242,8 @@ const PEDIDOS: Record<string, Pedido> = {
       { metodo: 'Tarjeta',  monto: '$396,904' },
     ],
     totalPago: '$596,904',
+    usuario: 'Juan Perez',
+    cufe: '---',
   },
   'O-010': {
     id: 'O-010',
@@ -248,6 +269,8 @@ const PEDIDOS: Record<string, Pedido> = {
       { persona: 'Persona 4', metodo: 'Nequi',                                             monto: '$362,593' },
     ],
     totalPago: '$1,450,372',
+    usuario: 'Juan Perez',
+    cufe:         CODCUFE,
   },
 };
 
@@ -462,6 +485,7 @@ export function PedidoDetallePage() {
             <InfoRow label="No. Documento">{pedido.noDoc}</InfoRow>
             <InfoRow label="Tipo de documento">{pedido.tipoDoc}</InfoRow>
             <InfoRow label="Resolución">{pedido.resolucion}</InfoRow>
+            <InfoRow label="CUFE">{pedido.cufe}</InfoRow>
             <InfoRow label="Mesa">{pedido.mesa}</InfoRow>
             <InfoRow label="Zona" last>{pedido.zona}</InfoRow>
           </div>
@@ -484,7 +508,7 @@ export function PedidoDetallePage() {
             <InfoRow label="Cliente" last>{pedido.cliente}</InfoRow>
           </div>
           <div style={{ paddingLeft: 32 }}>
-            <InfoRow label="Forma de pago">{pedido.formaPago}</InfoRow>
+            <InfoRow label="Emitido Por">{pedido.usuario}</InfoRow>
             <InfoRow label="Estado" last={!showDian || !pedido.dian}>
               <EstadoBadge label={pedido.estado.label} variant={pedido.estado.variant} />
             </InfoRow>
