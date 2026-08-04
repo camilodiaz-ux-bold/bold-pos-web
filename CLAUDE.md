@@ -1,7 +1,7 @@
 # CLAUDE.md — Bold POS Restaurantes WEB
 
 ## Qué es este proyecto
-Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigido al dueño o administrador del restaurante, no al mesero. Es una adaptación de Bold POS Retail, no un producto nuevo desde cero.
+Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigido al dueño o administrador del restaurante, no al mesero. Es una adaptación de Bold POS Retail, no un producto nuevo desde cero. Este es un prototipo visual no el proyecto real.
 
 ## Stack técnico
 - React 18 + TypeScript + Vite + Tailwind CSS

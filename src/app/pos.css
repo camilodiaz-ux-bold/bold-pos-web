@@ -52,6 +52,10 @@ button, a, [role="button"] { cursor: pointer; transition: all 150ms ease; }
 }
 .zone-tabs::-webkit-scrollbar { display: none; }
 
+/* Utility: hide scrollbar while keeping scroll functionality */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 .zone-tab {
   position: relative;
   display: flex;

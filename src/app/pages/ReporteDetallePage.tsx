@@ -9,10 +9,11 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { ArrowLeft, RefreshCw, X, ChevronDown, Download } from 'lucide-react';
+import { VentasAsyncReport } from '../components/reportes/VentasAsyncReport';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
-type StatusVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'dian-aceptado' | 'dian-enviado' | 'dian-pendiente' | 'dian-rechazado';
+export type StatusVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'dian-aceptado' | 'dian-enviado' | 'dian-pendiente' | 'dian-rechazado';
 
 interface Column {
   key: string;
@@ -44,7 +45,7 @@ interface ReportConfig {
 
 // ─── Estilos de badges ────────────────────────────────────────────────────────
 
-const BADGE_STYLES: Record<StatusVariant, React.CSSProperties> = {
+export const BADGE_STYLES: Record<StatusVariant, React.CSSProperties> = {
   success: { backgroundColor: 'var(--feedback-success-10)', color: 'var(--feedback-success-150)', border: '1px solid var(--feedback-success-100)' },
   warning: { backgroundColor: 'var(--feedback-warning-10)', color: 'var(--feedback-warning-200)', border: '1px solid var(--feedback-warning-100)' },
   error:   { backgroundColor: 'var(--feedback-error-10)',   color: 'var(--feedback-error-100)',   border: '1px solid var(--feedback-error-100)'   },
@@ -62,7 +63,7 @@ const MESEROS = ['Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'];
 
 const CONFIGS: Record<string, ReportConfig> = {
   'rest-ventas': {
-    title: 'Ventas',
+    title: 'Ventas (Legacy)',
     statusOptions: ['Todos', 'Pagada', 'Pendiente', 'Cancelada'],
     meseroOptions: ['Todos', ...MESEROS],
     showIncludeTip: true,
@@ -197,7 +198,7 @@ function formatCOP(n: number): string {
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
-function FilterDropdown({ label, options, value, onChange }: {
+export function FilterDropdown({ label, options, value, onChange }: {
   label: string;
   options: string[];
   value: string;
@@ -236,7 +237,7 @@ function FilterDropdown({ label, options, value, onChange }: {
   );
 }
 
-function StatusBadge({ label, variant }: { label: string; variant: StatusVariant }) {
+export function StatusBadge({ label, variant }: { label: string; variant: StatusVariant }) {
   return (
     <span style={{
       display: 'inline-flex',
@@ -285,6 +286,8 @@ export function ReporteDetallePage() {
         ...(config.showIncludeTip && includeTip && config.propinasColumn ? [config.propinasColumn] : []),
       ]
     : [];
+
+  if (id === 'rest-ventas-async') return <VentasAsyncReport />;
 
   if (!config) {
     return (
