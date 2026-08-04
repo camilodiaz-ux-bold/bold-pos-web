@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom';
 import { useNavigate, useLocation } from 'react-router';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
-  UtensilsCrossed, TrendingUp,
+  UtensilsCrossed, TrendingUp, Download,
 } from 'lucide-react';
+import { useNotifications } from '../store/notificationsStore';
 import {
   IcHome, IcHomeFill,
   IcMesas, IcTurnos,
@@ -644,9 +645,15 @@ interface TopBarProps {
 }
 
 export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBarProps) {
+  const { notifications, unreadCount, markRead } = useNotifications();
+
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const avatarBtnRef = useRef<HTMLButtonElement>(null);
+
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [notifPos, setNotifPos] = useState<{ top: number; right: number } | null>(null);
+  const bellBtnRef = useRef<HTMLButtonElement>(null);
 
   const handleAvatarClick = useCallback(() => {
     if (!showProfileMenu && avatarBtnRef.current) {
@@ -658,6 +665,23 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
     }
     setShowProfileMenu(v => !v);
   }, [showProfileMenu]);
+
+  const handleBellClick = useCallback(() => {
+    if (!showNotifPanel && bellBtnRef.current) {
+      const rect = bellBtnRef.current.getBoundingClientRect();
+      setNotifPos({
+        top: rect.bottom + 8,
+        right: Math.max(window.innerWidth - rect.right, 16),
+      });
+    }
+    setShowNotifPanel(v => !v);
+  }, [showNotifPanel]);
+
+  const handleNotificationRowClick = (n: { id: string; onRowClick?: () => void }) => {
+    markRead(n.id);
+    setShowNotifPanel(false);
+    n.onRowClick?.();
+  };
 
   return (
     <div style={{
@@ -686,11 +710,24 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
           <span style={{ fontSize: 14, color: '#6B7280' }}>Plan Plus</span>
         </div>
         <button
-          style={{ color: '#6B7280', display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer' }}
+          ref={bellBtnRef}
+          onClick={handleBellClick}
+          style={{ position: 'relative', color: '#6B7280', display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer' }}
           className="hover:text-gray-900 transition-colors"
           title="Notificaciones"
         >
           <Bell size={24} />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute', top: -2, right: -2,
+              backgroundColor: 'var(--coral-100)', color: '#fff',
+              fontSize: 10, fontWeight: 700, borderRadius: '50%',
+              width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '2px solid white', fontFamily: "'Montserrat', sans-serif",
+            }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
         <button
           ref={avatarBtnRef}
@@ -771,6 +808,87 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
                   <LogOut size={20} color="#6B7280" style={{ flexShrink: 0 }} />
                   <span style={{ fontSize: 14, color: '#0F1729' }}>Cerrar sesión</span>
                 </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* ── Notifications dropdown ── */}
+      {showNotifPanel && notifPos && ReactDOM.createPortal(
+        <>
+          <div
+            onClick={() => setShowNotifPanel(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 9000 }}
+          />
+          <div style={{
+            position: 'fixed', top: notifPos.top, right: notifPos.right,
+            width: 340, zIndex: 9001,
+          }}>
+            <div style={{
+              position: 'absolute', top: -8, right: 12,
+              width: 0, height: 0,
+              borderLeft: '8px solid transparent', borderRight: '8px solid transparent',
+              borderBottom: '8px solid #fff',
+              filter: 'drop-shadow(0 -2px 2px rgba(0,0,0,0.06))', zIndex: 1,
+            }} />
+            <div style={{
+              backgroundColor: '#fff', borderRadius: 12,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+              border: '1px solid #F3F4F6', overflow: 'hidden',
+              maxHeight: 420, display: 'flex', flexDirection: 'column',
+            }}>
+              <div style={{ padding: '14px 16px', fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: 14, color: '#0F1729', borderBottom: '1px solid #F3F4F6', flexShrink: 0 }}>
+                Notificaciones
+              </div>
+              <div style={{ overflowY: 'auto' }}>
+                {notifications.length === 0 ? (
+                  <p style={{ padding: '24px 16px', textAlign: 'center', fontFamily: "'Montserrat', sans-serif", fontSize: 13, color: '#9CA3AF', margin: 0 }}>
+                    No tienes notificaciones.
+                  </p>
+                ) : (
+                  notifications.map(n => (
+                    <div
+                      key={n.id}
+                      onClick={() => handleNotificationRowClick(n)}
+                      style={{
+                        display: 'flex', gap: 10, padding: '12px 16px',
+                        borderBottom: '1px solid #F3F4F6', cursor: 'pointer',
+                        backgroundColor: n.read ? 'transparent' : '#FAFAFA',
+                        opacity: n.read ? 0.6 : 1,
+                      }}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <span style={{
+                        width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
+                        backgroundColor: n.read ? '#D1D5DB' : (n.kind === 'error' ? '#EF4444' : '#34D399'),
+                      }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontFamily: "'Montserrat', sans-serif", fontSize: 13, fontWeight: n.read ? 400 : 600, color: '#0F1729' }}>
+                          {n.title}
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontFamily: "'Montserrat', sans-serif", fontSize: 12, color: '#6B7280' }}>
+                          {n.message}
+                        </p>
+                        {!n.read && n.action && (
+                          <button
+                            onClick={e => { e.stopPropagation(); n.action!.onClick(); markRead(n.id); }}
+                            style={{
+                              marginTop: 6, display: 'flex', alignItems: 'center', gap: 4,
+                              height: 26, padding: '0 10px', borderRadius: 13,
+                              border: '1.5px solid #121E6C', background: '#fff',
+                              fontSize: 12, fontWeight: 600, color: '#121E6C',
+                              fontFamily: "'Montserrat', sans-serif", cursor: 'pointer',
+                            }}
+                          >
+                            <Download size={12} /> {n.action.label}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

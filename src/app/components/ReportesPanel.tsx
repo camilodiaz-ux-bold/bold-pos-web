@@ -70,6 +70,7 @@ const CATEGORIES: ReportCategory[] = [
     title: 'Reportes de ventas',
     items: [
       { id: 'ventas',                  label: 'Ventas',                   icon: <FileText     size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'ventas-async',            label: 'Ventas Async',             icon: <Clock        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'comprobantes-mensuales',  label: 'Comprobantes mensuales',   icon: <FileCheck    size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ventas-items',            label: 'Ventas por ítems',         icon: <ShoppingCart size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ganancias-items',         label: 'Ganancias por ítems',      icon: <TrendingUp   size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
@@ -186,7 +187,9 @@ function CategoryCard({ category, isRestaurantes }: { category: ReportCategory; 
               ? () => navigate('/reportes/restaurantes/' + item.id)
               : item.id === 'ventas'
                 ? () => navigate('/reportes/restaurantes/rest-ventas')
-                : () => toast.info(item.label)
+                : item.id === 'ventas-async'
+                  ? () => navigate('/reportes/restaurantes/rest-ventas-async')
+                  : () => toast.info(item.label)
             }
           />
         ))}

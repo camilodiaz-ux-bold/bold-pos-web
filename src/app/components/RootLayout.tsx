@@ -20,6 +20,8 @@ import { CheckCircle } from 'lucide-react';
 import { BoldNavBar, BoldTopBar } from './BoldNavBar';
 import { MesasStoreProvider } from '../store/mesasStore';
 import { FavoritesProvider } from '../store/favoritesStore';
+import { NotificationsProvider } from '../store/notificationsStore';
+import { AsyncReportsProvider } from '../store/asyncReportsStore';
 import { LoginScreen } from './LoginScreen';
 import { SignupScreen } from './SignupScreen';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -109,6 +111,8 @@ export function RootLayout() {
   return (
     <FavoritesProvider>
     <MesasStoreProvider>
+    <NotificationsProvider>
+    <AsyncReportsProvider>
     <div className="flex flex-col h-screen w-full bg-[var(--blue-10)] overflow-hidden ">
       <Toaster position="top-center" richColors />
 
@@ -198,6 +202,8 @@ export function RootLayout() {
       </div>
 
     </div>
+    </AsyncReportsProvider>
+    </NotificationsProvider>
     </MesasStoreProvider>
     </FavoritesProvider>
   );
