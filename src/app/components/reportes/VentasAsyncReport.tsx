@@ -12,7 +12,7 @@ import { ArrowLeft, Download, RotateCcw } from 'lucide-react';
 import { FilterDropdown, StatusBadge } from '../../pages/ReporteDetallePage';
 import { useAsyncReports, type AsyncReportJob } from '../../store/asyncReportsStore';
 
-const ESTADO_OPTIONS  = ['Todos', 'Pagada', 'Pendiente', 'Cancelada'];
+const ESTADO_OPTIONS  = ['Todos', 'Pagada', 'No Pagada', 'Anulada'];
 const USUARIO_OPTIONS = ['Todos', 'Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -166,8 +166,8 @@ export function VentasAsyncReport() {
               outline: 'none', cursor: 'pointer', minWidth: 130,
             }}
           />
-          <FilterDropdown label="Estado"  options={ESTADO_OPTIONS}  value={estado}  onChange={setEstado} />
           <FilterDropdown label="Usuario" options={USUARIO_OPTIONS} value={usuario} onChange={setUsuario} />
+          <FilterDropdown label="Estado"  options={ESTADO_OPTIONS}  value={estado}  onChange={setEstado} />
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--black-60)', fontFamily: "'Montserrat', sans-serif", cursor: 'pointer', marginLeft: 8 }}>
             <input
               type="checkbox"
