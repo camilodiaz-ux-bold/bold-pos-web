@@ -69,8 +69,8 @@ const CATEGORIES: ReportCategory[] = [
     id: 'ventas',
     title: 'Reportes de ventas',
     items: [
-      { id: 'ventas',                  label: 'Ventas',                   icon: <FileText     size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'ventas-async',            label: 'Ventas Async',             icon: <Clock        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'ventas',                  label: 'Ventas (Legacy)',                   icon: <FileText     size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'ventas-async',            label: 'Ventas *Async',             icon: <FileText        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'comprobantes-mensuales',  label: 'Comprobantes mensuales',   icon: <FileCheck    size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ventas-items',            label: 'Ventas por ítems',         icon: <ShoppingCart size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ganancias-items',         label: 'Ganancias por ítems',      icon: <TrendingUp   size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },

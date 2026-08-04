@@ -153,12 +153,12 @@ export function AsyncReportsProvider({ children }: { children: React.ReactNode }
     push(willError
       ? {
           title: 'No se pudo generar el reporte',
-          message: `Reporte de Ventas Async (${rango}) falló al generarse.`,
+          message: `Reporte de Ventas (${rango}) falló al generarse.`,
           kind: 'error',
           onRowClick: () => navigate('/reportes/restaurantes/rest-ventas-async'),
         }
       : {
-          title: 'Reporte de Ventas Async listo',
+          title: 'Reporte de Ventas listo',
           message: `Rango ${rango} · ya puedes descargarlo.`,
           kind: 'success',
           onRowClick: () => navigate('/reportes/restaurantes/rest-ventas-async'),

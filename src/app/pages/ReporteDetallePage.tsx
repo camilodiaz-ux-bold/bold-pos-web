@@ -63,7 +63,7 @@ const MESEROS = ['Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'];
 
 const CONFIGS: Record<string, ReportConfig> = {
   'rest-ventas': {
-    title: 'Ventas',
+    title: 'Ventas (Legacy)',
     statusOptions: ['Todos', 'Pagada', 'Pendiente', 'Cancelada'],
     meseroOptions: ['Todos', ...MESEROS],
     showIncludeTip: true,

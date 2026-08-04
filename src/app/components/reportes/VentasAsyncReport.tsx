@@ -135,7 +135,7 @@ export function VentasAsyncReport() {
           <ArrowLeft size={18} color="var(--blue-100)" strokeWidth={1.8} />
         </button>
         <p style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: 20, lineHeight: '28px', color: 'var(--black-100)', margin: 0 }}>
-          Ventas Async
+          Ventas
         </p>
       </div>
 
