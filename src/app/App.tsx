@@ -10,6 +10,10 @@ import { VentasPage } from './pages/VentasPage';
 import { PedidoDetallePage } from './pages/PedidoDetallePage';
 import { StatusPage } from '../pages/StatusPage';
 import { MakersLanding } from '../pages/MakersLanding';
+import { SelfServiceLayout } from '../selfservice/components/SelfServiceLayout';
+import { PlanSelectionPage } from '../selfservice/pages/PlanSelectionPage';
+import { CheckoutSummaryPage } from '../selfservice/pages/CheckoutSummaryPage';
+import { ConfirmationPage } from '../selfservice/pages/ConfirmationPage';
 
 const router = createBrowserRouter([
   {
@@ -27,6 +31,16 @@ const router = createBrowserRouter([
   },
   { path: '/status', Component: StatusPage },
   { path: '/makers', Component: MakersLanding },
+  // Self Service — aislado de RootLayout: sin sidebar/topbar admin ni providers de Restaurantes.
+  {
+    path: '/self-service',
+    Component: SelfServiceLayout,
+    children: [
+      { index: true, Component: PlanSelectionPage },
+      { path: 'resumen', Component: CheckoutSummaryPage },
+      { path: 'confirmacion', Component: ConfirmationPage },
+    ],
+  },
 ], { basename: import.meta.env.BASE_URL });
 
 export default function App() {
