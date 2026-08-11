@@ -194,7 +194,7 @@ export function VentasAsyncReport() {
             Generar reporte
           </button>
           <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 12, color: 'var(--black-60)', margin: '8px 0 0' }}>
-            Este reporte se genera en segundo plano y puede tardar de 1 a 5 minutos. Te notificaremos cuando esté listo.
+            Lo estamos preparando. Puedes salir de esta pagina y te avisaremos cuando este listo.
           </p>
         </div>
       </div>
@@ -214,7 +214,7 @@ export function VentasAsyncReport() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Solicitado', 'Rango del reporte', 'Filtros', 'Estado', 'Vence', 'Acción'].map(label => (
+                  {['Fecha de generacion', 'Rango de fechas del reporte', 'Filtros del reporte', 'Estado', 'Fecha de vencimiento', 'Acción'].map(label => (
                     <th key={label} style={{
                       padding: '12px 16px 12px 0', textAlign: 'left',
                       fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: 13,
@@ -233,9 +233,9 @@ export function VentasAsyncReport() {
                     <td style={{ ...cellStyle, color: 'var(--black-60)' }}>{summarizeFilters(job)}</td>
                     <td style={cellStyle}>
                       {job.status === 'processing' && <StatusBadge label={`En proceso · ${formatElapsed(job.requestedAt, now)}`} variant="warning" />}
-                      {job.status === 'ready'      && <StatusBadge label="Listo" variant="success" />}
-                      {job.status === 'error'      && <StatusBadge label="Error" variant="error" />}
-                      {job.status === 'expired'    && <StatusBadge label="Expirado" variant="neutral" />}
+                      {job.status === 'ready'      && <StatusBadge label="Generado" variant="success" />}
+                      {job.status === 'error'      && <StatusBadge label="Fallido" variant="error" />}
+                      {job.status === 'expired'    && <StatusBadge label="Vencido" variant="neutral" />}
                     </td>
                     <td style={{ ...cellStyle, color: 'var(--black-60)' }}>
                       {job.status === 'ready' && job.expiresAt ? new Date(job.expiresAt).toLocaleDateString('es-CO') : '—'}
