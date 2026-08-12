@@ -39,6 +39,7 @@ interface AsyncReportsContextValue {
   requestReport:   (rangeFrom: string, rangeTo: string, filters: AsyncReportFilters) => void;
   retryReport:     (jobId: string) => void;
   downloadReport:  (jobId: string) => void;
+  refresh:         () => void;
 }
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -229,8 +230,20 @@ export function AsyncReportsProvider({ children }: { children: React.ReactNode }
     if (job) scheduleResolution(jobId, delay, job.rangeFrom, job.rangeTo);
   }, [updateJobs, scheduleResolution]);
 
+  // Vuelve a leer localStorage (por si otra pestaña generó/actualizó reportes)
+  // y retoma la programación de cualquier job "processing" que no tenga timer activo.
+  const refresh = useCallback(() => {
+    const reloaded = loadJobs();
+    updateJobs(() => reloaded);
+    reloaded.forEach(job => {
+      if (job.status === 'processing') {
+        scheduleResolution(job.id, job.expectedReadyAt - Date.now(), job.rangeFrom, job.rangeTo);
+      }
+    });
+  }, [updateJobs, scheduleResolution]);
+
   return (
-    <AsyncReportsContext.Provider value={{ jobs, requestReport, retryReport, downloadReport: downloadReportById }}>
+    <AsyncReportsContext.Provider value={{ jobs, requestReport, retryReport, downloadReport: downloadReportById, refresh }}>
       {children}
     </AsyncReportsContext.Provider>
   );
