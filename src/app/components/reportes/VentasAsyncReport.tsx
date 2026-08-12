@@ -8,7 +8,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Download, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Download, RotateCcw, RefreshCw, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { FilterDropdown, StatusBadge } from '../../pages/ReporteDetallePage';
 import { useAsyncReports, type AsyncReportJob } from '../../store/asyncReportsStore';
 
@@ -77,7 +78,7 @@ function ConfirmRetryModal({ onConfirm, onCancel }: { onConfirm: () => void; onC
 
 export function VentasAsyncReport() {
   const navigate = useNavigate();
-  const { jobs, requestReport, retryReport, downloadReport } = useAsyncReports();
+  const { jobs, requestReport, retryReport, downloadReport, refresh } = useAsyncReports();
 
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
@@ -105,6 +106,18 @@ export function VentasAsyncReport() {
 
   const handleRegenerar = (job: AsyncReportJob) => {
     requestReport(job.rangeFrom, job.rangeTo, job.filters);
+  };
+
+  const handleRefrescar = () => {
+    refresh();
+    toast.success('Historial actualizado');
+  };
+
+  const handleLimpiarFiltro = () => {
+    setFechaDesde('');
+    setFechaHasta('');
+    setEstado('Todos');
+    setUsuario('Todos');
   };
 
   const sortedJobs = [...jobs].sort((a, b) => b.requestedAt - a.requestedAt);
@@ -177,9 +190,7 @@ export function VentasAsyncReport() {
             />
             Incluir propina en el reporte
           </label>
-        </div>
 
-        <div>
           <button
             onClick={handleGenerar}
             disabled={!canGenerate}
@@ -189,21 +200,58 @@ export function VentasAsyncReport() {
               color: canGenerate ? '#fff' : 'var(--black-40)',
               fontFamily: "'Montserrat', sans-serif", fontSize: 14, fontWeight: 600,
               cursor: canGenerate ? 'pointer' : 'not-allowed',
+              marginLeft: 'auto',
             }}
           >
             Generar reporte
           </button>
-          <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 12, color: 'var(--black-60)', margin: '8px 0 0' }}>
-            Lo estamos preparando. Puedes salir de esta pagina y te avisaremos cuando este listo.
-          </p>
         </div>
+
+        <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 12, color: 'var(--black-60)', margin: 0 }}>
+          Lo estamos preparando. Puedes salir de esta pagina y te avisaremos cuando este listo.
+        </p>
       </div>
 
       {/* ── Historial ── */}
       <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: '20px 20px 8px 20px', display: 'flex', flexDirection: 'column' }}>
-        <p style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: 16, color: 'var(--black-100)', margin: '0 0 12px' }}>
-          Historial de reportes generados
-        </p>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid var(--black-10)',
+        }}>
+          <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 13, fontWeight: 500, color: 'var(--black-60)' }}>
+            {sortedJobs.length} Solicitudes de reportes
+          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button
+              onClick={handleRefrescar}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontFamily: "'Montserrat', sans-serif", fontSize: 13, fontWeight: 600,
+                color: 'var(--blue-100)', padding: 0,
+              }}
+              className="hover:opacity-70 transition-opacity"
+            >
+              <RefreshCw size={14} strokeWidth={2} />
+              Refrescar
+            </button>
+
+            <button
+              onClick={handleLimpiarFiltro}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontFamily: "'Montserrat', sans-serif", fontSize: 13, fontWeight: 600,
+                color: 'var(--blue-100)', padding: 0,
+              }}
+              className="hover:opacity-70 transition-opacity"
+            >
+              <Trash2 size={14} strokeWidth={2} />
+              Limpiar filtro
+            </button>
+          </div>
+        </div>
 
         {sortedJobs.length === 0 ? (
           <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 13, color: 'var(--black-60)', padding: '24px 0' }}>
