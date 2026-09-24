@@ -14,8 +14,14 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 ## Rutas
 / → HomePage
 /inicio → Dashboard
+/turnos → TurnosPage
+/ventas → VentasPage
+/ventas/:id → PedidoDetallePage
 /reportes → ReportesPage
 /reportes/restaurantes/:id → ReporteDetallePage
+/items → ListaItemsPage
+/items/nuevo → ItemFormPage (crear)
+/items/:id/editar → ItemFormPage (editar)
 
 ## Design System — Merlin
 - Fuente siempre Montserrat

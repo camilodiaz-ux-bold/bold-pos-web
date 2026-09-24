@@ -8,6 +8,9 @@ import { Dashboard } from './pages/Dashboard';
 import { TurnosPage } from './pages/TurnosPage';
 import { VentasPage } from './pages/VentasPage';
 import { PedidoDetallePage } from './pages/PedidoDetallePage';
+import { ItemsLayout } from './pages/items/ItemsLayout';
+import { ListaItemsPage } from './pages/items/ListaItemsPage';
+import { ItemFormPage } from './pages/items/ItemFormPage';
 import { StatusPage } from '../pages/StatusPage';
 import { MakersLanding } from '../pages/MakersLanding';
 
@@ -23,6 +26,15 @@ const router = createBrowserRouter([
       { path: 'turnos', Component: TurnosPage },
       { path: 'ventas', Component: VentasPage },
       { path: 'ventas/:id', Component: PedidoDetallePage },
+      {
+        path: 'items',
+        Component: ItemsLayout,
+        children: [
+          { index: true, Component: ListaItemsPage },
+          { path: 'nuevo', Component: ItemFormPage },
+          { path: ':id/editar', Component: ItemFormPage },
+        ],
+      },
     ],
   },
   { path: '/status', Component: StatusPage },
