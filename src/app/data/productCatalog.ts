@@ -51,6 +51,9 @@ export const CAT_DEFS: CatDef[] = [
   { id: 'sushi',              name: 'Sushi',                color: '#b01207', lightBg: 'rgba(176,18,7,0.07)',   darkText: '#1F2937', darkColor: '#8d0e06', merlinBg: 'rgba(176,18,7,0.04)',   merlinNameColor: '#540904', merlinCountColor: '#8d0e06', lineColor: '#b01207' },
   // Figma: #606060
   { id: 'desayunos',          name: 'Desayunos',            color: '#606060', lightBg: 'rgba(96,96,96,0.07)',   darkText: '#1F2937', darkColor: '#404040', merlinBg: 'rgba(96,96,96,0.04)',   merlinNameColor: '#2a2a2a', merlinCountColor: '#404040', lineColor: '#606060' },
+  // Agrupación de venta para combos (Item.esCombo === true) — Merlin --coral-100/-hover.
+  // No es una categoría administrativa del menú, ver specs/2026-09-combos.md §5.5.
+  { id: 'combos',             name: 'Combos',               color: '#ff2947', lightBg: 'rgba(255,41,71,0.07)',  darkText: '#1F2937', darkColor: '#e4102e', merlinBg: 'rgba(255,41,71,0.04)',  merlinNameColor: '#7a0018', merlinCountColor: '#e4102e', lineColor: '#ff2947' },
 ];
 
 // ─── Productos (56 total: 51 con imagen, 5 sin imagen) ────────────────────────

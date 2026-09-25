@@ -22,6 +22,7 @@ import { MesasStoreProvider } from '../store/mesasStore';
 import { FavoritesProvider } from '../store/favoritesStore';
 import { NotificationsProvider } from '../store/notificationsStore';
 import { AsyncReportsProvider } from '../store/asyncReportsStore';
+import { ItemsProvider } from '../store/itemsStore';
 import { LoginScreen } from './LoginScreen';
 import { SignupScreen } from './SignupScreen';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -111,9 +112,13 @@ export function RootLayout() {
   }
 
   // ── Main app shell ───────────────────────────────────────────────────────
+  // ItemsProvider vive aquí (no en las 2 ramas de arriba, login/onboarding no
+  // necesitan el catálogo de ítems) para que Mostrador y Mesas puedan leer
+  // useItems() y vender combos — ver src/app/utils/comboBridge.ts.
   return (
     <FavoritesProvider>
     <MesasStoreProvider>
+    <ItemsProvider>
     <NotificationsProvider>
     <AsyncReportsProvider>
     <div className="flex flex-col h-screen w-full bg-[var(--blue-10)] overflow-hidden ">
@@ -207,6 +212,7 @@ export function RootLayout() {
     </div>
     </AsyncReportsProvider>
     </NotificationsProvider>
+    </ItemsProvider>
     </MesasStoreProvider>
     </FavoritesProvider>
   );
