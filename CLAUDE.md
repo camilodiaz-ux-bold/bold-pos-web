@@ -9,7 +9,7 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 - Fuente: Montserrat (Google Fonts)
 - Router: React Router v7 con basename: import.meta.env.BASE_URL
 - Deploy: GitHub Pages via GitHub Actions (push a main)
-- Puerto local: http://localhost:5174/
+- Puerto local: http://localhost:5173/bold-pos-web/
 
 ## Rutas
 / → HomePage
@@ -29,11 +29,18 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 - Variables clave: --blue-10, --blue-20, --blue-100, --black-10, --black-100
 - Referencia visual en MERLIN-SYSTEM.md
 
+## Specs de producto
+- Los specs viven en `specs/`, con la convención descrita en `specs/README.md`.
+- Nombre de archivo: `AAAA-MM-nombre-feature.md`. Cada spec nuevo agrega su fila al índice del README.
+- Antes de implementar una feature, leer su spec completo en `specs/` — complementa a este CLAUDE.md, no lo reemplaza.
+- Un spec marcado `✅ Implementado` se congela: no se edita más. Un cambio de alcance posterior se escribe como spec nuevo que referencia al anterior como antecedente.
+
 ## Reglas críticas
 - NO modificar el router ni el basename
 - NO hardcodear colores ni tipografías fuera del design system
 - NO tocar vite.config.ts ni deploy.yml salvo que se indique explícitamente
 - Antes de editar cualquier componente, confirmar el archivo correcto con grep
+- Si existe un spec en `specs/` para lo que se está construyendo, ese spec manda sobre supuestos propios
 - NO hacer push directo a `main` ni a `develop` — ver "Flujo de Git" abajo
 
 ## Flujo de Git
