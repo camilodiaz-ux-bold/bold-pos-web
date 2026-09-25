@@ -14,6 +14,7 @@
 
 import React, { useMemo } from 'react';
 import { X, Printer, Info } from 'lucide-react';
+import type { ComboComponentSnapshot } from '../utils/comboBridge';
 
 // ─── Tipos públicos ───────────────────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ export interface TicketItem {
   isSent?: boolean;
   sentQuantity?: number;
   sentNote?: string;   // nota enviada en la comanda anterior
+  comboComponents?: ComboComponentSnapshot[];
 }
 
 export interface KitchenTicketPreviewModalProps {
@@ -307,6 +309,11 @@ export function KitchenTicketPreviewModal({
                         <p style={{ ...TXT.bold, fontWeight: 600 }}>
                           {String(displayQty).padEnd(3, ' ')} {item.name}
                         </p>
+                        {item.comboComponents?.map(c => (
+                          <p key={c.productId} style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
+                            {'      '}&#xB7;{' '}{c.quantity * displayQty} {c.name}
+                          </p>
+                        ))}
                         {displayNote.trim() && (
                           <p style={{ ...TXT.small, paddingLeft: 6, marginTop: 2 }}>
                             {'    '}&#x2192;{'  '}{displayNote}

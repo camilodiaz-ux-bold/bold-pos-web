@@ -13,13 +13,15 @@ import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, ImagePlus } from 'lucide-react';
 import { useItems } from '../../store/itemsStore';
-import type { ItemDraft, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
+import type { Item, ItemDraft, ItemComboComponente, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
 import { UNIDADES, IMPUESTOS, getImpuesto, getUnidad } from '../../data/itemsCatalogs';
 import { CAT_DEFS } from '../../data/productCatalog';
 import { formatCOP, parseCOP } from '../../utils/format';
 import { TextField, TextAreaField, SelectField } from '../../components/items/FormField';
 import { DisponibilidadCard } from '../../components/items/DisponibilidadCard';
+import { ComboComponentsCard } from '../../components/items/ComboComponentsCard';
 import { ConfirmDeleteModal } from '../../components/items/ConfirmDeleteModal';
+import { Toggle } from '../../components/items/Toggle';
 
 interface FormState {
   nombre: string;
@@ -36,13 +38,40 @@ interface FormState {
   manejaExistencias: boolean;
   sucursalIds: SucursalId[];
   existencias: Partial<Record<SucursalId, string>>;
+  esCombo: boolean;
+  componentes: ItemComboComponente[];
 }
 
 const EMPTY_FORM: FormState = {
   nombre: '', categoriaId: '', descripcion: '', codigo: '', unidadId: '', referencia: '',
   precioBaseRaw: '', impuestoId: 'iva-19', precioTotalRaw: '', costoRaw: '', imagen: '',
   manejaExistencias: false, sucursalIds: [], existencias: {},
+  esCombo: false, componentes: [],
 };
+
+// Única fuente de verdad para "Item → FormState de edición" — usada tanto en el
+// initializer de useState como en el snapshot de isDirty, para que nunca puedan
+// divergir (si divergen, el formulario queda permanentemente "sucio").
+function toFormState(item: Item): FormState {
+  return {
+    nombre: item.nombre,
+    categoriaId: item.categoriaId,
+    descripcion: item.descripcion,
+    codigo: item.codigo,
+    unidadId: item.unidadId,
+    referencia: item.referencia,
+    precioBaseRaw: String(item.precioBase),
+    impuestoId: item.impuestoId,
+    precioTotalRaw: String(item.precioTotal),
+    costoRaw: item.costo ? String(item.costo) : '',
+    imagen: item.imagen ?? '',
+    manejaExistencias: item.manejaExistencias,
+    sucursalIds: item.sucursales.map(s => s.sucursalId),
+    existencias: Object.fromEntries(item.sucursales.map(s => [s.sucursalId, String(s.existencia)])),
+    esCombo: item.esCombo,
+    componentes: item.componentes ?? [],
+  };
+}
 
 export function ItemFormPage() {
   const navigate = useNavigate();
@@ -54,27 +83,8 @@ export function ItemFormPage() {
   // lastEditedPrice: qué campo dispara el recálculo del otro cuando cambia el impuesto.
   const lastEditedPrice = useRef<'base' | 'total'>(mode === 'edit' ? 'total' : 'base');
 
-  const [form, setForm] = useState<FormState>(() => {
-    if (mode === 'edit' && existingItem) {
-      return {
-        nombre: existingItem.nombre,
-        categoriaId: existingItem.categoriaId,
-        descripcion: existingItem.descripcion,
-        codigo: existingItem.codigo,
-        unidadId: existingItem.unidadId,
-        referencia: existingItem.referencia,
-        precioBaseRaw: String(existingItem.precioBase),
-        impuestoId: existingItem.impuestoId,
-        precioTotalRaw: String(existingItem.precioTotal),
-        costoRaw: existingItem.costo ? String(existingItem.costo) : '',
-        imagen: existingItem.imagen ?? '',
-        manejaExistencias: existingItem.manejaExistencias,
-        sucursalIds: existingItem.sucursales.map(s => s.sucursalId),
-        existencias: Object.fromEntries(existingItem.sucursales.map(s => [s.sucursalId, String(s.existencia)])),
-      };
-    }
-    return EMPTY_FORM;
-  });
+  const [form, setForm] = useState<FormState>(() =>
+    mode === 'edit' && existingItem ? toFormState(existingItem) : EMPTY_FORM);
 
   const [showDiscardModal, setShowDiscardModal] = useState(false);
 
@@ -125,6 +135,22 @@ export function ItemFormPage() {
   const unidadLabel = getUnidad(form.unidadId)?.label ?? 'Unidades';
 
   const sucursalesError = form.sucursalIds.length === 0 ? 'Selecciona al menos una sucursal' : undefined;
+  const componentesError = form.esCombo && form.componentes.length < 2 ? 'Agrega al menos 2 componentes' : undefined;
+
+  const addComponente = (productId: number) => {
+    setForm(prev => prev.componentes.some(c => c.productId === productId)
+      ? prev
+      : { ...prev, componentes: [...prev.componentes, { productId, cantidad: 1 }] });
+  };
+  const changeComponenteCantidad = (productId: number, cantidad: number) => {
+    setForm(prev => ({
+      ...prev,
+      componentes: prev.componentes.map(c => c.productId === productId ? { ...c, cantidad } : c),
+    }));
+  };
+  const removeComponente = (productId: number) => {
+    setForm(prev => ({ ...prev, componentes: prev.componentes.filter(c => c.productId !== productId) }));
+  };
 
   const isValid = useMemo(() => {
     const precioBase = parseCOP(form.precioBaseRaw);
@@ -139,20 +165,16 @@ export function ItemFormPage() {
       });
       if (!allFilled) return false;
     }
+    if (form.esCombo) {
+      if (form.componentes.length < 2) return false;
+      if (form.componentes.some(c => !Number.isInteger(c.cantidad) || c.cantidad < 1)) return false;
+    }
     return true;
   }, [form]);
 
   const isDirty = mode === 'create'
     ? form.nombre !== '' || form.categoriaId !== ''
-    : !!existingItem && JSON.stringify(form) !== JSON.stringify({
-      nombre: existingItem.nombre, categoriaId: existingItem.categoriaId, descripcion: existingItem.descripcion,
-      codigo: existingItem.codigo, unidadId: existingItem.unidadId, referencia: existingItem.referencia,
-      precioBaseRaw: String(existingItem.precioBase), impuestoId: existingItem.impuestoId,
-      precioTotalRaw: String(existingItem.precioTotal), costoRaw: existingItem.costo ? String(existingItem.costo) : '',
-      imagen: existingItem.imagen ?? '', manejaExistencias: existingItem.manejaExistencias,
-      sucursalIds: existingItem.sucursales.map(s => s.sucursalId),
-      existencias: Object.fromEntries(existingItem.sucursales.map(s => [s.sucursalId, String(s.existencia)])),
-    });
+    : !!existingItem && JSON.stringify(form) !== JSON.stringify(toFormState(existingItem));
 
   const handleBack = () => {
     if (isDirty) setShowDiscardModal(true);
@@ -179,6 +201,10 @@ export function ItemFormPage() {
       })),
       activo: existingItem?.activo ?? true,
       imagen: form.imagen || undefined,
+      esCombo: form.esCombo,
+      // Se conserva aunque esCombo sea false: desmarcar el toggle no debe borrar
+      // la lista, para que sea reversible sin pérdida de datos (spec §9).
+      componentes: form.componentes.length > 0 ? form.componentes : undefined,
     };
 
     if (mode === 'edit' && id) {
@@ -256,7 +282,27 @@ export function ItemFormPage() {
               <SelectField label="Unidad" required value={form.unidadId} onChange={v => set('unidadId', v as UnidadId)} options={unidadOptions} clearable placeholder="Selecciona una unidad" />
             </div>
             <TextField label="Referencia" value={form.referencia} onChange={v => set('referencia', v)} placeholder="Ingresa una referencia" helper="Aparece en el comprobante de venta" />
+            <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Toggle checked={form.esCombo} onChange={v => set('esCombo', v)} ariaLabel="Es un combo" />
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>Es un combo</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--black-40)', margin: '6px 0 0' }}>
+                Al activar, elige los productos existentes que lo componen abajo.
+              </p>
+            </div>
           </div>
+
+          {form.esCombo && (
+            <ComboComponentsCard
+              componentes={form.componentes}
+              onAdd={addComponente}
+              onChangeCantidad={changeComponenteCantidad}
+              onRemove={removeComponente}
+              precioTotal={parseCOP(form.precioTotalRaw)}
+              error={componentesError}
+            />
+          )}
 
           {/* Precio total de venta */}
           <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -17,6 +17,7 @@ import { MesasView } from '../components/MesasView';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
 import { MostradorCatalog, type MostradorProduct } from '../components/MostradorCatalog';
 import type { RootOutletContext } from '../components/RootLayout';
+import type { ComboComponentSnapshot } from '../utils/comboBridge';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -37,6 +38,8 @@ interface OrderItem {
   sentQuantity?: number;
   sentNote?: string;
   description?: string;
+  isCombo?: boolean;
+  comboComponents?: ComboComponentSnapshot[];
 }
 
 interface Order {
@@ -280,6 +283,8 @@ export function HomePage() {
             quantity:    1,
             isSent:      false,
             description: product.description,
+            isCombo:         product.catId === 'combos' || undefined,
+            comboComponents: product.comboComponents,
           }];
       return { ...order, items: newItems, hasPendingChanges: order.comandaSent ? true : order.hasPendingChanges };
     }));

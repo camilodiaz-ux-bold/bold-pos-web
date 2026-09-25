@@ -21,6 +21,9 @@ import type { MesaTable, TableItem, PendingChange, PendingChangeType } from './M
 import { CAT_DEFS, CAT_PRODUCTS, ALL_CATALOG_PRODUCTS, FAVORITE_PRODUCTS } from '../data/productCatalog';
 import type { CatalogProduct } from '../data/productCatalog';
 import { useFavorites } from '../store/favoritesStore';
+import { useItems } from '../store/itemsStore';
+import { sellableComboProducts } from '../utils/comboBridge';
+import type { ComboComponentSnapshot, SellableCombo } from '../utils/comboBridge';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -28,11 +31,11 @@ function cn(...inputs: ClassValue[]) {
 
 // ─── Catálogo — usa fuente compartida de 56 productos ────────────────────────
 
-type Product = CatalogProduct & { image: string; category: string };
+type Product = CatalogProduct & { image: string; category: string; comboComponents?: ComboComponentSnapshot[] };
 
 function toProduct(p: CatalogProduct): Product {
   const def = CAT_DEFS.find(c => c.id === p.catId)!;
-  return { ...p, image: p.image ?? '', category: def.name };
+  return { ...p, image: p.image ?? '', category: def.name, comboComponents: (p as SellableCombo).comboComponents };
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -67,6 +70,7 @@ export function MesaProductSelector({
   const [inlineNoteText,   setInlineNoteText]   = useState('');
 
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { items } = useItems();
 
   const [activeCatMesa, setActiveCatMesa] = useState<string>('favoritos');
 
@@ -76,17 +80,30 @@ export function MesaProductSelector({
   const isSearchingMesa  = searchQuery.trim().length > 0;
   const activeCatMesaDef = CAT_DEFS.find(c => c.id === activeCatMesa) ?? CAT_DEFS[0];
 
-  // Productos Vista Categorías (búsqueda cruzada si hay query)
+  // Combos vendibles fusionados con el catálogo estático — ver comboBridge.ts.
+  const comboProducts = useMemo(() => sellableComboProducts(items), [items]);
+  const allProductsMesa = useMemo(
+    () => [...ALL_CATALOG_PRODUCTS, ...comboProducts],
+    [comboProducts],
+  );
+  const byCatMesa = useMemo(
+    () => ({ ...CAT_PRODUCTS, combos: comboProducts }),
+    [comboProducts],
+  );
+
+  // Productos Vista Categorías (búsqueda cruzada si hay query).
+  // isSearchingMesa se evalúa ANTES que el chip activo — igual que MostradorCatalog —
+  // para que buscar funcione aunque el chip "Favoritos" (default) esté activo.
   const mesaCatProducts = useMemo(() => {
     let base: CatalogProduct[];
-    if (activeCatMesa === 'favoritos') {
-      base = ALL_CATALOG_PRODUCTS.filter(p => favoriteIds.has(p.id));
-    } else if (isSearchingMesa) {
-      base = ALL_CATALOG_PRODUCTS.filter(p =>
+    if (isSearchingMesa) {
+      base = allProductsMesa.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
+    } else if (activeCatMesa === 'favoritos') {
+      base = allProductsMesa.filter(p => favoriteIds.has(p.id));
     } else {
-      base = CAT_PRODUCTS[activeCatMesa] ?? [];
+      base = byCatMesa[activeCatMesa] ?? [];
     }
     // Favoritos primero dentro de cada categoría
     if (!isSearchingMesa) {
@@ -96,7 +113,7 @@ export function MesaProductSelector({
       ];
     }
     return base;
-  }, [activeCatMesa, searchQuery, isSearchingMesa, favoriteIds]);
+  }, [activeCatMesa, searchQuery, isSearchingMesa, favoriteIds, allProductsMesa, byCatMesa]);
 
   // ── Acciones ──────────────────────────────────────────────────────────────
 
@@ -118,6 +135,8 @@ export function MesaProductSelector({
               isSent: false,
               description: product.description || undefined,
               catId: product.catId,
+              isCombo: product.catId === 'combos' || undefined,
+              comboComponents: product.comboComponents,
             },
           ],
           hasPendingChanges: (t.comandaSent || (confirmedMesas?.has(t.id) ?? false)) ? true : t.hasPendingChanges,

@@ -1,17 +1,15 @@
 /**
  * ItemsLayout — route layout del módulo ITEMS.
  *
- * Monta ItemsProvider aquí (no en RootLayout, junto a los otros 4 stores)
- * para que el catálogo sembrado de Items solo se escriba en localStorage
- * la primera vez que el usuario visita /items, no en cada carga de la app.
+ * Ya no monta ItemsProvider aquí: se movió a RootLayout (junto a
+ * FavoritesProvider/MesasStoreProvider) porque Mostrador y Mesas —que viven
+ * bajo `/`, no bajo `/items`— necesitan useItems() para vender combos (ver
+ * src/app/utils/comboBridge.ts y specs/2026-09-combos.md §5.3). Se conserva
+ * este archivo como passthrough para no tocar la definición de rutas en
+ * App.tsx.
  */
 import { Outlet } from 'react-router';
-import { ItemsProvider } from '../../store/itemsStore';
 
 export function ItemsLayout() {
-  return (
-    <ItemsProvider>
-      <Outlet />
-    </ItemsProvider>
-  );
+  return <Outlet />;
 }

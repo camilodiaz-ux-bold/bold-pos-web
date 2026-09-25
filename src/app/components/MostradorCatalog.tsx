@@ -3,16 +3,22 @@ import { Search, Star } from 'lucide-react';
 import { CAT_DEFS, CAT_PRODUCTS, ALL_CATALOG_PRODUCTS } from '../data/productCatalog';
 import type { CatalogProduct } from '../data/productCatalog';
 import { useFavorites } from '../store/favoritesStore';
+import { useItems } from '../store/itemsStore';
+import { sellableComboProducts } from '../utils/comboBridge';
+import type { ComboComponentSnapshot, SellableCombo } from '../utils/comboBridge';
 
 // ─── Tipo compartido con HomePage ─────────────────────────────────────────────
 
 export interface MostradorProduct {
-  id:           number;
-  name:         string;
-  price:        number;
-  description?: string;
-  category:     string;
-  image:        string;
+  id:               number;
+  name:             string;
+  price:            number;
+  description?:     string;
+  category:         string;
+  image:            string;
+  /** id de categoría de venta — 'combos' para un combo, ver comboBridge.ts. */
+  catId:            string;
+  comboComponents?: ComboComponentSnapshot[];
 }
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
@@ -26,6 +32,8 @@ function toMostradorProduct(p: CatalogProduct): MostradorProduct {
     description: p.description,
     category:    def.name,
     image:       p.image ?? '',
+    catId:       p.catId,
+    comboComponents: (p as SellableCombo).comboComponents,
   };
 }
 
@@ -41,27 +49,40 @@ export function MostradorCatalog({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCat, setActiveCat]     = useState<string>('favoritos');
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { items } = useItems();
 
   const isSearching = searchQuery.trim().length > 0;
+
+  // Combos vendibles (Item.esCombo && activo) fusionados con el catálogo estático.
+  // Acotado a esto — no una unificación general de Item y CatalogProduct (spec §5.3).
+  const comboProducts = useMemo(() => sellableComboProducts(items), [items]);
+  const allProducts = useMemo(
+    () => [...ALL_CATALOG_PRODUCTS, ...comboProducts],
+    [comboProducts],
+  );
+  const byCat = useMemo(
+    () => ({ ...CAT_PRODUCTS, combos: comboProducts }),
+    [comboProducts],
+  );
 
   const displayedProducts = useMemo(() => {
     let base: CatalogProduct[];
     if (isSearching) {
-      base = ALL_CATALOG_PRODUCTS.filter(p =>
+      base = allProducts.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       return base;
     }
     if (activeCat === 'favoritos') {
-      base = ALL_CATALOG_PRODUCTS.filter(p => favoriteIds.has(p.id));
+      base = allProducts.filter(p => favoriteIds.has(p.id));
     } else {
-      base = CAT_PRODUCTS[activeCat] ?? [];
+      base = byCat[activeCat] ?? [];
     }
     return [
       ...base.filter(p => favoriteIds.has(p.id)),
       ...base.filter(p => !favoriteIds.has(p.id)),
     ];
-  }, [activeCat, searchQuery, isSearching, favoriteIds]);
+  }, [activeCat, searchQuery, isSearching, favoriteIds, allProducts, byCat]);
 
   const inOrderQty = (id: number) =>
     activeOrderItems
@@ -195,14 +216,25 @@ export function MostradorCatalog({
 
                     {/* Nombre + precio */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
-                      <span style={{
-                        fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14,
-                        lineHeight: '20px', color: '#1e1e1e',
-                        overflow: 'hidden', display: '-webkit-box',
-                        WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                      }}>
-                        {item.name}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                        <span style={{
+                          fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14,
+                          lineHeight: '20px', color: '#1e1e1e',
+                          overflow: 'hidden', display: '-webkit-box',
+                          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                        }}>
+                          {item.name}
+                        </span>
+                        {item.catId === 'combos' && item.description && (
+                          <span style={{
+                            fontFamily: 'Montserrat, sans-serif', fontWeight: 400, fontSize: 11,
+                            lineHeight: '14px', color: 'var(--black-60)',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {item.description}
+                          </span>
+                        )}
+                      </div>
                       <span style={{
                         fontFamily: 'Montserrat, sans-serif', fontWeight: 400, fontSize: 14,
                         lineHeight: '20px', color: '#1e1e1e', whiteSpace: 'nowrap',
