@@ -13,6 +13,7 @@ import {
   Facebook, Instagram, Linkedin,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import type { ComboComponentSnapshot } from '../utils/comboBridge';
 
 const MFONT = 'Montserrat, sans-serif';
 
@@ -39,6 +40,7 @@ export interface CheckoutItem {
   price: number;
   note?: string;
   discount?: number;
+  comboComponents?: ComboComponentSnapshot[];
 }
 
 export interface CheckoutDrawerProps {
@@ -824,6 +826,11 @@ export function CheckoutDrawer({
                         {(item.discount ?? 0) > 0 && <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: '#1B8959' }}>−{item.discount}%</span>}
                       </p>
                       <p style={{ fontSize: 13, fontWeight: 500, color: '#1E1E1E', margin: 0, fontFamily: MFONT, lineHeight: '20px' }}>${fmtCOP(unit * item.quantity)}</p>
+                      {item.comboComponents && item.comboComponents.length > 0 && (
+                        <p style={{ fontSize: 11, color: '#606060', margin: 0, fontFamily: MFONT }}>
+                          {item.comboComponents.map(c => `${c.quantity * item.quantity} ${c.name}`).join(' · ')}
+                        </p>
+                      )}
                       {item.note && <p style={{ fontSize: 11, color: '#606060', fontStyle: 'italic', margin: 0, fontFamily: MFONT }}>{item.note}</p>}
                     </div>
                     <span style={{ fontSize: 14, fontWeight: 400, color: '#1E1E1E', fontFamily: MFONT, lineHeight: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>x{item.quantity}</span>

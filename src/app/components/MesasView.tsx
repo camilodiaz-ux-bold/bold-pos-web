@@ -110,6 +110,9 @@ function formatAdjustmentLines(items: TableItem[], pendingChanges: PendingChange
   // Nuevos ítems (nunca enviados)
   for (const item of items.filter(i => !i.isSent && i.quantity > 0)) {
     lines.push(`${String(item.quantity).padEnd(3)} ${item.name}`);
+    for (const c of item.comboComponents ?? []) {
+      lines.push(`      · ${c.quantity * item.quantity} ${c.name}`);
+    }
     if (item.note?.trim()) lines.push(`    -> ${item.note}`);
   }
   // Modificaciones a ítems ya enviados
