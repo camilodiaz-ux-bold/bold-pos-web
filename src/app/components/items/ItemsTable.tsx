@@ -100,7 +100,18 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
                 </td>
                 <td style={tdStyle}>{item.codigo}</td>
                 <td style={{ ...tdStyle, overflow: 'hidden' }}>
-                  <div style={{ fontWeight: 700 }}>{item.nombre}</div>
+                  <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nombre}</span>
+                    {item.esCombo && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 100,
+                        backgroundColor: 'var(--coral-10)', color: 'var(--coral-100)',
+                        flexShrink: 0, lineHeight: '14px',
+                      }}>
+                        Combo
+                      </span>
+                    )}
+                  </div>
                   {item.descripcion && (
                     <div style={{
                       fontSize: 12, fontWeight: 500, color: 'var(--black-40)', marginTop: 2,
