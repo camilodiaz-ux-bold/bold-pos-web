@@ -18,6 +18,7 @@ import { MesaProductSelector } from './MesaProductSelector';
 import { CheckoutDrawer } from './CheckoutDrawer';
 import { KitchenTicketPreviewModal, type TicketItem } from './KitchenTicketPreviewModal';
 import { CAT_DEFS, ALL_CATALOG_PRODUCTS } from '../data/productCatalog';
+import type { ComboComponentSnapshot } from '../utils/comboBridge';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -41,6 +42,8 @@ export interface TableItem {
   description?: string;
   catId?: string;           // id de categoría del producto
   discount?: number;        // % de descuento por ítem (0-20)
+  isCombo?: boolean;
+  comboComponents?: ComboComponentSnapshot[];
 }
 
 // ─── Pending changes (modificaciones post-primera-comanda) ───────────────────
