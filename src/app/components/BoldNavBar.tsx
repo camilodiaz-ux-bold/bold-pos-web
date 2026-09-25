@@ -38,8 +38,8 @@ const FONT = 'Montserrat, sans-serif';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface NavBarProps {
-  activeMode: 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos';
-  onModeChange: (mode: 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos') => void;
+  activeMode: 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos' | 'Items';
+  onModeChange: (mode: 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos' | 'Items') => void;
 }
 
 interface SubItem {
@@ -88,6 +88,10 @@ function MostradorIcon({ size = 20 }: { size?: number }) {
 export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  // Rutas que tienen su propia entrada de menú: mientras estemos en ellas,
+  // "Punto de venta" no debe resaltarse aunque activeMode caiga en su default.
+  const OWNED_ROUTES = ['/ventas', '/items'];
+  const inOwnedRoute = OWNED_ROUTES.some(r => pathname.startsWith(r));
   const inPosView = activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
   const [isExpanded, setIsExpanded] = useState(!inPosView);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['puntodeventa']));
@@ -148,9 +152,9 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       icon: (a, sz = 16) => <Monitor size={sz} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
       hasSubmenu: true,
       subItems: [
-        { id: 'mesas',     label: 'Mesas',     icon: <IcMesas size={16} />,       active: activeMode === 'Mesas'     && pathname !== '/ventas', onClick: () => onModeChange('Mesas') },
-        { id: 'mostrador', label: 'Mostrador', icon: <MostradorIcon size={16} />, active: activeMode === 'Mostrador' && pathname !== '/ventas', onClick: () => onModeChange('Mostrador') },
-        { id: 'turnos',    label: 'Turnos',    icon: <IcTurnos size={16} />,      active: activeMode === 'Turnos'    && pathname !== '/ventas', onClick: () => onModeChange('Turnos') },
+        { id: 'mesas',     label: 'Mesas',     icon: <IcMesas size={16} />,       active: activeMode === 'Mesas'     && !inOwnedRoute, onClick: () => onModeChange('Mesas') },
+        { id: 'mostrador', label: 'Mostrador', icon: <MostradorIcon size={16} />, active: activeMode === 'Mostrador' && !inOwnedRoute, onClick: () => onModeChange('Mostrador') },
+        { id: 'turnos',    label: 'Turnos',    icon: <IcTurnos size={16} />,      active: activeMode === 'Turnos'    && !inOwnedRoute, onClick: () => onModeChange('Turnos') },
       ],
     },
     {
@@ -179,11 +183,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     },
     {
       id: 'items',
-      label: 'Menú',
+      label: 'Items',
       icon: (a, sz = 16) => <UtensilsCrossed size={sz} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
       hasSubmenu: true,
       subItems: [
-        { id: 'listaitems',   label: 'Productos',                icon: <IcListaItems size={16} />,   active: false, onClick: () => toast.info('Productos') },
+        { id: 'listaitems',   label: 'Lista de Items',          icon: <IcListaItems size={16} />,   active: pathname.startsWith('/items'), onClick: () => navigate('/items') },
         { id: 'ajusteinv',    label: 'Ajuste de inventario',    icon: <IcAjusteInv size={16} />,    active: false, onClick: () => toast.info('Ajuste de inventario') },
         { id: 'flujoinv',     label: 'Flujo de inventario',     icon: <IcFlujoInv size={16} />,     active: false, onClick: () => toast.info('Flujo de inventario') },
         { id: 'variantesinv', label: 'Variantes de inventario', icon: <IcVariantesInv size={16} />, active: false, onClick: () => toast.info('Variantes de inventario') },
@@ -231,7 +235,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
 
   const isSectionActive = (item: MenuItem) => {
     if (item.id === 'inicio')       return activeMode === 'Inicio';
-    if (item.id === 'puntodeventa') return (activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos') && pathname !== '/ventas';
+    if (item.id === 'puntodeventa') return (activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos') && !inOwnedRoute;
     if (item.id === 'reportes')     return activeMode === 'Reportes';
     if (item.id === 'ingresos')     return item.subItems?.some(sub => sub.active) || pathname === '/ventas' || pathname.startsWith('/ventas');
     // Generic: parent is active when any child is active
@@ -639,8 +643,8 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
 // ─── TopBar ───────────────────────────────────────────────────────────────────
 
 interface TopBarProps {
-  activeMode: 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos';
-  onModeChange: (mode: 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos') => void;
+  activeMode: 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos' | 'Items';
+  onModeChange: (mode: 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos' | 'Items') => void;
   onLogoutRequest?: () => void;
 }
 

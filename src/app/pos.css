@@ -801,3 +801,79 @@ a:hover { text-decoration: underline; }
   opacity: 0.75;
   text-decoration: underline;
 }
+
+/* ─── Módulo ITEMS — Lista de ítems ─────────────────────────────────────── */
+
+/* Input relleno del formulario de ítems: fondo gris, sin borde visible */
+.merlin-input-filled {
+  font-family: var(--font-family, 'Montserrat', sans-serif);
+  font-size: 14px;
+  color: var(--black-100);
+  background: var(--blue-10);
+  border: 1px solid transparent;
+  border-radius: var(--radius-8);
+  height: 44px;
+  padding: 0 14px;
+  width: 100%;
+  outline: none;
+  transition: all 150ms ease;
+}
+.merlin-input-filled::placeholder {
+  color: var(--black-40);
+}
+.merlin-input-filled:focus {
+  border-color: var(--blue-20);
+  background: var(--black-0);
+}
+.merlin-input-filled:disabled {
+  color: var(--black-40);
+  cursor: not-allowed;
+}
+textarea.merlin-input-filled {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 14px;
+  resize: none;
+}
+select.merlin-input-filled {
+  cursor: pointer;
+}
+
+/* Pill de filtro del listado: redondeado completo, icono a la izquierda */
+.filter-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 18px;
+  width: 100%;
+  background: var(--black-0);
+  border: 1px solid var(--black-10);
+  border-radius: 100px;
+  transition: border-color 150ms ease;
+}
+.filter-pill:focus-within {
+  border-color: var(--blue-20);
+}
+
+/* Outline coral — usado en "Actualización masiva" / "Importar" */
+.btn-outline-coral {
+  background: var(--black-0);
+  color: var(--coral-100);
+  border: 1.5px solid var(--coral-100);
+  padding: 12px 20px;
+  font-size: 14px;
+}
+.btn-outline-coral:hover {
+  background: var(--coral-10);
+}
+
+/* Estado deshabilitado del botón primario — botón "Crear ítem" antes de ser válido */
+.btn-primary:disabled {
+  background: var(--coral-30);
+  color: var(--black-0);
+  cursor: not-allowed;
+}
+.btn-primary:disabled:hover {
+  background: var(--coral-30);
+}

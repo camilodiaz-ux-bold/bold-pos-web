@@ -34,7 +34,7 @@ export type RootOutletContext = {
 
 // ─── App-wide mode type ───────────────────────────────────────────────────────
 
-type AppMode = 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos';
+type AppMode = 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos' | 'Items';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -54,12 +54,15 @@ export function RootLayout() {
   // Derive activeMode from current URL
   const activeMode: AppMode =
     location.pathname.startsWith('/reportes') ? 'Reportes' :
+    location.pathname.startsWith('/items')    ? 'Items'    :
     location.pathname === '/inicio'            ? 'Inicio'   :
     location.pathname === '/turnos'            ? 'Turnos'   : subMode;
 
   const handleModeChange = (mode: AppMode) => {
     if (mode === 'Reportes') {
       navigate('/reportes');
+    } else if (mode === 'Items') {
+      navigate('/items');
     } else if (mode === 'Inicio') {
       navigate('/inicio');
     } else if (mode === 'Turnos') {
