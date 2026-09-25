@@ -15,16 +15,27 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { Item, ItemDraft } from '../types/item';
 import { buildSeedItems } from '../data/itemsSeed';
 
-const LS_KEY = 'bold-pos:items:v1';
+// v1 → v2: Item ganó esCombo/componentes/comboSaleId (specs/2026-09-combos.md §6.1).
+const LS_KEY = 'bold-pos:items:v2';
 
 function generateAutoCode(): string {
   return `I-${Date.now()}`;
 }
 
+/** Próximo id de venta para un combo nuevo — rango reservado ≥ 9000, ver types/item.ts. */
+function nextComboSaleId(items: Item[]): number {
+  const existing = items.map(i => i.comboSaleId ?? 0);
+  return Math.max(8999, ...existing) + 1;
+}
+
 function loadItems(): Item[] {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (raw) return JSON.parse(raw) as Item[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as Item[];
+      // Normalización defensiva: esCombo es requerido en el tipo.
+      return parsed.map(item => ({ ...item, esCombo: !!item.esCombo }));
+    }
   } catch {
     /* ignore */
   }
@@ -70,20 +81,33 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
 
   const createItem = useCallback((draft: ItemDraft): Item => {
     const now = Date.now();
-    const newItem: Item = {
-      ...draft,
-      id: crypto.randomUUID(),
-      codigo: draft.codigo.trim() || generateAutoCode(),
-      creadoEn: now,
-      actualizadoEn: now,
-    };
-    updateItems(prev => [newItem, ...prev]);
-    return newItem;
+    const id = crypto.randomUUID();
+    let created!: Item;
+    updateItems(prev => {
+      created = {
+        ...draft,
+        id,
+        codigo: draft.codigo.trim() || generateAutoCode(),
+        comboSaleId: draft.esCombo ? nextComboSaleId(prev) : undefined,
+        creadoEn: now,
+        actualizadoEn: now,
+      };
+      return [created, ...prev];
+    });
+    return created;
   }, [updateItems]);
 
   const updateItem = useCallback((id: string, draft: ItemDraft) => {
     updateItems(prev => prev.map(item => item.id === id
-      ? { ...item, ...draft, codigo: draft.codigo.trim() || item.codigo, actualizadoEn: Date.now() }
+      ? {
+          ...item,
+          ...draft,
+          codigo: draft.codigo.trim() || item.codigo,
+          // Conserva el comboSaleId existente (§9: desmarcar un combo no lo pierde);
+          // asigna uno nuevo solo si se marca esCombo por primera vez.
+          comboSaleId: item.comboSaleId ?? (draft.esCombo ? nextComboSaleId(prev) : undefined),
+          actualizadoEn: Date.now(),
+        }
       : item,
     ));
   }, [updateItems]);
