@@ -83,10 +83,11 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
             return (
               <tr
                 key={item.id}
-                style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--black-10)' }}
+                onClick={() => onEdit(item.id)}
+                style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--black-10)', cursor: 'pointer' }}
                 className="hover:bg-[var(--blue-10)] transition-colors"
               >
-                <td style={tdStyle}>
+                <td style={tdStyle} onClick={e => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={selectedIds.has(item.id)}
@@ -115,10 +116,10 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
                   {existencia === null ? '—' : formatExistencia(existencia)}
                 </td>
                 <td style={tdStyle}>{getTipoLabel(item)}</td>
-                <td style={tdStyle}>
+                <td style={tdStyle} onClick={e => e.stopPropagation()}>
                   <Toggle size="sm" checked={item.activo} onChange={() => onToggleActivo(item.id)} ariaLabel={`Activar/desactivar ${item.nombre}`} />
                 </td>
-                <td style={tdStyle}>
+                <td style={tdStyle} onClick={e => e.stopPropagation()}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <button
                       onClick={() => onEdit(item.id)}
