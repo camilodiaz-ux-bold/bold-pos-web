@@ -8,6 +8,7 @@ Cada spec tiene su propio campo "Estado" en la tabla de encabezado. Una vez marc
 
 | Fecha | Spec | Estado | Resumen |
 |---|---|---|---|
+| 2026-09 | [2026-09-combos-disponibilidad.md](./2026-09-combos-disponibilidad.md) | ✅ Implementado | Revierte §5.6 de `2026-09-combos.md`: un combo ya no puede activar existencias propias — su disponibilidad depende de sus componentes, no de un número manual inconexo. |
 | 2026-09 | [2026-09-combos.md](./2026-09-combos.md) | ✅ Implementado | Motor de productos compuestos (Combos): agrupar productos existentes a precio fijo, vendible en Mostrador y Mesas, integrado al módulo de gestión de Items (`/items`). Base reutilizable para Recetas (Q1 2027). |
 
 ## Convención
