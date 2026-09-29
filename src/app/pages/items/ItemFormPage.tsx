@@ -80,6 +80,11 @@ export function ItemFormPage() {
   const mode: 'create' | 'edit' = id ? 'edit' : 'create';
   const existingItem = id ? getItem(id) : undefined;
 
+  // Un combo ya guardado no se puede volver a convertir en ítem normal — el
+  // toggle se bloquea solo en edición, y solo si el ítem YA era combo al
+  // entrar al formulario (uno simple sí se puede marcar como combo, §9).
+  const comboLocked = mode === 'edit' && !!existingItem?.esCombo;
+
   // lastEditedPrice: qué campo dispara el recálculo del otro cuando cambia el impuesto.
   const lastEditedPrice = useRef<'base' | 'total'>(mode === 'edit' ? 'total' : 'base');
 
@@ -300,11 +305,13 @@ export function ItemFormPage() {
             <TextField label="Referencia" value={form.referencia} onChange={v => set('referencia', v)} placeholder="Ingresa una referencia" helper="Aparece en el comprobante de venta" />
             <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Toggle checked={form.esCombo} onChange={setEsCombo} ariaLabel="Es un combo" />
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>Es un combo</span>
+                <Toggle checked={form.esCombo} onChange={setEsCombo} ariaLabel="Es un combo" disabled={comboLocked} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: comboLocked ? 'var(--black-40)' : 'var(--black-100)' }}>Es un combo</span>
               </div>
               <p style={{ fontSize: 12, color: 'var(--black-40)', margin: '6px 0 0' }}>
-                Al activar, elige los productos existentes que lo componen abajo.
+                {comboLocked
+                  ? 'Un combo no se puede convertir en un ítem normal después de creado.'
+                  : 'Al activar, elige los productos existentes que lo componen abajo.'}
               </p>
             </div>
           </div>
