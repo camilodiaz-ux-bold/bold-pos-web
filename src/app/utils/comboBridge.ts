@@ -22,6 +22,16 @@ export interface SellableCombo extends CatalogProduct {
   comboComponents: ComboComponentSnapshot[];
 }
 
+/**
+ * Desglose de una línea de orden que es combo: cada componente con su cantidad
+ * total (por unidad de combo × cantidad de la línea). Vacío si no es combo.
+ */
+export function comboBreakdown(
+  item: { quantity: number; comboComponents?: ComboComponentSnapshot[] },
+): { name: string; qty: number }[] {
+  return (item.comboComponents ?? []).map(c => ({ name: c.name, qty: c.quantity * item.quantity }));
+}
+
 /** "1× Ceviche de Corvina Real · 1× Salmón Escocés · 1× Limonada de Lavanda" */
 export function autoDescribeComponents(item: Item): string {
   return (item.componentes ?? [])
