@@ -283,7 +283,7 @@ export function HomePage() {
             quantity:    1,
             isSent:      false,
             description: product.description,
-            isCombo:         product.catId === 'combos' || undefined,
+            isCombo:         (product.comboComponents?.length ?? 0) > 0 || undefined,
             comboComponents: product.comboComponents,
           }];
       return { ...order, items: newItems, hasPendingChanges: order.comandaSent ? true : order.hasPendingChanges };

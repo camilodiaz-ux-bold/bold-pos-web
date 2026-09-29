@@ -4,7 +4,7 @@ import { CAT_DEFS, CAT_PRODUCTS, ALL_CATALOG_PRODUCTS } from '../data/productCat
 import type { CatalogProduct } from '../data/productCatalog';
 import { useFavorites } from '../store/favoritesStore';
 import { useItems } from '../store/itemsStore';
-import { sellableComboProducts } from '../utils/comboBridge';
+import { sellableComboProducts, isSellableCombo } from '../utils/comboBridge';
 import type { ComboComponentSnapshot, SellableCombo } from '../utils/comboBridge';
 
 // ─── Tipo compartido con HomePage ─────────────────────────────────────────────
@@ -16,7 +16,7 @@ export interface MostradorProduct {
   description?:     string;
   category:         string;
   image:            string;
-  /** id de categoría de venta — 'combos' para un combo, ver comboBridge.ts. */
+  /** id de categoría de venta — para un combo, es su categoriaId administrativo (ver comboBridge.ts). */
   catId:            string;
   comboComponents?: ComboComponentSnapshot[];
 }
@@ -60,10 +60,15 @@ export function MostradorCatalog({
     () => [...ALL_CATALOG_PRODUCTS, ...comboProducts],
     [comboProducts],
   );
-  const byCat = useMemo(
-    () => ({ ...CAT_PRODUCTS, combos: comboProducts }),
-    [comboProducts],
-  );
+  // Cada combo se inyecta en el chip de SU PROPIA categoría (item.categoriaId),
+  // no todos bajo 'combos' — ver comboItemToCatalogProduct en comboBridge.ts.
+  const byCat = useMemo(() => {
+    const merged: Record<string, CatalogProduct[]> = { ...CAT_PRODUCTS };
+    for (const combo of comboProducts) {
+      merged[combo.catId] = [...(merged[combo.catId] ?? []), combo];
+    }
+    return merged;
+  }, [comboProducts]);
 
   const displayedProducts = useMemo(() => {
     let base: CatalogProduct[];
@@ -217,6 +222,15 @@ export function MostradorCatalog({
                     {/* Nombre + precio */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                        {isSellableCombo(item) && (
+                          <span style={{
+                            alignSelf: 'flex-start', fontSize: 10, fontWeight: 700, padding: '1px 6px',
+                            borderRadius: 100, backgroundColor: 'var(--coral-10)', color: 'var(--coral-100)',
+                            lineHeight: '14px', fontFamily: 'Montserrat, sans-serif',
+                          }}>
+                            Combo
+                          </span>
+                        )}
                         <span style={{
                           fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14,
                           lineHeight: '20px', color: '#1e1e1e',
@@ -225,7 +239,7 @@ export function MostradorCatalog({
                         }}>
                           {item.name}
                         </span>
-                        {item.catId === 'combos' && item.description && (
+                        {isSellableCombo(item) && item.description && (
                           <span style={{
                             fontFamily: 'Montserrat, sans-serif', fontWeight: 400, fontSize: 11,
                             lineHeight: '14px', color: 'var(--black-60)',
