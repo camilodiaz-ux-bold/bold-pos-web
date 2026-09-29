@@ -86,10 +86,15 @@ export function MesaProductSelector({
     () => [...ALL_CATALOG_PRODUCTS, ...comboProducts],
     [comboProducts],
   );
-  const byCatMesa = useMemo(
-    () => ({ ...CAT_PRODUCTS, combos: comboProducts }),
-    [comboProducts],
-  );
+  // Cada combo se inyecta en el chip de SU PROPIA categoría (item.categoriaId),
+  // no todos bajo 'combos' — ver comboItemToCatalogProduct en comboBridge.ts.
+  const byCatMesa = useMemo(() => {
+    const merged: Record<string, CatalogProduct[]> = { ...CAT_PRODUCTS };
+    for (const combo of comboProducts) {
+      merged[combo.catId] = [...(merged[combo.catId] ?? []), combo];
+    }
+    return merged;
+  }, [comboProducts]);
 
   // Productos Vista Categorías (búsqueda cruzada si hay query).
   // isSearchingMesa se evalúa ANTES que el chip activo — igual que MostradorCatalog —
@@ -135,7 +140,7 @@ export function MesaProductSelector({
               isSent: false,
               description: product.description || undefined,
               catId: product.catId,
-              isCombo: product.catId === 'combos' || undefined,
+              isCombo: (product.comboComponents?.length ?? 0) > 0 || undefined,
               comboComponents: product.comboComponents,
             },
           ],
@@ -644,14 +649,34 @@ export function MesaProductSelector({
 
                           {/* Texto: nombre + precio */}
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
-                            <span style={{
-                              fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14,
-                              lineHeight: '20px', color: '#1e1e1e',
-                              overflow: 'hidden', display: '-webkit-box',
-                              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                            }}>
-                              {item.name}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                              {prod.comboComponents && prod.comboComponents.length > 0 && (
+                                <span style={{
+                                  alignSelf: 'flex-start', fontSize: 10, fontWeight: 700, padding: '1px 6px',
+                                  borderRadius: 100, backgroundColor: 'var(--coral-10)', color: 'var(--coral-100)',
+                                  lineHeight: '14px', fontFamily: 'Montserrat, sans-serif',
+                                }}>
+                                  Combo
+                                </span>
+                              )}
+                              <span style={{
+                                fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14,
+                                lineHeight: '20px', color: '#1e1e1e',
+                                overflow: 'hidden', display: '-webkit-box',
+                                WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                              }}>
+                                {item.name}
+                              </span>
+                              {prod.comboComponents && prod.comboComponents.length > 0 && item.description && (
+                                <span style={{
+                                  fontFamily: 'Montserrat, sans-serif', fontWeight: 400, fontSize: 11,
+                                  lineHeight: '14px', color: 'var(--black-60)',
+                                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}>
+                                  {item.description}
+                                </span>
+                              )}
+                            </div>
                             <span style={{
                               fontFamily: 'Montserrat, sans-serif', fontWeight: 400, fontSize: 14,
                               lineHeight: '20px', color: '#1e1e1e', whiteSpace: 'nowrap',

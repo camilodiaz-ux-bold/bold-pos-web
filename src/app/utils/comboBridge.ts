@@ -40,17 +40,29 @@ export function resolveComboComponents(item: Item): ComboComponentSnapshot[] {
   });
 }
 
-/** Un Item combo → CatalogProduct vendible. catId se fuerza a 'combos' (spec §5.5). */
+/**
+ * Un Item combo → CatalogProduct vendible. catId = la categoría administrativa
+ * del ítem (Item.categoriaId) — NO se fuerza a 'combos'. Un combo aparece en
+ * Mostrador/Mesas bajo la misma categoría que el admin le asignó en /items;
+ * "Combos" sigue existiendo como categoría de venta legítima si el admin
+ * explícitamente eligió esa categoría para el combo (ver
+ * specs/2026-09-combos-categoria-venta.md, supersede spec §5.5).
+ */
 export function comboItemToCatalogProduct(item: Item): SellableCombo {
   return {
     id: item.comboSaleId!,
     name: item.nombre,
     price: item.precioTotal,
     description: item.descripcion || autoDescribeComponents(item),
-    catId: 'combos',
+    catId: item.categoriaId,
     image: item.imagen,
     comboComponents: resolveComboComponents(item),
   };
+}
+
+/** Type guard: identifica un producto vendible que es un combo, sin importar su catId. */
+export function isSellableCombo(p: CatalogProduct): p is SellableCombo {
+  return Array.isArray((p as Partial<SellableCombo>).comboComponents);
 }
 
 /** Ítems combo activos y con comboSaleId asignado — los únicos vendibles. */

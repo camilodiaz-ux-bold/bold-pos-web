@@ -80,6 +80,11 @@ export function ItemFormPage() {
   const mode: 'create' | 'edit' = id ? 'edit' : 'create';
   const existingItem = id ? getItem(id) : undefined;
 
+  // Un combo ya guardado no se puede volver a convertir en ítem normal — el
+  // toggle se bloquea solo en edición, y solo si el ítem YA era combo al
+  // entrar al formulario (uno simple sí se puede marcar como combo, §9).
+  const comboLocked = mode === 'edit' && !!existingItem?.esCombo;
+
   // lastEditedPrice: qué campo dispara el recálculo del otro cuando cambia el impuesto.
   const lastEditedPrice = useRef<'base' | 'total'>(mode === 'edit' ? 'total' : 'base');
 
@@ -132,6 +137,17 @@ export function ItemFormPage() {
     setForm(prev => ({ ...prev, existencias: { ...prev.existencias, [sucursalId]: raw } }));
   };
 
+  // Un combo no maneja existencias propias — al marcarlo, se apaga
+  // manejaExistencias y se limpian las existencias numéricas (caso borde §9:
+  // un ítem simple con existencias que se convierte en combo). Las sucursales
+  // seleccionadas SÍ se conservan: un combo puede estar activo en unas
+  // sucursales y no en otras, aunque no lleve un número de existencia propio.
+  const setEsCombo = (next: boolean) => {
+    setForm(prev => next
+      ? { ...prev, esCombo: next, manejaExistencias: false, existencias: {} }
+      : { ...prev, esCombo: next });
+  };
+
   const unidadLabel = getUnidad(form.unidadId)?.label ?? 'Unidades';
 
   const sucursalesError = form.sucursalIds.length === 0 ? 'Selecciona al menos una sucursal' : undefined;
@@ -157,6 +173,8 @@ export function ItemFormPage() {
     if (form.nombre.trim().length < 2) return false;
     if (!form.categoriaId || !form.unidadId || !form.impuestoId) return false;
     if (precioBase <= 0) return false;
+    // Un combo también exige al menos una sucursal — puede seleccionarlas,
+    // solo no puede activar el toggle de existencias (ver setEsCombo).
     if (form.sucursalIds.length === 0) return false;
     if (form.manejaExistencias) {
       const allFilled = form.sucursalIds.every(sid => {
@@ -194,7 +212,10 @@ export function ItemFormPage() {
       precioBase: parseCOP(form.precioBaseRaw),
       precioTotal: parseCOP(form.precioTotalRaw),
       costo: parseCOP(form.costoRaw),
-      manejaExistencias: form.manejaExistencias,
+      // Un combo nunca guarda existencia propia, sin importar el estado del
+      // form — red de seguridad además del reset en setEsCombo. Sí conserva
+      // sus sucursales seleccionadas (specs/2026-09-combos-disponibilidad.md).
+      manejaExistencias: form.esCombo ? false : form.manejaExistencias,
       sucursales: form.sucursalIds.map(sucursalId => ({
         sucursalId,
         existencia: form.manejaExistencias ? parseInt(form.existencias[sucursalId] ?? '0', 10) || 0 : 0,
@@ -284,11 +305,13 @@ export function ItemFormPage() {
             <TextField label="Referencia" value={form.referencia} onChange={v => set('referencia', v)} placeholder="Ingresa una referencia" helper="Aparece en el comprobante de venta" />
             <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Toggle checked={form.esCombo} onChange={v => set('esCombo', v)} ariaLabel="Es un combo" />
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>Es un combo</span>
+                <Toggle checked={form.esCombo} onChange={setEsCombo} ariaLabel="Es un combo" disabled={comboLocked} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: comboLocked ? 'var(--black-40)' : 'var(--black-100)' }}>Es un combo</span>
               </div>
               <p style={{ fontSize: 12, color: 'var(--black-40)', margin: '6px 0 0' }}>
-                Al activar, elige los productos existentes que lo componen abajo.
+                {comboLocked
+                  ? 'Un combo no se puede convertir en un ítem normal después de creado.'
+                  : 'Al activar, elige los productos existentes que lo componen abajo.'}
               </p>
             </div>
           </div>
@@ -347,7 +370,8 @@ export function ItemFormPage() {
             </button>
           </div>
 
-          {/* Disponibilidad */}
+          {/* Disponibilidad — un combo no maneja existencias propias, pero sí
+              elige en qué sucursales está activo (specs/2026-09-combos-disponibilidad.md) */}
           <DisponibilidadCard
             manejaExistencias={form.manejaExistencias}
             onToggleManeja={v => set('manejaExistencias', v)}
@@ -357,6 +381,7 @@ export function ItemFormPage() {
             onChangeExistencia={setExistencia}
             unidadLabel={unidadLabel}
             sucursalesError={sucursalesError}
+            existenciasDisabled={form.esCombo}
           />
         </div>
       </div>
