@@ -10,7 +10,7 @@ import { CAT_DEFS } from '../../data/productCatalog';
 import { UNIDADES, SUCURSALES } from '../../data/itemsCatalogs';
 
 export interface ItemsFilters {
-  tipo: '' | 'inventariable' | 'no-inventariable';
+  tipo: '' | 'inventariable' | 'no-inventariable' | 'combo';
   nombre: string;
   codigo: string;
   descripcion: string;
@@ -36,6 +36,7 @@ interface ItemsFilterBarProps {
 const TIPO_OPTIONS = [
   { value: 'inventariable', label: 'Inventariable' },
   { value: 'no-inventariable', label: 'No inventariable' },
+  { value: 'combo', label: 'Combo' },
 ];
 
 const ESTADO_OPTIONS = [
