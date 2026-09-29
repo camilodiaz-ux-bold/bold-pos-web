@@ -11,7 +11,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
-import { ArrowLeft, ImagePlus, Info } from 'lucide-react';
+import { ArrowLeft, ImagePlus } from 'lucide-react';
 import { useItems } from '../../store/itemsStore';
 import type { Item, ItemDraft, ItemComboComponente, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
 import { UNIDADES, IMPUESTOS, getImpuesto, getUnidad } from '../../data/itemsCatalogs';
@@ -132,12 +132,14 @@ export function ItemFormPage() {
     setForm(prev => ({ ...prev, existencias: { ...prev.existencias, [sucursalId]: raw } }));
   };
 
-  // Un combo no maneja existencias propias — al marcarlo, se limpia cualquier
-  // configuración de disponibilidad que el ítem tuviera (caso borde §9: un
-  // ítem simple con existencias que se convierte en combo).
+  // Un combo no maneja existencias propias — al marcarlo, se apaga
+  // manejaExistencias y se limpian las existencias numéricas (caso borde §9:
+  // un ítem simple con existencias que se convierte en combo). Las sucursales
+  // seleccionadas SÍ se conservan: un combo puede estar activo en unas
+  // sucursales y no en otras, aunque no lleve un número de existencia propio.
   const setEsCombo = (next: boolean) => {
     setForm(prev => next
-      ? { ...prev, esCombo: next, manejaExistencias: false, sucursalIds: [], existencias: {} }
+      ? { ...prev, esCombo: next, manejaExistencias: false, existencias: {} }
       : { ...prev, esCombo: next });
   };
 
@@ -166,8 +168,9 @@ export function ItemFormPage() {
     if (form.nombre.trim().length < 2) return false;
     if (!form.categoriaId || !form.unidadId || !form.impuestoId) return false;
     if (precioBase <= 0) return false;
-    // Un combo no maneja existencias propias — no exige sucursal (ver setEsCombo).
-    if (!form.esCombo && form.sucursalIds.length === 0) return false;
+    // Un combo también exige al menos una sucursal — puede seleccionarlas,
+    // solo no puede activar el toggle de existencias (ver setEsCombo).
+    if (form.sucursalIds.length === 0) return false;
     if (form.manejaExistencias) {
       const allFilled = form.sucursalIds.every(sid => {
         const raw = form.existencias[sid];
@@ -204,10 +207,11 @@ export function ItemFormPage() {
       precioBase: parseCOP(form.precioBaseRaw),
       precioTotal: parseCOP(form.precioTotalRaw),
       costo: parseCOP(form.costoRaw),
-      // Un combo nunca guarda existencias propias, sin importar el estado del
-      // form — red de seguridad además del reset en setEsCombo (specs/2026-09-combos-disponibilidad.md).
+      // Un combo nunca guarda existencia propia, sin importar el estado del
+      // form — red de seguridad además del reset en setEsCombo. Sí conserva
+      // sus sucursales seleccionadas (specs/2026-09-combos-disponibilidad.md).
       manejaExistencias: form.esCombo ? false : form.manejaExistencias,
-      sucursales: form.esCombo ? [] : form.sucursalIds.map(sucursalId => ({
+      sucursales: form.sucursalIds.map(sucursalId => ({
         sucursalId,
         existencia: form.manejaExistencias ? parseInt(form.existencias[sucursalId] ?? '0', 10) || 0 : 0,
       })),
@@ -359,30 +363,19 @@ export function ItemFormPage() {
             </button>
           </div>
 
-          {/* Disponibilidad — un combo no maneja existencias propias (ver
-              specs/2026-09-combos-disponibilidad.md, supersede spec §5.6) */}
-          {form.esCombo ? (
-            <div style={{ backgroundColor: 'var(--black-0)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Disponibilidad</h3>
-              <div style={{ display: 'flex', gap: 10, padding: 12, backgroundColor: 'var(--blue-10)', borderRadius: 8 }}>
-                <Info size={16} color="var(--blue-100)" style={{ flexShrink: 0, marginTop: 1 }} />
-                <p style={{ fontSize: 13, color: 'var(--black-60)', margin: 0, lineHeight: '18px' }}>
-                  Un combo no maneja existencias propias — su disponibilidad depende de sus componentes.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <DisponibilidadCard
-              manejaExistencias={form.manejaExistencias}
-              onToggleManeja={v => set('manejaExistencias', v)}
-              sucursalIds={form.sucursalIds}
-              onToggleSucursal={toggleSucursal}
-              existencias={form.existencias}
-              onChangeExistencia={setExistencia}
-              unidadLabel={unidadLabel}
-              sucursalesError={sucursalesError}
-            />
-          )}
+          {/* Disponibilidad — un combo no maneja existencias propias, pero sí
+              elige en qué sucursales está activo (specs/2026-09-combos-disponibilidad.md) */}
+          <DisponibilidadCard
+            manejaExistencias={form.manejaExistencias}
+            onToggleManeja={v => set('manejaExistencias', v)}
+            sucursalIds={form.sucursalIds}
+            onToggleSucursal={toggleSucursal}
+            existencias={form.existencias}
+            onChangeExistencia={setExistencia}
+            unidadLabel={unidadLabel}
+            sucursalesError={sucursalesError}
+            existenciasDisabled={form.esCombo}
+          />
         </div>
       </div>
 

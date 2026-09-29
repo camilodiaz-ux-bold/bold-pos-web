@@ -2,6 +2,11 @@
  * DisponibilidadCard — card "Disponibilidad" del formulario de ítem:
  * toggle de existencias + checkboxes de sucursal + input de existencia por
  * sucursal marcada (solo si el toggle está ON) + total.
+ *
+ * Para un combo (existenciasDisabled=true), el toggle de existencias se
+ * deshabilita pero las sucursales siguen siendo seleccionables — un combo
+ * puede estar activo en unas sucursales y no en otras, aunque no maneje
+ * un número de existencia propio.
  */
 import React from 'react';
 import type { SucursalId } from '../../types/item';
@@ -18,6 +23,9 @@ interface DisponibilidadCardProps {
   onChangeExistencia: (id: SucursalId, raw: string) => void;
   unidadLabel: string;
   sucursalesError?: string;
+  /** Un combo no maneja existencias propias — deshabilita el toggle sin ocultar
+   * la sección de sucursales, que sigue siendo editable (ver specs/2026-09-combos-disponibilidad.md). */
+  existenciasDisabled?: boolean;
 }
 
 export function DisponibilidadCard({
@@ -29,6 +37,7 @@ export function DisponibilidadCard({
   onChangeExistencia,
   unidadLabel,
   sucursalesError,
+  existenciasDisabled,
 }: DisponibilidadCardProps) {
   const total = manejaExistencias
     ? sucursalIds.reduce((acc, id) => acc + (parseInt(existencias[id] ?? '0', 10) || 0), 0)
@@ -40,13 +49,15 @@ export function DisponibilidadCard({
 
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Toggle checked={manejaExistencias} onChange={onToggleManeja} ariaLabel="Ítem con existencias" />
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>
+          <Toggle checked={manejaExistencias} onChange={onToggleManeja} ariaLabel="Ítem con existencias" disabled={existenciasDisabled} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: existenciasDisabled ? 'var(--black-40)' : 'var(--black-100)' }}>
             Ítem con existencias ({unidadLabel})
           </span>
         </div>
         <p style={{ fontSize: 12, color: 'var(--black-40)', margin: '6px 0 0' }}>
-          Al activar, puedes agregar la disponibilidad del item por sucursal.
+          {existenciasDisabled
+            ? 'Un combo no maneja existencias propias — su disponibilidad depende de sus componentes.'
+            : 'Al activar, puedes agregar la disponibilidad del item por sucursal.'}
         </p>
       </div>
 
