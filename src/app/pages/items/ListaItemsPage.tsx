@@ -22,6 +22,7 @@ function normalizeText(s: string): string {
 function matchesFilters(item: Item, f: ItemsFilters): boolean {
   if (f.tipo === 'inventariable' && !item.manejaExistencias) return false;
   if (f.tipo === 'no-inventariable' && item.manejaExistencias) return false;
+  if (f.tipo === 'combo' && !item.esCombo) return false;
   if (f.nombre && !normalizeText(item.nombre).includes(normalizeText(f.nombre))) return false;
   if (f.codigo && !normalizeText(item.codigo).includes(normalizeText(f.codigo))) return false;
   if (f.descripcion && !normalizeText(item.descripcion).includes(normalizeText(f.descripcion))) return false;
