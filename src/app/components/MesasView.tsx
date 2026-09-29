@@ -16,6 +16,8 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { MesaProductSelector } from './MesaProductSelector';
 import { CheckoutDrawer } from './CheckoutDrawer';
+import { SaleCompletedPanel } from './SaleCompletedPanel';
+import type { CompletedSale } from '../utils/invoice';
 import { KitchenTicketPreviewModal, type TicketItem } from './KitchenTicketPreviewModal';
 import { CAT_DEFS, ALL_CATALOG_PRODUCTS } from '../data/productCatalog';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
@@ -1261,6 +1263,7 @@ export function MesasView() {
     try { localStorage.setItem(TABLES_LS_KEY, JSON.stringify(tables)); } catch { /* ignorar */ }
   }, [tables]);
   const [selectedTableId, setSelectedTableId]   = useState<string | null>('s09');
+  const [completedSale, setCompletedSale]         = useState<CompletedSale | null>(null);
   const [activeZone, setActiveZone]             = useState<string>(() => zonesConfig[0] ?? 'Salón');
   const [showProductSelector, setShowProductSelector] = useState(false);
   const [showChangeMesa, setShowChangeMesa]     = useState(false);
@@ -1805,9 +1808,9 @@ export function MesasView() {
         guests={selectedTable.guests}
         openedAtTimestamp={selectedTable.openedAtTimestamp}
         items={selectedTable.items}
-        hideSendToKitchen
+        orderRef={`#${String(selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)).padStart(3, '0')}`}
         onClose={() => setShowCheckout(false)}
-        onConfirmPay={(_method, _total) => {
+        onConfirmPay={(sale) => {
           setTables(prev =>
             prev.map(t =>
               t.id === selectedTableId
@@ -1816,6 +1819,7 @@ export function MesasView() {
             ),
           );
           setShowCheckout(false);
+          setCompletedSale(sale);
         }}
       />
     );
@@ -1823,6 +1827,13 @@ export function MesasView() {
 
   return (
     <>
+      {/* Panel "Venta Completada" — se abre al confirmar el pago; "Nueva venta" vuelve a la vista de mesas */}
+      {completedSale && (
+        <SaleCompletedPanel
+          sale={completedSale}
+          onNewSale={() => { setCompletedSale(null); setSelectedTableId(null); }}
+        />
+      )}
       {/* ════════════════════════════════════════════════════
           Modal: ¿Cuántas personas?
           ════════════════════════════════════════════════════ */}

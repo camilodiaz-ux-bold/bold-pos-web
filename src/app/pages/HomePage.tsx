@@ -15,6 +15,8 @@ import { twMerge } from 'tailwind-merge';
 import { toast } from 'sonner';
 import { MesasView } from '../components/MesasView';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
+import { SaleCompletedPanel } from '../components/SaleCompletedPanel';
+import type { CompletedSale } from '../utils/invoice';
 import { MostradorCatalog, type MostradorProduct } from '../components/MostradorCatalog';
 import type { RootOutletContext } from '../components/RootLayout';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
@@ -217,6 +219,7 @@ export function HomePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editNoteModal, setEditNoteModal] = useState<{ itemId: string; itemName: string; note: string } | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [completedSale, setCompletedSale] = useState<CompletedSale | null>(null);
 
   // Timer tick cada 30 s para actualizar banners EN PREPARACIÓN
   const [, setTick] = useState(0);
@@ -380,15 +383,16 @@ export function HomePage() {
         title={`Orden #${activeOrder.number}`}
         meta={`${activeOrder.items.length} ítem${activeOrder.items.length !== 1 ? 's' : ''}`}
         items={activeOrder.items}
-        hideSendToKitchen
+        orderRef={`#${activeOrder.number}`}
         onClose={() => setShowCheckout(false)}
-        onConfirmPay={(_method, _total) => {
+        onConfirmPay={(sale) => {
           setOrders(prev => prev.map(o =>
             o.id === activeOrderId
               ? { ...o, items: [], status: 'BORRADOR' as OrderStatus, isPaid: false, comandaSent: false, hasPendingChanges: false, sentToKitchenAt: undefined, firstComandaSentAt: undefined, frozenPreparationMs: undefined }
               : o,
           ));
           setShowCheckout(false);
+          setCompletedSale(sale);
         }}
       />
     );
@@ -397,6 +401,11 @@ export function HomePage() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
+      {/* Panel "Venta Completada" — "Nueva venta" lo cierra y deja la orden vacía lista para otra venta */}
+      {completedSale && (
+        <SaleCompletedPanel sale={completedSale} onNewSale={() => setCompletedSale(null)} />
+      )}
+
       {/* ── Modal: Confirmar eliminación ── */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">

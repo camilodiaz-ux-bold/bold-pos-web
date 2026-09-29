@@ -7,15 +7,16 @@
 import React, { useState, useMemo } from 'react';
 import {
   ChevronLeft, ChevronDown, ChevronUp,
-  Printer, Plus, CheckCircle2, Send,
+  Printer, Plus,
   Banknote, CreditCard, Smartphone, ArrowLeftRight,
-  Monitor, X, Trash2, AlertTriangle, Mail,
-  Facebook, Instagram, Linkedin,
+  Monitor, X, Trash2, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
+import { nextInvoiceNumber, type CompletedSale } from '../utils/invoice';
 
 const MFONT = 'Montserrat, sans-serif';
+const TAX_RATE = 0.19;
 
 // ─── Payment methods catalog ──────────────────────────────────────────────────
 
@@ -52,8 +53,10 @@ export interface CheckoutDrawerProps {
   openedAtTimestamp?: number;
   items: CheckoutItem[];
   onClose: () => void;
-  onConfirmPay: (method: string, total: number) => void;
-  hideSendToKitchen?: boolean;
+  /** Recibe la venta completada: el padre libera la mesa/orden y muestra el panel "Venta Completada". */
+  onConfirmPay: (sale: CompletedSale) => void;
+  /** Número de orden para la factura, el mismo de la comanda ("#885"); si falta se deriva del consecutivo. */
+  orderRef?: string;
 }
 
 interface PayRow {
@@ -86,52 +89,9 @@ function distrib(total: number, n: number): number[] {
   return Array.from({ length: n }, (_, i) => base + (i === n - 1 ? rem : 0));
 }
 
-function formatComprobante(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-}
-
-// ─── Receipt snapshot (captura el estado exacto al confirmar el pago) ─────────
-
-interface ReceiptSnap {
-  total:       number;
-  subtotalAmt: number;
-  taxAmt:      number;
-  tipAmt:      number;
-  tipLabel:    string;
-  payEntries:  { method: string; amount: number }[];
-  cambioAmt:   number;
-  resolucion:  string;
-  vendedor:    string;
-  cliente:     string;
-  date:        string;
-}
-
 // ─── Tiny components ──────────────────────────────────────────────────────────
 
 const HSep = () => <div style={{ height: 1, background: '#F0F0F0', flexShrink: 0 }} />;
-
-const DashedDivider = () => <div style={{ borderTop: '1px dashed #E0E0E0', margin: '16px 0' }} />;
-
-function WaveTop() {
-  return (
-    <svg width="100%" height="18" viewBox="0 0 600 18" preserveAspectRatio="none" style={{ display: 'block' }}>
-      <path
-        d="M0,18 L0,10 Q15,2 30,10 Q45,18 60,10 Q75,2 90,10 Q105,18 120,10 Q135,2 150,10 Q165,18 180,10 Q195,2 210,10 Q225,18 240,10 Q255,2 270,10 Q285,18 300,10 Q315,2 330,10 Q345,18 360,10 Q375,2 390,10 Q405,18 420,10 Q435,2 450,10 Q465,18 480,10 Q495,2 510,10 Q525,18 540,10 Q555,2 570,10 Q585,18 600,10 L600,18 Z"
-        fill="#F7F8FB"
-      />
-    </svg>
-  );
-}
-
-function ReceiptRow({ label, value, valueColor, bold }: { label: string; value: string; valueColor?: string; bold?: boolean }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-      <span style={{ fontSize: 12, fontWeight: bold ? 600 : 400, color: '#606060', fontFamily: MFONT, lineHeight: '16px' }}>{label}</span>
-      <span style={{ fontSize: 12, fontWeight: bold ? 600 : 500, color: valueColor ?? '#1E1E1E', fontFamily: MFONT, lineHeight: '16px', textAlign: 'right' }}>{value}</span>
-    </div>
-  );
-}
 
 function SectionBar({ label, cta, onCta }: { label: string; cta: string; onCta: () => void }) {
   return (
@@ -320,13 +280,8 @@ function MethodPanel({ title, onSelect, onClose }: { title: string; onSelect: (m
 
 export function CheckoutDrawer({
   title, subtitle, guests, openedAtTimestamp,
-  items, onClose, onConfirmPay, hideSendToKitchen = false,
+  items, onClose, onConfirmPay, orderRef,
 }: CheckoutDrawerProps) {
-
-  // ── Receipt visibility ─────────────────────────────────────────────────────
-  const [showReceipt, setShowReceipt]         = useState(false);
-  const [comandaSentAfterPay, setComandaSentAfterPay] = useState(false);
-  const [receiptSnap, setReceiptSnap]         = useState<ReceiptSnap | null>(null);
 
   // ── Form fields ────────────────────────────────────────────────────────────
   const [orderNote,   setOrderNote]   = useState('');
@@ -349,7 +304,7 @@ export function CheckoutDrawer({
   const [payRows, setPayRows] = useState<PayRow[]>(() => {
     const sub  = items.reduce((s, i) => s + (i.discount ? Math.round(i.price * (1 - i.discount / 100)) : i.price) * i.quantity, 0);
     const tip  = Math.round(sub * 0.10);
-    const total = sub + Math.round(sub * 0.19) + tip;
+    const total = sub + Math.round(sub * TAX_RATE) + tip;
     return [{ id: uid(), method: 'Efectivo', amount: String(total) }];
   });
   const [splitEqual, setSplitEqual] = useState(false);
@@ -359,7 +314,7 @@ export function CheckoutDrawer({
     () => items.reduce((s, i) => s + (i.discount ? Math.round(i.price * (1 - i.discount / 100)) : i.price) * i.quantity, 0),
     [items],
   );
-  const tax      = Math.round(subtotal * 0.19);
+  const tax      = Math.round(subtotal * TAX_RATE);
   const discount = 0; // Prompt 3
 
   // ── Tip calculation ────────────────────────────────────────────────────────
@@ -413,7 +368,7 @@ export function CheckoutDrawer({
     return null;
   }, [tipRows, payRows, tipAuto, tipAutoTotal, splitEqual, grandTotal]);
 
-  const canConfirm = showReceipt || (payRows.length > 0 && pendiente === 0 && !tipWarning);
+  const canConfirm = payRows.length > 0 && pendiente === 0 && !tipWarning;
 
   // ── Tip actions ────────────────────────────────────────────────────────────
   const addTipRow = (method: string) => setTipRows(prev => [...prev, { id: uid(), method, amount: '' }]);
@@ -452,152 +407,37 @@ export function CheckoutDrawer({
     setPayRows(prev => prev.map(r => r.id === id ? { ...r, amount } : r));
 
   // ── Confirm ────────────────────────────────────────────────────────────────
+  // Al confirmar se entrega la venta completada al padre (libera la mesa/orden y
+  // abre el panel "Venta Completada"); ya no hay recibo dentro de este componente.
   const finalizePay = () => {
     if (!canConfirm) return;
-    const now = new Date();
     const payEntries = payRows.map((r, i) => ({
       method: r.method,
       amount: splitEqual ? payEqualAmounts[i] : (parseFloat(r.amount) || 0),
     }));
-    // Snapshot: captura el estado exacto; onConfirmPay se llama al cerrar
-    setReceiptSnap({
-      total:       grandTotal,
-      subtotalAmt: subtotal,
-      taxAmt:      tax,
-      tipAmt:      tipTotal,
-      tipLabel:    tipAuto && tipRows.length > 0 ? 'Propina (10%)' : 'Propina',
+    const invoiceNumber = nextInvoiceNumber();
+    onConfirmPay({
+      title,
+      orderRef:      orderRef ?? `#${invoiceNumber.slice(-3)}`,
+      invoiceNumber,
+      items,
+      subtotal,
+      taxRate:       TAX_RATE,
+      tax,
+      tip:           tipTotal,
+      tipLabel:      tipAuto && tipRows.length > 0 ? 'Propina (10%)' : 'Propina',
+      discount,
+      total:         grandTotal,
       payEntries,
-      cambioAmt:   cambio,
-      resolucion,
-      vendedor,
+      cambio,
       cliente,
-      date:        formatComprobante(now),
+      vendedor,
+      resolucion,
+      note:          orderNote,
+      paidAt:        Date.now(),
     });
-    setShowReceipt(true);
     toast.success(`Pago registrado · ${title} · $${fmtCOP(grandTotal)}`, { duration: 5000 });
   };
-
-  // Finaliza y cierra — llamado desde el comprobante; acá sí ejecuta onConfirmPay
-  const handleFinalize = () => {
-    if (!receiptSnap) { onClose(); return; }
-    const methods = [...new Set(receiptSnap.payEntries.map(e => e.method))].join(', ') || 'Pendiente';
-    onConfirmPay(methods, receiptSnap.total);
-  };
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // COMPROBANTE FULL-SCREEN — early return cuando showReceipt es true
-  // ════════════════════════════════════════════════════════════════════════════
-
-  if (showReceipt && receiptSnap) {
-    return (
-      <div style={{ flex: 1, overflowY: 'auto', background: '#F7F8FB', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 16px 48px', gap: 24, minHeight: 0, fontFamily: MFONT }}>
-
-        {/* ── Card ── */}
-        <div style={{ width: '100%', maxWidth: 480 }}>
-          <WaveTop />
-          <div style={{ background: '#fff', boxShadow: '0 8px 20px rgba(18,30,108,0.08)', borderRadius: '0 0 16px 16px', padding: '24px 20px' }}>
-
-            {/* Hero */}
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 20 }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F4FDF9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle2 size={22} color="#6CDCAB" />
-              </div>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: '#1E1E1E' }}>¡Completaste el pago!</p>
-              <p style={{ margin: 0, fontSize: 32, fontWeight: 400, color: '#1E1E1E', lineHeight: '40px' }}>${fmtCOP(receiptSnap.total)}</p>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#969696' }}>{receiptSnap.date}</p>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#606060' }}>{title}</p>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 400, color: '#969696' }}>{receiptSnap.resolucion}</p>
-            </div>
-
-            <DashedDivider />
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <ReceiptRow label="Mesero" value={receiptSnap.vendedor} />
-              <ReceiptRow label="Cliente"  value={receiptSnap.cliente}  />
-            </div>
-
-            <DashedDivider />
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {items.map(item => {
-                const unit = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
-                return (
-                  <ReceiptRow key={item.id} label={`${item.name} x${item.quantity}`} value={`$${fmtCOP(unit * item.quantity)}`} />
-                );
-              })}
-            </div>
-
-            <DashedDivider />
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {receiptSnap.payEntries.map((e, i) => (
-                <ReceiptRow key={i} label={e.method} value={`$${fmtCOP(e.amount)}`} />
-              ))}
-              {receiptSnap.cambioAmt > 0 && (
-                <ReceiptRow label="Cambio" value={`$${fmtCOP(receiptSnap.cambioAmt)}`} valueColor="#1B8959" />
-              )}
-            </div>
-
-            <DashedDivider />
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <ReceiptRow label="Subtotal"  value={`$${fmtCOP(receiptSnap.subtotalAmt)}`} />
-              <ReceiptRow label="IVA (19%)" value={`$${fmtCOP(receiptSnap.taxAmt)}`}      />
-              {receiptSnap.tipAmt > 0 && (
-                <ReceiptRow label={receiptSnap.tipLabel} value={`$${fmtCOP(receiptSnap.tipAmt)}`} />
-              )}
-            </div>
-
-            <DashedDivider />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E' }}>Total</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#1E1E1E' }}>${fmtCOP(receiptSnap.total)} COP</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Botones ── */}
-        <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={() => toast.info('Comprobante enviado por correo')}
-              style={{ flex: 1, height: 48, borderRadius: 32, border: '1.5px solid #FF2947', background: '#fff', color: '#FF2947', fontSize: 16, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-            >
-              <Mail size={16} color="#FF2947" /> Enviar
-            </button>
-            <button
-              onClick={handleFinalize}
-              style={{ flex: 1, height: 48, borderRadius: 32, border: 'none', background: '#FF2947', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
-            >
-              Nueva venta
-            </button>
-          </div>
-          {!hideSendToKitchen && (
-            <button
-              onClick={() => { setComandaSentAfterPay(true); toast.success('Comanda enviada a cocina'); }}
-              style={{ width: '100%', height: 44, borderRadius: 32, background: comandaSentAfterPay ? '#F4FDF9' : 'transparent', border: `1.5px solid ${comandaSentAfterPay ? '#6CDCAB' : '#C7CBE0'}`, color: comandaSentAfterPay ? '#1B8959' : '#606060', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-            >
-              <Send size={14} />{comandaSentAfterPay ? 'Comanda enviada' : 'Enviar comanda a cocina'}
-            </button>
-          )}
-        </div>
-
-        {/* ── Footer ── */}
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#969BBD' }}>Bold.co S.A.S NIT 901281572-4</p>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: '#969BBD' }}>www.bold.co</p>
-          <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
-            {([Facebook, Instagram, Linkedin] as const).map((Icon, i) => (
-              <div key={i} style={{ width: 24, height: 24, borderRadius: '50%', background: '#969BBD', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={12} color="#fff" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ════════════════════════════════════════════════════════════════════════════
   // LEFT PANEL (formulario de checkout)
@@ -880,10 +720,10 @@ export function CheckoutDrawer({
               Cancelar
             </button>
             <button
-              onClick={showReceipt ? handleFinalize : finalizePay}
+              onClick={finalizePay}
               disabled={!canConfirm}
               style={{ flex: 1, height: 44, borderRadius: 32, border: 'none', background: canConfirm ? '#FF2947' : '#FCDDE1', color: '#fff', fontSize: 16, fontWeight: 700, cursor: canConfirm ? 'pointer' : 'not-allowed', fontFamily: MFONT, transition: 'background 200ms' }}>
-              {showReceipt ? 'Nueva venta' : 'Confirmar pago'}
+              Confirmar pago
             </button>
           </div>
         </div>
