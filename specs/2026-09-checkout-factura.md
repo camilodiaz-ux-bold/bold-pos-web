@@ -27,7 +27,8 @@
 
 - Título, ícono de check, total de la venta.
 - Campo de correo (precargado con el correo del cliente) + "Enviar", y campo de teléfono + "Enviar"; link "O busca en tus contactos guardados en whatsapp" y "Abrir caja registradora". **Estos cuatro elementos son solo visuales** (muestran un toast) — se implementan en un spec posterior.
-- **Imprimir factura** (outline): abre el diálogo de impresión con el ticket.
+- **Impresión automática:** al abrirse el panel, el diálogo de impresión de la factura se abre solo, sin que el usuario haga clic. Ocurre una sola vez por venta.
+- **Imprimir factura** (outline): vuelve a abrir el diálogo de impresión con el ticket (reimpresión).
 - **Nueva venta** (coral): cierra el panel y vuelve a la vista de ventas lista para una venta nueva. En Mesas deja el mapa sin mesa seleccionada; en Mostrador deja la orden vacía.
 - El panel no tiene botón de cierre aparte: la salida es "Nueva venta".
 

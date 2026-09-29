@@ -3,8 +3,10 @@
  * Mesas/Mostrador al confirmar el pago (ver specs/2026-09-checkout-factura.md).
  * Solo "Imprimir factura" y "Nueva venta" tienen lógica; correo, WhatsApp y
  * caja registradora son visuales (toast), como el "Enviar" que había antes.
+ * Al abrirse, el diálogo de impresión de la factura se dispara solo; el botón
+ * "Imprimir factura" queda para reimprimir.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Mail, MessageCircle, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { buildInvoiceData, resolveCustomer, type CompletedSale } from '../utils/invoice';
@@ -31,6 +33,14 @@ export function SaleCompletedPanel({ sale, onNewSale }: Props) {
   const customer = resolveCustomer(sale.cliente);
   const [email, setEmail] = useState(customer.correo);
   const [phone, setPhone] = useState(customer.telefono);
+
+  // Impresión automática al abrir el panel (una sola vez por venta, aun con StrictMode).
+  const autoPrinted = useRef(false);
+  useEffect(() => {
+    if (autoPrinted.current) return;
+    autoPrinted.current = true;
+    printInvoice(buildInvoiceData(sale));
+  }, [sale]);
 
   return (
     <>
