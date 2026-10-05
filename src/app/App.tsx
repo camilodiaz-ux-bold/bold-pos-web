@@ -3,7 +3,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router';
 import { RootLayout } from './components/RootLayout';
 import { HomePage } from './pages/HomePage';
 import { ReportesPage } from './pages/ReportesPage';
-import { ReporteDetallePage } from './pages/ReporteDetallePage';
+import { ReporteDetalleRoute } from './pages/ReporteDetallePage';
 import { Dashboard } from './pages/Dashboard';
 import { TurnosPage } from './pages/TurnosPage';
 import { VentasPage } from './pages/VentasPage';
@@ -13,7 +13,7 @@ import { ListaItemsPage } from './pages/items/ListaItemsPage';
 import { ItemFormPage } from './pages/items/ItemFormPage';
 import { StatusPage } from '../pages/StatusPage';
 import { MakersLanding } from '../pages/MakersLanding';
-import { VerticalProvider, VerticalRoute } from './vertical';
+import { VerticalProvider } from './vertical';
 
 const router = createBrowserRouter([
   {
@@ -22,10 +22,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, Component: HomePage },
       { path: 'reportes', Component: ReportesPage },
-      {
-        path: 'reportes/restaurantes/:id',
-        element: <VerticalRoute module="reportes-restaurantes"><ReporteDetallePage /></VerticalRoute>,
-      },
+      { path: 'reportes/restaurantes/:id', Component: ReporteDetalleRoute },
       { path: 'inicio', Component: Dashboard },
       { path: 'turnos', Component: TurnosPage },
       { path: 'ventas', Component: VentasPage },

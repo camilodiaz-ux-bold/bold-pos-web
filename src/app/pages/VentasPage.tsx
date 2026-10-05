@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
-
-type StatusVariant = 'success' | 'warning' | 'error';
-type DianVariant = 'success' | 'warning' | 'neutral';
+import { useVertical } from '../vertical';
+import type { EstadoVariant as StatusVariant, DianVariant, VentaRow } from '../types/venta';
+import { RETAIL_VENTA_ROWS, RETAIL_VENTA_USUARIOS } from '../data/retail/ventasMocks';
 
 interface BadgeProps {
   label: string;
@@ -60,7 +60,7 @@ function DianBadge({ label, variant }: { label: string; variant: DianVariant }) 
   );
 }
 
-const rows = [
+const RESTAURANT_ROWS: VentaRow[] = [
   { pedido: 'O-001', horaInicio: '25/03/2026 13:42', horaCierre: '25/03/2026 14:42', zona: 'Zona 1', mesa: 'Mesa 3',  usuario: 'Carlos Pérez',  total: '$85,000',  tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
   { pedido: 'O-002', horaInicio: '25/03/2026 14:10', horaCierre: '25/03/2026 15:10', zona: 'Zona 1', mesa: 'Mesa 7',  usuario: 'Laura Gómez',   total: '$120,500', tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
   { pedido: 'O-003', horaInicio: '25/03/2026 14:55', horaCierre: '25/03/2026 15:55', zona: 'Zona 1', mesa: 'Mesa 1',  usuario: 'Miguel Torres', total: '$47,000',  tipoDoc: 'Factura electrónica', estado: { label: 'Abierto',   variant: 'warning' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
@@ -88,6 +88,11 @@ const columns = [
 
 export function VentasPage() {
   const navigate = useNavigate();
+  const { has } = useVertical();
+  const mesas = has('mesas');
+  const rows = mesas ? RESTAURANT_ROWS : RETAIL_VENTA_ROWS;
+  const visibleColumns = mesas ? columns : columns.filter(c => c.key !== 'zona' && c.key !== 'mesa');
+  const usuarios = mesas ? ['Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'] : RETAIL_VENTA_USUARIOS;
 
   return (
     <div style={{
@@ -151,10 +156,11 @@ export function VentasPage() {
         <div style={filterGroup}>
           <label style={labelStyle}>Usuario</label>
           <select style={filterInput}>
-            {['Todos', 'Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'].map(o => <option key={o}>{o}</option>)}
+            {['Todos', ...usuarios].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
 
+        {mesas && (<>
         <div style={filterGroup}>
           <label style={labelStyle}>Zona</label>
           <select style={filterInput}>
@@ -168,6 +174,7 @@ export function VentasPage() {
             {['Todos', 'Mesa 1', 'Mesa 2', 'Mesa 3', 'Mesa 4', 'Mesa 5', 'Mesa 6', 'Mesa 7', 'Mesa 8', 'Mesa 9'].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
+        </>)}
 
         <div style={filterGroup}>
           <label style={labelStyle}>Tipo de documento</label>
@@ -197,7 +204,7 @@ export function VentasPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                {columns.map(col => (
+                {visibleColumns.map(col => (
                   <th
                     key={col.key}
                     style={{
@@ -229,8 +236,8 @@ export function VentasPage() {
                   <td style={tdStyle}>{row.pedido}</td>
                   <td style={tdStyle}>{row.horaInicio}</td>
                   <td style={tdStyle}>{row.horaCierre}</td>
-                  <td style={tdStyle}>{row.zona}</td>
-                  <td style={tdStyle}>{row.mesa}</td>
+                  {mesas && <td style={tdStyle}>{row.zona}</td>}
+                  {mesas && <td style={tdStyle}>{row.mesa}</td>}
                   <td style={tdStyle}>{row.usuario}</td>
                   <td style={tdStyle}>{row.total}</td>
                   <td style={tdStyle}>{row.tipoDoc}</td>

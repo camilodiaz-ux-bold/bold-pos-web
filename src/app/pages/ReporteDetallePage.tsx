@@ -7,7 +7,8 @@
  */
 
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, Navigate } from 'react-router';
+import { useVertical } from '../vertical';
 import { ArrowLeft, RefreshCw, X, ChevronDown, Download } from 'lucide-react';
 import { VentasAsyncReport } from '../components/reportes/VentasAsyncReport';
 
@@ -259,11 +260,38 @@ export function StatusBadge({ label, variant }: { label: string; variant: Status
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
+// Reportes bajo /reportes/restaurantes/ que son exclusivos de Restaurantes. Los demás
+// (rest-ventas, rest-ventas-async) son reportes core que solo viven en esa ruta por historia.
+const RESTAURANT_ONLY_REPORTS = new Set(['rest-ocupacion', 'rest-propinas', 'rest-propinas-turno']);
+
+/** Guard de ruta: los reportes exclusivos de Restaurantes redirigen a /inicio en otras verticales. */
+export function ReporteDetalleRoute() {
+  const { id = '' } = useParams<{ id: string }>();
+  const { has } = useVertical();
+  if (RESTAURANT_ONLY_REPORTS.has(id) && !has('reportes-restaurantes')) return <Navigate to="/inicio" replace />;
+  return <ReporteDetallePage />;
+}
+
+/** Retail: sin mesa ni propinas (los módulos `mesas` y `propinas` no existen en esa vertical). */
+function withoutRestaurantColumns(config: ReportConfig): ReportConfig {
+  return {
+    ...config,
+    columns: config.columns
+      .filter(c => c.key !== 'mesa' && c.key !== 'totalConPropina')
+      .map(c => c.key === 'total' ? { ...c, label: 'Total' } : c),
+    propinasColumn: undefined,
+    propinasWidget: undefined,
+    showIncludeTip: false,
+  };
+}
+
 export function ReporteDetallePage() {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { has } = useVertical();
 
-  const config = CONFIGS[id];
+  const baseConfig = CONFIGS[id];
+  const config = baseConfig && !has('propinas') ? withoutRestaurantColumns(baseConfig) : baseConfig;
 
   // Filtros locales (solo UI — los datos mock no se filtran)
   const [fechaDesde, setFechaDesde] = useState('');

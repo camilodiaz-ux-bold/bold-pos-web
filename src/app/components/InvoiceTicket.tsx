@@ -120,9 +120,9 @@ export function InvoiceTicket({ invoice }: { invoice: InvoiceData }) {
       <div style={{ marginTop: 10 }}>Son: {invoice.totalInWords}</div>
 
       <div style={{ marginTop: 12 }}>Notas: {invoice.note}</div>
-      <div style={{ marginTop: 8 }}>Orden No.: {invoice.orderRef}</div>
+      {invoice.orderRef && <div style={{ marginTop: 8 }}>Orden No.: {invoice.orderRef}</div>}
       {invoice.mesa && <div>Mesa: {invoice.mesa}</div>}
-      <div>Mesero: {invoice.mesero}</div>
+      <div>{invoice.meseroLabel}: {invoice.mesero}</div>
 
       <div style={rule} />
 

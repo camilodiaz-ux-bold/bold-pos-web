@@ -11,6 +11,7 @@
 import React from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
+import { useVertical } from '../vertical';
 import {
   ChevronRight,
   LockKeyhole,
@@ -201,6 +202,7 @@ function CategoryCard({ category, isRestaurantes }: { category: ReportCategory; 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ReportesPanel() {
+  const { has } = useVertical();
   // Categorías split: col izquierda [0,2,3], col derecha [1]
   // Fila 1: Administrativos (izq) | Ventas (der)
   // Fila 2: Documentos electrónicos (izq) | Restaurantes (der)
@@ -239,7 +241,7 @@ export function ReportesPanel() {
         {/* Fila 2: Documentos electrónicos | Restaurantes */}
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           <CategoryCard category={CATEGORIES[2]} /> {/* Documentos electrónicos */}
-          <CategoryCard category={CATEGORIES[3]} isRestaurantes /> {/* Restaurantes */}
+          {has('reportes-restaurantes') && <CategoryCard category={CATEGORIES[3]} isRestaurantes />} {/* Restaurantes */}
         </div>
 
       </div>

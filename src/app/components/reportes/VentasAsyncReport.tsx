@@ -12,6 +12,7 @@ import { ArrowLeft, Download, RotateCcw, RefreshCw, Trash2 } from 'lucide-react'
 import { toast } from 'sonner';
 import { FilterDropdown, StatusBadge } from '../../pages/ReporteDetallePage';
 import { useAsyncReports, type AsyncReportJob } from '../../store/asyncReportsStore';
+import { useVertical } from '../../vertical';
 
 const ESTADO_OPTIONS  = ['Todos', 'Pagada', 'No Pagada', 'Anulada'];
 const USUARIO_OPTIONS = ['Todos', 'Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'];
@@ -77,6 +78,7 @@ function ConfirmRetryModal({ onConfirm, onCancel }: { onConfirm: () => void; onC
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export function VentasAsyncReport() {
+  const { has } = useVertical();
   const navigate = useNavigate();
   const { jobs, requestReport, retryReport, downloadReport, refresh } = useAsyncReports();
 
@@ -181,6 +183,7 @@ export function VentasAsyncReport() {
           />
           <FilterDropdown label="Usuario" options={USUARIO_OPTIONS} value={usuario} onChange={setUsuario} />
           <FilterDropdown label="Estado"  options={ESTADO_OPTIONS}  value={estado}  onChange={setEstado} />
+          {has('propinas') && (
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--black-60)', fontFamily: "'Montserrat', sans-serif", cursor: 'pointer', marginLeft: 8 }}>
             <input
               type="checkbox"
@@ -190,6 +193,7 @@ export function VentasAsyncReport() {
             />
             Incluir propina en el reporte
           </label>
+          )}
 
           <button
             onClick={handleGenerar}

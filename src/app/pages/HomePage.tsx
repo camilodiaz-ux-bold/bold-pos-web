@@ -91,7 +91,7 @@ function toggleNoteChip(chip: string, note: string): string {
 function buildInitialOrders(vertical: Vertical): Order[] {
   const ago = (min: number) => Date.now() - min * 60_000;
   // Retail: solo borradores con productos del catálogo Retail (sin estados de cocina).
-  // El flujo de "Confirmar orden"/preparación en Retail se adapta en la fase 3.
+  // Sin "Confirmar orden"/cocina en Retail: se cobra directo desde el borrador.
   if (vertical === 'retail') {
     const draft = (n: number, createdAt: string, items: OrderItem[] = []): Order => ({
       id: String(n), number: String(n).padStart(3, '0'), status: 'BORRADOR',
@@ -165,6 +165,8 @@ function EditNoteModal({ itemName, initialNote, onSave, onClose }: {
   onSave: (note: string) => void; onClose: () => void;
 }) {
   const [note, setNote] = useState(initialNote);
+  const { has } = useVertical();
+  const kitchen = has('mesas'); // sin cocina en Retail: sin placeholder de cocina ni chips de preparación
   return (
     <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -177,13 +179,13 @@ function EditNoteModal({ itemName, initialNote, onSave, onClose }: {
         <textarea
           className="merlin-input resize-none"
           rows={3}
-          placeholder="Nota para cocina (opcional)"
+          placeholder={kitchen ? 'Nota para cocina (opcional)' : 'Nota (opcional)'}
           value={note}
           onChange={e => setNote(e.target.value)}
           autoFocus
         />
         <div className="flex flex-wrap gap-1.5 mt-3 mb-5">
-          {NOTE_CHIPS.map(chip => (
+          {kitchen && NOTE_CHIPS.map(chip => (
             <button
               key={chip}
               onClick={() => setNote(prev => toggleNoteChip(chip, prev))}
@@ -230,7 +232,8 @@ function StatusDot({ status, active }: { status: OrderStatus; active: boolean })
 
 export function HomePage() {
   const { subMode } = useOutletContext<RootOutletContext>();
-  const { vertical } = useVertical();
+  const { vertical, has } = useVertical();
+  const kitchen = has('mesas'); // Retail no envía comandas a cocina: cobra directo
 
   const [orders, setOrders]       = useState<Order[]>(() => buildInitialOrders(vertical));
   const [activeOrderId, setActiveOrderId] = useState('1');
@@ -722,7 +725,7 @@ export function HomePage() {
                   <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
                     {/* BORRADOR → Confirmar orden (coral, envía a cocina) */}
-                    {activeOrder.status === 'BORRADOR' && (
+                    {kitchen && activeOrder.status === 'BORRADOR' && (
                       <button
                         onClick={confirmOrder}
                         style={{ width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer', background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700, fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
@@ -750,7 +753,7 @@ export function HomePage() {
                     )}
 
                     {/* LISTA / ENTREGADA → Cobrar (abre CheckoutDrawer) */}
-                    {(activeOrder.status === 'LISTA' || activeOrder.status === 'ENTREGADA') && (
+                    {(activeOrder.status === 'LISTA' || activeOrder.status === 'ENTREGADA' || (!kitchen && activeOrder.status === 'BORRADOR' && activeOrder.items.length > 0)) && (
                       <button
                         onClick={() => setShowCheckout(true)}
                         style={{ width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer', background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700, fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}

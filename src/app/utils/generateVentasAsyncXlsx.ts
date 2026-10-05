@@ -27,7 +27,8 @@ function hashSeed(str: string): number {
   return h;
 }
 
-export function generateVentasAsyncXlsx(job: AsyncReportJob): void {
+/** `propinas: false` (Retail) usa el encabezado "Total" en vez de "Total sin propina". */
+export function generateVentasAsyncXlsx(job: AsyncReportJob, { propinas = true }: { propinas?: boolean } = {}): void {
   const rand = mulberry32(hashSeed(job.id));
   const rowCount = 15 + Math.floor(rand() * 20);
 
@@ -47,7 +48,7 @@ export function generateVentasAsyncXlsx(job: AsyncReportJob): void {
       'Subtotal':          subtotal,
       'Descuento':         descuento,
       'Impuestos':         impuestos,
-      'Total sin propina': total,
+      [propinas ? 'Total sin propina' : 'Total']: total,
       'Estado':            estado,
     };
     if (job.filters.includeTip) {
