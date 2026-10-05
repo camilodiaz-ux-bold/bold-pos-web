@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { TrendingUp, Receipt, Users, Clock, ChevronDown, ShoppingBag, MapPin, RefreshCw } from 'lucide-react';
 import { useVertical, PrototypeVerticalSwitcher } from '../vertical';
-import { RETAIL_TOP_PRODUCTS, RETAIL_PAYMENT_BREAKDOWN } from '../data/retail/dashboardMocks';
+import { RetailDashboard } from './dashboard/RetailDashboard';
 import {
   BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -775,11 +775,16 @@ function ProductList({ items }: { items: Product[] }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+/** Inicio: dos versiones, una por vertical. Retail replica el dashboard del POS Retail real. */
 export function Dashboard() {
+  const { vertical } = useVertical();
+  return vertical === 'retail' ? <RetailDashboard /> : <RestaurantDashboard />;
+}
+
+function RestaurantDashboard() {
   const { config, has } = useVertical();
-  const mesas = has('mesas');
   const [period,      setPeriod]     = useState<Period>('today');
-  const [channel,     setChannel]    = useState<Channel>(mesas ? 'mesas' : 'mostrador');
+  const [channel,     setChannel]    = useState<Channel>(has('mesas') ? 'mesas' : 'mostrador');
   const [channelOpen, setChannelOpen] = useState(false);
   const [branch,      setBranch]     = useState('principal');
   const [branchOpen,  setBranchOpen] = useState(false);
@@ -796,11 +801,9 @@ export function Dashboard() {
     return `Actualizado hoy a las ${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
   };
 
-  const baseKpi = period === 'custom' && customFrom && customTo
+  const kpi = period === 'custom' && customFrom && customTo
     ? getCustomKpi(customFrom, customTo, channel)
     : KPI_DATA[period][channel];
-  // Retail: el canal es siempre Mostrador, pero las órdenes son "ventas".
-  const kpi = mesas ? baseKpi : { ...baseKpi, countLabel: 'Ventas realizadas' };
 
   // Bar chart: for custom period, derive data from the selected date range
   const _customBar = period === 'custom' && customFrom && customTo
@@ -809,7 +812,7 @@ export function Dashboard() {
   const barData  = _customBar ? _customBar.data  : BAR_DATA[period][channel];
   const barTitle = _customBar ? _customBar.title : BAR_TITLE[period];
   const countIcon = kpi.countIcon === 'bag' ? ShoppingBag : Users;
-  const products  = mesas ? TOP_PRODUCTS[channel] : RETAIL_TOP_PRODUCTS;
+  const products  = TOP_PRODUCTS[channel];
 
   // Date context label shown as subtitle in each card
   const dateLabel = getDateLabel(period, customFrom, customTo);
@@ -832,8 +835,7 @@ export function Dashboard() {
   const top5Title = 'Top productos';
 
   // Ocupacion card title
-  const ocupTitle = !mesas ? 'Ventas por método de pago'
-    : channel === 'mostrador' ? 'Órdenes del día'
+  const ocupTitle = channel === 'mostrador' ? 'Órdenes del día'
     : (period === 'today' || period === 'custom') ? 'Ocupación actual'
     : 'Ocupación promedio';
 
@@ -883,8 +885,6 @@ export function Dashboard() {
             {/* Left group: channel + branch */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 
-              {mesas && (
-              <>
               {/* ── Channel dropdown ── */}
               <div style={{ position: 'relative' }}>
                 <button
@@ -942,8 +942,6 @@ export function Dashboard() {
                   </>
                 )}
               </div>
-              </>
-              )}
 
               {/* ── Branch dropdown ── */}
               <div style={{ position: 'relative' }}>
@@ -1074,7 +1072,7 @@ export function Dashboard() {
             label={kpi.ventasLabel}
             badge={kpi.vBadge}
             badgeColor={kpi.vBadgeColor}
-            note={mesas ? 'No incluye propinas' : undefined}
+            note="No incluye propinas"
           />
           <KpiCard
             icon={Receipt}
@@ -1082,7 +1080,7 @@ export function Dashboard() {
             label="Ticket promedio"
             badge={kpi.tBadge}
             badgeColor={kpi.tBadgeColor}
-            note={mesas ? 'No incluye propinas' : undefined}
+            note="No incluye propinas"
           />
           <KpiCard
             icon={countIcon}
@@ -1091,7 +1089,7 @@ export function Dashboard() {
             badge={kpi.mBadge}
             badgeColor={kpi.mBadgeColor}
           />
-          {mesas && channel !== 'all' && (
+          {channel !== 'all' && (
             <KpiCard
               icon={Clock}
               value={kpi.tiempo}
@@ -1117,7 +1115,7 @@ export function Dashboard() {
               <SectionTitle mb={0} subtitle={dateLabel}>
                 {ocupTitle}
               </SectionTitle>
-              {!mesas ? null : channel === 'mostrador' ? (
+              {channel === 'mostrador' ? (
                 <span style={{
                   fontSize: 12, fontWeight: 700, fontFamily: FONT,
                   backgroundColor: '#FEF9C3', color: '#854F0B',
@@ -1136,33 +1134,8 @@ export function Dashboard() {
               )}
             </div>
 
-            {/* Retail: ventas por método de pago */}
-            {!mesas && (
-              <>
-                {RETAIL_PAYMENT_BREAKDOWN.map(row => (
-                  <div key={row.label} style={{
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'space-between', marginBottom: 10,
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: row.dot, flexShrink: 0 }} />
-                      <span style={{ fontSize: 14, color: C.black100, fontFamily: FONT }}>{row.label}</span>
-                    </div>
-                    <span style={{ fontSize: 14, color: C.black100, fontFamily: FONT, fontWeight: 500 }}>{row.count}</span>
-                  </div>
-                ))}
-                <div style={{
-                  marginTop: 8, paddingTop: 12,
-                  borderTop: `1px solid ${C.border}`,
-                  fontSize: 13, color: C.black60, fontFamily: FONT,
-                }}>
-                  Ticket promedio: $52,000
-                </div>
-              </>
-            )}
-
             {/* channel === 'all': two sections stacked */}
-            {mesas && channel === 'all' && (
+            {channel === 'all' && (
               <>
                 {/* MESAS section */}
                 <p style={{
@@ -1215,7 +1188,7 @@ export function Dashboard() {
             )}
 
             {/* channel === 'mesas': zone bars only */}
-            {mesas && channel === 'mesas' && (
+            {channel === 'mesas' && (
               <>
                 <ZoneBar label="Salón"   filled={16} total={35} pct={45} />
                 <ZoneBar label="Terraza" filled={3}  total={8}  pct={37} />
@@ -1231,7 +1204,7 @@ export function Dashboard() {
             )}
 
             {/* channel === 'mostrador': orders breakdown */}
-            {mesas && channel === 'mostrador' && (
+            {channel === 'mostrador' && (
               <>
                 <div style={{
                   display: 'flex', alignItems: 'center',
