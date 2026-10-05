@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
 import { nextInvoiceNumber, type CompletedSale } from '../utils/invoice';
+import { useVertical } from '../vertical';
 
 const MFONT = 'Montserrat, sans-serif';
 const TAX_RATE = 0.19;
@@ -282,28 +283,31 @@ export function CheckoutDrawer({
   title, subtitle, guests, openedAtTimestamp,
   items, onClose, onConfirmPay, orderRef,
 }: CheckoutDrawerProps) {
+  const { has } = useVertical();
+  const tips = has('propinas');   // Retail no cobra propina
+  const retail = !has('mesas');
 
   // ── Form fields ────────────────────────────────────────────────────────────
   const [orderNote,   setOrderNote]   = useState('');
-  const [vendedor,    setVendedor]    = useState('Carlos Méndez');
-  const [resolucion,  setResolucion]  = useState('Resolution - Rest Demo 2026');
+  const [vendedor,    setVendedor]    = useState(retail ? 'Sofía Martínez' : 'Carlos Méndez');
+  const [resolucion,  setResolucion]  = useState(retail ? 'Resolution - Retail Demo 2026' : 'Resolution - Rest Demo 2026');
 
   const [cliente,          setCliente]          = useState('Consumidor final');
   const [clienteOpen,      setClienteOpen]      = useState(false);
-  const [clientesList,     setClientesList]     = useState(['Consumidor final', 'Restaurante El Cielo', 'Inversiones Tech SAS', 'Juan Pérez (NIT: 900.123.456)', 'María González']);
+  const [clientesList,     setClientesList]     = useState(['Consumidor final', retail ? 'Comercial Andina SAS' : 'Restaurante El Cielo', 'Inversiones Tech SAS', 'Juan Pérez (NIT: 900.123.456)', 'María González']);
   const [showAddCliente,   setShowAddCliente]   = useState(false);
   const [newClienteNombre, setNewClienteNombre] = useState('');
   const [newClienteNit,    setNewClienteNit]    = useState('');
 
   // ── Propina state ──────────────────────────────────────────────────────────
-  const [tipRows,   setTipRows]   = useState<PayRow[]>(() => [{ id: uid(), method: 'Efectivo', amount: '' }]);
+  const [tipRows,   setTipRows]   = useState<PayRow[]>(() => tips ? [{ id: uid(), method: 'Efectivo', amount: '' }] : []);
   const [tipAuto,   setTipAuto]   = useState(true);   // toggle "Propina con el 10%"
   const [methodPanel, setMethodPanel] = useState<'tip' | 'pay' | null>(null);
 
   // ── Cobro state ────────────────────────────────────────────────────────────
   const [payRows, setPayRows] = useState<PayRow[]>(() => {
     const sub  = items.reduce((s, i) => s + (i.discount ? Math.round(i.price * (1 - i.discount / 100)) : i.price) * i.quantity, 0);
-    const tip  = Math.round(sub * 0.10);
+    const tip  = tips ? Math.round(sub * 0.10) : 0;
     const total = sub + Math.round(sub * TAX_RATE) + tip;
     return [{ id: uid(), method: 'Efectivo', amount: String(total) }];
   });
@@ -418,7 +422,8 @@ export function CheckoutDrawer({
     const invoiceNumber = nextInvoiceNumber();
     onConfirmPay({
       title,
-      orderRef:      orderRef ?? `#${invoiceNumber.slice(-3)}`,
+      // Retail no maneja número de orden/comanda: va vacío y la factura no lo imprime.
+      orderRef:      retail ? '' : (orderRef ?? `#${invoiceNumber.slice(-3)}`),
       invoiceNumber,
       items,
       subtotal,
@@ -432,6 +437,7 @@ export function CheckoutDrawer({
       cambio,
       cliente,
       vendedor,
+      vendedorLabel: retail ? 'Vendedor' : 'Mesero',
       resolucion,
       note:          orderNote,
       paidAt:        Date.now(),
@@ -448,8 +454,8 @@ export function CheckoutDrawer({
       {/* ── Vendedor | Resolución | Cliente ── */}
       <div style={{ padding: 16, flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 16 }}>
-          <SelectField label="Mesero" value={vendedor} onChange={setVendedor} options={['Carlos Méndez', 'Laura Torres', 'Miguel García', 'Ana Ruiz']} />
-          <SelectField label="Resolución" value={resolucion} onChange={setResolucion} options={['Resolution - Rest Demo 2026', 'Resolution Terraza - 9876543210', 'Resolution Mostrador - 1122334455']} />
+          <SelectField label={retail ? 'Vendedor' : 'Mesero'} value={vendedor} onChange={setVendedor} options={retail ? ['Sofía Martínez', 'Andrés Ríos', 'Valentina Cruz', 'Diego Salazar'] : ['Carlos Méndez', 'Laura Torres', 'Miguel García', 'Ana Ruiz']} />
+          <SelectField label="Resolución" value={resolucion} onChange={setResolucion} options={retail ? ['Resolution - Retail Demo 2026', 'Resolution Mostrador - 1122334455'] : ['Resolution - Rest Demo 2026', 'Resolution Terraza - 9876543210', 'Resolution Mostrador - 1122334455']} />
 
           {/* Cliente combobox */}
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, position: 'relative' }}>
@@ -506,9 +512,9 @@ export function CheckoutDrawer({
       {/* ══════════════════════════════════════════════════════
           SECCIÓN PROPINA
           ══════════════════════════════════════════════════ */}
-      <SectionBar label="Propina" cta="Agregar Propina" onCta={() => setMethodPanel('tip')} />
+      {tips && <SectionBar label="Propina" cta="Agregar Propina" onCta={() => setMethodPanel('tip')} />}
 
-      {tipRows.length > 0 && (
+      {tips && tipRows.length > 0 && (
         <>
           {/* Toggle 10% */}
           <div style={{ padding: '0 16px 12px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
@@ -534,7 +540,7 @@ export function CheckoutDrawer({
         </>
       )}
 
-      <HSep />
+      {tips && <HSep />}
 
       {/* ══════════════════════════════════════════════════════
           SECCIÓN COBRO

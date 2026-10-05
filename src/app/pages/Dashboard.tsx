@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { TrendingUp, Receipt, Users, Clock, ChevronDown, ShoppingBag, MapPin, RefreshCw } from 'lucide-react';
 import { useVertical, PrototypeVerticalSwitcher } from '../vertical';
+import { RetailDashboard } from './dashboard/RetailDashboard';
 import {
   BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -774,7 +775,13 @@ function ProductList({ items }: { items: Product[] }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+/** Inicio: dos versiones, una por vertical. Retail replica el dashboard del POS Retail real. */
 export function Dashboard() {
+  const { vertical } = useVertical();
+  return vertical === 'retail' ? <RetailDashboard /> : <RestaurantDashboard />;
+}
+
+function RestaurantDashboard() {
   const { config, has } = useVertical();
   const [period,      setPeriod]     = useState<Period>('today');
   const [channel,     setChannel]    = useState<Channel>(has('mesas') ? 'mesas' : 'mostrador');

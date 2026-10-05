@@ -1,48 +1,11 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { ArrowLeft, Printer, Send } from 'lucide-react';
+import { useVertical } from '../vertical';
+import type { EstadoVariant, DianVariant, Pedido, PedidoProducto } from '../types/venta';
+import { RETAIL_PEDIDOS, RETAIL_PEDIDO_PRODUCTOS, RETAIL_PEDIDO_TOTALES } from '../data/retail/ventasMocks';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type EstadoVariant = 'success' | 'warning' | 'error';
-type DianVariant   = 'success' | 'warning' | 'neutral';
-
-interface PagoMixtoItem {
-  metodo: string;
-  monto:  string;
-}
-
-interface PagoDivididoPersona {
-  persona: string;
-  metodo:  string;
-  monto:   string;
-}
-
-interface Pedido {
-  id:           string;
-  estado:       { label: string; variant: EstadoVariant };
-  noDoc:        string;
-  tipoDoc:      string;
-  resolucion:   string;
-  mesa:         string;
-  zona:         string;
-  sucursal:     string;
-  personas:     string;
-  horaApertura: string;
-  horaCierre:   string;
-  duracion:     string;
-  vendedor:     string;
-  cliente:      string;
-  formaPago:    string;
-  dian?:        { label: string; variant: DianVariant };
-  efectivo?:    { recibido: string; cambio: string };
-  pagoCancelado?: boolean;
-  pagoMixto?:     PagoMixtoItem[];
-  pagoDividido?:  PagoDivididoPersona[];
-  totalPago?:     string;
-  usuario:        string;
-  cufe:           string;
-}
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -278,7 +241,7 @@ const FALLBACK = PEDIDOS['O-001'];
 
 // ─── Products ─────────────────────────────────────────────────────────────────
 
-const PRODUCTOS = [
+const PRODUCTOS: PedidoProducto[] = [
   { nombre: 'Salmón Escocés', nota: '',            cantidad: 2, precioUnit: '$152,000', descuento: '---', total: '$304,000' },
   { nombre: 'Burrata Ahumada', nota: 'Sin lactosa', cantidad: 1, precioUnit: '$88,000',  descuento: '---', total: '$88,000'  },
   { nombre: 'Agua de Piedra',  nota: '',            cantidad: 2, precioUnit: '$32,000',  descuento: '---', total: '$64,000'  },
@@ -411,11 +374,26 @@ function InfoRow({ label, children, last }: { label: string; children: React.Rea
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+const RESTAURANT_TOTALES = {
+  rows: [
+    { label: 'Subtotal',    value: '$456,000' },
+    { label: 'Descuento',   value: '$0'       },
+    { label: 'IVA 19%',     value: '$86,640'  },
+    { label: 'Propina 10%', value: '$54,264'  },
+  ],
+  total: '$596,904',
+};
+
 export function PedidoDetallePage() {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { has } = useVertical();
+  const mesas = has('mesas');
 
-  const pedido = PEDIDOS[id] ?? FALLBACK;
+  const pedidos   = mesas ? PEDIDOS : RETAIL_PEDIDOS;
+  const pedido    = pedidos[id] ?? (mesas ? FALLBACK : RETAIL_PEDIDOS['V-001']);
+  const productos = mesas ? PRODUCTOS : RETAIL_PEDIDO_PRODUCTOS;
+  const totales   = mesas ? RESTAURANT_TOTALES : RETAIL_PEDIDO_TOTALES;
   const isAbierto   = pedido.estado.variant === 'warning';
   const isEfectivo  = pedido.formaPago === 'Efectivo';
   const showDian    = pedido.tipoDoc === 'Factura electrónica';
@@ -485,16 +463,16 @@ export function PedidoDetallePage() {
             <InfoRow label="No. Documento">{pedido.noDoc}</InfoRow>
             <InfoRow label="Tipo de documento">{pedido.tipoDoc}</InfoRow>
             <InfoRow label="Resolución">{pedido.resolucion}</InfoRow>
-            <InfoRow label="CUFE">{pedido.cufe}</InfoRow>
-            <InfoRow label="Mesa">{pedido.mesa}</InfoRow>
-            <InfoRow label="Zona" last>{pedido.zona}</InfoRow>
+            <InfoRow label="CUFE" last={!mesas}>{pedido.cufe}</InfoRow>
+            {mesas && <InfoRow label="Mesa">{pedido.mesa}</InfoRow>}
+            {mesas && <InfoRow label="Zona" last>{pedido.zona}</InfoRow>}
           </div>
           <div style={{ paddingLeft: 32 }}>
             <InfoRow label="Sucursal">{pedido.sucursal}</InfoRow>
-            <InfoRow label="Personas en mesa">{pedido.personas}</InfoRow>
+            {mesas && <InfoRow label="Personas en mesa">{pedido.personas}</InfoRow>}
             <InfoRow label="Hora apertura">{pedido.horaApertura}</InfoRow>
-            <InfoRow label="Hora cierre">{pedido.horaCierre}</InfoRow>
-            <InfoRow label="Duración" last>{pedido.duracion}</InfoRow>
+            <InfoRow label="Hora cierre" last={!mesas}>{pedido.horaCierre}</InfoRow>
+            {mesas && <InfoRow label="Duración" last>{pedido.duracion}</InfoRow>}
           </div>
         </div>
       </div>
@@ -534,10 +512,10 @@ export function PedidoDetallePage() {
               </tr>
             </thead>
             <tbody>
-              {PRODUCTOS.map((p, idx) => (
+              {productos.map((p, idx) => (
                 <tr
                   key={p.nombre}
-                  style={{ borderBottom: idx === PRODUCTOS.length - 1 ? 'none' : `1px solid ${C.black10}` }}
+                  style={{ borderBottom: idx === productos.length - 1 ? 'none' : `1px solid ${C.black10}` }}
                 >
                   <td style={tdCell}>
                     <span style={{ display: 'block' }}>{p.nombre}</span>
@@ -603,7 +581,7 @@ export function PedidoDetallePage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={font(13, 500, C.black60, 20)}>{pedido.formaPago}</span>
-                <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>$596,904</span>
+                <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{totales.total}</span>
               </div>
               {isEfectivo && pedido.efectivo && (
                 <>
@@ -625,12 +603,7 @@ export function PedidoDetallePage() {
         <div style={sectionCard}>
           <p style={sectionTitle}>Totales</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              { label: 'Subtotal',    value: '$456,000' },
-              { label: 'Descuento',   value: '$0'       },
-              { label: 'IVA 19%',     value: '$86,640'  },
-              { label: 'Propina 10%', value: '$54,264'  },
-            ].map(row => (
+            {totales.rows.map(row => (
               <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={font(13, 500, C.black60, 20)}>{row.label}</span>
                 <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{row.value}</span>
@@ -638,7 +611,7 @@ export function PedidoDetallePage() {
             ))}
             <div style={{ borderTop: `1.5px solid ${C.black10}`, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
               <span style={font(14, 700, C.blue100, 22)}>Total</span>
-              <span style={{ ...font(14, 700, C.blue100, 22), textAlign: 'right' }}>$596,904</span>
+              <span style={{ ...font(14, 700, C.blue100, 22), textAlign: 'right' }}>{totales.total}</span>
             </div>
           </div>
         </div>

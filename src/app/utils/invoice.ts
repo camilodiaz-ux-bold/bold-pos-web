@@ -38,6 +38,8 @@ export interface CompletedSale {
   cambio: number;
   cliente: string;
   vendedor: string;
+  /** Rol de quien atiende en la factura: 'Mesero' (Restaurantes) o 'Vendedor' (Retail). Default 'Mesero'. */
+  vendedorLabel?: 'Mesero' | 'Vendedor';
   resolucion: string;
   note: string;
   /** Epoch ms del pago. */
@@ -110,10 +112,13 @@ export interface InvoiceData {
   total: number;
   totalInWords: string;
   note: string;
+  /** Vacío en Retail (no hay número de orden): la factura omite la línea "Orden No.". */
   orderRef: string;
   /** Nombre de la mesa; vacío en ventas de Mostrador. */
   mesa: string;
   mesero: string;
+  /** Etiqueta del campo `mesero` en el ticket. */
+  meseroLabel: 'Mesero' | 'Vendedor';
   mediosDePago: string;
   cambio: number;
 }
@@ -163,6 +168,7 @@ export function buildInvoiceData(sale: CompletedSale): InvoiceData {
     orderRef: sale.orderRef,
     mesa: sale.title.startsWith('Mesa ') ? sale.title.slice(5) : '',
     mesero: sale.vendedor,
+    meseroLabel: sale.vendedorLabel ?? 'Mesero',
     mediosDePago: sale.payEntries.map(e => e.method).join(', ') || 'Pendiente',
     cambio: sale.cambio,
   };
