@@ -102,6 +102,7 @@ export function buildRetailSeedItems(now: number = Date.now()): Item[] {
       sucursales: buildSucursales(p.id),
       activo: !INACTIVE_IDS.has(p.id),
       imagen: p.image,
+      catalogProductId: p.id,
       esCombo: false,
       creadoEn: now - (RETAIL_ALL_PRODUCTS.length - index) * 3_600_000,
       actualizadoEn: now - (RETAIL_ALL_PRODUCTS.length - index) * 3_600_000,

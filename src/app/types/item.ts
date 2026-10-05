@@ -53,6 +53,8 @@ export interface Item {
   sucursales: ItemSucursal[];
   activo: boolean;
   imagen?: string;
+  /** Id del producto del catálogo POS del que se sembró (Retail) — enlaza con sus variantes (data/retail/productVariants.ts). */
+  catalogProductId?: number;
   /** Marca este ítem como combo — ver comboBridge.ts. Default false. */
   esCombo: boolean;
   /** Presente cuando esCombo === true, mínimo 2 componentes distintos. */
