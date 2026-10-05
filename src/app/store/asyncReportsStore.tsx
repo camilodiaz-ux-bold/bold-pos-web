@@ -11,6 +11,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { useNavigate } from 'react-router';
 import { useNotifications } from './notificationsStore';
 import { generateVentasAsyncXlsx } from '../utils/generateVentasAsyncXlsx';
+import { useVertical } from '../vertical';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,7 @@ const AsyncReportsContext = createContext<AsyncReportsContextValue | null>(null)
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AsyncReportsProvider({ children }: { children: React.ReactNode }) {
+  const { has } = useVertical();
   const [jobs, setJobs] = useState<AsyncReportJob[]>(() => loadJobs());
   const jobsRef = useRef(jobs);
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -135,8 +137,8 @@ export function AsyncReportsProvider({ children }: { children: React.ReactNode }
 
   const downloadReportById = useCallback((jobId: string) => {
     const job = jobsRef.current.find(j => j.id === jobId);
-    if (job && job.status === 'ready') generateVentasAsyncXlsx(job);
-  }, []);
+    if (job && job.status === 'ready') generateVentasAsyncXlsx(job, { propinas: has('propinas') });
+  }, [has]);
 
   const resolveJob = useCallback((jobId: string, rangeFrom: string, rangeTo: string) => {
     timers.current.delete(jobId);

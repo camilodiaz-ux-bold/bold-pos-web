@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Estado** | Listo para implementación |
+| **Estado** | ✅ Implementado |
 | **Repo** | `camilodiaz-ux-bold/bold-pos-web` |
 | **Versión** | 1.0 |
 | **Fecha** | Octubre 2026 |
@@ -53,8 +53,14 @@ Las vistas consultan `useVertical().has(moduleId)`; no se usa `if (vertical === 
 
 1. **(Esta)** Infraestructura, selector, filtrado de menú, guard de rutas, onboarding, documentación.
 2. **(Implementada)** Datos Retail propios (`src/app/data/retail/`: catálogo POS e items seed de una tienda de ropa y accesorios, con 2 combos de ejemplo); `useCatalog()` entrega categorías, productos, favoritos, unidades e impuestos de la vertical activa (Retail sin INC, porciones ni botellas); `ItemsProvider` y `FavoritesProvider` se remontan con `key={vertical}`; localStorage de ítems separado (`bold-pos:items:retail:v1`); Mostrador con catálogo Retail y órdenes iniciales Retail. Los mocks de ventas se pasan a la fase 3, junto con las columnas de `/ventas`.
-3. Adaptación de vistas compartidas: Ventas/Pedido (sin Mesa/Zona), Dashboard (KPIs Retail, sin filtro de canal Mesas), ReportesPanel (sin categoría Restaurantes), Turnos/Checkout (sin propinas), factura (sin mesa/mesero).
-4. Primer módulo exclusivo de Retail: Variantes (spec propio).
+3. **(Implementada)** Adaptación de vistas compartidas, siempre con `has(moduleId)`:
+   - Ventas / Detalle de orden: sin Zona, Mesa, Personas ni Duración; mocks propios en `data/retail/ventasMocks.ts` (órdenes `V-001`…`V-010`).
+   - Dashboard: sin filtro de canal ni KPIs de mesas; "Ventas por método de pago" en vez de ocupación; top productos Retail (`data/retail/dashboardMocks.ts`).
+   - Reportes: sin categoría "Operación"; el guard de `/reportes/restaurantes/:id` aplica solo a `rest-ocupacion`, `rest-propinas` y `rest-propinas-turno` (Ventas Legacy y Ventas Async son core y viven en esa ruta por historia). En Retail, Ventas Legacy sin Mesa ni propina y Ventas Async sin "Incluir propina".
+   - Turnos y Checkout: sin propinas (el checkout dice "Vendedor" en vez de "Mesero").
+   - Factura: etiqueta "Vendedor" en vez de "Mesero".
+   - Mostrador Retail: sin "Confirmar orden"/cocina; se cobra directo desde el borrador y la nota no ofrece chips de cocina.
+4. Primer módulo exclusivo de Retail: Variantes (spec propio, nuevo).
 
 ## 6. Convenciones
 

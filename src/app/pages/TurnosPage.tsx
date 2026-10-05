@@ -9,6 +9,7 @@
  */
 import React, { useState } from 'react';
 import { Calendar, Clock, ChevronRight, ChevronLeft, Sun, Moon, DollarSign, Plus, Info } from 'lucide-react';
+import { useVertical } from '../vertical';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -496,8 +497,10 @@ function TurnoListItem({
 // ─── Tab: Resumen ─────────────────────────────────────────────────────────────
 
 function TabResumen({ turno }: { turno: Turno }) {
+  const { has } = useVertical();
+  const tips = has('propinas');
   const d = turno.detalle;
-  const propinas            = turno.ventas.propinas;
+  const propinas            = tips ? turno.ventas.propinas : 0;
   const efectivoBase        = d.ingresos.find(i => i.metodo === 'Efectivo')?.monto ?? 0;
   const ingEfectivoNoRel    = d.ingresosNoRelacionados.find(i => i.metodo === 'Efectivo')?.monto ?? 0;
   const totalNoRelacionados = d.ingresosNoRelacionados.reduce((s, r) => s + r.monto, 0);
@@ -561,8 +564,10 @@ function TabResumen({ turno }: { turno: Turno }) {
           labelColor={totalEgresos > 0 ? C.coral100 : undefined}
           valueColor={totalEgresos > 0 ? C.coral100 : undefined}
         />
-        <Divider />
-        <SummaryRow label="Propinas recaudadas" value={cop(propinas)} />
+        {tips && (<>
+          <Divider />
+          <SummaryRow label="Propinas recaudadas" value={cop(propinas)} />
+        </>)}
 
         <SummaryRow label="Resultado neto del turno" value={cop(resultadoNeto)} bold highlight />
 
@@ -570,7 +575,7 @@ function TabResumen({ turno }: { turno: Turno }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginTop: 8 }}>
           <Info size={13} color={C.blue100} style={{ flexShrink: 0, marginTop: 1 }} />
           <p style={{ fontSize: 11, color: C.black60, fontFamily: FONT, margin: 0, lineHeight: '16px' }}>
-            ({cop(d.ventasRegistradas)} ingresos + {cop(totalNoRelacionados)} no relacionados + {cop(propinas)} propinas − {cop(totalEgresos)} egresos = {cop(resultadoNeto)})
+            ({cop(d.ventasRegistradas)} ingresos + {cop(totalNoRelacionados)} no relacionados{tips ? <> + {cop(propinas)} propinas</> : null} − {cop(totalEgresos)} egresos = {cop(resultadoNeto)})
           </p>
         </div>
       </Card>
@@ -581,12 +586,14 @@ function TabResumen({ turno }: { turno: Turno }) {
 // ─── Tab: Detalle ─────────────────────────────────────────────────────────────
 
 function TabDetalle({ turno }: { turno: Turno }) {
+  const { has } = useVertical();
+  const tips = has('propinas');
   const d = turno.detalle;
 
   const totalIngresos       = d.ingresos.reduce((s, r) => s + r.monto, 0);
   const totalNoRelacionados = d.ingresosNoRelacionados.reduce((s, r) => s + r.monto, 0);
   const totalEgresos        = d.egresos.reduce((s, r) => s + r.monto, 0);
-  const propinas            = turno.ventas.propinas;
+  const propinas            = tips ? turno.ventas.propinas : 0;
   const resultadoNeto       = totalIngresos + totalNoRelacionados - totalEgresos;
   const totalConPropinas    = resultadoNeto + propinas;
   const efectivoBase        = d.ingresos.find(i => i.metodo === 'Efectivo')?.monto ?? 0;
@@ -632,6 +639,7 @@ function TabDetalle({ turno }: { turno: Turno }) {
       </div>
 
       {/* ── 3. Propinas recaudadas ── */}
+      {tips && (
       <div>
         <SectionTitle>Propinas recaudadas</SectionTitle>
         <Card>
@@ -644,6 +652,7 @@ function TabDetalle({ turno }: { turno: Turno }) {
           />
         </Card>
       </div>
+      )}
 
       {/* ── 4. Egresos ── */}
       <div>
@@ -703,7 +712,7 @@ function TabDetalle({ turno }: { turno: Turno }) {
           <CuadreRow label="Número de gastos ingresados"       value={String(d.egresos.length)} />
           <CuadreRow label="Gastos realizados"                 value={cop(totalEgresos)} />
           <CuadreRow label="Ventas realizadas a crédito"       value={cop(d.ventasCredito)} />
-          <CuadreRow label="Propinas recaudadas"               value={cop(propinas)} />
+          {tips && <CuadreRow label="Propinas recaudadas"               value={cop(propinas)} />}
 
           {/* Resultado neto */}
           <div style={{ height: 4 }} />
@@ -711,7 +720,7 @@ function TabDetalle({ turno }: { turno: Turno }) {
           <p style={{ fontSize: 11, color: C.black60, fontFamily: FONT, margin: '4px 0 6px', lineHeight: '16px' }}>
             ({cop(totalIngresos)} ingresos + {cop(totalNoRelacionados)} no relacionados − {cop(totalEgresos)} egresos = {cop(resultadoNeto)})
           </p>
-          <CuadreRow label="Total con propinas" value={cop(totalConPropinas)} bold highlight />
+          {tips && <CuadreRow label="Total con propinas" value={cop(totalConPropinas)} bold highlight />}
         </Card>
       </div>
 
@@ -737,6 +746,7 @@ function TabDetalle({ turno }: { turno: Turno }) {
 // ─── Right panel: turno detail ────────────────────────────────────────────────
 
 function TurnoDetail({ turno }: { turno: Turno }) {
+  const { has } = useVertical();
   const [tab, setTab] = useState<'resumen' | 'detalle'>('resumen');
   const d = turno.detalle;
 
@@ -830,7 +840,7 @@ function TurnoDetail({ turno }: { turno: Turno }) {
               <div style={{ ...card, flex: '1 0 0' }}>
                 <DollarSign size={20} color={C.blue100} />
                 <div>
-                  <p style={lbl}>Total sin incluir propinas</p>
+                  <p style={lbl}>{has('propinas') ? 'Total sin incluir propinas' : 'Total de ventas'}</p>
                   <p style={monto}>{cop(d.ventasRegistradas)}</p>
                   <p style={hora}>{d.numVentas} ventas</p>
                 </div>
@@ -873,7 +883,7 @@ function TurnoDetail({ turno }: { turno: Turno }) {
             <div style={{ ...card, flex: '1 0 0' }}>
               <DollarSign size={20} color={C.blue100} />
               <div>
-                <p style={lbl}>Total sin incluir propinas</p>
+                <p style={lbl}>{has('propinas') ? 'Total sin incluir propinas' : 'Total de ventas'}</p>
                 <p style={monto}>{cop(d.ventasRegistradas)}</p>
                 <p style={hora}>{d.numVentas} Ventas</p>
               </div>
