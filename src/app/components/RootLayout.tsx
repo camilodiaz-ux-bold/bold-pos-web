@@ -42,7 +42,7 @@ type AppMode = 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos' | 'Items
 
 export function RootLayout() {
   // The sub-mode toggled within the Home page (Mesas ↔ Mostrador)
-  const { has, setVertical } = useVertical();
+  const { vertical, has, setVertical } = useVertical();
   const [subModeState, setSubMode] = useState<'Mesas' | 'Mostrador'>('Mesas');
   // Sin el módulo Mesas (Retail) el POS es siempre Mostrador.
   const subMode: 'Mesas' | 'Mostrador' = has('mesas') ? subModeState : 'Mostrador';
@@ -127,9 +127,9 @@ export function RootLayout() {
   // necesitan el catálogo de ítems) para que Mostrador y Mesas puedan leer
   // useItems() y vender combos — ver src/app/utils/comboBridge.ts.
   return (
-    <FavoritesProvider>
+    <FavoritesProvider key={vertical}>
     <MesasStoreProvider>
-    <ItemsProvider>
+    <ItemsProvider key={vertical}>
     <NotificationsProvider>
     <AsyncReportsProvider>
     <div className="flex flex-col h-screen w-full bg-[var(--blue-10)] overflow-hidden ">

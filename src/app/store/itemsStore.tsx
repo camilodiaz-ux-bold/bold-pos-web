@@ -13,10 +13,12 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { Item, ItemDraft } from '../types/item';
-import { buildSeedItems } from '../data/itemsSeed';
+import { getVerticalCatalog } from '../data/verticalCatalog';
+import { useVertical, type Vertical } from '../vertical';
 
-// v1 → v2: Item ganó esCombo/componentes/comboSaleId (specs/2026-09-combos.md §6.1).
-const LS_KEY = 'bold-pos:items:v2';
+// La clave de localStorage depende de la vertical (data/verticalCatalog.ts):
+// Restaurantes conserva 'bold-pos:items:v2' (v1 → v2: Item ganó esCombo/componentes/
+// comboSaleId, specs/2026-09-combos.md §6.1); Retail usa su propia clave.
 
 function generateAutoCode(): string {
   return `I-${Date.now()}`;
@@ -28,9 +30,10 @@ function nextComboSaleId(items: Item[]): number {
   return Math.max(8999, ...existing) + 1;
 }
 
-function loadItems(): Item[] {
+function loadItems(vertical: Vertical): Item[] {
+  const { itemsStorageKey, buildSeedItems } = getVerticalCatalog(vertical);
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(itemsStorageKey);
     if (raw) {
       const parsed = JSON.parse(raw) as Item[];
       // Normalización defensiva: esCombo es requerido en el tipo.
@@ -40,13 +43,13 @@ function loadItems(): Item[] {
     /* ignore */
   }
   const seed = buildSeedItems();
-  saveItems(seed);
+  saveItems(vertical, seed);
   return seed;
 }
 
-function saveItems(items: Item[]): void {
+function saveItems(vertical: Vertical, items: Item[]): void {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(items));
+    localStorage.setItem(getVerticalCatalog(vertical).itemsStorageKey, JSON.stringify(items));
   } catch {
     /* ignore */
   }
@@ -67,15 +70,18 @@ interface ItemsContextValue {
 const ItemsContext = createContext<ItemsContextValue | null>(null);
 
 export function ItemsProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<Item[]>(() => loadItems());
+  // El provider se remonta al cambiar de vertical (key en RootLayout), así que
+  // `vertical` es estable durante la vida de esta instancia.
+  const { vertical } = useVertical();
+  const [items, setItems] = useState<Item[]>(() => loadItems(vertical));
 
   const updateItems = useCallback((updater: (prev: Item[]) => Item[]) => {
     setItems(prev => {
       const next = updater(prev);
-      saveItems(next);
+      saveItems(vertical, next);
       return next;
     });
-  }, []);
+  }, [vertical]);
 
   const getItem = useCallback((id: string) => items.find(i => i.id === id), [items]);
 
@@ -124,12 +130,12 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
   }, [updateItems]);
 
   const refresh = useCallback(() => {
-    updateItems(() => loadItems());
-  }, [updateItems]);
+    updateItems(() => loadItems(vertical));
+  }, [updateItems, vertical]);
 
   const resetToSeed = useCallback(() => {
-    updateItems(() => buildSeedItems());
-  }, [updateItems]);
+    updateItems(() => getVerticalCatalog(vertical).buildSeedItems());
+  }, [updateItems, vertical]);
 
   return (
     <ItemsContext.Provider value={{ items, getItem, createItem, updateItem, deleteItem, toggleActivo, refresh, resetToSeed }}>

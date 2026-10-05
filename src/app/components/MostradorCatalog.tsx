@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Star } from 'lucide-react';
-import { CAT_DEFS, CAT_PRODUCTS, ALL_CATALOG_PRODUCTS } from '../data/productCatalog';
-import type { CatalogProduct } from '../data/productCatalog';
+import type { CatDef, CatalogProduct } from '../data/productCatalog';
+import { useCatalog } from '../vertical';
 import { useFavorites } from '../store/favoritesStore';
 import { useItems } from '../store/itemsStore';
 import { sellableComboProducts, isSellableCombo } from '../utils/comboBridge';
@@ -23,8 +23,8 @@ export interface MostradorProduct {
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
-function toMostradorProduct(p: CatalogProduct): MostradorProduct {
-  const def = CAT_DEFS.find(c => c.id === p.catId)!;
+function toMostradorProduct(p: CatalogProduct, catDefs: CatDef[]): MostradorProduct {
+  const def = catDefs.find(c => c.id === p.catId)!;
   return {
     id:          p.id,
     name:        p.name,
@@ -50,6 +50,7 @@ export function MostradorCatalog({
   const [activeCat, setActiveCat]     = useState<string>('favoritos');
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { items } = useItems();
+  const { catDefs: CAT_DEFS, catProducts: CAT_PRODUCTS, allProducts: ALL_CATALOG_PRODUCTS } = useCatalog();
 
   const isSearching = searchQuery.trim().length > 0;
 
@@ -58,7 +59,7 @@ export function MostradorCatalog({
   const comboProducts = useMemo(() => sellableComboProducts(items), [items]);
   const allProducts = useMemo(
     () => [...ALL_CATALOG_PRODUCTS, ...comboProducts],
-    [comboProducts],
+    [ALL_CATALOG_PRODUCTS, comboProducts],
   );
   // Cada combo se inyecta en el chip de SU PROPIA categoría (item.categoriaId),
   // no todos bajo 'combos' — ver comboItemToCatalogProduct en comboBridge.ts.
@@ -68,7 +69,7 @@ export function MostradorCatalog({
       merged[combo.catId] = [...(merged[combo.catId] ?? []), combo];
     }
     return merged;
-  }, [comboProducts]);
+  }, [CAT_PRODUCTS, comboProducts]);
 
   const displayedProducts = useMemo(() => {
     let base: CatalogProduct[];
@@ -208,7 +209,7 @@ export function MostradorCatalog({
                 return (
                   <button
                     key={item.id}
-                    onClick={() => onAddProduct(toMostradorProduct(item))}
+                    onClick={() => onAddProduct(toMostradorProduct(item, CAT_DEFS))}
                     className="text-left transition-all active:scale-[0.97] hover:brightness-95 cursor-pointer"
                     style={{
                       backgroundColor: 'white',

@@ -35,6 +35,7 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 - El selector vive **solo en Inicio** y es una herramienta del prototipo. La vertical persiste en `localStorage['bold-pos-vertical']`; `?vertical=retail|restaurantes` en la URL la fija (links de demo).
 - Para ocultar o mostrar algo por vertical usar `has('modulo')`, no `vertical === '…'` (salvo textos/íconos). Un módulo nuevo exclusivo se registra primero en `modules.ts`.
 - Features exclusivas de una vertical: `src/app/verticals/retail/…` o `src/app/verticals/restaurantes/…`. Lo core sigue en `pages/` y `components/`.
+- Catálogo y datos por vertical: usar `useCatalog()` (`src/app/vertical/`), no importar `CAT_DEFS`/`CAT_PRODUCTS` directo en componentes que corren en ambas verticales. Datos Retail en `src/app/data/retail/`; `src/app/data/verticalCatalog.ts` los selecciona. Ids de productos: Restaurantes 101-184, Retail 201+ (no deben colisionar).
 - Combos es core (ambas verticales). Propinas, Mesas y reportes de restaurantes: solo Restaurantes. Variantes: solo Retail.
 - Todo spec nuevo declara su campo **Vertical** (`Core | Retail | Restaurantes`).
 

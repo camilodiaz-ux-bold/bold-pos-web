@@ -14,8 +14,8 @@ import { toast } from 'sonner';
 import { ArrowLeft, ImagePlus } from 'lucide-react';
 import { useItems } from '../../store/itemsStore';
 import type { Item, ItemDraft, ItemComboComponente, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
-import { UNIDADES, IMPUESTOS, getImpuesto, getUnidad } from '../../data/itemsCatalogs';
-import { CAT_DEFS } from '../../data/productCatalog';
+import { getImpuesto, getUnidad } from '../../data/itemsCatalogs';
+import { useCatalog } from '../../vertical';
 import { formatCOP, parseCOP } from '../../utils/format';
 import { TextField, TextAreaField, SelectField } from '../../components/items/FormField';
 import { DisponibilidadCard } from '../../components/items/DisponibilidadCard';
@@ -77,6 +77,7 @@ export function ItemFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const { getItem, createItem, updateItem } = useItems();
+  const { catDefs: CAT_DEFS, unidades: UNIDADES, impuestos: IMPUESTOS } = useCatalog();
   const mode: 'create' | 'edit' = id ? 'edit' : 'create';
   const existingItem = id ? getItem(id) : undefined;
 

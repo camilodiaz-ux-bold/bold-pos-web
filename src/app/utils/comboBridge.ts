@@ -7,7 +7,7 @@
  */
 import type { Item } from '../types/item';
 import type { CatalogProduct } from '../data/productCatalog';
-import { ALL_CATALOG_PRODUCTS } from '../data/productCatalog';
+import { findCatalogProduct } from '../data/verticalCatalog';
 
 /** Snapshot de un componente ya resuelto a nombre — lo que se denormaliza en una línea de orden. */
 export interface ComboComponentSnapshot {
@@ -36,7 +36,7 @@ export function comboBreakdown(
 export function autoDescribeComponents(item: Item): string {
   return (item.componentes ?? [])
     .map(c => {
-      const p = ALL_CATALOG_PRODUCTS.find(x => x.id === c.productId);
+      const p = findCatalogProduct(c.productId);
       return `${c.cantidad}× ${p?.name ?? 'Producto no encontrado'}`;
     })
     .join(' · ');
@@ -45,7 +45,7 @@ export function autoDescribeComponents(item: Item): string {
 /** Resuelve los componentes de un combo a su snapshot de nombre (por unidad de combo). */
 export function resolveComboComponents(item: Item): ComboComponentSnapshot[] {
   return (item.componentes ?? []).map(c => {
-    const p = ALL_CATALOG_PRODUCTS.find(x => x.id === c.productId);
+    const p = findCatalogProduct(c.productId);
     return { productId: c.productId, name: p?.name ?? 'Producto no encontrado', quantity: c.cantidad };
   });
 }
