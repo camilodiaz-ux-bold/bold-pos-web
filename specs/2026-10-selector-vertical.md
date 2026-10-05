@@ -52,7 +52,7 @@ Las vistas consultan `useVertical().has(moduleId)`; no se usa `if (vertical === 
 ## 5. Fases
 
 1. **(Esta)** Infraestructura, selector, filtrado de menú, guard de rutas, onboarding, documentación.
-2. Datos Retail propios (`src/app/data/retail/`: items, catálogo POS, mocks de ventas); `ItemsProvider` con `key` y claves de localStorage por vertical; POS Mostrador con catálogo Retail.
+2. **(Implementada)** Datos Retail propios (`src/app/data/retail/`: catálogo POS e items seed de una tienda de ropa y accesorios, con 2 combos de ejemplo); `useCatalog()` entrega categorías, productos, favoritos, unidades e impuestos de la vertical activa (Retail sin INC, porciones ni botellas); `ItemsProvider` y `FavoritesProvider` se remontan con `key={vertical}`; localStorage de ítems separado (`bold-pos:items:retail:v1`); Mostrador con catálogo Retail y órdenes iniciales Retail. Los mocks de ventas se pasan a la fase 3, junto con las columnas de `/ventas`.
 3. Adaptación de vistas compartidas: Ventas/Pedido (sin Mesa/Zona), Dashboard (KPIs Retail, sin filtro de canal Mesas), ReportesPanel (sin categoría Restaurantes), Turnos/Checkout (sin propinas), factura (sin mesa/mesero).
 4. Primer módulo exclusivo de Retail: Variantes (spec propio).
 

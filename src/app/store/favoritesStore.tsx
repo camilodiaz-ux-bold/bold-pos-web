@@ -2,11 +2,12 @@
  * favoritesStore.tsx — Estado global compartido de productos favoritos.
  *
  * Permite sincronizar favoriteIds entre MostradorCatalog y MesaProductSelector
- * sin prop-drilling. Inicializa desde FAVORITE_IDS del catálogo.
+ * sin prop-drilling. Inicializa desde los favoritos del catálogo de la vertical activa
+ * (el provider se remonta al cambiar de vertical — key en RootLayout).
  */
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { FAVORITE_IDS } from '../data/productCatalog';
+import { useCatalog } from '../vertical';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -23,8 +24,9 @@ const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
+  const { favoriteIds: initialFavoriteIds } = useCatalog();
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(
-    () => new Set(FAVORITE_IDS),
+    () => new Set(initialFavoriteIds),
   );
 
   const toggleFavorite = useCallback(

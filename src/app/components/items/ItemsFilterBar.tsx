@@ -6,8 +6,8 @@
 import React from 'react';
 import { Package, Search, Hash, FileText, Tag, Store, CircleDot, Ruler, ChevronDown } from 'lucide-react';
 import { FilterPillSelect, FilterPillInput } from './FilterPill';
-import { CAT_DEFS } from '../../data/productCatalog';
-import { UNIDADES, SUCURSALES } from '../../data/itemsCatalogs';
+import { SUCURSALES } from '../../data/itemsCatalogs';
+import { useCatalog } from '../../vertical';
 
 export interface ItemsFilters {
   tipo: '' | 'inventariable' | 'no-inventariable' | 'combo';
@@ -45,6 +45,7 @@ const ESTADO_OPTIONS = [
 ];
 
 export function ItemsFilterBar({ filters, setFilter, expanded, onToggleExpanded }: ItemsFilterBarProps) {
+  const { catDefs: CAT_DEFS, unidades: UNIDADES } = useCatalog();
   const unidadOptions = UNIDADES.map(u => ({ value: u.id, label: u.label }));
   const sucursalOptions = SUCURSALES.map(s => ({ value: s.id, label: s.label }));
   const categoriaOptions = CAT_DEFS.map(c => ({ value: c.id, label: c.name }));

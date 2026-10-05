@@ -20,6 +20,7 @@ import type { CompletedSale } from '../utils/invoice';
 import { MostradorCatalog, type MostradorProduct } from '../components/MostradorCatalog';
 import type { RootOutletContext } from '../components/RootLayout';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
+import { useVertical, type Vertical } from '../vertical';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -87,8 +88,24 @@ function toggleNoteChip(chip: string, note: string): string {
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
-function buildInitialOrders(): Order[] {
+function buildInitialOrders(vertical: Vertical): Order[] {
   const ago = (min: number) => Date.now() - min * 60_000;
+  // Retail: solo borradores con productos del catálogo Retail (sin estados de cocina).
+  // El flujo de "Confirmar orden"/preparación en Retail se adapta en la fase 3.
+  if (vertical === 'retail') {
+    const draft = (n: number, createdAt: string, items: OrderItem[] = []): Order => ({
+      id: String(n), number: String(n).padStart(3, '0'), status: 'BORRADOR',
+      items, isPaid: false, requiresPreparation: true, createdAt,
+    });
+    return [
+      draft(1, '10:30 AM', [
+        { id: 'i1a', productId: 211, name: 'Camiseta Básica Algodón',  price: 45900,  quantity: 1 },
+        { id: 'i1b', productId: 221, name: 'Jean Slim Azul Oscuro',    price: 159900, quantity: 1 },
+      ]),
+      draft(2, '10:35 AM'), draft(3, '10:40 AM'), draft(4, '10:45 AM'),
+      draft(5, '10:50 AM'), draft(6, '10:55 AM'), draft(7, '11:00 AM'),
+    ];
+  }
   return [
     {
       id: '1', number: '001', status: 'BORRADOR',
@@ -213,8 +230,9 @@ function StatusDot({ status, active }: { status: OrderStatus; active: boolean })
 
 export function HomePage() {
   const { subMode } = useOutletContext<RootOutletContext>();
+  const { vertical } = useVertical();
 
-  const [orders, setOrders]       = useState<Order[]>(buildInitialOrders);
+  const [orders, setOrders]       = useState<Order[]>(() => buildInitialOrders(vertical));
   const [activeOrderId, setActiveOrderId] = useState('1');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editNoteModal, setEditNoteModal] = useState<{ itemId: string; itemName: string; note: string } | null>(null);
