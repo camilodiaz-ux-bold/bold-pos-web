@@ -10,7 +10,7 @@
 import React, { useState } from 'react';
 import { Search, Minus, Plus, X } from 'lucide-react';
 import type { ItemComboComponente } from '../../types/item';
-import { ALL_CATALOG_PRODUCTS } from '../../data/productCatalog';
+import { useCatalog } from '../../vertical';
 import { FieldLabel } from './FormField';
 
 interface ComboComponentsCardProps {
@@ -31,6 +31,7 @@ export function ComboComponentsCard({
   error,
 }: ComboComponentsCardProps) {
   const [query, setQuery] = useState('');
+  const { allProducts: ALL_CATALOG_PRODUCTS } = useCatalog();
 
   const selectedIds = new Set(componentes.map(c => c.productId));
   const results = query.trim().length > 0
