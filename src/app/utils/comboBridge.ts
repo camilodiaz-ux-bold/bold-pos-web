@@ -5,13 +5,14 @@
  * marcados como combo — no es una unificación general de los dos catálogos
  * (ver specs/2026-09-combos.md §5.3).
  */
-import type { Item } from '../types/item';
+import type { Item, ItemComboComponente } from '../types/item';
 import type { CatalogProduct } from '../data/productCatalog';
-import { findCatalogProduct } from '../data/verticalCatalog';
+import { findCatalogProduct, findCatalogVariant } from '../data/verticalCatalog';
 
 /** Snapshot de un componente ya resuelto a nombre — lo que se denormaliza en una línea de orden. */
 export interface ComboComponentSnapshot {
   productId: number;
+  variantId?: string;
   name: string;
   /** Por UNIDAD de combo — multiplicar por la cantidad de la línea al renderizar. */
   quantity: number;
@@ -32,22 +33,29 @@ export function comboBreakdown(
   return (item.comboComponents ?? []).map(c => ({ name: c.name, qty: c.quantity * item.quantity }));
 }
 
+/** Nombre de un componente: "Camiseta Básica Algodón — Azul / S" si lleva variante. */
+function componentName(c: ItemComboComponente): string {
+  const p = findCatalogProduct(c.productId);
+  if (!p) return 'Producto no encontrado';
+  const v = c.variantId ? findCatalogVariant(c.productId, c.variantId) : undefined;
+  return v ? `${p.name} — ${v.label}` : p.name;
+}
+
 /** "1× Ceviche de Corvina Real · 1× Salmón Escocés · 1× Limonada de Lavanda" */
 export function autoDescribeComponents(item: Item): string {
   return (item.componentes ?? [])
-    .map(c => {
-      const p = findCatalogProduct(c.productId);
-      return `${c.cantidad}× ${p?.name ?? 'Producto no encontrado'}`;
-    })
+    .map(c => `${c.cantidad}× ${componentName(c)}`)
     .join(' · ');
 }
 
 /** Resuelve los componentes de un combo a su snapshot de nombre (por unidad de combo). */
 export function resolveComboComponents(item: Item): ComboComponentSnapshot[] {
-  return (item.componentes ?? []).map(c => {
-    const p = findCatalogProduct(c.productId);
-    return { productId: c.productId, name: p?.name ?? 'Producto no encontrado', quantity: c.cantidad };
-  });
+  return (item.componentes ?? []).map(c => ({
+    productId: c.productId,
+    variantId: c.variantId,
+    name: componentName(c),
+    quantity: c.cantidad,
+  }));
 }
 
 /**

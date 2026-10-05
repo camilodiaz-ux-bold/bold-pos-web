@@ -15,7 +15,7 @@ import { ArrowLeft, ImagePlus } from 'lucide-react';
 import { useItems } from '../../store/itemsStore';
 import type { Item, ItemDraft, ItemComboComponente, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
 import { getImpuesto, getUnidad } from '../../data/itemsCatalogs';
-import { useCatalog } from '../../vertical';
+import { useCatalog, useVertical } from '../../vertical';
 import { formatCOP, parseCOP } from '../../utils/format';
 import { TextField, TextAreaField, SelectField } from '../../components/items/FormField';
 import { DisponibilidadCard } from '../../components/items/DisponibilidadCard';
@@ -77,7 +77,8 @@ export function ItemFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const { getItem, createItem, updateItem } = useItems();
-  const { catDefs: CAT_DEFS, unidades: UNIDADES, impuestos: IMPUESTOS } = useCatalog();
+  const { catDefs: CAT_DEFS, unidades: UNIDADES, impuestos: IMPUESTOS, productVariants } = useCatalog();
+  const { has } = useVertical();
   const mode: 'create' | 'edit' = id ? 'edit' : 'create';
   const existingItem = id ? getItem(id) : undefined;
 
@@ -154,19 +155,22 @@ export function ItemFormPage() {
   const sucursalesError = form.sucursalIds.length === 0 ? 'Selecciona al menos una sucursal' : undefined;
   const componentesError = form.esCombo && form.componentes.length < 2 ? 'Agrega al menos 2 componentes' : undefined;
 
-  const addComponente = (productId: number) => {
-    setForm(prev => prev.componentes.some(c => c.productId === productId)
+  // Identidad de un componente: la variante si la tiene, si no el producto (Restaurantes, o producto sin variantes).
+  const componenteKey = (c: ItemComboComponente) => c.variantId ?? String(c.productId);
+  const addComponente = (productId: number, variantId?: string) => {
+    const nuevo: ItemComboComponente = { productId, variantId, cantidad: 1 };
+    setForm(prev => prev.componentes.some(c => componenteKey(c) === componenteKey(nuevo))
       ? prev
-      : { ...prev, componentes: [...prev.componentes, { productId, cantidad: 1 }] });
+      : { ...prev, componentes: [...prev.componentes, nuevo] });
   };
-  const changeComponenteCantidad = (productId: number, cantidad: number) => {
+  const changeComponenteCantidad = (key: string, cantidad: number) => {
     setForm(prev => ({
       ...prev,
-      componentes: prev.componentes.map(c => c.productId === productId ? { ...c, cantidad } : c),
+      componentes: prev.componentes.map(c => componenteKey(c) === key ? { ...c, cantidad } : c),
     }));
   };
-  const removeComponente = (productId: number) => {
-    setForm(prev => ({ ...prev, componentes: prev.componentes.filter(c => c.productId !== productId) }));
+  const removeComponente = (key: string) => {
+    setForm(prev => ({ ...prev, componentes: prev.componentes.filter(c => componenteKey(c) !== key) }));
   };
 
   const isValid = useMemo(() => {
@@ -186,10 +190,11 @@ export function ItemFormPage() {
     }
     if (form.esCombo) {
       if (form.componentes.length < 2) return false;
+      if (has('variantes') && form.componentes.some(c => productVariants[c.productId] && !c.variantId)) return false;
       if (form.componentes.some(c => !Number.isInteger(c.cantidad) || c.cantidad < 1)) return false;
     }
     return true;
-  }, [form]);
+  }, [form, has, productVariants]);
 
   const isDirty = mode === 'create'
     ? form.nombre !== '' || form.categoriaId !== ''

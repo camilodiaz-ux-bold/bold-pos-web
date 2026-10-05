@@ -8,6 +8,7 @@ Cada spec tiene su propio campo "Estado" en la tabla de encabezado. Una vez marc
 
 | Fecha | Spec | Estado | Resumen |
 |---|---|---|---|
+| 2026-10 | [2026-10-combos-variantes-retail.md](./2026-10-combos-variantes-retail.md) | Listo para implementación | Retail: los componentes de un combo pueden ser una variante concreta (Talla / Color) de un producto, con su precio y código. Restaurantes no cambia. Complementa `2026-09-combos.md`. |
 | 2026-10 | [2026-10-dashboard-retail.md](./2026-10-dashboard-retail.md) | ✅ Implementado | Inicio de Retail: réplica del dashboard del POS Retail real (utilidad bruta, flujo de caja, cuentas por cobrar, ítems y clientes). Restaurantes conserva el suyo. Reemplaza lo que la fase 3 de `2026-10-selector-vertical.md` adaptaba en el Dashboard compartido. |
 | 2026-10 | [2026-10-selector-vertical.md](./2026-10-selector-vertical.md) | ✅ Implementado | Selector de vertical Retail / Restaurantes (solo en Inicio): registro de módulos core vs. exclusivos, menú y rutas por vertical, datos propios de Retail por fases. |
 | 2026-09 | [2026-09-checkout-factura.md](./2026-09-checkout-factura.md) | Listo para implementación | Checkout: al pagar se abre el panel lateral "Venta Completada" (Imprimir factura / Nueva venta) y la factura se imprime como ticket de 80 mm con los combos desglosados. Complementa §7.5 de `2026-09-combos.md`. |
