@@ -29,6 +29,15 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 - Variables clave: --blue-10, --blue-20, --blue-100, --black-10, --black-100
 - Referencia visual en MERLIN-SYSTEM.md
 
+## Verticales (Retail y Restaurantes)
+- El prototipo simula dos verticales de Bold POS: **Retail** (principal) y **Restaurantes** (default). Spec: `specs/2026-10-selector-vertical.md`.
+- Infraestructura en `src/app/vertical/`: `modules.ts` (registro de módulos exclusivos; lo que no figura ahí es core), `verticalConfig.ts` (textos por vertical), `verticalStore.tsx` (`useVertical()` → `vertical`, `setVertical`, `config`, `has(moduleId)`), `VerticalRoute.tsx` (guard), `PrototypeVerticalSwitcher.tsx` (selector).
+- El selector vive **solo en Inicio** y es una herramienta del prototipo. La vertical persiste en `localStorage['bold-pos-vertical']`; `?vertical=retail|restaurantes` en la URL la fija (links de demo).
+- Para ocultar o mostrar algo por vertical usar `has('modulo')`, no `vertical === '…'` (salvo textos/íconos). Un módulo nuevo exclusivo se registra primero en `modules.ts`.
+- Features exclusivas de una vertical: `src/app/verticals/retail/…` o `src/app/verticals/restaurantes/…`. Lo core sigue en `pages/` y `components/`.
+- Combos es core (ambas verticales). Propinas, Mesas y reportes de restaurantes: solo Restaurantes. Variantes: solo Retail.
+- Todo spec nuevo declara su campo **Vertical** (`Core | Retail | Restaurantes`).
+
 ## Specs de producto
 - Los specs viven en `specs/`, con la convención descrita en `specs/README.md`.
 - Nombre de archivo: `AAAA-MM-nombre-feature.md`. Cada spec nuevo agrega su fila al índice del README.
@@ -36,7 +45,7 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 - Un spec marcado `✅ Implementado` se congela: no se edita más. Un cambio de alcance posterior se escribe como spec nuevo que referencia al anterior como antecedente.
 
 ## Reglas críticas
-- NO modificar el router ni el basename
+- NO modificar el basename ni las rutas existentes del router. Sí se permite **agregar** rutas nuevas para módulos exclusivos de una vertical, envueltas en `<VerticalRoute module="…">`
 - NO hardcodear colores ni tipografías fuera del design system
 - NO tocar vite.config.ts ni deploy.yml salvo que se indique explícitamente
 - Antes de editar cualquier componente, confirmar el archivo correcto con grep

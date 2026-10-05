@@ -26,6 +26,7 @@ import { ItemsProvider } from '../store/itemsStore';
 import { LoginScreen } from './LoginScreen';
 import { SignupScreen } from './SignupScreen';
 import { OnboardingFlow } from './OnboardingFlow';
+import { useVertical, type Vertical } from '../vertical';
 
 // ─── Outlet context type (consumed by child pages) ───────────────────────────
 
@@ -41,7 +42,10 @@ type AppMode = 'Mesas' | 'Mostrador' | 'Reportes' | 'Inicio' | 'Turnos' | 'Items
 
 export function RootLayout() {
   // The sub-mode toggled within the Home page (Mesas ↔ Mostrador)
-  const [subMode, setSubMode] = useState<'Mesas' | 'Mostrador'>('Mesas');
+  const { has, setVertical } = useVertical();
+  const [subModeState, setSubMode] = useState<'Mesas' | 'Mostrador'>('Mesas');
+  // Sin el módulo Mesas (Retail) el POS es siempre Mostrador.
+  const subMode: 'Mesas' | 'Mostrador' = has('mesas') ? subModeState : 'Mostrador';
 
   // Auth state
   const [isLoggedIn, setIsLoggedIn]         = useState(true);
@@ -69,6 +73,7 @@ export function RootLayout() {
     } else if (mode === 'Turnos') {
       navigate('/turnos');
     } else {
+      if (mode === 'Mesas' && !has('mesas')) return;
       setSubMode(mode);
       if (location.pathname !== '/') navigate('/');
     }
@@ -105,7 +110,13 @@ export function RootLayout() {
       <FavoritesProvider>
       <MesasStoreProvider>
         <Toaster position="top-center" richColors />
-        <OnboardingFlow onComplete={() => setOnboardingDone(true)} />
+        <OnboardingFlow
+          onComplete={(_modalidad, vertical) => {
+            // 'documentos' no tiene vertical propia en el prototipo: se mantiene la actual.
+            if (vertical === 'retail' || vertical === 'restaurantes') setVertical(vertical as Vertical);
+            setOnboardingDone(true);
+          }}
+        />
       </MesasStoreProvider>
       </FavoritesProvider>
     );

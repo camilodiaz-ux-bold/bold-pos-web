@@ -6,6 +6,7 @@
  */
 import React, { useState } from 'react';
 import { TrendingUp, Receipt, Users, Clock, ChevronDown, ShoppingBag, MapPin, RefreshCw } from 'lucide-react';
+import { useVertical, PrototypeVerticalSwitcher } from '../vertical';
 import {
   BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -774,8 +775,9 @@ function ProductList({ items }: { items: Product[] }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function Dashboard() {
+  const { config, has } = useVertical();
   const [period,      setPeriod]     = useState<Period>('today');
-  const [channel,     setChannel]    = useState<Channel>('mesas');
+  const [channel,     setChannel]    = useState<Channel>(has('mesas') ? 'mesas' : 'mostrador');
   const [channelOpen, setChannelOpen] = useState(false);
   const [branch,      setBranch]     = useState('principal');
   const [branchOpen,  setBranchOpen] = useState(false);
@@ -857,12 +859,15 @@ export function Dashboard() {
         <div style={{ marginBottom: 24 }}>
 
           {/* Row 1: Title only */}
-          <h1 style={{
-            fontSize: 20, fontWeight: 700, color: C.blue100,
-            fontFamily: FONT, margin: '0 0 14px', lineHeight: '28px',
-          }}>
-            Restaurante Demo
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, margin: '0 0 14px' }}>
+            <h1 style={{
+              fontSize: 20, fontWeight: 700, color: C.blue100,
+              fontFamily: FONT, margin: 0, lineHeight: '28px',
+            }}>
+              {config.businessName}
+            </h1>
+            <PrototypeVerticalSwitcher />
+          </div>
 
           {/* Row 2: [Channel dropdown + Branch dropdown] ← → [Period tabs] */}
           <div style={{

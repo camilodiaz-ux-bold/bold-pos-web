@@ -13,6 +13,7 @@ import { ListaItemsPage } from './pages/items/ListaItemsPage';
 import { ItemFormPage } from './pages/items/ItemFormPage';
 import { StatusPage } from '../pages/StatusPage';
 import { MakersLanding } from '../pages/MakersLanding';
+import { VerticalProvider, VerticalRoute } from './vertical';
 
 const router = createBrowserRouter([
   {
@@ -21,7 +22,10 @@ const router = createBrowserRouter([
     children: [
       { index: true, Component: HomePage },
       { path: 'reportes', Component: ReportesPage },
-      { path: 'reportes/restaurantes/:id', Component: ReporteDetallePage },
+      {
+        path: 'reportes/restaurantes/:id',
+        element: <VerticalRoute module="reportes-restaurantes"><ReporteDetallePage /></VerticalRoute>,
+      },
       { path: 'inicio', Component: Dashboard },
       { path: 'turnos', Component: TurnosPage },
       { path: 'ventas', Component: VentasPage },
@@ -42,5 +46,9 @@ const router = createBrowserRouter([
 ], { basename: import.meta.env.BASE_URL });
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <VerticalProvider>
+      <RouterProvider router={router} />
+    </VerticalProvider>
+  );
 }
