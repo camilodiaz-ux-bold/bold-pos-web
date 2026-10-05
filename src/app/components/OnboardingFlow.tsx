@@ -751,7 +751,7 @@ function CP3Image() {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface OnboardingFlowProps {
-  onComplete: (modalidad: 'mesas' | 'mostrador' | 'mixto') => void;
+  onComplete: (modalidad: 'mesas' | 'mostrador' | 'mixto', vertical?: string | null) => void;
 }
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
@@ -786,7 +786,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     if (idx > 0) setStep(STEP_ORDER[idx - 1]);
   };
 
-  const handleComplete = () => onComplete(modalidad ?? 'mesas');
+  const handleComplete = () => onComplete(modalidad ?? 'mesas', vertical);
 
   const canContinue: boolean = (() => {
     if (step === 'step-1-1') return vertical !== null;

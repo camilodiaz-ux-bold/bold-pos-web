@@ -5,6 +5,9 @@ Dashboard administrativo web para la vertical de restaurantes de Bold POS. Dirig
 ## Descripción
 Adaptación de Bold POS Retail hacia una experiencia especializada para restaurantes. Permite visualizar ventas, ocupación de mesas, productos top y reportes desde un dashboard web.
 
+## Verticales
+El prototipo simula las dos verticales de Bold POS: **Retail** y **Restaurantes** (default). El selector está en Inicio (`/inicio`) y es una herramienta del prototipo. Para compartir un link directo a una vertical se usa `?vertical=retail` o `?vertical=restaurantes`, por ejemplo `https://camilodiaz-ux-bold.github.io/bold-pos-web/inicio?vertical=retail`. Detalle en `specs/2026-10-selector-vertical.md`.
+
 ## Stack
 - React 18 + TypeScript + Vite + Tailwind CSS
 - MUI + Radix UI + Lucide React + Recharts

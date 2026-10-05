@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom';
 import { useNavigate, useLocation } from 'react-router';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
-  UtensilsCrossed, TrendingUp, Download,
+  UtensilsCrossed, Package, TrendingUp, Download,
 } from 'lucide-react';
 import { useNotifications } from '../store/notificationsStore';
+import { useVertical } from '../vertical';
 import {
   IcHome, IcHomeFill,
   IcMesas, IcTurnos,
@@ -44,6 +45,8 @@ interface NavBarProps {
 
 interface SubItem {
   id: string;
+  /** Módulo de modules.ts; si falta se usa `id`. Se oculta si la vertical activa no lo tiene. */
+  moduleId?: string;
   label: string;
   icon: React.ReactNode;
   active: boolean;
@@ -88,6 +91,7 @@ function MostradorIcon({ size = 20 }: { size?: number }) {
 export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { vertical, has } = useVertical();
   // Rutas que tienen su propia entrada de menú: mientras estemos en ellas,
   // "Punto de venta" no debe resaltarse aunque activeMode caiga en su default.
   const OWNED_ROUTES = ['/ventas', '/items'];
@@ -184,13 +188,16 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     {
       id: 'items',
       label: 'Items',
-      icon: (a, sz = 16) => <UtensilsCrossed size={sz} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
+      icon: (a, sz = 16) => {
+        const ItemsIcon = vertical === 'retail' ? Package : UtensilsCrossed;
+        return <ItemsIcon size={sz} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />;
+      },
       hasSubmenu: true,
       subItems: [
         { id: 'listaitems',   label: 'Lista de Items',          icon: <IcListaItems size={16} />,   active: pathname.startsWith('/items'), onClick: () => navigate('/items') },
         { id: 'ajusteinv',    label: 'Ajuste de inventario',    icon: <IcAjusteInv size={16} />,    active: false, onClick: () => toast.info('Ajuste de inventario') },
         { id: 'flujoinv',     label: 'Flujo de inventario',     icon: <IcFlujoInv size={16} />,     active: false, onClick: () => toast.info('Flujo de inventario') },
-        { id: 'variantesinv', label: 'Variantes de inventario', icon: <IcVariantesInv size={16} />, active: false, onClick: () => toast.info('Variantes de inventario') },
+        { id: 'variantesinv', moduleId: 'variantes', label: 'Variantes de inventario', icon: <IcVariantesInv size={16} />, active: false, onClick: () => toast.info('Variantes de inventario') },
       ],
     },
     {
@@ -231,7 +238,12 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     },
   ];
 
-  const menu = buildMenu();
+  // Oculta sub-items de módulos que la vertical activa no tiene, y los padres que quedan vacíos.
+  const menu = buildMenu()
+    .map(item => item.subItems
+      ? { ...item, subItems: item.subItems.filter(s => has(s.moduleId ?? s.id)) }
+      : item)
+    .filter(item => !item.hasSubmenu || (item.subItems?.length ?? 0) > 0);
 
   const isSectionActive = (item: MenuItem) => {
     if (item.id === 'inicio')       return activeMode === 'Inicio';
@@ -650,6 +662,7 @@ interface TopBarProps {
 
 export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBarProps) {
   const { notifications, unreadCount, markRead } = useNotifications();
+  const { config } = useVertical();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
@@ -709,9 +722,9 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
       {/* ── Right: business info + bell + avatar ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#0F1729' }}>Restaurante Demo</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#0F1729' }}>{config.businessName}</span>
           <span style={{ fontSize: 14, color: '#6B7280', margin: '0 4px' }}>—</span>
-          <span style={{ fontSize: 14, color: '#6B7280' }}>Plan Plus</span>
+          <span style={{ fontSize: 14, color: '#6B7280' }}>{config.plan}</span>
         </div>
         <button
           ref={bellBtnRef}
