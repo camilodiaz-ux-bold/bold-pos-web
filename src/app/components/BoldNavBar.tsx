@@ -92,6 +92,8 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { vertical, has } = useVertical();
+  // "Nueva venta": Mesas en Restaurantes; en Retail (sin Mesas) abre el Mostrador.
+  const newSaleMode = has('mesas') ? 'Mesas' : 'Mostrador';
   // Rutas que tienen su propia entrada de menú: mientras estemos en ellas,
   // "Punto de venta" no debe resaltarse aunque activeMode caiga en su default.
   const OWNED_ROUTES = ['/ventas', '/items'];
@@ -306,7 +308,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
 
         {/* Nueva venta */}
         <button
-          onClick={() => onModeChange('Mesas')}
+          onClick={() => onModeChange(newSaleMode)}
           title="Nueva venta"
           style={{
             width: 44, height: 32, marginBottom: 8,
@@ -510,7 +512,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
         </button>
 
         <button
-          onClick={() => onModeChange('Mesas')}
+          onClick={() => onModeChange(newSaleMode)}
           style={{
             width: 196, height: 40,
             backgroundColor: C.blue100,
