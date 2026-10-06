@@ -24,8 +24,10 @@ export interface ItemSucursal {
 
 /** Un producto del catálogo de venta (ALL_CATALOG_PRODUCTS) que compone un combo. */
 export interface ItemComboComponente {
-  /** id de un producto en ALL_CATALOG_PRODUCTS (src/app/data/productCatalog.ts). */
-  productId: number;
+  /** id de un producto en ALL_CATALOG_PRODUCTS (src/app/data/productCatalog.ts). Ausente si el componente es un Item creado por el usuario (`itemId`). */
+  productId?: number;
+  /** Item creado por el usuario en /items (no sembrado desde el catálogo) usado como componente. */
+  itemId?: string;
   /** Solo Retail: id de la variante elegida (ver data/retail/productVariants.ts). Ausente = producto entero. */
   variantId?: string;
   /** Entero ≥ 1, por unidad de combo. Sin unidades de medida (ver spec §3.1-#7). */

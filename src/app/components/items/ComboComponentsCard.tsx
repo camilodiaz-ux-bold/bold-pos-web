@@ -7,15 +7,17 @@
  * efectivamente venden Mostrador/Mesas), no otros Items — ver
  * specs/2026-09-combos.md §5.2.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Minus, Plus, X, ChevronDown } from 'lucide-react';
 import type { ItemComboComponente } from '../../types/item';
 import { useCatalog, useVertical } from '../../vertical';
+import { componentKey, isCustomComponentItem } from '../../utils/comboBridge';
+import { useItems } from '../../store/itemsStore';
 import { FieldLabel } from './FormField';
 
 interface ComboComponentsCardProps {
   componentes: ItemComboComponente[];
-  onAdd: (productId: number, variantId?: string) => void;
+  onAdd: (ref: { productId?: number; itemId?: string; variantId?: string }) => void;
   /** `key` = variantId ?? String(productId). */
   onChangeCantidad: (key: string, cantidad: number) => void;
   onRemove: (key: string) => void;
@@ -23,7 +25,19 @@ interface ComboComponentsCardProps {
   error?: string;
 }
 
-const keyOf = (c: ItemComboComponente) => c.variantId ?? String(c.productId);
+/** Máximo de resultados del buscador (con o sin texto). */
+const MAX_RESULTS = 30;
+
+const keyOf = componentKey;
+
+/** Candidato del buscador: un producto del catálogo o un Item creado por el usuario. */
+interface Opt {
+  key: string;
+  name: string;
+  price: number;
+  productId?: number;
+  itemId?: string;
+}
 
 export function ComboComponentsCard({
   componentes,
@@ -35,27 +49,78 @@ export function ComboComponentsCard({
 }: ComboComponentsCardProps) {
   const [query, setQuery] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const { items } = useItems();
   const { allProducts: ALL_CATALOG_PRODUCTS, productVariants } = useCatalog();
   const { has } = useVertical();
   const variantsOf = (productId: number) => (has('variantes') ? productVariants[productId] : undefined);
+  const closeSearch = () => { setQuery(''); setOpen(false); setExpandedId(null); };
 
   const selectedKeys = new Set(componentes.map(keyOf));
-  const results = query.trim().length > 0
-    ? ALL_CATALOG_PRODUCTS
-        .filter(p => {
-          if (!p.name.toLowerCase().includes(query.toLowerCase())) return false;
-          const pv = variantsOf(p.id);
+  // Candidatos ordenados del Item guardado más reciente al más antiguo. Los Items sembrados enlazan con su
+  // producto del catálogo por catalogProductId (Retail) o por id 'seed-<productId>'; los Items creados por
+  // el usuario entran directo (ver isCustomComponentItem). Los productos sin Item van al final.
+  const options = useMemo(() => {
+    const byId = new Map(ALL_CATALOG_PRODUCTS.map(p => [p.id, p]));
+    const seen = new Set<number>();
+    const out: Opt[] = [];
+    for (const i of [...items].sort((a, b) => b.creadoEn - a.creadoEn)) {
+      if (isCustomComponentItem(i)) {
+        out.push({ key: `item:${i.id}`, name: i.nombre, price: i.precioTotal, itemId: i.id });
+        continue;
+      }
+      const productId = i.catalogProductId ?? Number(/^seed-(\d+)$/.exec(i.id)?.[1]);
+      const p = byId.get(productId);
+      if (!p || seen.has(p.id)) continue;
+      seen.add(p.id);
+      out.push({ key: String(p.id), name: p.name, price: p.price, productId: p.id });
+    }
+    for (const p of ALL_CATALOG_PRODUCTS) {
+      if (!seen.has(p.id)) out.push({ key: String(p.id), name: p.name, price: p.price, productId: p.id });
+    }
+    return out;
+  }, [items, ALL_CATALOG_PRODUCTS]);
+
+  const hasQuery = query.trim().length > 0;
+  const results = open || hasQuery
+    ? options
+        .filter(o => {
+          if (hasQuery && !o.name.toLowerCase().includes(query.toLowerCase())) return false;
+          const pv = o.productId !== undefined ? variantsOf(o.productId) : undefined;
           // Con variantes: se oculta solo cuando ya están todas agregadas.
-          return pv ? pv.variantes.some(v => !selectedKeys.has(v.id)) : !selectedKeys.has(String(p.id));
+          return pv ? pv.variantes.some(v => !selectedKeys.has(v.id)) : !selectedKeys.has(o.key);
         })
-        .slice(0, 6)
+        .slice(0, MAX_RESULTS)
     : [];
 
-  const sumaIndividual = componentes.reduce((acc, c) => {
+  // Cierra el desplegable al hacer clic fuera del buscador o con Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!searchRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  // Nombre, precio y variante de un componente ya agregado.
+  const resolve = (c: ItemComboComponente) => {
+    if (c.itemId) {
+      const it = items.find(i => i.id === c.itemId);
+      return { name: it?.nombre, price: it?.precioTotal ?? 0, pv: undefined, v: undefined };
+    }
     const p = ALL_CATALOG_PRODUCTS.find(x => x.id === c.productId);
-    const v = c.variantId ? variantsOf(c.productId)?.variantes.find(x => x.id === c.variantId) : undefined;
-    return acc + ((v?.price ?? p?.price ?? 0) * c.cantidad);
-  }, 0);
+    const pv = c.productId !== undefined ? variantsOf(c.productId) : undefined;
+    const v = c.variantId ? pv?.variantes.find(x => x.id === c.variantId) : undefined;
+    return { name: p?.name, price: v?.price ?? p?.price ?? 0, pv, v };
+  };
+  const sumaIndividual = componentes.reduce((acc, c) => acc + resolve(c).price * c.cantidad, 0);
   const ahorro = sumaIndividual - precioTotal;
 
   return (
@@ -63,23 +128,29 @@ export function ComboComponentsCard({
       <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Componentes del combo</h3>
 
       {/* Buscador */}
-      <div>
+      <div ref={searchRef}>
         <FieldLabel required>Agregar productos</FieldLabel>
         <div style={{ position: 'relative' }}>
-          <Search size={16} color="var(--black-40)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="var(--black-40)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             type="text"
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => { setQuery(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
             placeholder="Busca un producto del catálogo"
             className="merlin-input-filled"
             style={{ paddingLeft: 36 }}
           />
         </div>
         {results.length > 0 && (
-          <div style={{ marginTop: 8, border: '1px solid var(--black-10)', borderRadius: 8, overflow: 'hidden' }}>
-            {results.map(p => {
-              const pv = variantsOf(p.id);
+          <div style={{ marginTop: 8, border: '1px solid var(--black-10)', borderRadius: 8, maxHeight: 360, overflowY: 'auto' }}>
+            {!hasQuery && (
+              <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: 'var(--black-60)', borderBottom: '1px solid var(--black-10)' }}>
+                Últimos productos guardados
+              </div>
+            )}
+            {results.map(o => {
+              const pv = o.productId !== undefined ? variantsOf(o.productId) : undefined;
               const rowStyle: React.CSSProperties = {
                 width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 padding: '10px 12px', background: 'none', border: 'none', borderBottom: '1px solid var(--black-10)',
@@ -87,18 +158,18 @@ export function ComboComponentsCard({
               };
               if (!pv) {
                 return (
-                  <button key={p.id} type="button" onClick={() => { onAdd(p.id); setQuery(''); }} style={rowStyle}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--black-100)' }}>{p.name}</span>
-                    <span style={{ fontSize: 12, color: 'var(--black-40)' }}>${p.price.toLocaleString('es-CO')}</span>
+                  <button key={o.key} type="button" onClick={() => { onAdd({ productId: o.productId, itemId: o.itemId }); closeSearch(); }} style={rowStyle}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--black-100)' }}>{o.name}</span>
+                    <span style={{ fontSize: 12, color: 'var(--black-40)' }}>${o.price.toLocaleString('es-CO')}</span>
                   </button>
                 );
               }
-              const open = expandedId === p.id;
+              const open = expandedId === o.productId;
               const desde = Math.min(...pv.variantes.map(v => v.price));
               return (
-                <div key={p.id}>
-                  <button type="button" onClick={() => setExpandedId(open ? null : p.id)} style={rowStyle} aria-expanded={open}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--black-100)' }}>{p.name}</span>
+                <div key={o.key}>
+                  <button type="button" onClick={() => setExpandedId(open ? null : o.productId!)} style={rowStyle} aria-expanded={open}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--black-100)' }}>{o.name}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--black-40)' }}>
                       {pv.variantes.length} variantes · desde ${desde.toLocaleString('es-CO')}
                       <ChevronDown size={14} style={{ transform: open ? 'rotate(180deg)' : undefined }} />
@@ -116,7 +187,7 @@ export function ComboComponentsCard({
                             key={v.id}
                             type="button"
                             disabled={taken}
-                            onClick={() => { onAdd(p.id, v.id); setQuery(''); setExpandedId(null); }}
+                            onClick={() => { onAdd({ productId: o.productId, variantId: v.id }); closeSearch(); }}
                             style={{
                               width: '100%', display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.4fr 0.8fr', gap: 8,
                               padding: '8px 12px', background: 'none', border: 'none', borderTop: '1px solid var(--black-10)',
@@ -146,9 +217,7 @@ export function ComboComponentsCard({
           <p style={{ fontSize: 13, color: 'var(--black-40)', margin: 0 }}>Aún no agregaste ningún producto.</p>
         )}
         {componentes.map(c => {
-          const p = ALL_CATALOG_PRODUCTS.find(x => x.id === c.productId);
-          const pv = variantsOf(c.productId);
-          const v = c.variantId ? pv?.variantes.find(x => x.id === c.variantId) : undefined;
+          const { name, price, pv, v } = resolve(c);
           const falta = !!pv && !v;
           const key = keyOf(c);
           return (
@@ -160,10 +229,10 @@ export function ComboComponentsCard({
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                {p ? (
+                {name ? (
                   <>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black-100)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.name}
+                      {name}
                     </div>
                     {v && (
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--blue-100)' }}>{v.label} · {v.codigo}</div>
@@ -171,7 +240,7 @@ export function ComboComponentsCard({
                     {falta && (
                       <div style={{ fontSize: 12, color: 'var(--coral-100)' }}>Selecciona una variante (quita y vuelve a agregar)</div>
                     )}
-                    <div style={{ fontSize: 12, color: 'var(--black-40)' }}>${(v?.price ?? p.price).toLocaleString('es-CO')} c/u</div>
+                    <div style={{ fontSize: 12, color: 'var(--black-40)' }}>${price.toLocaleString('es-CO')} c/u</div>
                   </>
                 ) : (
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black-40)', fontStyle: 'italic' }}>

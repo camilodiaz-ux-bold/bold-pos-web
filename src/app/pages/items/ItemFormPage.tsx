@@ -17,6 +17,7 @@ import type { Item, ItemDraft, ItemComboComponente, SucursalId, UnidadId, Impues
 import { getImpuesto, getUnidad } from '../../data/itemsCatalogs';
 import { useCatalog, useVertical } from '../../vertical';
 import { formatCOP, parseCOP } from '../../utils/format';
+import { componentKey } from '../../utils/comboBridge';
 import { TextField, TextAreaField, SelectField } from '../../components/items/FormField';
 import { DisponibilidadCard } from '../../components/items/DisponibilidadCard';
 import { ComboComponentsCard } from '../../components/items/ComboComponentsCard';
@@ -156,9 +157,9 @@ export function ItemFormPage() {
   const componentesError = form.esCombo && form.componentes.length < 2 ? 'Agrega al menos 2 componentes' : undefined;
 
   // Identidad de un componente: la variante si la tiene, si no el producto (Restaurantes, o producto sin variantes).
-  const componenteKey = (c: ItemComboComponente) => c.variantId ?? String(c.productId);
-  const addComponente = (productId: number, variantId?: string) => {
-    const nuevo: ItemComboComponente = { productId, variantId, cantidad: 1 };
+  const componenteKey = componentKey;
+  const addComponente = (ref: { productId?: number; itemId?: string; variantId?: string }) => {
+    const nuevo: ItemComboComponente = { ...ref, cantidad: 1 };
     setForm(prev => prev.componentes.some(c => componenteKey(c) === componenteKey(nuevo))
       ? prev
       : { ...prev, componentes: [...prev.componentes, nuevo] });
@@ -190,7 +191,7 @@ export function ItemFormPage() {
     }
     if (form.esCombo) {
       if (form.componentes.length < 2) return false;
-      if (has('variantes') && form.componentes.some(c => productVariants[c.productId] && !c.variantId)) return false;
+      if (has('variantes') && form.componentes.some(c => c.productId !== undefined && productVariants[c.productId] && !c.variantId)) return false;
       if (form.componentes.some(c => !Number.isInteger(c.cantidad) || c.cantidad < 1)) return false;
     }
     return true;
