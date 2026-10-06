@@ -26,6 +26,7 @@ const EXCLUSIVE_MODULES = {
   propinas: ['restaurantes'],
   // Solo Retail
   variantes: ['retail'],
+  'listas-precios': ['retail'],
 } as const satisfies Record<string, readonly Vertical[]>;
 
 export type ExclusiveModuleId = keyof typeof EXCLUSIVE_MODULES;

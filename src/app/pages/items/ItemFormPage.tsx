@@ -11,7 +11,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
-import { ArrowLeft, ImagePlus } from 'lucide-react';
+import { ArrowLeft, ImagePlus, Info } from 'lucide-react';
 import { useItems } from '../../store/itemsStore';
 import type { Item, ItemDraft, ItemComboComponente, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
 import { getImpuesto, getUnidad } from '../../data/itemsCatalogs';
@@ -350,7 +350,52 @@ export function ItemFormPage() {
                 Precio de venta: {formatCOP(parseCOP(form.precioTotalRaw))}
               </p>
             )}
+            {/* Solo visual por ahora: el toggle no cambia de estado (specs/2026-10-listas-precios-variantes-form.md) */}
+            {has('listas-precios') && (
+              <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--black-100)' }}>Listas de precios</span>
+                <Toggle checked={false} onChange={() => toast.info('Listas de precios — próximamente')} ariaLabel="Listas de precios" />
+              </div>
+            )}
           </div>
+
+          {/* Variantes disponibles — solo visual; un combo no puede tener variantes */}
+          {has('variantes') && (
+            <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Variantes disponibles</h3>
+              {form.esCombo && (
+                <div
+                  role="note"
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 8,
+                    backgroundColor: 'var(--blue-10)', color: 'var(--black-60)', fontSize: 12, lineHeight: '18px',
+                  }}
+                >
+                  <Info size={16} color="var(--blue-100)" style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span>
+                    Un combo no puede tener variantes: se arma con productos existentes (puedes elegir sus variantes en
+                    "Componentes del combo"). Desactiva "Es un combo" si quieres agregarlas.
+                  </span>
+                </div>
+              )}
+              <div>
+                <button
+                  type="button"
+                  disabled={form.esCombo}
+                  title={form.esCombo ? 'Un combo no puede tener variantes' : undefined}
+                  onClick={() => toast.info('Variantes — próximamente')}
+                  style={{
+                    padding: '10px 16px', borderRadius: 8, border: 'none', backgroundColor: 'var(--black-10)',
+                    color: form.esCombo ? 'var(--black-40)' : 'var(--black-100)', fontFamily: "'Montserrat', sans-serif",
+                    fontSize: 14, fontWeight: 700, cursor: form.esCombo ? 'not-allowed' : 'pointer',
+                    opacity: form.esCombo ? 0.6 : 1,
+                  }}
+                >
+                  Agregar variante
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Columna derecha */}
