@@ -27,8 +27,8 @@ const SEED_COMBOS: Array<Omit<Item, 'creadoEn' | 'actualizadoEn'>> = [
     esCombo: true,
     comboSaleId: 9001,
     componentes: [
-      { productId: 211, cantidad: 1 }, // Camiseta Básica Algodón — $45.900
-      { productId: 221, cantidad: 1 }, // Jean Slim Azul Oscuro — $159.900
+      { productId: 211, variantId: '211-azul-s', cantidad: 1 }, // Camiseta Básica Algodón (Azul / S) — $45.900
+      { productId: 221, variantId: '221-32', cantidad: 1 }, // Jean Slim Azul Oscuro (32) — $159.900
       { productId: 251, cantidad: 1 }, // Gorra Visera Curva — $49.900
     ],
     // Suma individual: $255.700 → combo a $229.900 (ahorra $25.800)
@@ -102,6 +102,7 @@ export function buildRetailSeedItems(now: number = Date.now()): Item[] {
       sucursales: buildSucursales(p.id),
       activo: !INACTIVE_IDS.has(p.id),
       imagen: p.image,
+      catalogProductId: p.id,
       esCombo: false,
       creadoEn: now - (RETAIL_ALL_PRODUCTS.length - index) * 3_600_000,
       actualizadoEn: now - (RETAIL_ALL_PRODUCTS.length - index) * 3_600_000,

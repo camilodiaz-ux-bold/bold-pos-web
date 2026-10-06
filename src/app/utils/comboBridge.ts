@@ -5,13 +5,15 @@
  * marcados como combo — no es una unificación general de los dos catálogos
  * (ver specs/2026-09-combos.md §5.3).
  */
-import type { Item } from '../types/item';
+import type { Item, ItemComboComponente } from '../types/item';
 import type { CatalogProduct } from '../data/productCatalog';
-import { findCatalogProduct } from '../data/verticalCatalog';
+import { findCatalogProduct, findCatalogVariant } from '../data/verticalCatalog';
 
 /** Snapshot de un componente ya resuelto a nombre — lo que se denormaliza en una línea de orden. */
 export interface ComboComponentSnapshot {
-  productId: number;
+  productId?: number;
+  itemId?: string;
+  variantId?: string;
   name: string;
   /** Por UNIDAD de combo — multiplicar por la cantidad de la línea al renderizar. */
   quantity: number;
@@ -32,22 +34,41 @@ export function comboBreakdown(
   return (item.comboComponents ?? []).map(c => ({ name: c.name, qty: c.quantity * item.quantity }));
 }
 
+/** Identidad de un componente dentro de un combo: variante, Item propio o producto del catálogo. */
+export function componentKey(c: ItemComboComponente): string {
+  return c.variantId ?? (c.itemId ? `item:${c.itemId}` : String(c.productId));
+}
+
+/** Items del usuario que pueden ser componentes: no combos, activos y no sembrados desde el catálogo. */
+export function isCustomComponentItem(i: Item): boolean {
+  return !i.esCombo && i.activo && i.catalogProductId === undefined && !/^seed-\d+$/.test(i.id);
+}
+
+/** Nombre de un componente: "Camiseta Básica Algodón — Azul / S" si lleva variante. `items` resuelve los Items propios. */
+function componentName(c: ItemComboComponente, items: Item[]): string {
+  if (c.itemId) return items.find(i => i.id === c.itemId)?.nombre ?? 'Producto no encontrado';
+  const p = c.productId !== undefined ? findCatalogProduct(c.productId) : undefined;
+  if (!p) return 'Producto no encontrado';
+  const v = c.variantId ? findCatalogVariant(p.id, c.variantId) : undefined;
+  return v ? `${p.name} — ${v.label}` : p.name;
+}
+
 /** "1× Ceviche de Corvina Real · 1× Salmón Escocés · 1× Limonada de Lavanda" */
-export function autoDescribeComponents(item: Item): string {
+export function autoDescribeComponents(item: Item, items: Item[] = []): string {
   return (item.componentes ?? [])
-    .map(c => {
-      const p = findCatalogProduct(c.productId);
-      return `${c.cantidad}× ${p?.name ?? 'Producto no encontrado'}`;
-    })
+    .map(c => `${c.cantidad}× ${componentName(c, items)}`)
     .join(' · ');
 }
 
 /** Resuelve los componentes de un combo a su snapshot de nombre (por unidad de combo). */
-export function resolveComboComponents(item: Item): ComboComponentSnapshot[] {
-  return (item.componentes ?? []).map(c => {
-    const p = findCatalogProduct(c.productId);
-    return { productId: c.productId, name: p?.name ?? 'Producto no encontrado', quantity: c.cantidad };
-  });
+export function resolveComboComponents(item: Item, items: Item[] = []): ComboComponentSnapshot[] {
+  return (item.componentes ?? []).map(c => ({
+    productId: c.productId,
+    itemId: c.itemId,
+    variantId: c.variantId,
+    name: componentName(c, items),
+    quantity: c.cantidad,
+  }));
 }
 
 /**
@@ -58,15 +79,15 @@ export function resolveComboComponents(item: Item): ComboComponentSnapshot[] {
  * explícitamente eligió esa categoría para el combo (ver
  * specs/2026-09-combos-categoria-venta.md, supersede spec §5.5).
  */
-export function comboItemToCatalogProduct(item: Item): SellableCombo {
+export function comboItemToCatalogProduct(item: Item, items: Item[] = []): SellableCombo {
   return {
     id: item.comboSaleId!,
     name: item.nombre,
     price: item.precioTotal,
-    description: item.descripcion || autoDescribeComponents(item),
+    description: item.descripcion || autoDescribeComponents(item, items),
     catId: item.categoriaId,
     image: item.imagen,
-    comboComponents: resolveComboComponents(item),
+    comboComponents: resolveComboComponents(item, items),
   };
 }
 
@@ -82,5 +103,5 @@ export function selectSellableCombos(items: Item[]): Item[] {
 
 /** Lista lista para fusionar con ALL_CATALOG_PRODUCTS / CAT_PRODUCTS. */
 export function sellableComboProducts(items: Item[]): SellableCombo[] {
-  return selectSellableCombos(items).map(comboItemToCatalogProduct);
+  return selectSellableCombos(items).map(c => comboItemToCatalogProduct(c, items));
 }

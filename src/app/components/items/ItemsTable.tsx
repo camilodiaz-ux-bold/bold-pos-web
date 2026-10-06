@@ -3,13 +3,14 @@
  * canónico del proyecto (VentasPage.tsx): card blanca radius 16,
  * tableLayout:'fixed', th 13/700 con borderBottom 2px, tdStyle 13/500.
  */
-import React, { useEffect, useRef } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Pencil, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import type { Item } from '../../types/item';
 import { getTipoLabel, getExistenciaTotal } from '../../types/item';
 import { formatCOP, formatExistencia } from '../../utils/format';
 import { ItemThumb } from './ItemThumb';
 import { Toggle } from './Toggle';
+import { useCatalog } from '../../vertical';
 
 interface ItemsTableProps {
   rows: Item[];
@@ -44,8 +45,28 @@ const thStyle: React.CSSProperties = {
 
 export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAll, onToggleActivo, onEdit, onDeleteRequest }: ItemsTableProps) {
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
-  const selectedOnPage = rows.filter(r => selectedIds.has(r.id)).length;
-  const allSelected = rows.length > 0 && selectedOnPage === rows.length;
+  const { productVariants } = useCatalog();
+  // Retail: un ítem con variantes es una fila padre expandible (specs/2026-10-items-variantes-lista.md).
+  const variantsOf = (item: Item) =>
+    item.catalogProductId !== undefined ? productVariants[item.catalogProductId]?.variantes : undefined;
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  // Estado "Activo" de cada variante: solo visual en el prototipo (no se persiste).
+  const [inactiveVariantIds, setInactiveVariantIds] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) => setExpandedIds(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  const toggleVariantActivo = (id: string) => setInactiveVariantIds(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  // Los padres con variantes no se seleccionan (como en el POS real).
+  const selectable = rows.filter(r => !variantsOf(r));
+  const selectedOnPage = selectable.filter(r => selectedIds.has(r.id)).length;
+  const allSelected = selectable.length > 0 && selectedOnPage === selectable.length;
   const someSelected = selectedOnPage > 0 && !allSelected;
 
   useEffect(() => {
@@ -79,21 +100,37 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
         </thead>
         <tbody>
           {rows.map((item, idx) => {
-            const existencia = getExistenciaTotal(item);
+            const variantes = variantsOf(item);
+            const isOpen = !!variantes && expandedIds.has(item.id);
+            // Con variantes, la existencia del padre es la suma de sus variantes.
+            const existencia = variantes ? variantes.reduce((a, v) => a + v.existencia, 0) : getExistenciaTotal(item);
+            const isLast = idx === rows.length - 1;
             return (
+              <React.Fragment key={item.id}>
               <tr
-                key={item.id}
                 onClick={() => onEdit(item.id)}
-                style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--black-10)', cursor: 'pointer' }}
+                style={{ borderBottom: isLast && !isOpen ? 'none' : '1px solid var(--black-10)', cursor: 'pointer' }}
                 className="hover:bg-[var(--blue-10)] transition-colors"
               >
                 <td style={tdStyle} onClick={e => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(item.id)}
-                    onChange={() => onToggleSelect(item.id)}
-                    style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--blue-100)' }}
-                  />
+                  {variantes ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(item.id)}
+                      aria-label={isOpen ? 'Contraer variantes' : 'Expandir variantes'}
+                      aria-expanded={isOpen}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--blue-100)' }}
+                    >
+                      {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                    </button>
+                  ) : (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item.id)}
+                      onChange={() => onToggleSelect(item.id)}
+                      style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--blue-100)' }}
+                    />
+                  )}
                 </td>
                 <td style={tdStyle}>
                   <ItemThumb src={item.imagen} alt={item.nombre} />
@@ -122,7 +159,7 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
                   )}
                 </td>
                 <td style={tdStyle}>{item.referencia || '—'}</td>
-                <td style={tdStyle}>{formatCOP(item.precioTotal)}</td>
+                <td style={tdStyle}>{formatCOP(variantes ? 0 : item.precioTotal)}</td>
                 <td style={{ ...tdStyle, color: existencia !== null && existencia < 0 ? 'var(--coral-100)' : tdStyle.color, fontWeight: existencia !== null && existencia < 0 ? 700 : 500 }}>
                   {existencia === null ? '—' : formatExistencia(existencia)}
                 </td>
@@ -153,6 +190,41 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
                   </div>
                 </td>
               </tr>
+              {isOpen && variantes!.map((v, vi) => (
+                <tr
+                  key={v.id}
+                  onClick={() => onEdit(item.id)}
+                  style={{ borderBottom: isLast && vi === variantes!.length - 1 ? 'none' : '1px solid var(--black-10)', cursor: 'pointer' }}
+                  className="hover:bg-[var(--blue-10)] transition-colors"
+                >
+                  <td style={tdStyle} />
+                  <td style={tdStyle}><ItemThumb src={item.imagen} alt={item.nombre} /></td>
+                  <td style={tdStyle}>{v.codigo}</td>
+                  <td style={{ ...tdStyle, overflow: 'hidden', fontWeight: 700 }}>
+                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.nombre} - {v.label}
+                    </span>
+                  </td>
+                  <td style={tdStyle} />
+                  <td style={tdStyle}>{formatCOP(v.price)}</td>
+                  <td style={tdStyle}>{formatExistencia(v.existencia)}</td>
+                  <td style={tdStyle}>{getTipoLabel(item)}</td>
+                  <td style={tdStyle} onClick={e => e.stopPropagation()}>
+                    <Toggle size="sm" checked={!inactiveVariantIds.has(v.id)} onChange={() => toggleVariantActivo(v.id)} ariaLabel={`Activar/desactivar ${item.nombre} - ${v.label}`} />
+                  </td>
+                  <td style={tdStyle} onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => onEdit(item.id)}
+                      aria-label="Editar"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 6, color: 'var(--blue-100)' }}
+                      className="hover:bg-[var(--blue-10)]"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              </React.Fragment>
             );
           })}
         </tbody>
