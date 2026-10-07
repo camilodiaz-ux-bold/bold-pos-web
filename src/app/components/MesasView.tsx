@@ -10,6 +10,7 @@ import {
   LayoutGrid, Map, RefreshCw, CheckCircle, DollarSign,
   ChefHat, Check, Save,
 } from 'lucide-react';
+import { useVentas } from '../store/ventasStore';
 import { MesasGridView } from './MesasGridView';
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
@@ -1378,6 +1379,7 @@ export function MesasView() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived ────────────────────────────────────────────────────────────────
+  const { registrarVenta } = useVentas();
   const selectedTable = useMemo(
     () => tables.find(t => t.id === selectedTableId) ?? null,
     [tables, selectedTableId],
@@ -1822,6 +1824,12 @@ export function MesasView() {
         orderRef={selectedTable.orderSeq != null ? formatOrderNumber(selectedTable.orderSeq) : undefined}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
+          registrarVenta(sale, {
+            zona: selectedTable.zone,
+            mesa: selectedTable.name,
+            personas: selectedTable.guests,
+            abiertaEn: selectedTable.openedAtTimestamp,
+          });
           setTables(prev =>
             prev.map(t =>
               t.id === selectedTableId

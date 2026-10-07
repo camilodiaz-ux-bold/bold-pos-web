@@ -21,6 +21,7 @@ import { nextOrderNumber, formatOrderNumber, getMostradorSlate, replaceMostrador
 import { MostradorCatalog, type MostradorProduct } from '../components/MostradorCatalog';
 import type { RootOutletContext } from '../components/RootLayout';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
+import { useVentas } from '../store/ventasStore';
 import { useVertical, type Vertical } from '../vertical';
 
 function cn(...inputs: ClassValue[]) {
@@ -237,6 +238,7 @@ function StatusDot({ status, active }: { status: OrderStatus; active: boolean })
 export function HomePage() {
   const { subMode } = useOutletContext<RootOutletContext>();
   const { vertical, has } = useVertical();
+  const { registrarVenta } = useVentas();
   const kitchen = has('mesas'); // Retail no envía comandas a cocina: cobra directo
 
   const [orders, setOrders]       = useState<Order[]>(() => buildInitialOrders(vertical));
@@ -412,6 +414,7 @@ export function HomePage() {
         orderRef={kitchen ? formatOrderNumber(parseInt(activeOrder.number, 10)) : `#${activeOrder.number}`}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
+          registrarVenta(sale, kitchen ? { zona: 'Mostrador', abiertaEn: activeOrder.firstComandaSentAt } : {});
           const nuevoNumero = kitchen ? nextOrderNumber() : null;
           if (nuevoNumero != null && /^[1-7]$/.test(activeOrderId)) {
             replaceMostradorSlateEntry(parseInt(activeOrderId, 10) - 1, nuevoNumero);
