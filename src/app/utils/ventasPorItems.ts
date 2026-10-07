@@ -42,18 +42,22 @@ export function fmtReporte(n: number): string {
   return `$ ${n.toLocaleString('en-US', entero ? {} : { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
-interface Acc extends VentasItemsFila {
+export interface AccLinea extends VentasItemsFila {
   esCombo: boolean;
   ultimaEn: number;
   ultimoNombre: string;
   productId?: number;
 }
 
-export function agregarVentasPorItems(
-  ventas: Venta[],
-  ctx: { allProducts: CatalogProduct[]; catDefs: CatDef[]; items: Item[] },
-): VentasItemsFila[] {
-  const acc = new Map<string, Acc>();
+export interface VentasItemsCtx {
+  allProducts: CatalogProduct[];
+  catDefs: CatDef[];
+  items: Item[];
+}
+
+/** Acumula las líneas de las ventas por clave de agrupación (§5.3), sin resolver código/nombre/categoría. */
+export function acumularLineas(ventas: Venta[]): AccLinea[] {
+  const acc = new Map<string, AccLinea>();
 
   for (const v of ventas) {
     for (const si of v.items) {
@@ -77,27 +81,40 @@ export function agregarVentasPorItems(
     }
   }
 
+  return Array.from(acc.values());
+}
+
+/** Resuelve código, nombre, categoría y tipo de una fila acumulada, junto con el Item del que salen (si existe). */
+export function resolverFila(
+  a: AccLinea,
+  ctx: VentasItemsCtx,
+): { codigo: string; nombre: string; categoria: string; tipo: 'Ítem' | 'Combo'; item?: Item } {
   const catNombre = (id?: string) => ctx.catDefs.find(c => c.id === id)?.name ?? '-';
+  const comboItem = a.productId !== undefined ? ctx.items.find(i => i.comboSaleId === a.productId) : undefined;
+  const esCombo = a.esCombo || !!comboItem;
 
-  return Array.from(acc.values()).map(a => {
-    const comboItem = a.productId !== undefined ? ctx.items.find(i => i.comboSaleId === a.productId) : undefined;
-    if (comboItem) a.esCombo = true;
+  let codigo = '-', nombre = a.ultimoNombre, categoria = '-';
+  let item: Item | undefined = comboItem;
+  if (comboItem) {
+    codigo = comboItem.codigo;
+    nombre = comboItem.nombre;
+    categoria = catNombre(comboItem.categoriaId);
+  } else if (a.productId !== undefined) {
+    const prod = ctx.allProducts.find(p => p.id === a.productId);
+    item = ctx.items.find(i => i.id === `seed-${a.productId}` || i.catalogProductId === a.productId);
+    if (item) codigo = item.codigo;
+    if (prod) { nombre = prod.name; categoria = catNombre(prod.catId); }
+  }
 
-    let codigo = '-', producto = a.ultimoNombre, categoria = '-';
-    if (comboItem) {
-      codigo = comboItem.codigo;
-      producto = comboItem.nombre;
-      categoria = catNombre(comboItem.categoriaId);
-    } else if (a.productId !== undefined) {
-      const prod = ctx.allProducts.find(p => p.id === a.productId);
-      const item = ctx.items.find(i => i.id === `seed-${a.productId}` || i.catalogProductId === a.productId);
-      if (item) codigo = item.codigo;
-      if (prod) { producto = prod.name; categoria = catNombre(prod.catId); }
-    }
+  return { codigo, nombre, categoria, tipo: esCombo ? 'Combo' : 'Ítem', item };
+}
 
+export function agregarVentasPorItems(ventas: Venta[], ctx: VentasItemsCtx): VentasItemsFila[] {
+  return acumularLineas(ventas).map(a => {
+    const r = resolverFila(a, ctx);
     return {
-      key: a.key, codigo, producto, tipo: a.esCombo ? 'Combo' : 'Ítem', categoria,
+      key: a.key, codigo: r.codigo, producto: r.nombre, tipo: r.tipo, categoria: r.categoria,
       cantidad: a.cantidad, subtotal: a.subtotal, total: a.total,
-    } as VentasItemsFila;
+    };
   });
 }
