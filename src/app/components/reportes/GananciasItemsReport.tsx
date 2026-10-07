@@ -236,7 +236,7 @@ export function GananciasItemsReport() {
                   <td style={td}>{fmtReporte(f.totalVentas)}</td>
                   <td style={td}>{fmtReporte(f.totalCostos)}</td>
                   <td style={td}>{fmtReporte(f.totalGanancias)}</td>
-                  <td style={{ ...td, fontWeight: 700, color: f.gananciaPct >= 0 ? 'var(--success-150)' : 'var(--error-150)' }}>
+                  <td style={{ ...td, fontWeight: 700, color: f.gananciaPct >= 0 ? 'var(--feedback-success-150)' : 'var(--feedback-error-150)' }}>
                     {fmtPct(f.gananciaPct)}
                   </td>
                 </tr>
