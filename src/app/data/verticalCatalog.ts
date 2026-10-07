@@ -6,11 +6,14 @@
  */
 import type { Vertical } from '../vertical/modules';
 import type { Item } from '../types/item';
+import type { Venta } from '../types/venta';
 import { CAT_DEFS, CAT_PRODUCTS, ALL_CATALOG_PRODUCTS, FAVORITE_IDS } from './productCatalog';
 import type { CatDef, CatalogProduct } from './productCatalog';
 import { UNIDADES, IMPUESTOS } from './itemsCatalogs';
 import type { UnidadDef, ImpuestoDef } from './itemsCatalogs';
 import { buildSeedItems } from './itemsSeed';
+import { buildRestaurantSeedVentas } from './ventasSeed';
+import { buildRetailSeedVentas } from './retail/ventasSeed';
 import { RETAIL_CAT_DEFS, RETAIL_CAT_PRODUCTS, RETAIL_ALL_PRODUCTS, RETAIL_FAVORITE_IDS } from './retail/productCatalog';
 import { buildRetailSeedItems } from './retail/itemsSeed';
 import { RETAIL_PRODUCT_VARIANTS, findProductVariant } from './retail/productVariants';
@@ -28,6 +31,9 @@ export interface VerticalCatalog {
   /** Clave de localStorage del store de Items — separada por vertical. */
   itemsStorageKey: string;
   buildSeedItems: (now?: number) => Item[];
+  /** Clave de localStorage del store de Ventas — separada por vertical. */
+  ventasStorageKey: string;
+  buildSeedVentas: () => Venta[];
 }
 
 const CATALOGS: Record<Vertical, VerticalCatalog> = {
@@ -42,6 +48,8 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     // Conserva la clave histórica para no perder los ítems ya guardados.
     itemsStorageKey: 'bold-pos:items:v2',
     buildSeedItems,
+    ventasStorageKey: 'bold-pos:ventas:restaurantes:v1',
+    buildSeedVentas: buildRestaurantSeedVentas,
   },
   retail: {
     catDefs: RETAIL_CAT_DEFS,
@@ -54,6 +62,8 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     impuestos: IMPUESTOS.filter(i => i.id !== 'inc-8'),
     itemsStorageKey: 'bold-pos:items:retail:v3',
     buildSeedItems: buildRetailSeedItems,
+    ventasStorageKey: 'bold-pos:ventas:retail:v1',
+    buildSeedVentas: buildRetailSeedVentas,
   },
 };
 
