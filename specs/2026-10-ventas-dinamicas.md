@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Estado** | Listo para implementación |
+| **Estado** | ✅ Implementado |
 | **Repo** | `camilodiaz-ux-bold/bold-pos-web` |
 | **Versión** | 1.0 |
 | **Fecha** | Octubre 2026 |
@@ -47,7 +47,7 @@ Una sola forma para ambas verticales (`src/app/types/venta.ts`). Restaurantes la
 |---|---|
 | `id` | Id interno único; lo usa la ruta del detalle. |
 | `numero` | Número visible: `ORD0011` (Restaurantes), `3763` (comprobante Retail), `SETT 2400418` (factura Retail). |
-| `tipoDoc` | `comprobante` o `factura`. Restaurantes siempre es `factura`. |
+| `tipoDoc` | `comprobante` o `factura`. En Restaurantes los datos sembrados mezclan ambos tipos; las ventas nuevas (cobradas en el checkout) son siempre `factura`. |
 | `numeroDocumento` | Restaurantes: número de la factura electrónica asociada a la orden (`SETT 2400418`). |
 | `emitidaEn` | Epoch ms de la emisión (= cobro). Define el orden del listado. |
 | `abiertaEn` | Epoch ms de la apertura de la mesa/orden (Restaurantes). |
@@ -92,14 +92,14 @@ Una sola forma para ambas verticales (`src/app/types/venta.ts`). Restaurantes la
 |---|---|
 | No. Orden | `numero` (`ORD####`) |
 | Hora Inicio | `abiertaEn`, o `emitidaEn` si falta |
-| Hora Cierre | `emitidaEn` |
+| Hora Cierre | `emitidaEn`, o `---` si la venta está abierta |
 | Zona | `zona` |
 | Mesa | `mesa`, o `---` |
 | Usuario | `vendedor` |
-| Total | `total` en COP |
-| Tipo de documento | Factura electrónica |
+| Total | `total` en COP, con coma como separador de miles (`$505,680`) |
+| Tipo de documento | Factura electrónica o Comprobante (según `tipoDoc`) |
 | Estado | Pagado / Abierto / Cancelado |
-| Estado DIAN | Enviada / Pendiente |
+| Estado DIAN | Enviada / Pendiente (badge de advertencia, amarillo) |
 
 **Filtros** (todos funcionales, D7):
 
@@ -107,7 +107,7 @@ Una sola forma para ambas verticales (`src/app/types/venta.ts`). Restaurantes la
 - Fecha (un día: desde = hasta).
 - Estado: Todos / Pagado / Abierto / Cancelado.
 - Usuario, Zona y Mesa: opciones armadas con los valores presentes en las ventas.
-- Tipo de documento.
+- Tipo de documento: Todos / Comprobante / Factura electrónica.
 - Estado DIAN: Todos / Enviada / Pendiente.
 
 El clic en una fila abre `/ventas/:id`.
@@ -128,19 +128,24 @@ Se mantiene la UI actual y los datos salen de la venta registrada. Si el id no e
 
 ## 8. Datos sembrados (Restaurantes)
 
-Diez ventas `ORD0001`–`ORD0010` con ítems del catálogo de Restaurantes (ids 101–184), propina del 10 %, y las zonas, mesas y meseros de las filas actuales. Se conserva la mezcla de estados de hoy:
+Diez ventas `ORD0001`–`ORD0010` con ítems del catálogo de Restaurantes (ids 101–184), propina del 10 %, y las zonas y mesas reales del plano (Salón: S02, S04…; Terraza: T02, T04…, no "Zona 1/2" ni "Mesa N"). Se conserva la mezcla de estados de hoy:
+
+- Tipo de documento mezclado: `ORD0001`, `03`, `04`, `05`, `07`, `08` y `09` son Comprobante; `ORD0002`, `06` y `10` son Factura electrónica.
 
 - `ORD0003` y `ORD0007`: abiertas (sin pagos).
 - `ORD0005`: cancelada.
 - `ORD0006`: factura con estado DIAN pendiente.
 - Una venta con pago mixto (Efectivo + Tarjeta) y una con pago dividido por persona.
-- Las facturas llevan número de documento `SETT 24004xx`, resolución y CUFE.
+- Las facturas llevan número de documento `SETT 2400401`–`SETT 2400403`, resolución y CUFE. El primer cobro nuevo es `SETT 2400418`.
+- La clave de `localStorage` de Restaurantes es `bold-pos:ventas:restaurantes:v2`.
+- El badge DIAN "Pendiente" (`ORD0006`) usa la variante de advertencia.
+- En `/ventas`, las ventas abiertas (`ORD0003`, `ORD0007`) muestran `---` en Hora Cierre.
 
 ## 9. Qué NO cambia en Restaurantes
 
 - El menú: Ingresos sigue siendo Ventas, Recibos, Notas crédito y Notas débito.
 - El Dashboard (`pages/Dashboard.tsx`) no se toca.
-- El checkout se ve igual que hoy: sin selector de tipo de documento, siempre factura electrónica.
+- El checkout se ve igual que hoy: sin selector de tipo de documento, siempre factura electrónica (las ventas nuevas son siempre `factura`).
 - Las rutas existentes (`/ventas`, `/ventas/:id`) y el basename no se modifican.
 - La comanda de cocina y las pestañas de Mostrador conservan su formato visual (`#011`).
 
@@ -150,3 +155,8 @@ Diez ventas `ORD0001`–`ORD0010` con ítems del catálogo de Restaurantes (ids 
 - Ventas a crédito o cobros parciales desde el checkout (solo existen como datos sembrados en Retail).
 - Un botón para restablecer los datos de demo (D7).
 - Persistir ventas fuera de `localStorage`.
+
+## 11. Limitaciones conocidas
+
+- Las mesas sembradas con comanda ya enviada (sin `orderSeq`) no muestran "Orden #" en la vista previa de cocina hasta que se envían ajustes o se cobra la mesa.
+- El consecutivo `SETT` es independiente por vertical: Restaurantes usa `bold-pos:invoice-seq:v1` y Retail `bold-pos:invoice-seq:retail:v1`. Ambos arrancan en `SETT 2400418`.

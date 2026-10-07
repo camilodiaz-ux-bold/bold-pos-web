@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Estado** | Listo para implementación |
+| **Estado** | ✅ Implementado |
 | **Repo** | `camilodiaz-ux-bold/bold-pos-web` |
 | **Versión** | 1.0 |
 | **Fecha** | Octubre 2026 |
@@ -21,7 +21,7 @@ En Retail, el módulo Ventas de Restaurantes se reemplaza por dos listados de In
 | | Comprobante | Factura electrónica |
 |---|---|---|
 | ¿Va a la DIAN? | No | Sí |
-| Número | `No. 3763…` (consecutivo propio) | `SETT …` (consecutivo de facturas) |
+| Número | `No. 3763…` (consecutivo propio) | `SETT …` (consecutivo SETT propio de Retail) |
 | Resolución | No lleva (`---`) | Sí |
 | CUFE | No | Sí |
 | Estado DIAN | No | Aceptada / Pendiente |
@@ -39,7 +39,7 @@ En Retail, el módulo Ventas de Restaurantes se reemplaza por dos listados de In
 
 ### Decisiones propias del spec (a validar en la revisión)
 
-- **P3 · IVA en el comprobante solo si es mayor a 0.** El detalle y el ticket del comprobante muestran Subtotal / Descuento / IVA / Total, de modo que la suma cuadra; la fila de IVA se omite cuando el impuesto es 0 (como en el POS real), dejando Subtotal / Descuento / Total. La factura siempre desglosa el IVA.
+- **P3 · IVA en el comprobante solo si es mayor a 0.** El detalle y el ticket del comprobante muestran Subtotal / Descuento / IVA / Total, de modo que la suma cuadra; la fila de IVA se omite cuando el impuesto es 0 (como en el POS real), dejando Subtotal / Descuento / Total. La factura siempre desglosa el IVA. Implementado así: el comprobante muestra el IVA cuando es mayor a 0, pero nunca Base imponible ni validación DIAN.
 - **P4 · Una tarifa de IVA.** El checkout usa una sola tarifa (19 %). La columna "Impuesto" de la factura muestra "IVA 19%" en todas las líneas. No se modela IVA por ítem.
 - **P6 · Rutas.** En Retail, `/ventas` y `/ventas/:id` redirigen a `/comprobantes`. Las rutas existentes no se modifican; la redirección vive dentro de las páginas.
 
@@ -64,9 +64,9 @@ Redirecciones: en Retail, `/ventas` y `/ventas/:id` llevan a `/comprobantes`. En
 - La Resolución se muestra solo si el tipo es factura (un comprobante no lleva resolución DIAN).
 - Al cobrar:
   - Comprobante: número `3763`, `3764`… (consecutivo propio; el primero es 3763 porque los sembrados llegan a 3762).
-  - Factura: `SETT 24004xx`, con el consecutivo de facturas actual.
+  - Factura: `SETT 2400418`, `SETT 2400419`… Retail lleva su propio consecutivo SETT (`bold-pos:invoice-seq:retail:v1`), independiente del de Restaurantes; la primera factura nueva es `SETT 2400418`.
 - Ticket impreso (80 mm):
-  - Comprobante: título "Comprobante de Venta No. 3763"; sin fecha de validación, base imponible, resolución ni CUFE; con fila de IVA solo si el impuesto es mayor a 0 (P3).
+  - Comprobante: título "Comprobante de Venta" y debajo "No. 3763"; sin fecha de validación, base imponible, resolución ni CUFE; con fila de IVA solo si el impuesto es mayor a 0 (P3).
   - Factura: igual que hoy (ver `2026-09-checkout-factura.md`).
 - Panel "Venta Completada": el botón y los toasts dicen "Imprimir comprobante" o "Imprimir factura" según el tipo.
 - En Restaurantes el checkout no cambia: sin selector, siempre factura.
@@ -103,7 +103,7 @@ Si el id no existe o el documento no es del tipo de la ruta: "Documento no encon
 
 - Izquierda: Cliente · Sucursal · Fecha de emisión · Fecha de vencimiento · Método de pago (el método, o "Pago mixto" si hay más de uno).
 - Derecha: Empresa · Emitido por · Registrada en Turno No. · Vendedor.
-- Solo factura, una fila completa más: Resolución y **CUFE** (monoespaciado, con corte de línea para que no desborde).
+- Solo factura, una fila completa más: Resolución y **CUFE** (fuente monoespaciada del repo, `Courier New`, con corte de línea para que no desborde).
 
 **Tarjeta "Ítems":**
 
@@ -123,10 +123,10 @@ Si el id no existe o el documento no es del tipo de la ruta: "Documento no encon
 
 ## 8. Datos sembrados (P5, parte Retail)
 
-Todas con fechas entre el 28-sep y el 6-oct de 2026, ítems del catálogo Retail (ids 201+), métodos de pago Efectivo, Nequi y Tarjeta, y recibos `8410`–`8428`. Sucursal `Hub Ciudad del Río`, emitido por `Wendell Nazar`.
+Todas con fechas entre el 28-sep y el 6-oct de 2026, ítems del catálogo Retail (ids 201+), métodos de pago Efectivo, Nequi y Tarjeta, y recibos `8410`–`8427` (18 documentos, uno por venta, por orden de fecha). Sucursal `Hub Ciudad del Río`, emitido por `Wendell Nazar`.
 
-- **Comprobantes:** `3753`–`3762` (el siguiente es 3763), turnos 520–528. Clientes: Daniel Aycardy, David, Consumidor final y Comercial Andina SAS (NIT: 901.555.777). El `3755` es "No pagada", con total de $5,000 y saldo de $3,000 (pagado $2,000).
-- **Facturas:** `SETT 2400410`–`SETT 2400417` (el siguiente es `SETT 2400418`, el inicio actual del consecutivo de facturas). Todas con CUFE y resolución "Resolution - Retail Demo 2026". Todas aceptadas por la DIAN, salvo `SETT 2400410`, que está pendiente y "No pagada".
+- **Comprobantes:** `3753`–`3762` (el siguiente es 3763), turnos 520–528. Clientes: Daniel aycardy 2, David, Consumidor final y Comercial Andina SAS (NIT: 901.555.777). El `3755` es "No pagada", con total de $5,000 y saldo de $3,000 (pagado $2,000).
+- **Facturas:** `SETT 2400410`–`SETT 2400417` (el siguiente es `SETT 2400418`, el inicio del consecutivo SETT de Retail). Todas con CUFE y resolución "Resolution - Retail Demo 2026". Todas aceptadas por la DIAN, salvo `SETT 2400410`, que está pendiente y "No pagada".
 
 ## 9. Qué NO cambia en Restaurantes
 
@@ -137,7 +137,7 @@ Todas con fechas entre el 28-sep y el 6-oct de 2026, ítems del catálogo Retail
 
 ## 10. Fuera de alcance
 
-- Cotizaciones como pantalla (solo ítem de menú con toast, D8).
+- Cotizaciones como pantalla: es solo un ítem de menú con toast, sin ruta ni página (D8).
 - Anular comprobantes o facturas, notas crédito/débito asociadas y cobros de saldo pendiente.
 - IVA por ítem y otras tarifas distintas de 19 % (P4).
 - Envío real a la DIAN o por correo: "Enviar" y "Verificar en la DIAN" son solo toasts.
