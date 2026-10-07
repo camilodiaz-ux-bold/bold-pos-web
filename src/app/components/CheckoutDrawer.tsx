@@ -37,6 +37,8 @@ const PAYMENT_METHODS = [
 
 export interface CheckoutItem {
   id: string;
+  productId?: number;
+  isCombo?: boolean;
   name: string;
   quantity: number;
   price: number;

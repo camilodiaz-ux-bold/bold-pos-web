@@ -190,7 +190,9 @@ function CategoryCard({ category, isRestaurantes }: { category: ReportCategory; 
                 ? () => navigate('/reportes/restaurantes/rest-ventas')
                 : item.id === 'ventas-async'
                   ? () => navigate('/reportes/restaurantes/rest-ventas-async')
-                  : () => toast.info(item.label)
+                  : item.id === 'ventas-items'
+                    ? () => navigate('/reportes/restaurantes/ventas-items')
+                    : () => toast.info(item.label)
             }
           />
         ))}
