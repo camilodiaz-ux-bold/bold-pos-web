@@ -8,73 +8,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Calendar, ChevronDown, ChevronUp, ChevronsUpDown, FileSpreadsheet } from 'lucide-react';
-import { toast } from 'sonner';
 import { FilterDropdown } from '../../pages/ReporteDetallePage';
 import { useVentas } from '../../store/ventasStore';
 import { useItems } from '../../store/itemsStore';
 import { useCatalog, useVertical } from '../../vertical';
 import { SESION_VENTAS, isoDia, opciones } from '../../utils/ventas';
 import {
+  MFONT, TIPO_OPTIONS, PAGE_SIZES, norm, primerDiaDelMes, inputStyle, Field, PillButton, SummaryCard,
+} from './reporteShared';
+import {
   agregarVentasPorItems, fmtReporte, ventaIncluida, type VentasItemsFila,
 } from '../../utils/ventasPorItems';
 
-const MFONT = "'Montserrat', sans-serif";
-const TIPO_OPTIONS = ['Todos', 'Ítems', 'Combos'];
-const PAGE_SIZES = [10, 25, 50];
-
 type SortKey = 'codigo' | 'cantidad' | 'subtotal' | 'total';
-
-const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-function primerDiaDelMes(): string {
-  const d = new Date();
-  return isoDia(new Date(d.getFullYear(), d.getMonth(), 1).getTime());
-}
 
 function fmtActualizacion(ts: number): string {
   const d = new Date(ts);
   const p = (x: number) => String(x).padStart(2, '0');
   const mes = d.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '');
   return `${d.getDate()} ${mes.charAt(0).toUpperCase()}${mes.slice(1)} ${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', height: 36, padding: '0 12px', boxSizing: 'border-box',
-  border: '1px solid var(--blue-20)', borderRadius: 8, backgroundColor: '#fff',
-  fontFamily: MFONT, fontSize: 13, fontWeight: 500, color: 'var(--black-100)', outline: 'none',
-};
-
-/** Select a todo el ancho de la celda de la grilla. */
-function Field({ children }: { children: React.ReactNode }) {
-  return <div className="[&>div]:w-full [&_select]:w-full">{children}</div>;
-}
-
-function PillButton({ label, bg, icon }: { label: string; bg: string; icon?: React.ReactNode }) {
-  return (
-    <button
-      onClick={() => toast.info('Próximamente')}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 24px',
-        borderRadius: 18, border: 'none', backgroundColor: bg, color: '#fff',
-        fontFamily: MFONT, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-      }}
-      className="hover:opacity-90 transition-opacity"
-    >
-      {label}{icon}
-    </button>
-  );
-}
-
-function SummaryCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div style={{
-      backgroundColor: '#fff', borderRadius: 12, padding: '10px 16px', minWidth: 300, textAlign: 'center',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-    }}>
-      <p style={{ fontFamily: MFONT, fontSize: 13, fontWeight: 500, color: 'var(--black-100)', margin: 0 }}>{label}</p>
-      <p style={{ fontFamily: MFONT, fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>{fmtReporte(value)}</p>
-    </div>
-  );
 }
 
 export function VentasItemsReport() {
