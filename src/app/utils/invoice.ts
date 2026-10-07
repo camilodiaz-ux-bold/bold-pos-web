@@ -17,6 +17,8 @@ export interface SaleItem {
   /** Descuento de línea en %, 0-20. */
   discount?: number;
   comboComponents?: ComboComponentSnapshot[];
+  /** Nota de la línea. */
+  note?: string;
 }
 
 export interface CompletedSale {
@@ -26,6 +28,8 @@ export interface CompletedSale {
   orderRef: string;
   /** "SETT 2400418" — asignado una sola vez al confirmar el pago. */
   invoiceNumber: string;
+  /** Retail: comprobante (consecutivo propio) o factura electrónica. Restaurantes: siempre 'factura'. */
+  tipoDoc: 'comprobante' | 'factura';
   items: SaleItem[];
   subtotal: number;
   taxRate: number;
@@ -59,6 +63,21 @@ export function nextInvoiceNumber(): string {
     localStorage.setItem(SEQ_KEY, String(n));
   } catch { /* storage no disponible: se usa el inicial */ }
   return `${INVOICE_ISSUER.prefijo} ${n}`;
+}
+
+const COMPROBANTE_SEQ_KEY = 'bold-pos:comprobante-seq:v1';
+/** Primer comprobante que se emite: los sembrados de Retail llegan a 3762. */
+export const COMPROBANTE_SEQ_START = 3763;
+
+/** Siguiente número de comprobante de Retail ("3763", luego "3764"…). Persistido en localStorage. */
+export function nextComprobanteNumber(): string {
+  let n = COMPROBANTE_SEQ_START;
+  try {
+    const last = parseInt(localStorage.getItem(COMPROBANTE_SEQ_KEY) ?? '', 10);
+    if (Number.isFinite(last) && last >= COMPROBANTE_SEQ_START) n = last + 1;
+    localStorage.setItem(COMPROBANTE_SEQ_KEY, String(n));
+  } catch { /* storage no disponible: se usa el inicial */ }
+  return String(n);
 }
 
 // ─── Cliente ──────────────────────────────────────────────────────────────────

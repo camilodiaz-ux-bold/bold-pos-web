@@ -425,6 +425,7 @@ export function CheckoutDrawer({
       // Retail no maneja número de orden/comanda: va vacío y la factura no lo imprime.
       orderRef:      retail ? '' : (orderRef ?? `#${invoiceNumber.slice(-3)}`),
       invoiceNumber,
+      tipoDoc:       'factura', // TODO(Tarea 6): dinámico en Retail
       items,
       subtotal,
       taxRate:       TAX_RATE,
