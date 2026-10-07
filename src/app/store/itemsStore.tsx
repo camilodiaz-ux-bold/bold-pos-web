@@ -17,8 +17,9 @@ import { getVerticalCatalog } from '../data/verticalCatalog';
 import { useVertical, type Vertical } from '../vertical';
 
 // La clave de localStorage depende de la vertical (data/verticalCatalog.ts):
-// Restaurantes conserva 'bold-pos:items:v2' (v1 → v2: Item ganó esCombo/componentes/
-// comboSaleId, specs/2026-09-combos.md §6.1); Retail usa su propia clave.
+// Restaurantes usa 'bold-pos:items:v3' (v1 → v2: Item ganó esCombo/componentes/
+// comboSaleId, specs/2026-09-combos.md §6.1; v2 → v3: combos sembrados con costo,
+// specs/2026-10-reporte-ganancias-items.md §8.3); Retail usa su propia clave (v4 por lo mismo).
 
 function generateAutoCode(): string {
   return `I-${Date.now()}`;
