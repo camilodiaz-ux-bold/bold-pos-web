@@ -96,7 +96,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const newSaleMode = has('mesas') ? 'Mesas' : 'Mostrador';
   // Rutas que tienen su propia entrada de menú: mientras estemos en ellas,
   // "Punto de venta" no debe resaltarse aunque activeMode caiga en su default.
-  const OWNED_ROUTES = ['/ventas', '/items'];
+  const OWNED_ROUTES = ['/ventas', '/items', '/comprobantes', '/facturas-venta'];
   const inOwnedRoute = OWNED_ROUTES.some(r => pathname.startsWith(r));
   const inPosView = activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
   const [isExpanded, setIsExpanded] = useState(!inPosView);
@@ -169,8 +169,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       icon: (a, sz = 16) => <TrendingUp size={sz} color={a ? C.blue100 : C.black60} strokeWidth={a ? 2.5 : 1.5} />,
       hasSubmenu: true,
       subItems: [
-        { id: 'ventas',       label: 'Ventas',             icon: <IcRecibos size={16} />,      active: pathname === '/ventas', onClick: () => navigate('/ventas') },
+        { id: 'ventas',       label: 'Ventas',             icon: <IcRecibos size={16} />,      active: pathname.startsWith('/ventas'), onClick: () => navigate('/ventas') },
         { id: 'recibos',      label: 'Recibos',           icon: <IcRecibos size={16} />,      active: false, onClick: () => toast.info('Recibos') },
+        { id: 'comprobantes',  label: 'Comprobantes',      icon: <IcComprobantes size={16} />, active: pathname.startsWith('/comprobantes'),   onClick: () => navigate('/comprobantes') },
+        { id: 'facturasventa', moduleId: 'facturas-venta', label: 'Facturas de Venta', icon: <IcFacturas size={16} />, active: pathname.startsWith('/facturas-venta'), onClick: () => navigate('/facturas-venta') },
+        { id: 'cotizaciones',  label: 'Cotizaciones',      icon: <IcCotizaciones size={16} />, active: false, onClick: () => toast.info('Cotizaciones') },
         { id: 'notascredito', label: 'Notas crédito',     icon: <IcNotasCredito size={16} />, active: false, onClick: () => toast.info('Notas crédito') },
         { id: 'notasdebito',  label: 'Notas débito',      icon: <IcNotasDebito size={16} />,  active: false, onClick: () => toast.info('Notas débito') },
       ],
@@ -251,7 +254,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     if (item.id === 'inicio')       return activeMode === 'Inicio';
     if (item.id === 'puntodeventa') return (activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos') && !inOwnedRoute;
     if (item.id === 'reportes')     return activeMode === 'Reportes';
-    if (item.id === 'ingresos')     return item.subItems?.some(sub => sub.active) || pathname === '/ventas' || pathname.startsWith('/ventas');
+    if (item.id === 'ingresos')     return item.subItems?.some(sub => sub.active) ?? false;
     // Generic: parent is active when any child is active
     if (item.subItems)              return item.subItems.some(sub => sub.active);
     return false;
