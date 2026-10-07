@@ -8,8 +8,8 @@
  * idempotente (persiste el slate), así que ejecutarlo dos veces es seguro.
  */
 const ORDER_SEQ_KEY = 'bold-pos:order-seq:v1';
-/** ORD0001–ORD0010 son las ventas sembradas (data/ventasSeed.ts). */
-export const ORDER_SEQ_START = 11;
+/** ORD0001–ORD0012 son las ventas sembradas (data/ventasSeed.ts). */
+export const ORDER_SEQ_START = 13;
 
 export function nextOrderNumber(): number {
   let n = ORDER_SEQ_START;
@@ -25,7 +25,7 @@ export function formatOrderNumber(n: number): string {
   return `ORD${String(n).padStart(4, '0')}`;
 }
 
-const SLATE_KEY = 'bold-pos:mostrador-slate:v1';
+const SLATE_KEY = 'bold-pos:mostrador-slate:v2';
 
 function readSlate(): number[] {
   try {

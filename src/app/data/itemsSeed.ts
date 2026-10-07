@@ -21,7 +21,7 @@ import { getImpuesto } from './itemsCatalogs';
 // Combos de ejemplo (specs/2026-09-combos.md §10) — productos reales de
 // ALL_CATALOG_PRODUCTS agrupados a precio fijo. id/codigo/comboSaleId fijos
 // para que sean deterministas y reconocibles en localStorage.
-const SEED_COMBOS: Array<Omit<Item, 'creadoEn' | 'actualizadoEn'>> = [
+export const SEED_COMBOS: Array<Omit<Item, 'creadoEn' | 'actualizadoEn'>> = [
   {
     id: 'seed-combo-1',
     codigo: '900001',

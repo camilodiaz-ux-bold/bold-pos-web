@@ -11,6 +11,7 @@ import { useParams, useNavigate, Navigate } from 'react-router';
 import { useVertical } from '../vertical';
 import { ArrowLeft, RefreshCw, X, ChevronDown, Download } from 'lucide-react';
 import { VentasAsyncReport } from '../components/reportes/VentasAsyncReport';
+import { VentasItemsReport } from '../components/reportes/VentasItemsReport';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -261,7 +262,7 @@ export function StatusBadge({ label, variant }: { label: string; variant: Status
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 // Reportes bajo /reportes/restaurantes/ que son exclusivos de Restaurantes. Los demás
-// (rest-ventas, rest-ventas-async) son reportes core que solo viven en esa ruta por historia.
+// (rest-ventas, rest-ventas-async, ventas-items) son reportes core que solo viven en esa ruta por historia.
 const RESTAURANT_ONLY_REPORTS = new Set(['rest-ocupacion', 'rest-propinas', 'rest-propinas-turno']);
 
 /** Guard de ruta: los reportes exclusivos de Restaurantes redirigen a /inicio en otras verticales. */
@@ -316,6 +317,7 @@ export function ReporteDetallePage() {
     : [];
 
   if (id === 'rest-ventas-async') return <VentasAsyncReport />;
+  if (id === 'ventas-items') return <VentasItemsReport />;
 
   if (!config) {
     return (

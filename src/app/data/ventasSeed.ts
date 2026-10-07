@@ -1,12 +1,14 @@
 /**
- * ventasSeed.ts — Ventas sembradas de Restaurantes (ORD0001–ORD0010, 6-oct-2026).
+ * ventasSeed.ts — Ventas sembradas de Restaurantes (ORD0001–ORD0012, 6-oct-2026).
  * Los totales salen de los ítems (seed) para que siempre cuadren.
  * Retail tiene su propia semilla en retail/ventasSeed.ts.
  */
 import type { Venta, VentaPago } from '../types/venta';
 import type { SaleItem } from '../utils/invoice';
 import { mockCufe } from '../utils/ventas';
+import { resolveComboComponents } from '../utils/comboBridge';
 import { ALL_CATALOG_PRODUCTS } from './productCatalog';
+import { SEED_COMBOS } from './itemsSeed';
 
 const TAX = 0.19;
 const RESOLUCION = 'Resolution test SP - Resolution 1234509752467';
@@ -36,6 +38,17 @@ function item(productId: number, quantity: number, note?: string): SaleItem {
   const p = ALL_CATALOG_PRODUCTS.find(x => x.id === productId);
   if (!p) throw new Error(`ventasSeed: producto ${productId} no existe en el catálogo de Restaurantes`);
   return { id: String(productId), name: p.name, price: p.price, quantity, ...(note ? { note } : {}) };
+}
+
+/** Combo sembrado (comboSaleId ≥ 9000), con la misma forma que produce el checkout. */
+function combo(comboSaleId: number, quantity: number): SaleItem {
+  const c = SEED_COMBOS.find(x => x.comboSaleId === comboSaleId);
+  if (!c) throw new Error(`ventasSeed: combo ${comboSaleId} no existe en SEED_COMBOS`);
+  return {
+    id: String(comboSaleId), productId: comboSaleId, isCombo: true,
+    name: c.nombre, price: c.precioTotal, quantity,
+    comboComponents: resolveComboComponents(c as Parameters<typeof resolveComboComponents>[0]),
+  };
 }
 
 /** Pago mixto: `efectivo` en efectivo y el resto con tarjeta. */
@@ -112,6 +125,15 @@ export function buildRestaurantSeedVentas(): Venta[] {
       { persona: 'Persona 3', method: 'Tarjeta',  amount: 300000 },
       { persona: 'Persona 4', method: 'Nequi',    amount: 0 },
     ]),
+    // Ventas con combos (specs/2026-10-reporte-ventas-items.md §8.3).
+    seed({ ...base, id: num(11), numero: num(11), ...comprobante, recibo: rec(11),
+      emitidaEn: at(6, 21, 30), abiertaEn: at(6, 20, 40), zona: 'Salón', mesa: 'S03', personas: 2,
+      cliente: 'Consumidor final', vendedor: 'Carlos Pérez', estado: 'pagada',
+      items: [combo(9001, 1), item(103, 1)] }),
+    seed({ ...base, id: num(12), numero: num(12), ...comprobante, recibo: rec(12),
+      emitidaEn: at(6, 21, 50), abiertaEn: at(6, 20, 55), zona: 'Terraza', mesa: 'T03', personas: 4,
+      cliente: 'Consumidor final', vendedor: 'Ana Ruiz', estado: 'pagada',
+      items: [combo(9002, 2)] }),
   ];
   // Una orden cancelada no deja saldo por cobrar.
   return ventas.map(v => (v.estado === 'cancelada' ? { ...v, saldo: 0 } : v));
