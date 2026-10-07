@@ -37,7 +37,7 @@ const outlineBtn: React.CSSProperties = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function InfoRow({ label, children, last }: { label: string; children: React.ReactNode; last?: boolean }) {
+function InfoRow({ label, children, last, title }: { label: string; children: React.ReactNode; last?: boolean; title?: string }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -48,7 +48,7 @@ function InfoRow({ label, children, last }: { label: string; children: React.Rea
       <span style={{ ...font(14, 400, 'var(--black-60)'), flexShrink: 0 }}>
         {label}
       </span>
-      <span style={{ ...font(14, 600, 'var(--black-100)'), textAlign: 'right', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span title={title} style={{ ...font(14, 600, 'var(--black-100)'), textAlign: 'right', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {children}
       </span>
     </div>
@@ -181,13 +181,13 @@ export function PedidoDetallePage() {
             <InfoRow label="No. Documento">{v.numeroDocumento ?? '---'}</InfoRow>
             <InfoRow label="Tipo de documento">{tipoDocLabel(v)}</InfoRow>
             <InfoRow label="Resolución">{v.resolucion || '---'}</InfoRow>
-            <InfoRow label="CUFE">{v.cufe ?? '---'}</InfoRow>
+            <InfoRow label="CUFE" title={v.cufe}>{v.cufe ?? '---'}</InfoRow>
             <InfoRow label="Mesa">{v.mesa ?? '---'}</InfoRow>
             <InfoRow label="Zona" last>{v.zona ?? '---'}</InfoRow>
           </div>
           <div style={{ paddingLeft: 32 }}>
             <InfoRow label="Sucursal">{v.sucursal}</InfoRow>
-            <InfoRow label="Personas en mesa">{v.personas !== undefined ? `${v.personas} personas` : '---'}</InfoRow>
+            <InfoRow label="Personas en mesa">{v.personas !== undefined ? `${v.personas} ${v.personas === 1 ? 'persona' : 'personas'}` : '---'}</InfoRow>
             <InfoRow label="Hora apertura">{v.abiertaEn !== undefined ? fmtFechaHora(v.abiertaEn) : '---'}</InfoRow>
             <InfoRow label="Hora cierre">{isAbierto ? '---' : fmtFechaHora(v.emitidaEn)}</InfoRow>
             <InfoRow label="Duración" last>{fmtDuracion(v)}</InfoRow>
