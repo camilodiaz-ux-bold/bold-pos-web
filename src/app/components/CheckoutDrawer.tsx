@@ -421,7 +421,7 @@ export function CheckoutDrawer({
       amount: splitEqual ? payEqualAmounts[i] : (parseFloat(r.amount) || 0),
     }));
     const docTipo = retail ? tipoDoc : 'factura';
-    const invoiceNumber = docTipo === 'comprobante' ? nextComprobanteNumber() : nextInvoiceNumber();
+    const invoiceNumber = docTipo === 'comprobante' ? nextComprobanteNumber() : nextInvoiceNumber(retail ? 'retail' : 'restaurantes');
     onConfirmPay({
       title,
       // Retail no maneja número de orden/comanda: va vacío y la factura no lo imprime.

@@ -204,7 +204,7 @@ export function VentasPage() {
                   >
                     <td style={tdStyle}>{v.numero}</td>
                     <td style={tdStyle}>{fmtFechaHora(v.abiertaEn ?? v.emitidaEn)}</td>
-                    <td style={tdStyle}>{fmtFechaHora(v.emitidaEn)}</td>
+                    <td style={tdStyle}>{v.estado === 'abierta' ? '---' : fmtFechaHora(v.emitidaEn)}</td>
                     <td style={tdStyle}>{v.zona ?? '---'}</td>
                     <td style={tdStyle}>{v.mesa ?? '---'}</td>
                     <td style={tdStyle}>{v.vendedor}</td>

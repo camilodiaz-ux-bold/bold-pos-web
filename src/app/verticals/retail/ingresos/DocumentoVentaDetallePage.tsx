@@ -53,7 +53,7 @@ function InfoRow({ label, children, last, title, wrap }: {
       <span title={title} style={{
         ...font(14, 600, 'var(--black-100)'), textAlign: 'right', minWidth: 0,
         ...(wrap
-          ? { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12, wordBreak: 'break-all' as const }
+          ? { fontFamily: '"Courier New", Courier, monospace', fontSize: 12, wordBreak: 'break-all' as const }
           : { overflowWrap: 'anywhere' as const }),
       }}>
         {children}

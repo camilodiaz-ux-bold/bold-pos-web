@@ -4,6 +4,7 @@
  * components/InvoiceTicket.tsx y la impresión en utils/printInvoice.tsx.
  */
 import { comboBreakdown, type ComboComponentSnapshot } from './comboBridge';
+import type { Vertical } from '../vertical/modules';
 import { INVOICE_ISSUER, INVOICE_SEQ_START } from '../data/invoiceIssuer';
 
 // ─── Venta completada (lo que produce el checkout) ────────────────────────────
@@ -53,14 +54,17 @@ export interface CompletedSale {
 // ─── Consecutivo ──────────────────────────────────────────────────────────────
 
 const SEQ_KEY = 'bold-pos:invoice-seq:v1';
+/** Retail lleva su propio consecutivo SETT; Restaurantes conserva la clave original. */
+const SEQ_KEY_RETAIL = 'bold-pos:invoice-seq:retail:v1';
 
-/** Siguiente número de factura ("SETT 2400418", luego 2400419…). Persistido en localStorage. */
-export function nextInvoiceNumber(): string {
+/** Siguiente número de factura ("SETT 2400418", luego 2400419…). Persistido en localStorage, un consecutivo por vertical. */
+export function nextInvoiceNumber(vertical: Vertical = 'restaurantes'): string {
+  const key = vertical === 'retail' ? SEQ_KEY_RETAIL : SEQ_KEY;
   let n = INVOICE_SEQ_START;
   try {
-    const last = parseInt(localStorage.getItem(SEQ_KEY) ?? '', 10);
+    const last = parseInt(localStorage.getItem(key) ?? '', 10);
     if (Number.isFinite(last) && last >= INVOICE_SEQ_START) n = last + 1;
-    localStorage.setItem(SEQ_KEY, String(n));
+    localStorage.setItem(key, String(n));
   } catch { /* storage no disponible: se usa el inicial */ }
   return `${INVOICE_ISSUER.prefijo} ${n}`;
 }
@@ -117,7 +121,7 @@ export interface InvoiceLine {
 
 export interface InvoiceData {
   number: string;
-  /** 'comprobante' (Retail, sin DIAN ni IVA desglosado) o 'factura'. */
+  /** 'comprobante' (Retail: muestra el IVA cuando es > 0, sin Base imponible ni validación DIAN) o 'factura'. */
   tipoDoc: 'comprobante' | 'factura';
   customer: InvoiceCustomer;
   emitidaEn: string;

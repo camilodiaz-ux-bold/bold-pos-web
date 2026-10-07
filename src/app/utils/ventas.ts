@@ -29,14 +29,13 @@ export function mockCufe(seed: string): string {
 
 export function ventaFromSale(sale: CompletedSale, vertical: Vertical, recibo: string, ctx: VentaContexto = {}): Venta {
   const sesion = SESION_VENTAS[vertical];
-  const restaurantes = vertical === 'restaurantes';
   const esFactura = sale.tipoDoc === 'factura';
   const pagos: VentaPago[] = sale.payEntries.map(p => ({ method: p.method, amount: p.amount }));
   return {
     id: `v-${sale.paidAt}-${Math.random().toString(36).slice(2, 7)}`,
-    numero: restaurantes ? sale.orderRef : sale.invoiceNumber,
+    numero: sale.orderRef || sale.invoiceNumber,
     tipoDoc: sale.tipoDoc,
-    numeroDocumento: restaurantes ? sale.invoiceNumber : undefined,
+    numeroDocumento: sale.orderRef ? sale.invoiceNumber : undefined,
     emitidaEn: sale.paidAt,
     abiertaEn: ctx.abiertaEn,
     vencimiento: sale.paidAt,
@@ -82,7 +81,7 @@ export function saleFromVenta(v: Venta): CompletedSale {
     cambio: v.cambio,
     cliente: v.cliente,
     vendedor: v.vendedor,
-    vendedorLabel: v.mesa !== undefined ? 'Mesero' : 'Vendedor',
+    vendedorLabel: v.numero.startsWith('ORD') ? 'Mesero' : 'Vendedor',
     resolucion: v.resolucion,
     note: v.note,
     paidAt: v.emitidaEn,
@@ -105,7 +104,7 @@ export function estadoLabel(estado: EstadoVenta, vertical: Vertical): { label: s
 
 export function dianLabel(dian: EstadoDian | undefined, vertical: Vertical): { label: string; variant: BadgeVariant } | null {
   if (!dian) return null;
-  if (dian === 'pendiente') return { label: 'Pendiente', variant: 'info' };
+  if (dian === 'pendiente') return { label: 'Pendiente', variant: 'warning' };
   return { label: vertical === 'restaurantes' ? 'Enviada' : 'Aceptada', variant: 'success' };
 }
 

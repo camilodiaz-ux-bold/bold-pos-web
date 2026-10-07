@@ -3,7 +3,9 @@
  * (specs/2026-10-ventas-dinamicas.md). Mesas y Mostrador lo comparten, así que
  * un número nunca se repite. El mismo número es el "ORD####" de la venta.
  * Llamarlo solo desde handlers de eventos: nunca dentro de render ni de
- * updaters de setState (StrictMode los ejecuta dos veces).
+ * updaters de setState (StrictMode los ejecuta dos veces). Excepción:
+ * `getMostradorSlate` sí corre dentro de un initializer de useState, pero es
+ * idempotente (persiste el slate), así que ejecutarlo dos veces es seguro.
  */
 const ORDER_SEQ_KEY = 'bold-pos:order-seq:v1';
 /** ORD0001–ORD0010 son las ventas sembradas (data/ventasSeed.ts). */
