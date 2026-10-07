@@ -1,402 +1,130 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { Navigate, useParams, useNavigate } from 'react-router';
 import { ArrowLeft, Printer, Send } from 'lucide-react';
 import { useVertical } from '../vertical';
-import type { EstadoVariant, DianVariant, Pedido, PedidoProducto } from '../types/venta';
-import { RETAIL_PEDIDOS, RETAIL_PEDIDO_PRODUCTOS, RETAIL_PEDIDO_TOTALES } from '../data/retail/ventasMocks';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const RES = 'Resolution test SP - Resolution 1234509752467';
-const CODCUFE = 'eefa31ca5cdaf0422bab155a0c1b6e4341cd07236510741cd041cd0...';
-
-const PEDIDOS: Record<string, Pedido> = {
-  'O-001': {
-    id: 'O-001',
-    estado:      { label: 'Pagado',    variant: 'success' },
-    noDoc:       'V-001234',
-    tipoDoc:     'Comprobante',
-    resolucion:  '---',
-    mesa:        'Mesa 3',
-    zona:        'Zona 1',
-    sucursal:    'Principal',
-    personas:    '2 personas',
-    horaApertura:'25/03/2026 13:42',
-    horaCierre:  '25/03/2026 14:42',
-    duracion:    '1h 00min',
-    vendedor:    'Carlos Pérez',
-    cliente:     'Consumidor final',
-    formaPago:   'Efectivo',
-    efectivo:    { recibido: '$600,000', cambio: '$3,096' },
-    usuario: 'Juan Perez',
-    cufe: '---',
-  },
-  'O-002': {
-    id: 'O-002',
-    estado:      { label: 'Abierto',   variant: 'warning' },
-    noDoc:       'V-001236',
-    tipoDoc:     'Factura electrónica',
-    resolucion:  RES,
-    mesa:        'Mesa 1',
-    zona:        'Zona 1',
-    sucursal:    'Principal',
-    personas:    '4 personas',
-    horaApertura:'25/03/2026 14:55',
-    horaCierre:  '---',
-    duracion:    '---',
-    vendedor:    'Miguel Torres',
-    cliente:     'Juan García NIT 900123456',
-    formaPago:   'Tarjeta',
-    dian:        { label: 'Enviada', variant: 'success' },
-    usuario:     'Juan Perez',
-    cufe:         CODCUFE,
-  },
-  'O-003': {
-    id: 'O-003',
-    estado:      { label: 'Abierto',   variant: 'warning' },
-    noDoc:       'V-001236',
-    tipoDoc:     'Factura electrónica',
-    resolucion:  RES,
-    mesa:        'Mesa 1',
-    zona:        'Zona 1',
-    sucursal:    'Principal',
-    personas:    '4 personas',
-    horaApertura:'25/03/2026 14:55',
-    horaCierre:  '---',
-    duracion:    '---',
-    vendedor:    'Miguel Torres',
-    cliente:     'Juan García NIT 900123456',
-    formaPago:   'Tarjeta',
-    dian:        { label: 'Enviada', variant: 'success' },
-    usuario: 'Juan Perez',
-    cufe:         CODCUFE,
-  },
-  'O-004': {
-    id: 'O-004',
-    estado:       { label: 'Cancelado', variant: 'error' },
-    noDoc:        'V-001238',
-    tipoDoc:      'Comprobante',
-    resolucion:   '---',
-    mesa:         'Mesa 2',
-    zona:         'Zona 2',
-    sucursal:     'Principal',
-    personas:     '3 personas',
-    horaApertura: '25/03/2026 16:05',
-    horaCierre:   '25/03/2026 17:05',
-    duracion:     '1h 00min',
-    vendedor:     'Carlos Pérez',
-    cliente:      'Consumidor final',
-    formaPago:    'Nequi',
-    pagoCancelado: true,
-    usuario: 'Juan Perez',
-    cufe: '---',
-  },
-  'O-005': {
-    id: 'O-005',
-    estado:       { label: 'Cancelado', variant: 'error' },
-    noDoc:        'V-001238',
-    tipoDoc:      'Comprobante',
-    resolucion:   '---',
-    mesa:         'Mesa 2',
-    zona:         'Zona 2',
-    sucursal:     'Principal',
-    personas:     '3 personas',
-    horaApertura: '25/03/2026 16:05',
-    horaCierre:   '25/03/2026 17:05',
-    duracion:     '1h 00min',
-    vendedor:     'Carlos Pérez',
-    cliente:      'Consumidor final',
-    formaPago:    'Nequi',
-    pagoCancelado: true,
-    usuario: 'Juan Perez',
-    cufe: '---',
-  },
-  'O-006': {
-    id: 'O-006',
-    estado:       { label: 'Pagado', variant: 'success' },
-    noDoc:        'V-001243',
-    tipoDoc:      'Factura electrónica',
-    resolucion:   RES,
-    mesa:         'Mesa 8',
-    zona:         'Zona 2',
-    sucursal:     'Principal',
-    personas:     '4 personas',
-    horaApertura: '25/03/2026 19:00',
-    horaCierre:   '25/03/2026 20:10',
-    duracion:     '1h 10min',
-    vendedor:     'Miguel Torres',
-    cliente:      'Consumidor final',
-    formaPago:    'Cuenta dividida',
-    dian:         { label: 'Enviada', variant: 'success' },
-    pagoDividido: [
-      { persona: 'Persona 1', metodo: 'Efectivo',                                          monto: '$362,593' },
-      { persona: 'Persona 2', metodo: 'Tarjeta',                                           monto: '$362,593' },
-      { persona: 'Persona 3', metodo: 'Mixto (Efectivo $200,000 + Tarjeta $162,593)',      monto: '$362,593' },
-      { persona: 'Persona 4', metodo: 'Nequi',                                             monto: '$362,593' },
-    ],
-    totalPago: '$1,450,372',
-    usuario: 'Juan Perez',
-    cufe:         CODCUFE,
-  },
-  'O-007': {
-    id: 'O-007',
-    estado:       { label: 'Cancelado', variant: 'error' },
-    noDoc:        'V-001238',
-    tipoDoc:      'Comprobante',
-    resolucion:   '---',
-    mesa:         'Mesa 2',
-    zona:         'Zona 2',
-    sucursal:     'Principal',
-    personas:     '3 personas',
-    horaApertura: '25/03/2026 16:05',
-    horaCierre:   '25/03/2026 17:05',
-    duracion:     '1h 00min',
-    vendedor:     'Carlos Pérez',
-    cliente:      'Consumidor final',
-    formaPago:    'Nequi',
-    pagoCancelado: true,
-    usuario: 'Juan Perez',
-    cufe: '---',
-  },
-  'O-008': {
-    id: 'O-008',
-    estado:       { label: 'Pagado', variant: 'success' },
-    noDoc:        'V-001242',
-    tipoDoc:      'Comprobante',
-    resolucion:   '---',
-    mesa:         'Mesa 6',
-    zona:         'Zona 1',
-    sucursal:     'Principal',
-    personas:     '2 personas',
-    horaApertura: '25/03/2026 18:30',
-    horaCierre:   '25/03/2026 19:15',
-    duracion:     '45min',
-    vendedor:     'Laura Gómez',
-    cliente:      'Consumidor final',
-    formaPago:    'Mixto',
-    pagoMixto: [
-      { metodo: 'Efectivo', monto: '$200,000' },
-      { metodo: 'Tarjeta',  monto: '$396,904' },
-    ],
-    totalPago: '$596,904',
-    usuario: 'Juan Perez',
-    cufe: '---',
-  },
-  'O-009': {
-    id: 'O-009',
-    estado:       { label: 'Pagado', variant: 'success' },
-    noDoc:        'V-001242',
-    tipoDoc:      'Comprobante',
-    resolucion:   '---',
-    mesa:         'Mesa 6',
-    zona:         'Zona 1',
-    sucursal:     'Principal',
-    personas:     '2 personas',
-    horaApertura: '25/03/2026 18:30',
-    horaCierre:   '25/03/2026 19:15',
-    duracion:     '45min',
-    vendedor:     'Laura Gómez',
-    cliente:      'Consumidor final',
-    formaPago:    'Mixto',
-    pagoMixto: [
-      { metodo: 'Efectivo', monto: '$200,000' },
-      { metodo: 'Tarjeta',  monto: '$396,904' },
-    ],
-    totalPago: '$596,904',
-    usuario: 'Juan Perez',
-    cufe: '---',
-  },
-  'O-010': {
-    id: 'O-010',
-    estado:       { label: 'Pagado', variant: 'success' },
-    noDoc:        'V-001243',
-    tipoDoc:      'Factura electrónica',
-    resolucion:   RES,
-    mesa:         'Mesa 8',
-    zona:         'Zona 2',
-    sucursal:     'Principal',
-    personas:     '4 personas',
-    horaApertura: '25/03/2026 19:00',
-    horaCierre:   '25/03/2026 20:10',
-    duracion:     '1h 10min',
-    vendedor:     'Miguel Torres',
-    cliente:      'Consumidor final',
-    formaPago:    'Cuenta dividida',
-    dian:         { label: 'Enviada', variant: 'success' },
-    pagoDividido: [
-      { persona: 'Persona 1', metodo: 'Efectivo',                                          monto: '$362,593' },
-      { persona: 'Persona 2', metodo: 'Tarjeta',                                           monto: '$362,593' },
-      { persona: 'Persona 3', metodo: 'Mixto (Efectivo $200,000 + Tarjeta $162,593)',      monto: '$362,593' },
-      { persona: 'Persona 4', metodo: 'Nequi',                                             monto: '$362,593' },
-    ],
-    totalPago: '$1,450,372',
-    usuario: 'Juan Perez',
-    cufe:         CODCUFE,
-  },
-};
-
-const FALLBACK = PEDIDOS['O-001'];
-
-// ─── Products ─────────────────────────────────────────────────────────────────
-
-const PRODUCTOS: PedidoProducto[] = [
-  { nombre: 'Salmón Escocés', nota: '',            cantidad: 2, precioUnit: '$152,000', descuento: '---', total: '$304,000' },
-  { nombre: 'Burrata Ahumada', nota: 'Sin lactosa', cantidad: 1, precioUnit: '$88,000',  descuento: '---', total: '$88,000'  },
-  { nombre: 'Agua de Piedra',  nota: '',            cantidad: 2, precioUnit: '$32,000',  descuento: '---', total: '$64,000'  },
-];
-
-// ─── Design tokens (MERLIn) ───────────────────────────────────────────────────
-
-const C = {
-  blue100:  '#121E6C',
-  blue20:   '#D2D4E1',
-  blue10:   '#F1F2F6',
-  black100: '#1E1E1E',
-  black60:  '#606060',
-  black10:  '#F3F3F3',
-  white:    '#FFFFFF',
-  bgPage:   '#F7F8FB',
-  coral100: '#FF2947',
-  successBg:   '#F4FDF9',
-  successBorder:'#1B8959',
-  successText: '#1B8959',
-  warningBg:   '#FFF3D1',
-  warningBorder:'#FFC217',
-  warningText: '#5B3100',
-  errorBg:     '#FBF3F5',
-  errorBorder: '#910022',
-  errorText:   '#910022',
-};
-
-const ESTADO_STYLES: Record<EstadoVariant, React.CSSProperties> = {
-  success: { backgroundColor: C.successBg,  color: C.successText,  border: `1px solid ${C.successBorder}` },
-  warning: { backgroundColor: C.warningBg,  color: C.warningText,  border: `1px solid ${C.warningBorder}` },
-  error:   { backgroundColor: C.errorBg,    color: C.errorText,    border: `1px solid ${C.errorBorder}`   },
-};
-
-const DIAN_STYLES: Record<DianVariant, React.CSSProperties> = {
-  success: { backgroundColor: C.successBg, color: C.successText, border: `1px solid ${C.successBorder}` },
-  warning: { backgroundColor: C.warningBg, color: C.warningText, border: `1px solid ${C.warningBorder}` },
-  neutral: {},
-};
+import { useVentas } from '../store/ventasStore';
+import { VentaBadge } from '../components/ventas/VentaBadge';
+import { font, sectionCard, sectionTitle } from '../components/ventas/ventasStyles';
+import { dianLabel, estadoLabel, fmtCOP, fmtFechaHora, saleFromVenta, tipoDocLabel } from '../utils/ventas';
+import { buildInvoiceData } from '../utils/invoice';
+import { printInvoice } from '../utils/printInvoice';
+import { comboBreakdown } from '../utils/comboBridge';
+import type { Venta } from '../types/venta';
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
-
-const font = (size: number, weight: number, color: string, lineHeight?: number): React.CSSProperties => ({
-  fontFamily: "'Montserrat', sans-serif",
-  fontSize: size,
-  fontWeight: weight,
-  color,
-  ...(lineHeight ? { lineHeight: `${lineHeight}px` } : {}),
-});
-
-const sectionCard: React.CSSProperties = {
-  backgroundColor: C.white,
-  borderRadius: 16,
-  padding: '20px 24px',
-};
-
-const sectionTitle: React.CSSProperties = {
-  ...font(13, 700, C.black100, 18),
-  margin: '0 0 16px',
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
-};
-
-const infoLabel: React.CSSProperties = { ...font(12, 600, C.blue100, 16), margin: '0 0 2px' };
-const infoValue: React.CSSProperties = { ...font(13, 500, C.black100, 20), margin: 0 };
 
 const tdHead: React.CSSProperties = {
   padding: '10px 16px 10px 0',
   textAlign: 'left',
-  ...font(12, 700, C.black100, 18),
-  borderBottom: `2px solid ${C.black10}`,
+  ...font(12, 700, 'var(--black-100)', 18),
+  borderBottom: '2px solid var(--black-10)',
   whiteSpace: 'nowrap',
 };
 
 const tdCell: React.CSSProperties = {
   padding: '12px 16px 12px 0',
-  ...font(13, 500, C.black100, 18),
+  ...font(13, 500, 'var(--black-100)', 18),
+};
+
+const DIVIDER = '1px solid var(--black-10)';
+
+const outlineBtn: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 8,
+  height: 40, padding: '0 20px', borderRadius: 32,
+  border: '1.5px solid var(--blue-100)', backgroundColor: 'var(--black-0)',
+  cursor: 'pointer', ...font(14, 600, 'var(--blue-100)'),
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-function EstadoBadge({ label, variant }: { label: string; variant: EstadoVariant }) {
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      height: 24, paddingLeft: 10, paddingRight: 10,
-      borderRadius: 100, ...font(12, 600, ''),
-      whiteSpace: 'nowrap',
-      ...ESTADO_STYLES[variant],
-    }}>
-      {label}
-    </span>
-  );
-}
-
-function DianBadge({ label, variant }: { label: string; variant: DianVariant }) {
-  if (variant === 'neutral') {
-    return <span style={font(13, 500, C.black60)}>{label}</span>;
-  }
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      height: 24, paddingLeft: 10, paddingRight: 10,
-      borderRadius: 100, ...font(12, 600, ''),
-      whiteSpace: 'nowrap',
-      ...DIAN_STYLES[variant],
-    }}>
-      {label}
-    </span>
-  );
-}
 
 function InfoRow({ label, children, last }: { label: string; children: React.ReactNode; last?: boolean }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       paddingTop: 10, paddingBottom: 10,
-      borderBottom: last ? 'none' : '1px solid #F0F1F5',
+      borderBottom: last ? 'none' : DIVIDER,
       gap: 12,
     }}>
-      <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 14, fontWeight: 400, color: '#606060', flexShrink: 0 }}>
+      <span style={{ ...font(14, 400, 'var(--black-60)'), flexShrink: 0 }}>
         {label}
       </span>
-      <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 14, fontWeight: 600, color: '#1E1E1E', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span style={{ ...font(14, 600, 'var(--black-100)'), textAlign: 'right', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {children}
       </span>
     </div>
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+function AmountRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <span style={font(13, 500, 'var(--black-60)', 20)}>{label}</span>
+      <span style={{ ...font(13, 600, 'var(--black-100)', 20), textAlign: 'right' }}>{value}</span>
+    </div>
+  );
+}
 
-const RESTAURANT_TOTALES = {
-  rows: [
-    { label: 'Subtotal',    value: '$456,000' },
-    { label: 'Descuento',   value: '$0'       },
-    { label: 'IVA 19%',     value: '$86,640'  },
-    { label: 'Propina 10%', value: '$54,264'  },
-  ],
-  total: '$596,904',
-};
+function fmtDuracion(v: Venta): string {
+  if (v.abiertaEn === undefined || v.estado === 'abierta') return '---';
+  const min = Math.max(0, Math.round((v.emitidaEn - v.abiertaEn) / 60000));
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (h === 0) return `${m}min`;
+  return `${h}h ${String(m).padStart(2, '0')}min`;
+}
+
+/** Pagos agrupados por persona (pago dividido). */
+function pagosPorPersona(v: Venta): { persona: string; detalle: string }[] {
+  const grupos = new Map<string, string[]>();
+  v.pagos.forEach(p => {
+    const k = p.persona ?? '';
+    grupos.set(k, [...(grupos.get(k) ?? []), `${p.method} ${fmtCOP(p.amount)}`]);
+  });
+  return Array.from(grupos, ([persona, partes]) => ({ persona, detalle: partes.join(' + ') }));
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export function PedidoDetallePage() {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { has } = useVertical();
-  const mesas = has('mesas');
+  const { has, vertical } = useVertical();
+  const { getVenta } = useVentas();
+  const v = getVenta(id);
 
-  const pedidos   = mesas ? PEDIDOS : RETAIL_PEDIDOS;
-  const pedido    = pedidos[id] ?? (mesas ? FALLBACK : RETAIL_PEDIDOS['V-001']);
-  const productos = mesas ? PRODUCTOS : RETAIL_PEDIDO_PRODUCTOS;
-  const totales   = mesas ? RESTAURANT_TOTALES : RETAIL_PEDIDO_TOTALES;
-  const isAbierto   = pedido.estado.variant === 'warning';
-  const isEfectivo  = pedido.formaPago === 'Efectivo';
-  const showDian    = pedido.tipoDoc === 'Factura electrónica';
+  // Ventas es exclusivo de Restaurantes: Retail usa Comprobantes / Facturas de Venta.
+  if (!has('ventas')) return <Navigate to="/comprobantes" replace />;
+
+  if (!v) {
+    return (
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24,
+      }}>
+        <p style={{ ...font(16, 600, 'var(--black-100)', 24), margin: 0 }}>Venta no encontrada</p>
+        <button onClick={() => navigate('/ventas')} style={outlineBtn}>
+          <ArrowLeft size={14} color="var(--blue-100)" />
+          Volver
+        </button>
+      </div>
+    );
+  }
+
+  const est = estadoLabel(v.estado, vertical);
+  const dn = dianLabel(v.dian, vertical);
+  const isAbierto = v.estado === 'abierta';
+  const showDian = v.tipoDoc === 'factura' && !!dn;
+  const sinPagos = v.pagos.length === 0;
+  const porPersona = v.pagos.some(p => p.persona);
+  const metodos = Array.from(new Set(v.pagos.map(p => p.method)));
+  const efectivoConCambio = v.pagos.length === 1 && v.pagos[0].method === 'Efectivo' && v.cambio > 0;
+
+  const totales = [
+    { label: 'Subtotal', value: fmtCOP(v.subtotal) },
+    { label: 'Descuento', value: fmtCOP(v.discount) },
+    { label: `IVA ${Math.round(v.taxRate * 100)}%`, value: fmtCOP(v.tax) },
+    ...(v.tip > 0 ? [{ label: 'Propina', value: fmtCOP(v.tip) }] : []),
+  ];
 
   return (
     <div style={{
@@ -417,39 +145,29 @@ export function PedidoDetallePage() {
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 36, height: 36, borderRadius: 8,
-              border: `1px solid ${C.blue20}`,
-              backgroundColor: C.white,
+              border: '1px solid var(--blue-20)',
+              backgroundColor: 'var(--black-0)',
               cursor: 'pointer', flexShrink: 0,
             }}
           >
-            <ArrowLeft size={18} color={C.blue100} strokeWidth={1.8} />
+            <ArrowLeft size={18} color="var(--blue-100)" strokeWidth={1.8} />
           </button>
 
-          <p style={{ ...font(20, 700, C.black100, 28), margin: 0 }}>
-            Orden No. {pedido.id}
+          <p style={{ ...font(20, 700, 'var(--black-100)', 28), margin: 0 }}>
+            Orden No. {v.numero}
           </p>
 
-          <EstadoBadge label={pedido.estado.label} variant={pedido.estado.variant} />
+          <VentaBadge {...est} />
         </div>
 
         {isAbierto ? (
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            height: 40, padding: '0 20px', borderRadius: 32,
-            border: `1.5px solid ${C.blue100}`, backgroundColor: C.white,
-            cursor: 'pointer', ...font(14, 600, C.blue100),
-          }}>
-            <Send size={14} color={C.blue100} />
+          <button style={outlineBtn}>
+            <Send size={14} color="var(--blue-100)" />
             Reenviar comanda
           </button>
         ) : (
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            height: 40, padding: '0 20px', borderRadius: 32,
-            border: `1.5px solid ${C.blue100}`, backgroundColor: C.white,
-            cursor: 'pointer', ...font(14, 600, C.blue100),
-          }}>
-            <Printer size={14} color={C.blue100} />
+          <button style={outlineBtn} onClick={() => printInvoice(buildInvoiceData(saleFromVenta(v)))}>
+            <Printer size={14} color="var(--blue-100)" />
             Imprimir recibo
           </button>
         )}
@@ -458,21 +176,21 @@ export function PedidoDetallePage() {
       {/* ── Section 1: Información general ── */}
       <div style={sectionCard}>
         <p style={sectionTitle}>Información general</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-          <div style={{ paddingRight: 32, borderRight: '1px solid #F0F1F5' }}>
-            <InfoRow label="No. Documento">{pedido.noDoc}</InfoRow>
-            <InfoRow label="Tipo de documento">{pedido.tipoDoc}</InfoRow>
-            <InfoRow label="Resolución">{pedido.resolucion}</InfoRow>
-            <InfoRow label="CUFE" last={!mesas}>{pedido.cufe}</InfoRow>
-            {mesas && <InfoRow label="Mesa">{pedido.mesa}</InfoRow>}
-            {mesas && <InfoRow label="Zona" last>{pedido.zona}</InfoRow>}
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)' }}>
+          <div style={{ paddingRight: 32, borderRight: DIVIDER }}>
+            <InfoRow label="No. Documento">{v.numeroDocumento ?? '---'}</InfoRow>
+            <InfoRow label="Tipo de documento">{tipoDocLabel(v)}</InfoRow>
+            <InfoRow label="Resolución">{v.resolucion || '---'}</InfoRow>
+            <InfoRow label="CUFE">{v.cufe ?? '---'}</InfoRow>
+            <InfoRow label="Mesa">{v.mesa ?? '---'}</InfoRow>
+            <InfoRow label="Zona" last>{v.zona ?? '---'}</InfoRow>
           </div>
           <div style={{ paddingLeft: 32 }}>
-            <InfoRow label="Sucursal">{pedido.sucursal}</InfoRow>
-            {mesas && <InfoRow label="Personas en mesa">{pedido.personas}</InfoRow>}
-            <InfoRow label="Hora apertura">{pedido.horaApertura}</InfoRow>
-            <InfoRow label="Hora cierre" last={!mesas}>{pedido.horaCierre}</InfoRow>
-            {mesas && <InfoRow label="Duración" last>{pedido.duracion}</InfoRow>}
+            <InfoRow label="Sucursal">{v.sucursal}</InfoRow>
+            <InfoRow label="Personas en mesa">{v.personas !== undefined ? `${v.personas} personas` : '---'}</InfoRow>
+            <InfoRow label="Hora apertura">{v.abiertaEn !== undefined ? fmtFechaHora(v.abiertaEn) : '---'}</InfoRow>
+            <InfoRow label="Hora cierre">{isAbierto ? '---' : fmtFechaHora(v.emitidaEn)}</InfoRow>
+            <InfoRow label="Duración" last>{fmtDuracion(v)}</InfoRow>
           </div>
         </div>
       </div>
@@ -480,19 +198,19 @@ export function PedidoDetallePage() {
       {/* ── Section 1b: Participantes y pago ── */}
       <div style={sectionCard}>
         <p style={sectionTitle}>Participantes y pago</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-          <div style={{ paddingRight: 32, borderRight: '1px solid #F0F1F5' }}>
-            <InfoRow label="Vendedor">{pedido.vendedor}</InfoRow>
-            <InfoRow label="Cliente" last>{pedido.cliente}</InfoRow>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)' }}>
+          <div style={{ paddingRight: 32, borderRight: DIVIDER }}>
+            <InfoRow label="Vendedor">{v.vendedor}</InfoRow>
+            <InfoRow label="Cliente" last>{v.cliente}</InfoRow>
           </div>
           <div style={{ paddingLeft: 32 }}>
-            <InfoRow label="Emitido Por">{pedido.usuario}</InfoRow>
-            <InfoRow label="Estado" last={!showDian || !pedido.dian}>
-              <EstadoBadge label={pedido.estado.label} variant={pedido.estado.variant} />
+            <InfoRow label="Emitido Por">{v.emitidoPor}</InfoRow>
+            <InfoRow label="Estado" last={!showDian}>
+              <VentaBadge {...est} />
             </InfoRow>
-            {showDian && pedido.dian && (
+            {showDian && dn && (
               <InfoRow label="Estado DIAN" last>
-                <DianBadge label={pedido.dian.label} variant={pedido.dian.variant} />
+                <VentaBadge {...dn} />
               </InfoRow>
             )}
           </div>
@@ -512,25 +230,34 @@ export function PedidoDetallePage() {
               </tr>
             </thead>
             <tbody>
-              {productos.map((p, idx) => (
-                <tr
-                  key={p.nombre}
-                  style={{ borderBottom: idx === productos.length - 1 ? 'none' : `1px solid ${C.black10}` }}
-                >
-                  <td style={tdCell}>
-                    <span style={{ display: 'block' }}>{p.nombre}</span>
-                    {p.nota && (
-                      <span style={{ ...font(11, 400, C.black60, 16), fontStyle: 'italic' }}>
-                        {p.nota}
-                      </span>
-                    )}
-                  </td>
-                  <td style={tdCell}>{p.cantidad}</td>
-                  <td style={tdCell}>{p.precioUnit}</td>
-                  <td style={tdCell}>{p.descuento}</td>
-                  <td style={tdCell}>{p.total}</td>
-                </tr>
-              ))}
+              {v.items.map((p, idx) => {
+                const unit = p.discount ? Math.round(p.price * (1 - p.discount / 100)) : p.price;
+                const componentes = comboBreakdown(p);
+                return (
+                  <tr
+                    key={`${p.id}-${idx}`}
+                    style={{ borderBottom: idx === v.items.length - 1 ? 'none' : '1px solid var(--black-10)' }}
+                  >
+                    <td style={tdCell}>
+                      <span style={{ display: 'block' }}>{p.name}</span>
+                      {componentes.length > 0 && (
+                        <span style={{ display: 'block', ...font(11, 400, 'var(--black-60)', 16) }}>
+                          {componentes.map(c => `${c.qty}× ${c.name}`).join(' · ')}
+                        </span>
+                      )}
+                      {p.note && (
+                        <span style={{ ...font(11, 400, 'var(--black-60)', 16), fontStyle: 'italic' }}>
+                          {p.note}
+                        </span>
+                      )}
+                    </td>
+                    <td style={tdCell}>{p.quantity}</td>
+                    <td style={tdCell}>{fmtCOP(p.price)}</td>
+                    <td style={tdCell}>{p.discount ? `${p.discount}%` : '---'}</td>
+                    <td style={tdCell}>{fmtCOP(unit * p.quantity)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -543,56 +270,44 @@ export function PedidoDetallePage() {
         <div style={sectionCard}>
           <p style={sectionTitle}>Método de pago</p>
 
-          {pedido.pagoCancelado ? (
-            <span style={font(13, 500, C.black60, 20)}>Pago no realizado</span>
+          {sinPagos ? (
+            <span style={font(13, 500, 'var(--black-60)', 20)}>Pago no realizado</span>
 
-          ) : pedido.pagoDividido ? (
+          ) : porPersona ? (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {pedido.pagoDividido.map((p, idx) => (
+              {pagosPorPersona(v).map((p, idx, arr) => (
                 <div key={p.persona} style={{
                   display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
                   paddingTop: 10, paddingBottom: 10,
-                  borderBottom: idx === pedido.pagoDividido!.length - 1 ? 'none' : '1px solid #F0F1F5',
+                  borderBottom: idx === arr.length - 1 ? 'none' : DIVIDER,
                 }}>
                   <div>
-                    <span style={{ display: 'block', ...font(13, 600, C.black100, 20) }}>{p.persona}</span>
-                    <span style={{ display: 'block', ...font(12, 400, C.black60, 18) }}>{p.metodo} — {p.monto}</span>
+                    <span style={{ display: 'block', ...font(13, 600, 'var(--black-100)', 20) }}>{p.persona}</span>
+                    <span style={{ display: 'block', ...font(12, 400, 'var(--black-60)', 18) }}>{p.detalle}</span>
                   </div>
-                  <EstadoBadge label="Pagada" variant="success" />
+                  <VentaBadge label="Pagada" variant="success" />
                 </div>
               ))}
-              <div style={{ borderTop: `1.5px solid ${C.black10}`, marginTop: 8, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-                <span style={font(14, 700, C.blue100, 22)}>Total</span>
-                <span style={{ ...font(14, 700, C.blue100, 22), textAlign: 'right' }}>{pedido.totalPago}</span>
+              <div style={{ borderTop: '1.5px solid var(--black-10)', marginTop: 8, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+                <span style={font(14, 700, 'var(--blue-100)', 22)}>Total</span>
+                <span style={{ ...font(14, 700, 'var(--blue-100)', 22), textAlign: 'right' }}>{fmtCOP(v.total)}</span>
               </div>
             </div>
 
-          ) : pedido.pagoMixto ? (
+          ) : v.pagos.length > 1 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {pedido.pagoMixto.map(item => (
-                <div key={item.metodo} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={font(13, 500, C.black60, 20)}>{item.metodo}</span>
-                  <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{item.monto}</span>
-                </div>
+              {v.pagos.map((p, i) => (
+                <AmountRow key={`${p.method}-${i}`} label={p.method} value={fmtCOP(p.amount)} />
               ))}
             </div>
 
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={font(13, 500, C.black60, 20)}>{pedido.formaPago}</span>
-                <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{totales.total}</span>
-              </div>
-              {isEfectivo && pedido.efectivo && (
+              <AmountRow label={metodos[0]} value={fmtCOP(v.total)} />
+              {efectivoConCambio && (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={font(13, 500, C.black60, 20)}>Monto recibido</span>
-                    <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{pedido.efectivo.recibido}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={font(13, 500, C.black60, 20)}>Cambio</span>
-                    <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{pedido.efectivo.cambio}</span>
-                  </div>
+                  <AmountRow label="Monto recibido" value={fmtCOP(v.total + v.cambio)} />
+                  <AmountRow label="Cambio" value={fmtCOP(v.cambio)} />
                 </>
               )}
             </div>
@@ -603,15 +318,12 @@ export function PedidoDetallePage() {
         <div style={sectionCard}>
           <p style={sectionTitle}>Totales</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {totales.rows.map(row => (
-              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={font(13, 500, C.black60, 20)}>{row.label}</span>
-                <span style={{ ...font(13, 600, C.black100, 20), textAlign: 'right' }}>{row.value}</span>
-              </div>
+            {totales.map(row => (
+              <AmountRow key={row.label} label={row.label} value={row.value} />
             ))}
-            <div style={{ borderTop: `1.5px solid ${C.black10}`, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-              <span style={font(14, 700, C.blue100, 22)}>Total</span>
-              <span style={{ ...font(14, 700, C.blue100, 22), textAlign: 'right' }}>{totales.total}</span>
+            <div style={{ borderTop: '1.5px solid var(--black-10)', paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+              <span style={font(14, 700, 'var(--blue-100)', 22)}>Total</span>
+              <span style={{ ...font(14, 700, 'var(--blue-100)', 22), textAlign: 'right' }}>{fmtCOP(v.total)}</span>
             </div>
           </div>
         </div>

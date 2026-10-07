@@ -1,98 +1,68 @@
-import React from 'react';
-import { useNavigate } from 'react-router';
+import React, { useMemo, useState } from 'react';
+import { Navigate, useNavigate } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { useVertical } from '../vertical';
-import type { EstadoVariant as StatusVariant, DianVariant, VentaRow } from '../types/venta';
-import { RETAIL_VENTA_ROWS, RETAIL_VENTA_USUARIOS } from '../data/retail/ventasMocks';
-
-interface BadgeProps {
-  label: string;
-  variant: StatusVariant | DianVariant;
-}
-
-const ESTADO_STYLES: Record<StatusVariant, React.CSSProperties> = {
-  success: { backgroundColor: 'var(--feedback-success-10)', color: 'var(--feedback-success-150)', border: '1px solid var(--feedback-success-100)' },
-  warning: { backgroundColor: 'var(--feedback-warning-10)', color: 'var(--feedback-warning-200)', border: '1px solid var(--feedback-warning-100)' },
-  error:   { backgroundColor: 'var(--feedback-error-10)',   color: 'var(--feedback-error-100)',   border: '1px solid var(--feedback-error-100)'   },
-};
-
-const DIAN_STYLES: Record<DianVariant, React.CSSProperties> = {
-  success: { backgroundColor: 'var(--feedback-success-10)', color: 'var(--feedback-success-150)', border: '1px solid var(--feedback-success-100)' },
-  warning: { backgroundColor: 'var(--feedback-warning-10)', color: 'var(--feedback-warning-200)', border: '1px solid var(--feedback-warning-100)' },
-  neutral: {},
-};
-
-function StatusBadge({ label, variant }: { label: string; variant: StatusVariant }) {
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      height: 24, paddingLeft: 10, paddingRight: 10,
-      borderRadius: 12, fontFamily: "'Montserrat', sans-serif",
-      fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
-      ...ESTADO_STYLES[variant],
-    }}>
-      {label}
-    </span>
-  );
-}
-
-function DianBadge({ label, variant }: { label: string; variant: DianVariant }) {
-  if (variant === 'neutral') {
-    return (
-      <span style={{
-        fontFamily: "'Montserrat', sans-serif", fontSize: 13,
-        fontWeight: 500, color: 'var(--black-60)',
-      }}>
-        {label}
-      </span>
-    );
-  }
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      height: 24, paddingLeft: 10, paddingRight: 10,
-      borderRadius: 12, fontFamily: "'Montserrat', sans-serif",
-      fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
-      ...DIAN_STYLES[variant],
-    }}>
-      {label}
-    </span>
-  );
-}
-
-const RESTAURANT_ROWS: VentaRow[] = [
-  { pedido: 'O-001', horaInicio: '25/03/2026 13:42', horaCierre: '25/03/2026 14:42', zona: 'Zona 1', mesa: 'Mesa 3',  usuario: 'Carlos Pérez',  total: '$85,000',  tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'O-002', horaInicio: '25/03/2026 14:10', horaCierre: '25/03/2026 15:10', zona: 'Zona 1', mesa: 'Mesa 7',  usuario: 'Laura Gómez',   total: '$120,500', tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
-  { pedido: 'O-003', horaInicio: '25/03/2026 14:55', horaCierre: '25/03/2026 15:55', zona: 'Zona 1', mesa: 'Mesa 1',  usuario: 'Miguel Torres', total: '$47,000',  tipoDoc: 'Factura electrónica', estado: { label: 'Abierto',   variant: 'warning' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
-  { pedido: 'O-004', horaInicio: '25/03/2026 15:30', horaCierre: '25/03/2026 16:30', zona: 'Zona 1', mesa: 'Mesa 5',  usuario: 'Ana Ruiz',      total: '$210,000', tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'O-005', horaInicio: '25/03/2026 16:05', horaCierre: '25/03/2026 17:05', zona: 'Zona 2', mesa: 'Mesa 2',  usuario: 'Carlos Pérez',  total: '$65,500',  tipoDoc: 'Comprobante',         estado: { label: 'Cancelado', variant: 'error'   as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'O-006', horaInicio: '25/03/2026 16:48', horaCierre: '25/03/2026 17:48', zona: 'Zona 2', mesa: 'Mesa 9',  usuario: 'Laura Gómez',   total: '$95,000',  tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Pendiente', variant: 'warning' as DianVariant } },
-  { pedido: 'O-007', horaInicio: '25/03/2026 17:20', horaCierre: '25/03/2026 18:20', zona: 'Zona 2', mesa: 'Mesa 4',  usuario: 'Miguel Torres', total: '$158,000', tipoDoc: 'Comprobante',         estado: { label: 'Abierto',   variant: 'warning' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'O-008', horaInicio: '25/03/2026 18:00', horaCierre: '25/03/2026 19:00', zona: 'Zona 2', mesa: 'Mesa 6',  usuario: 'Ana Ruiz',      total: '$73,500',    tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'O-009', horaInicio: '25/03/2026 18:30', horaCierre: '25/03/2026 19:15', zona: 'Zona 1', mesa: 'Mesa 6',  usuario: 'Laura Gómez',   total: '$596,904',   tipoDoc: 'Comprobante',         estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: '---',      variant: 'neutral' as DianVariant } },
-  { pedido: 'O-010', horaInicio: '25/03/2026 19:00', horaCierre: '25/03/2026 20:10', zona: 'Zona 2', mesa: 'Mesa 8',  usuario: 'Miguel Torres', total: '$1,450,372', tipoDoc: 'Factura electrónica', estado: { label: 'Pagado',    variant: 'success' as StatusVariant }, dian: { label: 'Enviada',  variant: 'success' as DianVariant } },
-];
+import { useVentas } from '../store/ventasStore';
+import { VentaBadge } from '../components/ventas/VentaBadge';
+import { filterInput, filterGroup, labelStyle, tdStyle, thStyle } from '../components/ventas/ventasStyles';
+import {
+  dianLabel, estadoLabel, filterVentas, fmtCOP, fmtFechaHora, opciones, tipoDocLabel,
+  type FiltrosVenta,
+} from '../utils/ventas';
 
 const columns = [
-  { key: 'pedido',     label: 'No. Orden',            width: '100px' },
-  { key: 'horaInicio', label: 'Hora Inicio',         width: '160px' },
-  { key: 'horaCierre', label: 'Hora Cierre',         width: '160px' },
-  { key: 'zona',       label: 'Zona',                width: '80px'  },
-  { key: 'mesa',       label: 'Mesa',                width: '80px'  },
-  { key: 'usuario',    label: 'Usuario',             width: '140px' },
-  { key: 'total',      label: 'Total',               width: '100px' },
-  { key: 'tipoDoc',    label: 'Tipo de documento',   width: '170px' },
-  { key: 'estado',     label: 'Estado',              width: '110px' },
-  { key: 'dian',       label: 'Estado DIAN',         width: '110px' },
+  { key: 'pedido',     label: 'No. Orden',          width: '100px' },
+  { key: 'horaInicio', label: 'Hora Inicio',        width: '160px' },
+  { key: 'horaCierre', label: 'Hora Cierre',        width: '160px' },
+  { key: 'zona',       label: 'Zona',               width: '80px'  },
+  { key: 'mesa',       label: 'Mesa',               width: '80px'  },
+  { key: 'usuario',    label: 'Usuario',            width: '140px' },
+  { key: 'total',      label: 'Total',              width: '100px' },
+  { key: 'tipoDoc',    label: 'Tipo de documento',  width: '170px' },
+  { key: 'estado',     label: 'Estado',             width: '110px' },
+  { key: 'dian',       label: 'Estado DIAN',        width: '110px' },
 ];
+
+// Etiquetas de la UI → valores del modelo (filterVentas solo ignora '' en estos tres).
+const ESTADO_UI: Record<string, FiltrosVenta['estado']> = { Pagado: 'pagada', Abierto: 'abierta', Cancelado: 'cancelada' };
+const DIAN_UI: Record<string, FiltrosVenta['dian']> = { Enviada: 'aceptada', Pendiente: 'pendiente' };
+const TIPO_UI: Record<string, FiltrosVenta['tipoDoc']> = { Comprobante: 'comprobante', 'Factura electrónica': 'factura' };
 
 export function VentasPage() {
   const navigate = useNavigate();
-  const { has } = useVertical();
-  const mesas = has('mesas');
-  const rows = mesas ? RESTAURANT_ROWS : RETAIL_VENTA_ROWS;
-  const visibleColumns = mesas ? columns : columns.filter(c => c.key !== 'zona' && c.key !== 'mesa');
-  const usuarios = mesas ? ['Carlos Pérez', 'Laura Gómez', 'Miguel Torres', 'Ana Ruiz'] : RETAIL_VENTA_USUARIOS;
+  const { has, vertical } = useVertical();
+  const { ventas } = useVentas();
+
+  const [numero, setNumero] = useState('');
+  const [fecha, setFecha] = useState('');
+  const [estado, setEstado] = useState('Todos');
+  const [usuario, setUsuario] = useState('Todos');
+  const [zona, setZona] = useState('Todos');
+  const [mesa, setMesa] = useState('Todos');
+  const [tipoDoc, setTipoDoc] = useState('Todos');
+  const [dian, setDian] = useState('Todos');
+
+  const rows = useMemo(() => filterVentas(ventas, {
+    numero,
+    desde: fecha,
+    hasta: fecha,
+    estado: ESTADO_UI[estado] ?? '',
+    dian: DIAN_UI[dian] ?? '',
+    tipoDoc: TIPO_UI[tipoDoc] ?? '',
+    vendedor: usuario,
+    zona,
+    mesa,
+  }), [ventas, numero, fecha, estado, dian, tipoDoc, usuario, zona, mesa]);
+
+  const usuarios = useMemo(() => opciones(ventas, v => v.vendedor), [ventas]);
+  const zonas = useMemo(() => opciones(ventas, v => v.zona), [ventas]);
+  const mesas = useMemo(
+    () => opciones(ventas, v => v.mesa).sort((a, b) => a.localeCompare(b, 'es', { numeric: true })),
+    [ventas],
+  );
+
+  // Ventas es exclusivo de Restaurantes: Retail usa Comprobantes / Facturas de Venta.
+  if (!has('ventas')) return <Navigate to="/comprobantes" replace />;
 
   return (
     <div style={{
@@ -113,7 +83,7 @@ export function VentasPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 36, height: 36, borderRadius: 8,
             border: '1px solid var(--blue-20)',
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--black-0)',
             cursor: 'pointer', flexShrink: 0,
           }}
           className="hover:bg-[var(--blue-10)] transition-colors"
@@ -138,54 +108,53 @@ export function VentasPage() {
 
         <div style={filterGroup}>
           <label style={labelStyle}>Buscar</label>
-          <input type="text" placeholder="Buscar por No. Orden" style={filterInput} />
+          <input type="text" placeholder="Buscar por No. Orden" style={filterInput}
+            value={numero} onChange={e => setNumero(e.target.value)} />
         </div>
 
         <div style={filterGroup}>
           <label style={labelStyle}>Fecha</label>
-          <input type="date" style={filterInput} />
+          <input type="date" style={filterInput} value={fecha} onChange={e => setFecha(e.target.value)} />
         </div>
 
         <div style={filterGroup}>
           <label style={labelStyle}>Estado</label>
-          <select style={filterInput}>
+          <select style={filterInput} value={estado} onChange={e => setEstado(e.target.value)}>
             {['Todos', 'Pagado', 'Abierto', 'Cancelado'].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
 
         <div style={filterGroup}>
           <label style={labelStyle}>Usuario</label>
-          <select style={filterInput}>
+          <select style={filterInput} value={usuario} onChange={e => setUsuario(e.target.value)}>
             {['Todos', ...usuarios].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
 
-        {mesas && (<>
         <div style={filterGroup}>
           <label style={labelStyle}>Zona</label>
-          <select style={filterInput}>
-            {['Todos', 'Zona 1', 'Zona 2'].map(o => <option key={o}>{o}</option>)}
+          <select style={filterInput} value={zona} onChange={e => setZona(e.target.value)}>
+            {['Todos', ...zonas].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
 
         <div style={filterGroup}>
           <label style={labelStyle}>Mesa</label>
-          <select style={filterInput}>
-            {['Todos', 'Mesa 1', 'Mesa 2', 'Mesa 3', 'Mesa 4', 'Mesa 5', 'Mesa 6', 'Mesa 7', 'Mesa 8', 'Mesa 9'].map(o => <option key={o}>{o}</option>)}
+          <select style={filterInput} value={mesa} onChange={e => setMesa(e.target.value)}>
+            {['Todos', ...mesas].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
-        </>)}
 
         <div style={filterGroup}>
           <label style={labelStyle}>Tipo de documento</label>
-          <select style={filterInput}>
+          <select style={filterInput} value={tipoDoc} onChange={e => setTipoDoc(e.target.value)}>
             {['Todos', 'Comprobante', 'Factura electrónica'].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
 
         <div style={filterGroup}>
           <label style={labelStyle}>Estado DIAN</label>
-          <select style={filterInput}>
+          <select style={filterInput} value={dian} onChange={e => setDian(e.target.value)}>
             {['Todos', 'Enviada', 'Pendiente'].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
@@ -194,57 +163,62 @@ export function VentasPage() {
 
       {/* ── Tabla ── */}
       <div style={{
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--black-0)',
         borderRadius: 16,
         padding: '20px 20px 0 20px',
         display: 'flex',
         flexDirection: 'column',
       }}>
+        <p style={{
+          fontFamily: "'Montserrat', sans-serif", fontSize: 12, fontWeight: 500,
+          color: 'var(--black-60)', margin: '0 0 4px',
+        }}>
+          Mostrando {rows.length} de {ventas.length}
+        </p>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                {visibleColumns.map(col => (
-                  <th
-                    key={col.key}
-                    style={{
-                      width: col.width,
-                      padding: '12px 16px 12px 0',
-                      textAlign: 'left',
-                      fontFamily: "'Montserrat', sans-serif",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      lineHeight: '18px',
-                      color: 'var(--black-100)',
-                      borderBottom: '2px solid var(--black-10)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {col.label}
-                  </th>
+                {columns.map(col => (
+                  <th key={col.key} style={{ ...thStyle, width: col.width }}>{col.label}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, idx) => (
-                <tr
-                  key={row.pedido}
-                  onClick={() => navigate(`/ventas/${row.pedido}`)}
-                  style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--black-10)', cursor: 'pointer' }}
-                  className="hover:bg-[var(--blue-10)] transition-colors"
-                >
-                  <td style={tdStyle}>{row.pedido}</td>
-                  <td style={tdStyle}>{row.horaInicio}</td>
-                  <td style={tdStyle}>{row.horaCierre}</td>
-                  {mesas && <td style={tdStyle}>{row.zona}</td>}
-                  {mesas && <td style={tdStyle}>{row.mesa}</td>}
-                  <td style={tdStyle}>{row.usuario}</td>
-                  <td style={tdStyle}>{row.total}</td>
-                  <td style={tdStyle}>{row.tipoDoc}</td>
-                  <td style={tdStyle}><StatusBadge label={row.estado.label} variant={row.estado.variant} /></td>
-                  <td style={tdStyle}><DianBadge label={row.dian.label} variant={row.dian.variant} /></td>
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={columns.length} style={{ ...tdStyle, textAlign: 'center', color: 'var(--black-60)', padding: '32px 0' }}>
+                    No hay ventas con estos filtros
+                  </td>
                 </tr>
-              ))}
+              )}
+              {rows.map((v, idx) => {
+                const est = estadoLabel(v.estado, vertical);
+                const dn = dianLabel(v.dian, vertical);
+                return (
+                  <tr
+                    key={v.id}
+                    onClick={() => navigate(`/ventas/${v.id}`)}
+                    style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--black-10)', cursor: 'pointer' }}
+                    className="hover:bg-[var(--blue-10)] transition-colors"
+                  >
+                    <td style={tdStyle}>{v.numero}</td>
+                    <td style={tdStyle}>{fmtFechaHora(v.abiertaEn ?? v.emitidaEn)}</td>
+                    <td style={tdStyle}>{fmtFechaHora(v.emitidaEn)}</td>
+                    <td style={tdStyle}>{v.zona ?? '---'}</td>
+                    <td style={tdStyle}>{v.mesa ?? '---'}</td>
+                    <td style={tdStyle}>{v.vendedor}</td>
+                    <td style={tdStyle}>{fmtCOP(v.total)}</td>
+                    <td style={tdStyle}>{tipoDocLabel(v)}</td>
+                    <td style={tdStyle}><VentaBadge {...est} /></td>
+                    <td style={tdStyle}>
+                      {dn ? <VentaBadge {...dn} /> : (
+                        <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 13, fontWeight: 500, color: 'var(--black-60)' }}>---</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -253,40 +227,3 @@ export function VentasPage() {
     </div>
   );
 }
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 11,
-  fontWeight: 600,
-  color: '#606060',
-  fontFamily: "'Montserrat', sans-serif",
-  textTransform: 'uppercase',
-  marginBottom: 4,
-  whiteSpace: 'nowrap',
-};
-
-const filterGroup: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-};
-
-const filterInput: React.CSSProperties = {
-  border: '1.5px solid #C7CBE0',
-  borderRadius: 8,
-  padding: '8px 12px',
-  fontSize: 14,
-  fontFamily: "'Montserrat', sans-serif",
-  color: '#1E1E1E',
-  backgroundColor: '#FFFFFF',
-  outline: 'none',
-  cursor: 'pointer',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '14px 16px 14px 0',
-  fontFamily: "'Montserrat', sans-serif",
-  fontSize: 13,
-  fontWeight: 500,
-  color: 'var(--black-100)',
-  lineHeight: '18px',
-};
