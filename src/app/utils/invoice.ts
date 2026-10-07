@@ -117,6 +117,8 @@ export interface InvoiceLine {
 
 export interface InvoiceData {
   number: string;
+  /** 'comprobante' (Retail, sin DIAN ni IVA desglosado) o 'factura'. */
+  tipoDoc: 'comprobante' | 'factura';
   customer: InvoiceCustomer;
   emitidaEn: string;
   validadaEn: string;
@@ -170,6 +172,7 @@ export function buildInvoiceData(sale: CompletedSale): InvoiceData {
   });
   return {
     number: sale.invoiceNumber,
+    tipoDoc: sale.tipoDoc,
     customer: resolveCustomer(sale.cliente),
     emitidaEn: formatInvoiceDate(sale.paidAt),
     validadaEn: formatInvoiceDate(sale.paidAt + 7_000),

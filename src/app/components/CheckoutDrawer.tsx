@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
-import { nextInvoiceNumber, type CompletedSale } from '../utils/invoice';
+import { nextInvoiceNumber, nextComprobanteNumber, type CompletedSale } from '../utils/invoice';
 import { useVertical } from '../vertical';
 
 const MFONT = 'Montserrat, sans-serif';
@@ -294,6 +294,7 @@ export function CheckoutDrawer({
 
   const [cliente,          setCliente]          = useState('Consumidor final');
   const [clienteOpen,      setClienteOpen]      = useState(false);
+  const [tipoDoc,          setTipoDoc]          = useState<'factura' | 'comprobante'>('factura');
   const [clientesList,     setClientesList]     = useState(['Consumidor final', retail ? 'Comercial Andina SAS' : 'Restaurante El Cielo', 'Inversiones Tech SAS', 'Juan Pérez (NIT: 900.123.456)', 'María González']);
   const [showAddCliente,   setShowAddCliente]   = useState(false);
   const [newClienteNombre, setNewClienteNombre] = useState('');
@@ -419,13 +420,14 @@ export function CheckoutDrawer({
       method: r.method,
       amount: splitEqual ? payEqualAmounts[i] : (parseFloat(r.amount) || 0),
     }));
-    const invoiceNumber = nextInvoiceNumber();
+    const docTipo = retail ? tipoDoc : 'factura';
+    const invoiceNumber = docTipo === 'comprobante' ? nextComprobanteNumber() : nextInvoiceNumber();
     onConfirmPay({
       title,
       // Retail no maneja número de orden/comanda: va vacío y la factura no lo imprime.
       orderRef:      retail ? '' : (orderRef ?? `#${invoiceNumber.slice(-3)}`),
       invoiceNumber,
-      tipoDoc:       'factura', // TODO(Tarea 6): dinámico en Retail
+      tipoDoc:       docTipo,
       items,
       subtotal,
       taxRate:       TAX_RATE,
@@ -439,7 +441,7 @@ export function CheckoutDrawer({
       cliente,
       vendedor,
       vendedorLabel: retail ? 'Vendedor' : 'Mesero',
-      resolucion,
+      resolucion:    docTipo === 'comprobante' ? '---' : resolucion,
       note:          orderNote,
       paidAt:        Date.now(),
     });
@@ -456,7 +458,17 @@ export function CheckoutDrawer({
       <div style={{ padding: 16, flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 16 }}>
           <SelectField label={retail ? 'Vendedor' : 'Mesero'} value={vendedor} onChange={setVendedor} options={retail ? ['Sofía Martínez', 'Andrés Ríos', 'Valentina Cruz', 'Diego Salazar'] : ['Carlos Méndez', 'Laura Torres', 'Miguel García', 'Ana Ruiz']} />
-          <SelectField label="Resolución" value={resolucion} onChange={setResolucion} options={retail ? ['Resolution - Retail Demo 2026', 'Resolution Mostrador - 1122334455'] : ['Resolution - Rest Demo 2026', 'Resolution Terraza - 9876543210', 'Resolution Mostrador - 1122334455']} />
+          {retail && (
+            <SelectField
+              label="Tipo de documento"
+              value={tipoDoc === 'factura' ? 'Factura electrónica' : 'Comprobante'}
+              onChange={v => setTipoDoc(v === 'Comprobante' ? 'comprobante' : 'factura')}
+              options={['Factura electrónica', 'Comprobante']}
+            />
+          )}
+          {(!retail || tipoDoc === 'factura') && (
+            <SelectField label="Resolución" value={resolucion} onChange={setResolucion} options={retail ? ['Resolution - Retail Demo 2026', 'Resolution Mostrador - 1122334455'] : ['Resolution - Rest Demo 2026', 'Resolution Terraza - 9876543210', 'Resolution Mostrador - 1122334455']} />
+          )}
 
           {/* Cliente combobox */}
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, position: 'relative' }}>

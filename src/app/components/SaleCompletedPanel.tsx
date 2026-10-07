@@ -30,6 +30,7 @@ interface Props {
 }
 
 export function SaleCompletedPanel({ sale, onNewSale }: Props) {
+  const docLabel = sale.tipoDoc === 'comprobante' ? 'Comprobante' : 'Factura';
   const customer = resolveCustomer(sale.cliente);
   const [email, setEmail] = useState(customer.correo);
   const [phone, setPhone] = useState(customer.telefono);
@@ -63,13 +64,13 @@ export function SaleCompletedPanel({ sale, onNewSale }: Props) {
           <label style={{ display: 'block', margin: '0 0 8px', fontSize: 14, fontWeight: 700, color: 'var(--blue-100)' }}>Escribe un correo electrónico</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
             <input value={email} onChange={e => setEmail(e.target.value)} style={fieldStyle} />
-            <button style={linkStyle} onClick={() => toast.info('Factura enviada por correo')}><Mail size={20} /> Enviar</button>
+            <button style={linkStyle} onClick={() => toast.info(`${docLabel} enviad${docLabel === 'Factura' ? 'a' : 'o'} por correo`)}><Mail size={20} /> Enviar</button>
           </div>
 
           <label style={{ display: 'block', margin: '0 0 8px', fontSize: 14, fontWeight: 700, color: 'var(--blue-100)' }}>Escribe el número de teléfono del cliente</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
             <input value={phone} onChange={e => setPhone(e.target.value)} style={fieldStyle} />
-            <button style={linkStyle} onClick={() => toast.info('Factura enviada por WhatsApp')}><MessageCircle size={20} /> Enviar</button>
+            <button style={linkStyle} onClick={() => toast.info(`${docLabel} enviad${docLabel === 'Factura' ? 'a' : 'o'} por WhatsApp`)}><MessageCircle size={20} /> Enviar</button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
@@ -83,7 +84,7 @@ export function SaleCompletedPanel({ sale, onNewSale }: Props) {
             onClick={() => printInvoice(buildInvoiceData(sale))}
             style={{ flex: 1, height: 52, borderRadius: 32, border: '1.5px solid var(--coral-100)', background: 'var(--black-0)', color: 'var(--coral-100)', fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
           >
-            Imprimir factura
+            Imprimir {docLabel.toLowerCase()}
           </button>
           <button
             onClick={onNewSale}
