@@ -18,6 +18,7 @@ import { MesaProductSelector } from './MesaProductSelector';
 import { CheckoutDrawer } from './CheckoutDrawer';
 import { SaleCompletedPanel } from './SaleCompletedPanel';
 import type { CompletedSale } from '../utils/invoice';
+import { nextOrderNumber, formatOrderNumber } from '../utils/orderNumber';
 import { KitchenTicketPreviewModal, type TicketItem } from './KitchenTicketPreviewModal';
 import { CAT_DEFS, ALL_CATALOG_PRODUCTS } from '../data/productCatalog';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
@@ -1456,6 +1457,7 @@ export function MesasView() {
       toast.info('No hay cambios pendientes'); return;
     }
     const now = Date.now();
+    const seq = selectedTable.orderSeq ?? nextOrderNumber();
     setTables(prev =>
       prev.map(t =>
         t.id !== selectedTableId ? t : {
@@ -1466,12 +1468,21 @@ export function MesasView() {
           pendingChanges:      [],
           firstComandaSentAt:  t.firstComandaSentAt ?? now,
           comandaVersion:      (t.comandaVersion ?? 0) + 1,
-          orderSeq:            t.orderSeq ?? (Date.now() % 1000),
+          orderSeq:            t.orderSeq ?? seq,
           items: t.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
         },
       ),
     );
     toast.success(isResend ? 'Ajustes enviados a cocina' : 'Comanda enviada a cocina');
+  };
+
+  /** Abre el cobro; si la mesa nunca envió comanda, le asigna su número de orden ahora. */
+  const openCheckout = (table: MesaTable) => {
+    if (table.orderSeq == null) {
+      const seq = nextOrderNumber();
+      setTables(prev => prev.map(t => t.id === table.id ? { ...t, orderSeq: t.orderSeq ?? seq } : t));
+    }
+    setShowCheckout(true);
   };
 
   const requestBill = () => {
@@ -1730,7 +1741,7 @@ export function MesasView() {
         toast.success(`Cuenta solicitada · Mesa ${table.name}`);
         break;
       case 'pagar':
-        setShowCheckout(true);
+        openCheckout(table);
         break;
       case 'imprimir':
         setShowPrecuentaModal(true);
@@ -1780,7 +1791,7 @@ export function MesasView() {
               subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
               actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
               adjustmentLines={adjLines}
-              orderSeq={selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)}
+              orderSeq={selectedTable.orderSeq}
               orderVersion={(selectedTable.comandaVersion ?? 0) + 1}
               onCancel={() => setShowKitchenPreview(false)}
               onConfirm={() => {
@@ -1808,7 +1819,7 @@ export function MesasView() {
         guests={selectedTable.guests}
         openedAtTimestamp={selectedTable.openedAtTimestamp}
         items={selectedTable.items}
-        orderRef={`#${String(selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)).padStart(3, '0')}`}
+        orderRef={selectedTable.orderSeq != null ? formatOrderNumber(selectedTable.orderSeq) : undefined}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
           setTables(prev =>
@@ -2393,7 +2404,7 @@ export function MesasView() {
             subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
             actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
             adjustmentLines={adjLines}
-            orderSeq={selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)}
+            orderSeq={selectedTable.orderSeq}
             orderVersion={(selectedTable.comandaVersion ?? 0) + 1}
             onCancel={() => setShowKitchenPreview(false)}
             onConfirm={() => {
@@ -3042,7 +3053,7 @@ export function MesasView() {
                 {/* ── CUENTA_SOLICITADA ── */}
                 {selectedTable.status === 'CUENTA_SOLICITADA' && (
                   <>
-                    <PanelCoralBtn onClick={() => setShowCheckout(true)}>
+                    <PanelCoralBtn onClick={() => openCheckout(selectedTable)}>
                       <DollarSign size={16} color="#fff" /> Cobrar mesa
                     </PanelCoralBtn>
                     {selectedTable.items.some(i => i.isSent) && (

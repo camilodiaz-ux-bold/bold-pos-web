@@ -22,3 +22,34 @@ export function nextOrderNumber(): number {
 export function formatOrderNumber(n: number): string {
   return `ORD${String(n).padStart(4, '0')}`;
 }
+
+const SLATE_KEY = 'bold-pos:mostrador-slate:v1';
+
+function readSlate(): number[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SLATE_KEY) ?? '[]');
+    if (Array.isArray(raw)) return raw.filter(x => Number.isFinite(x)) as number[];
+  } catch { /* storage no disponible o JSON inválido */ }
+  return [];
+}
+
+/**
+ * Números de las órdenes iniciales de Mostrador (Restaurantes). Se persisten para
+ * que remontar la página (o StrictMode) no consuma números nuevos: es idempotente,
+ * solo reserva los que falten hasta completar `count`.
+ */
+export function getMostradorSlate(count: number): number[] {
+  const slate = readSlate();
+  if (slate.length >= count) return slate.slice(0, count);
+  while (slate.length < count) slate.push(nextOrderNumber());
+  try { localStorage.setItem(SLATE_KEY, JSON.stringify(slate)); } catch { /* sin storage */ }
+  return slate;
+}
+
+/** Al cobrar una orden inicial, su número nuevo reemplaza la entrada del slate. */
+export function replaceMostradorSlateEntry(index: number, n: number): void {
+  const slate = readSlate();
+  if (index < 0 || index >= slate.length) return;
+  slate[index] = n;
+  try { localStorage.setItem(SLATE_KEY, JSON.stringify(slate)); } catch { /* sin storage */ }
+}
