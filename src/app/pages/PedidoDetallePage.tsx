@@ -168,7 +168,7 @@ export function PedidoDetallePage() {
         ) : (
           <button style={outlineBtn} onClick={() => printInvoice(buildInvoiceData(saleFromVenta(v)))}>
             <Printer size={14} color="var(--blue-100)" />
-            Imprimir Factura Electronica
+            {v.tipoDoc === 'factura' ? 'Imprimir Factura Electronica' : 'Imprimir comprobante'}
           </button>
         )}
       </div>
