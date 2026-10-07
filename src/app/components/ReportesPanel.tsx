@@ -70,8 +70,7 @@ const CATEGORIES: ReportCategory[] = [
     id: 'ventas',
     title: 'Reportes de ventas',
     items: [
-      { id: 'ventas',                  label: 'Ventas (Legacy)',                   icon: <FileText     size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
-      { id: 'ventas-async',            label: 'Ventas *Async',             icon: <FileText        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'ventas-async',            label: 'Ventas',                   icon: <FileText        size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'comprobantes-mensuales',  label: 'Comprobantes mensuales',   icon: <FileCheck    size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ventas-items',            label: 'Ventas por ítems',         icon: <ShoppingCart size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ganancias-items',         label: 'Ganancias por ítems',      icon: <TrendingUp   size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
@@ -186,10 +185,10 @@ function CategoryCard({ category, isRestaurantes }: { category: ReportCategory; 
             isLast={idx === category.items.length - 1}
             onClick={isRestaurantes
               ? () => navigate('/reportes/restaurantes/' + item.id)
-              : item.id === 'ventas'
-                ? () => navigate('/reportes/restaurantes/rest-ventas')
-                : item.id === 'ventas-async'
-                  ? () => navigate('/reportes/restaurantes/rest-ventas-async')
+              : item.id === 'ventas-async'
+                ? () => navigate('/reportes/restaurantes/rest-ventas-async')
+                : item.id === 'ventas-items'
+                  ? () => navigate('/reportes/restaurantes/ventas-items')
                   : () => toast.info(item.label)
             }
           />

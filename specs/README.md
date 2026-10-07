@@ -8,6 +8,7 @@ Cada spec tiene su propio campo "Estado" en la tabla de encabezado. Una vez marc
 
 | Fecha | Spec | Estado | Resumen |
 |---|---|---|---|
+| 2026-10 | [2026-10-reporte-ventas-items.md](./2026-10-reporte-ventas-items.md) | ✅ Implementado | Core: reporte "Ventas por ítems" como réplica del reporte real de Bold POS, con datos de `ventasStore`. Los combos son una fila propia (sin desglose, modelo Fudo) y la columna nueva "Tipo" distingue Ítem de Combo. Columnas Subtotal y Total; botones Generar/Imprimir/Exportar solo visuales. |
 | 2026-10 | [2026-10-comprobantes-facturas-retail.md](./2026-10-comprobantes-facturas-retail.md) | ✅ Implementado | Retail: Ingresos con Comprobantes (no van a la DIAN) y Facturas de Venta (electrónicas, con CUFE e IVA), listados y detalles reales, y selector "Tipo de documento" en el checkout. Cotizaciones solo visual. Restaurantes no cambia. |
 | 2026-10 | [2026-10-ventas-dinamicas.md](./2026-10-ventas-dinamicas.md) | ✅ Implementado | Core: las ventas cobradas en Mesas y Mostrador se registran y aparecen en Ingresos, de la más reciente a la más antigua, con detalle real. Restaurantes: `ORD####` = número de comanda, con consecutivo global compartido. |
 | 2026-10 | [2026-10-combos-variantes-retail.md](./2026-10-combos-variantes-retail.md) | Listo para implementación | Retail: los componentes de un combo pueden ser una variante concreta (Talla / Color) de un producto, con su precio y código. Restaurantes no cambia. Complementa `2026-09-combos.md`. |

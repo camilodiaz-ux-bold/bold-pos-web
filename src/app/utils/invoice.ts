@@ -11,6 +11,10 @@ import { INVOICE_ISSUER, INVOICE_SEQ_START } from '../data/invoiceIssuer';
 
 export interface SaleItem {
   id: string;
+  /** Id del producto vendido: catálogo (101–184 / 201+) o comboSaleId (≥ 9000). Ausente en ventas sembradas antiguas y líneas libres. */
+  productId?: number;
+  /** true si la línea es un combo. */
+  isCombo?: boolean;
   name: string;
   quantity: number;
   /** Precio unitario de lista (antes del descuento de línea). */
