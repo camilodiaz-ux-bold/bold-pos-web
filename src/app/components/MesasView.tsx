@@ -1255,7 +1255,7 @@ export function MesasView() {
     return syncTablesFromConfig(mesasConfig, base).map(t =>
       STATUS_CFG[t.status]
         ? t
-        : { ...t, status: 'DISPONIBLE' as TableStatus, items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined },
+        : { ...t, status: 'DISPONIBLE' as TableStatus, items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined },
     );
   });
 
@@ -1431,7 +1431,7 @@ export function MesasView() {
     setTables(prev =>
       prev.map(t =>
         t.id === selectedTableId
-          ? { ...t, status: 'OCUPADA', openedAtTimestamp: Date.now(), firstComandaSentAt: undefined, guests, items: [], comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+          ? { ...t, status: 'OCUPADA', openedAtTimestamp: Date.now(), firstComandaSentAt: undefined, guests, items: [], comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined }
           : t,
       ),
     );
@@ -1499,7 +1499,7 @@ export function MesasView() {
     setTables(prev =>
       prev.map(t =>
         t.id === selectedTableId
-          ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+          ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined }
           : t,
       ),
     );
@@ -1682,9 +1682,9 @@ export function MesasView() {
     setTables(prev =>
       prev.map(t => {
         if (t.id === selectedTableId)
-          return { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined };
+          return { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined };
         if (t.id === changeMesaTarget)
-          return { ...t, status: 'OCUPADA', items: source.items, openedAtTimestamp: source.openedAtTimestamp, guests: source.guests, comandaSent: source.comandaSent, hasPendingChanges: source.hasPendingChanges };
+          return { ...t, status: 'OCUPADA', items: source.items, openedAtTimestamp: source.openedAtTimestamp, guests: source.guests, comandaSent: source.comandaSent, hasPendingChanges: source.hasPendingChanges, orderSeq: source.orderSeq, comandaVersion: source.comandaVersion, firstComandaSentAt: source.firstComandaSentAt };
         return t;
       }),
     );
@@ -1749,7 +1749,7 @@ export function MesasView() {
       case 'liberar':
         setTables(prev => prev.map(t =>
           t.id === table.id
-            ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+            ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined }
             : t,
         ));
         toast.success(`Mesa ${table.name} liberada y disponible`);
@@ -1825,7 +1825,7 @@ export function MesasView() {
           setTables(prev =>
             prev.map(t =>
               t.id === selectedTableId
-                ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+                ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined }
                 : t,
             ),
           );

@@ -269,8 +269,9 @@ export function HomePage() {
   const selectOrder = (id: string) => setActiveOrderId(id);
 
   const addOrder = () => {
-    const maxNum  = kitchen ? 0 : orders.reduce((max, o) => Math.max(max, parseInt(o.number) || 0), 0);
-    const nextNum = kitchen ? String(nextOrderNumber()).padStart(3, '0') : (maxNum + 1).toString().padStart(3, '0');
+    const nextNum = kitchen
+      ? String(nextOrderNumber()).padStart(3, '0')
+      : (orders.reduce((max, o) => Math.max(max, parseInt(o.number) || 0), 0) + 1).toString().padStart(3, '0');
     const newOrder: Order = {
       id: Math.random().toString(36).slice(2, 9),
       number: nextNum,
