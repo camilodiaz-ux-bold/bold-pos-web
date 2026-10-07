@@ -25,7 +25,7 @@ En Retail, el módulo Ventas de Restaurantes se reemplaza por dos listados de In
 | Resolución | No lleva (`---`) | Sí |
 | CUFE | No | Sí |
 | Estado DIAN | No | Aceptada / Pendiente |
-| Impuestos | Sin desglose de IVA (P3) | IVA desglosado, 19 % (P4) |
+| Impuestos | IVA solo si es mayor a 0 (P3) | IVA desglosado, 19 % (P4) |
 | Listado | `/comprobantes` | `/facturas-venta` |
 
 ## 3. Decisiones
@@ -39,7 +39,7 @@ En Retail, el módulo Ventas de Restaurantes se reemplaza por dos listados de In
 
 ### Decisiones propias del spec (a validar en la revisión)
 
-- **P3 · Comprobante sin desglose de impuestos.** El detalle y el ticket del comprobante muestran Subtotal / Descuento / Total, sin filas de IVA. La factura sí desglosa el IVA.
+- **P3 · IVA en el comprobante solo si es mayor a 0.** El detalle y el ticket del comprobante muestran Subtotal / Descuento / IVA / Total, de modo que la suma cuadra; la fila de IVA se omite cuando el impuesto es 0 (como en el POS real), dejando Subtotal / Descuento / Total. La factura siempre desglosa el IVA.
 - **P4 · Una tarifa de IVA.** El checkout usa una sola tarifa (19 %). La columna "Impuesto" de la factura muestra "IVA 19%" en todas las líneas. No se modela IVA por ítem.
 - **P6 · Rutas.** En Retail, `/ventas` y `/ventas/:id` redirigen a `/comprobantes`. Las rutas existentes no se modifican; la redirección vive dentro de las páginas.
 
@@ -66,7 +66,7 @@ Redirecciones: en Retail, `/ventas` y `/ventas/:id` llevan a `/comprobantes`. En
   - Comprobante: número `3763`, `3764`… (consecutivo propio; el primero es 3763 porque los sembrados llegan a 3762).
   - Factura: `SETT 24004xx`, con el consecutivo de facturas actual.
 - Ticket impreso (80 mm):
-  - Comprobante: título "Comprobante de Venta No. 3763"; sin fecha de validación, resolución, CUFE ni filas de IVA (P3).
+  - Comprobante: título "Comprobante de Venta No. 3763"; sin fecha de validación, base imponible, resolución ni CUFE; con fila de IVA solo si el impuesto es mayor a 0 (P3).
   - Factura: igual que hoy (ver `2026-09-checkout-factura.md`).
 - Panel "Venta Completada": el botón y los toasts dicen "Imprimir comprobante" o "Imprimir factura" según el tipo.
 - En Restaurantes el checkout no cambia: sin selector, siempre factura.
@@ -113,7 +113,7 @@ Si el id no existe o el documento no es del tipo de la ruta: "Documento no encon
 **Notas y Totales** lado a lado:
 
 - Notas: el texto de la venta, o "Sin notas" en gris.
-- Totales del comprobante: Subtotal · Descuento · Total.
+- Totales del comprobante: Subtotal · Descuento · IVA 19% (solo si el impuesto es mayor a 0) · Total.
 - Totales de la factura: Subtotal · Descuento · IVA 19% · Total.
 
 **Tarjeta "Recibos":**

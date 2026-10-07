@@ -105,9 +105,9 @@ export function DocumentoVentaDetallePage({ tipo }: { tipo: TipoDocVenta }) {
   const ivaLabel = `IVA ${Math.round(v.taxRate * 100)}%`;
 
   const totales = [
-    { label: 'Subtotal', value: fmtCOP(esFactura ? v.subtotal : v.total + v.discount) },
+    { label: 'Subtotal', value: fmtCOP(v.subtotal) },
     { label: 'Descuento', value: fmtCOP(v.discount) },
-    ...(esFactura ? [{ label: ivaLabel, value: fmtCOP(v.tax) }] : []),
+    ...(esFactura || v.tax > 0 ? [{ label: ivaLabel, value: fmtCOP(v.tax) }] : []),
   ];
 
   const reciboCols = ['Código', 'Estado', 'Total', ...(esFactura ? ['Saldo a favor'] : []), 'Método de pago', 'Fecha'];

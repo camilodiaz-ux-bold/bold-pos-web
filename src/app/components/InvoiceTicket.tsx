@@ -114,6 +114,7 @@ export function InvoiceTicket({ invoice }: { invoice: InvoiceData }) {
         {!esComprobante && <Total label="Base imponible:" value={formatInvoiceCOP(invoice.subtotal)} />}
         {!esComprobante && <Total label={`IVA ${(invoice.taxRate * 100).toFixed(2)} %:`} value={formatInvoiceCOP(invoice.tax)} />}
         <Total label="Descuento:" value={formatInvoiceCOP(invoice.discount)} />
+        {esComprobante && invoice.tax > 0 && <Total label={`IVA ${(invoice.taxRate * 100).toFixed(2)} %:`} value={formatInvoiceCOP(invoice.tax)} />}
         {invoice.tip > 0 && <Total label={`${invoice.tipLabel}:`} value={formatInvoiceCOP(invoice.tip)} />}
         <Total label="Total:" value={formatInvoiceCOP(invoice.total)} strong />
       </div>
