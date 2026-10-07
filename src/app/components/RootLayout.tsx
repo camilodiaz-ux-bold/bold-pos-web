@@ -23,6 +23,7 @@ import { FavoritesProvider } from '../store/favoritesStore';
 import { NotificationsProvider } from '../store/notificationsStore';
 import { AsyncReportsProvider } from '../store/asyncReportsStore';
 import { ItemsProvider } from '../store/itemsStore';
+import { VentasProvider } from '../store/ventasStore';
 import { LoginScreen } from './LoginScreen';
 import { SignupScreen } from './SignupScreen';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -130,6 +131,7 @@ export function RootLayout() {
     <FavoritesProvider key={vertical}>
     <MesasStoreProvider>
     <ItemsProvider key={vertical}>
+    <VentasProvider key={vertical}>
     <NotificationsProvider>
     <AsyncReportsProvider>
     <div className="flex flex-col h-screen w-full bg-[var(--blue-10)] overflow-hidden ">
@@ -223,6 +225,7 @@ export function RootLayout() {
     </div>
     </AsyncReportsProvider>
     </NotificationsProvider>
+    </VentasProvider>
     </ItemsProvider>
     </MesasStoreProvider>
     </FavoritesProvider>

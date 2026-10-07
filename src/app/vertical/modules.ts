@@ -24,9 +24,13 @@ const EXCLUSIVE_MODULES = {
   mesas: ['restaurantes'],
   'reportes-restaurantes': ['restaurantes'],
   propinas: ['restaurantes'],
+  ventas: ['restaurantes'],
   // Solo Retail
   variantes: ['retail'],
   'listas-precios': ['retail'],
+  comprobantes: ['retail'],
+  'facturas-venta': ['retail'],
+  cotizaciones: ['retail'],
 } as const satisfies Record<string, readonly Vertical[]>;
 
 export type ExclusiveModuleId = keyof typeof EXCLUSIVE_MODULES;

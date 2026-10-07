@@ -17,9 +17,11 @@ import { MesasView } from '../components/MesasView';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
 import { SaleCompletedPanel } from '../components/SaleCompletedPanel';
 import type { CompletedSale } from '../utils/invoice';
+import { nextOrderNumber, formatOrderNumber, getMostradorSlate, replaceMostradorSlateEntry } from '../utils/orderNumber';
 import { MostradorCatalog, type MostradorProduct } from '../components/MostradorCatalog';
 import type { RootOutletContext } from '../components/RootLayout';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
+import { useVentas } from '../store/ventasStore';
 import { useVertical, type Vertical } from '../vertical';
 
 function cn(...inputs: ClassValue[]) {
@@ -106,9 +108,12 @@ function buildInitialOrders(vertical: Vertical): Order[] {
       draft(5, '10:50 AM'), draft(6, '10:55 AM'), draft(7, '11:00 AM'),
     ];
   }
+  // Restaurantes: los números salen del slate persistido (consecutivo global compartido con Mesas).
+  const slate = getMostradorSlate(7);
+  const num = (i: number) => String(slate[i]).padStart(3, '0');
   return [
     {
-      id: '1', number: '001', status: 'BORRADOR',
+      id: '1', number: num(0), status: 'BORRADOR',
       items: [
         { id: 'i1a', productId: 3, name: 'Pizza Pepperoni Med.',    price: 42000, quantity: 1 },
         { id: 'i1b', productId: 4, name: 'Iced Latte XL',           price: 12500, quantity: 2 },
@@ -116,7 +121,7 @@ function buildInitialOrders(vertical: Vertical): Order[] {
       isPaid: false, requiresPreparation: true, createdAt: '10:30 AM',
     },
     {
-      id: '2', number: '002', status: 'EN PREPARACIÓN',
+      id: '2', number: num(1), status: 'EN PREPARACIÓN',
       items: [
         { id: 'i2a', productId: 1, name: 'Hamb. Gourmet con Papas', price: 38000, quantity: 1, note: 'Sin cebolla', isSent: true },
         { id: 'i2b', productId: 7, name: 'Ensalada César',          price: 28000, quantity: 1, isSent: true },
@@ -126,7 +131,7 @@ function buildInitialOrders(vertical: Vertical): Order[] {
       sentToKitchenAt: ago(18), comandaSent: true,
     },
     {
-      id: '3', number: '003', status: 'LISTA',
+      id: '3', number: num(2), status: 'LISTA',
       items: [
         { id: 'i3a', productId: 5, name: 'Pasta Carbonara',         price: 35000, quantity: 1, isSent: true },
         { id: 'i3b', productId: 4, name: 'Iced Latte XL',           price: 12500, quantity: 2, note: 'Con Stevia', isSent: true },
@@ -134,10 +139,10 @@ function buildInitialOrders(vertical: Vertical): Order[] {
       isPaid: false, requiresPreparation: true, createdAt: '10:20 AM',
       sentToKitchenAt: ago(35), frozenPreparationMs: 28 * 60_000, comandaSent: true,
     },
-    { id: '4', number: '004', status: 'BORRADOR', items: [], isPaid: false, requiresPreparation: true, createdAt: '10:35 AM' },
-    { id: '5', number: '005', status: 'BORRADOR', items: [], isPaid: false, requiresPreparation: true, createdAt: '10:40 AM' },
-    { id: '6', number: '006', status: 'BORRADOR', items: [], isPaid: false, requiresPreparation: true, createdAt: '10:45 AM' },
-    { id: '7', number: '007', status: 'BORRADOR', items: [], isPaid: false, requiresPreparation: true, createdAt: '10:50 AM' },
+    { id: '4', number: num(3), status: 'BORRADOR', items: [], isPaid: false, requiresPreparation: true, createdAt: '10:35 AM' },
+    { id: '5', number: num(4), status: 'BORRADOR', items: [], isPaid: false, requiresPreparation: true, createdAt: '10:40 AM' },
+    { id: '6', number: num(5), status: 'BORRADOR', items: [], isPaid: false, requiresPreparation: true, createdAt: '10:45 AM' },
+    { id: '7', number: num(6), status: 'BORRADOR', items: [], isPaid: false, requiresPreparation: true, createdAt: '10:50 AM' },
   ];
 }
 
@@ -233,6 +238,7 @@ function StatusDot({ status, active }: { status: OrderStatus; active: boolean })
 export function HomePage() {
   const { subMode } = useOutletContext<RootOutletContext>();
   const { vertical, has } = useVertical();
+  const { registrarVenta } = useVentas();
   const kitchen = has('mesas'); // Retail no envía comandas a cocina: cobra directo
 
   const [orders, setOrders]       = useState<Order[]>(() => buildInitialOrders(vertical));
@@ -265,8 +271,9 @@ export function HomePage() {
   const selectOrder = (id: string) => setActiveOrderId(id);
 
   const addOrder = () => {
-    const maxNum  = orders.reduce((max, o) => Math.max(max, parseInt(o.number) || 0), 0);
-    const nextNum = (maxNum + 1).toString().padStart(3, '0');
+    const nextNum = kitchen
+      ? String(nextOrderNumber()).padStart(3, '0')
+      : (orders.reduce((max, o) => Math.max(max, parseInt(o.number) || 0), 0) + 1).toString().padStart(3, '0');
     const newOrder: Order = {
       id: Math.random().toString(36).slice(2, 9),
       number: nextNum,
@@ -404,12 +411,18 @@ export function HomePage() {
         title={`Orden #${activeOrder.number}`}
         meta={`${activeOrder.items.length} ítem${activeOrder.items.length !== 1 ? 's' : ''}`}
         items={activeOrder.items}
-        orderRef={`#${activeOrder.number}`}
+        orderRef={kitchen ? formatOrderNumber(parseInt(activeOrder.number, 10)) : `#${activeOrder.number}`}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
+          registrarVenta(sale, kitchen ? { zona: 'Mostrador', abiertaEn: activeOrder.firstComandaSentAt } : {});
+          const nuevoNumero = kitchen ? nextOrderNumber() : null;
+          if (nuevoNumero != null && /^[1-7]$/.test(activeOrderId)) {
+            replaceMostradorSlateEntry(parseInt(activeOrderId, 10) - 1, nuevoNumero);
+          }
+          const numeroOrden = nuevoNumero != null ? String(nuevoNumero).padStart(3, '0') : activeOrder.number;
           setOrders(prev => prev.map(o =>
             o.id === activeOrderId
-              ? { ...o, items: [], status: 'BORRADOR' as OrderStatus, isPaid: false, comandaSent: false, hasPendingChanges: false, sentToKitchenAt: undefined, firstComandaSentAt: undefined, frozenPreparationMs: undefined }
+              ? { ...o, number: numeroOrden, items: [], status: 'BORRADOR' as OrderStatus, isPaid: false, comandaSent: false, hasPendingChanges: false, sentToKitchenAt: undefined, firstComandaSentAt: undefined, frozenPreparationMs: undefined }
               : o,
           ));
           setShowCheckout(false);
