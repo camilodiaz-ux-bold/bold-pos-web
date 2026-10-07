@@ -39,6 +39,7 @@ function Total({ label, value, strong }: { label: string; value: string; strong?
 export function InvoiceTicket({ invoice }: { invoice: InvoiceData }) {
   const { customer } = invoice;
   const cols = '7mm 22mm 1fr';
+  const esComprobante = invoice.tipoDoc === 'comprobante';
 
   return (
     <div style={{ width: '72mm', margin: '0 auto', fontFamily: FONT, fontSize: 10.5, color: INK, lineHeight: '13px' }}>
@@ -48,7 +49,7 @@ export function InvoiceTicket({ invoice }: { invoice: InvoiceData }) {
           <path d={svgPaths.p210b6200} fill={INK} />
         </svg>
       </div>
-      <div style={{ ...centered, fontWeight: 700 }}>Factura Electrónica de Venta</div>
+      <div style={{ ...centered, fontWeight: 700 }}>{esComprobante ? 'Comprobante de Venta' : 'Factura Electrónica de Venta'}</div>
       <div style={{ ...centered, fontWeight: 700 }}>No. {invoice.number}</div>
       <div style={centered}>{INVOICE_ISSUER.razonSocial}</div>
       <div style={centered}>NIT: {INVOICE_ISSUER.nit}</div>
@@ -74,7 +75,7 @@ export function InvoiceTicket({ invoice }: { invoice: InvoiceData }) {
       <div style={rule} />
 
       <Field label="Fecha emisión:" value={invoice.emitidaEn} />
-      <Field label="Fecha validación:" value={invoice.validadaEn} />
+      {!esComprobante && <Field label="Fecha validación:" value={invoice.validadaEn} />}
 
       <div style={rule} />
 
@@ -110,9 +111,10 @@ export function InvoiceTicket({ invoice }: { invoice: InvoiceData }) {
       {/* Totales */}
       <div style={{ marginLeft: '28%', marginTop: 2 }}>
         <Total label="Subtotal:" value={formatInvoiceCOP(invoice.subtotal)} />
-        <Total label="Base imponible:" value={formatInvoiceCOP(invoice.subtotal)} />
-        <Total label={`IVA ${(invoice.taxRate * 100).toFixed(2)} %:`} value={formatInvoiceCOP(invoice.tax)} />
+        {!esComprobante && <Total label="Base imponible:" value={formatInvoiceCOP(invoice.subtotal)} />}
+        {!esComprobante && <Total label={`IVA ${(invoice.taxRate * 100).toFixed(2)} %:`} value={formatInvoiceCOP(invoice.tax)} />}
         <Total label="Descuento:" value={formatInvoiceCOP(invoice.discount)} />
+        {esComprobante && invoice.tax > 0 && <Total label={`IVA ${(invoice.taxRate * 100).toFixed(2)} %:`} value={formatInvoiceCOP(invoice.tax)} />}
         {invoice.tip > 0 && <Total label={`${invoice.tipLabel}:`} value={formatInvoiceCOP(invoice.tip)} />}
         <Total label="Total:" value={formatInvoiceCOP(invoice.total)} strong />
       </div>

@@ -10,6 +10,7 @@ import {
   LayoutGrid, Map, RefreshCw, CheckCircle, DollarSign,
   ChefHat, Check, Save,
 } from 'lucide-react';
+import { useVentas } from '../store/ventasStore';
 import { MesasGridView } from './MesasGridView';
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
@@ -18,6 +19,7 @@ import { MesaProductSelector } from './MesaProductSelector';
 import { CheckoutDrawer } from './CheckoutDrawer';
 import { SaleCompletedPanel } from './SaleCompletedPanel';
 import type { CompletedSale } from '../utils/invoice';
+import { nextOrderNumber, formatOrderNumber } from '../utils/orderNumber';
 import { KitchenTicketPreviewModal, type TicketItem } from './KitchenTicketPreviewModal';
 import { CAT_DEFS, ALL_CATALOG_PRODUCTS } from '../data/productCatalog';
 import type { ComboComponentSnapshot } from '../utils/comboBridge';
@@ -1254,7 +1256,7 @@ export function MesasView() {
     return syncTablesFromConfig(mesasConfig, base).map(t =>
       STATUS_CFG[t.status]
         ? t
-        : { ...t, status: 'DISPONIBLE' as TableStatus, items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined },
+        : { ...t, status: 'DISPONIBLE' as TableStatus, items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined },
     );
   });
 
@@ -1377,6 +1379,7 @@ export function MesasView() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived ────────────────────────────────────────────────────────────────
+  const { registrarVenta } = useVentas();
   const selectedTable = useMemo(
     () => tables.find(t => t.id === selectedTableId) ?? null,
     [tables, selectedTableId],
@@ -1430,7 +1433,7 @@ export function MesasView() {
     setTables(prev =>
       prev.map(t =>
         t.id === selectedTableId
-          ? { ...t, status: 'OCUPADA', openedAtTimestamp: Date.now(), firstComandaSentAt: undefined, guests, items: [], comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+          ? { ...t, status: 'OCUPADA', openedAtTimestamp: Date.now(), firstComandaSentAt: undefined, guests, items: [], comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined }
           : t,
       ),
     );
@@ -1456,6 +1459,7 @@ export function MesasView() {
       toast.info('No hay cambios pendientes'); return;
     }
     const now = Date.now();
+    const seq = selectedTable.orderSeq ?? nextOrderNumber();
     setTables(prev =>
       prev.map(t =>
         t.id !== selectedTableId ? t : {
@@ -1466,12 +1470,21 @@ export function MesasView() {
           pendingChanges:      [],
           firstComandaSentAt:  t.firstComandaSentAt ?? now,
           comandaVersion:      (t.comandaVersion ?? 0) + 1,
-          orderSeq:            t.orderSeq ?? (Date.now() % 1000),
+          orderSeq:            t.orderSeq ?? seq,
           items: t.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
         },
       ),
     );
     toast.success(isResend ? 'Ajustes enviados a cocina' : 'Comanda enviada a cocina');
+  };
+
+  /** Abre el cobro; si la mesa nunca envió comanda, le asigna su número de orden ahora. */
+  const openCheckout = (table: MesaTable) => {
+    if (table.orderSeq == null) {
+      const seq = nextOrderNumber();
+      setTables(prev => prev.map(t => t.id === table.id ? { ...t, orderSeq: t.orderSeq ?? seq } : t));
+    }
+    setShowCheckout(true);
   };
 
   const requestBill = () => {
@@ -1488,7 +1501,7 @@ export function MesasView() {
     setTables(prev =>
       prev.map(t =>
         t.id === selectedTableId
-          ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+          ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined }
           : t,
       ),
     );
@@ -1671,9 +1684,9 @@ export function MesasView() {
     setTables(prev =>
       prev.map(t => {
         if (t.id === selectedTableId)
-          return { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined };
+          return { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined };
         if (t.id === changeMesaTarget)
-          return { ...t, status: 'OCUPADA', items: source.items, openedAtTimestamp: source.openedAtTimestamp, guests: source.guests, comandaSent: source.comandaSent, hasPendingChanges: source.hasPendingChanges };
+          return { ...t, status: 'OCUPADA', items: source.items, openedAtTimestamp: source.openedAtTimestamp, guests: source.guests, comandaSent: source.comandaSent, hasPendingChanges: source.hasPendingChanges, orderSeq: source.orderSeq, comandaVersion: source.comandaVersion, firstComandaSentAt: source.firstComandaSentAt };
         return t;
       }),
     );
@@ -1730,7 +1743,7 @@ export function MesasView() {
         toast.success(`Cuenta solicitada · Mesa ${table.name}`);
         break;
       case 'pagar':
-        setShowCheckout(true);
+        openCheckout(table);
         break;
       case 'imprimir':
         setShowPrecuentaModal(true);
@@ -1738,7 +1751,7 @@ export function MesasView() {
       case 'liberar':
         setTables(prev => prev.map(t =>
           t.id === table.id
-            ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+            ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined }
             : t,
         ));
         toast.success(`Mesa ${table.name} liberada y disponible`);
@@ -1780,7 +1793,7 @@ export function MesasView() {
               subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
               actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
               adjustmentLines={adjLines}
-              orderSeq={selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)}
+              orderSeq={selectedTable.orderSeq}
               orderVersion={(selectedTable.comandaVersion ?? 0) + 1}
               onCancel={() => setShowKitchenPreview(false)}
               onConfirm={() => {
@@ -1808,13 +1821,19 @@ export function MesasView() {
         guests={selectedTable.guests}
         openedAtTimestamp={selectedTable.openedAtTimestamp}
         items={selectedTable.items}
-        orderRef={`#${String(selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)).padStart(3, '0')}`}
+        orderRef={selectedTable.orderSeq != null ? formatOrderNumber(selectedTable.orderSeq) : undefined}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
+          registrarVenta(sale, {
+            zona: selectedTable.zone,
+            mesa: selectedTable.name,
+            personas: selectedTable.guests,
+            abiertaEn: selectedTable.openedAtTimestamp,
+          });
           setTables(prev =>
             prev.map(t =>
               t.id === selectedTableId
-                ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined }
+                ? { ...t, status: 'DISPONIBLE', items: [], openedAtTimestamp: undefined, firstComandaSentAt: undefined, guests: undefined, comandaSent: false, hasPendingChanges: false, frozenElapsedMs: undefined, orderSeq: undefined, comandaVersion: undefined }
                 : t,
             ),
           );
@@ -2393,7 +2412,7 @@ export function MesasView() {
             subtitle={isAdjust ? 'Se enviarán los siguientes cambios a cocina' : isFullResend ? 'Se reimprimirá la última comanda enviada a cocina' : undefined}
             actionLabel={isAdjust ? 'Enviar ajuste' : isFullResend ? 'Reenviar e imprimir' : undefined}
             adjustmentLines={adjLines}
-            orderSeq={selectedTable.orderSeq ?? (selectedTable.id.charCodeAt(0) % 900 + 100)}
+            orderSeq={selectedTable.orderSeq}
             orderVersion={(selectedTable.comandaVersion ?? 0) + 1}
             onCancel={() => setShowKitchenPreview(false)}
             onConfirm={() => {
@@ -3042,7 +3061,7 @@ export function MesasView() {
                 {/* ── CUENTA_SOLICITADA ── */}
                 {selectedTable.status === 'CUENTA_SOLICITADA' && (
                   <>
-                    <PanelCoralBtn onClick={() => setShowCheckout(true)}>
+                    <PanelCoralBtn onClick={() => openCheckout(selectedTable)}>
                       <DollarSign size={16} color="#fff" /> Cobrar mesa
                     </PanelCoralBtn>
                     {selectedTable.items.some(i => i.isSent) && (
