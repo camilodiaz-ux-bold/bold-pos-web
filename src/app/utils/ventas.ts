@@ -119,7 +119,7 @@ export function metodoPagoLabel(v: Venta): string {
 }
 
 // ── Formato ───────────────────────────────────────────────────────────────────
-export const fmtCOP = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
+export const fmtCOP = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
 /** '06/10/2026 16:01' */
 export function fmtFechaHora(ms: number): string {
