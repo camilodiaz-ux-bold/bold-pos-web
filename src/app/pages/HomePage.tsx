@@ -412,6 +412,7 @@ export function HomePage() {
         meta={`${activeOrder.items.length} ítem${activeOrder.items.length !== 1 ? 's' : ''}`}
         items={activeOrder.items}
         orderRef={kitchen ? formatOrderNumber(parseInt(activeOrder.number, 10)) : `#${activeOrder.number}`}
+        hidePreCuenta={kitchen}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
           registrarVenta(sale, kitchen ? { zona: 'Mostrador', abiertaEn: activeOrder.firstComandaSentAt } : {});
