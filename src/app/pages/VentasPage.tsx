@@ -21,11 +21,14 @@ const columns = [
   { key: 'tipoDoc',    label: 'Tipo de documento',  width: '170px' },
   { key: 'estado',     label: 'Estado',             width: '110px' },
   { key: 'dian',       label: 'Estado DIAN',        width: '110px' },
+  { key: 'modo',       label: 'Modo de venta',      width: '130px' },
 ];
 
 // Etiquetas de la UI → valores del modelo (filterVentas solo ignora '' en estos tres).
 const ESTADO_UI: Record<string, FiltrosVenta['estado']> = { Pagado: 'pagada', Abierto: 'abierta', Cancelado: 'cancelada' };
 const DIAN_UI: Record<string, FiltrosVenta['dian']> = { Enviada: 'aceptada', Pendiente: 'pendiente' };
+const MODO_UI: Record<string, FiltrosVenta['modo']> = { Mostrador: 'mostrador', Mesa: 'mesa' };
+const MODO_LABEL = { mostrador: 'Mostrador', mesa: 'Mesa' } as const;
 const TIPO_UI: Record<string, FiltrosVenta['tipoDoc']> = { Comprobante: 'comprobante', 'Factura electrónica': 'factura' };
 
 export function VentasPage() {
@@ -41,6 +44,7 @@ export function VentasPage() {
   const [mesa, setMesa] = useState('Todos');
   const [tipoDoc, setTipoDoc] = useState('Todos');
   const [dian, setDian] = useState('Todos');
+  const [modo, setModo] = useState('Todos');
 
   const rows = useMemo(() => filterVentas(ventas, {
     numero,
@@ -50,9 +54,10 @@ export function VentasPage() {
     dian: DIAN_UI[dian] ?? '',
     tipoDoc: TIPO_UI[tipoDoc] ?? '',
     vendedor: usuario,
+    modo: MODO_UI[modo] ?? '',
     zona,
     mesa,
-  }), [ventas, numero, fecha, estado, dian, tipoDoc, usuario, zona, mesa]);
+  }), [ventas, numero, fecha, estado, dian, tipoDoc, usuario, modo, zona, mesa]);
 
   const usuarios = useMemo(() => opciones(ventas, v => v.vendedor), [ventas]);
   const zonas = useMemo(() => opciones(ventas, v => v.zona), [ventas]);
@@ -159,6 +164,13 @@ export function VentasPage() {
           </select>
         </div>
 
+        <div style={filterGroup}>
+          <label style={labelStyle}>Modo de venta</label>
+          <select style={filterInput} value={modo} onChange={e => setModo(e.target.value)}>
+            {['Todos', 'Mostrador', 'Mesa'].map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+
       </div>
 
       {/* ── Tabla ── */}
@@ -216,6 +228,7 @@ export function VentasPage() {
                         <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 13, fontWeight: 500, color: 'var(--black-60)' }}>---</span>
                       )}
                     </td>
+                    <td style={tdStyle}>{v.modo ? MODO_LABEL[v.modo] : '---'}</td>
                   </tr>
                 );
               })}

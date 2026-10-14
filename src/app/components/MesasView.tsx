@@ -1825,6 +1825,7 @@ export function MesasView() {
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
           registrarVenta(sale, {
+            modo: 'mesa',
             zona: selectedTable.zone,
             mesa: selectedTable.name,
             personas: selectedTable.guests,

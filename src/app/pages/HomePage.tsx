@@ -390,7 +390,7 @@ export function HomePage() {
         hidePreCuenta={kitchen}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
-          registrarVenta(sale, kitchen ? { zona: 'Mostrador', abiertaEn: activeOrder.firstComandaSentAt } : {});
+          registrarVenta(sale, kitchen ? { modo: 'mostrador', abiertaEn: activeOrder.firstComandaSentAt } : {});
           const nuevoNumero = kitchen ? nextOrderNumber() : null;
           if (nuevoNumero != null && /^[1-7]$/.test(activeOrderId)) {
             replaceMostradorSlateEntry(parseInt(activeOrderId, 10) - 1, nuevoNumero);

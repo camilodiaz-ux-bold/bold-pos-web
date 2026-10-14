@@ -48,7 +48,7 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     // Conserva la clave histórica para no perder los ítems ya guardados.
     itemsStorageKey: 'bold-pos:items:v3',
     buildSeedItems,
-    ventasStorageKey: 'bold-pos:ventas:restaurantes:v3',
+    ventasStorageKey: 'bold-pos:ventas:restaurantes:v4',
     buildSeedVentas: buildRestaurantSeedVentas,
   },
   retail: {

@@ -116,7 +116,7 @@ export function PedidoDetallePage() {
   const est = estadoLabel(v.estado, vertical);
   const dn = dianLabel(v.dian, vertical);
   const isAbierto = v.estado === 'abierta';
-  const isMostrador = v.zona === 'Mostrador';
+  const isMostrador = v.modo === 'mostrador';
   const showDian = v.tipoDoc === 'factura' && !!dn;
   const sinPagos = v.pagos.length === 0;
   const porPersona = v.pagos.some(p => p.persona);
