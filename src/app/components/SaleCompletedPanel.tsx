@@ -83,7 +83,7 @@ export function SaleCompletedPanel({ sale, onNewSale, kitchenTicket = false }: P
             <button style={linkStyle} onClick={() => toast.info('Buscar contactos de WhatsApp')}><MessageCircle size={20} /> O busca en tus contactos guardados en whatsapp</button>
             <button style={linkStyle} onClick={() => toast.info('Abriendo caja registradora')}><Receipt size={20} /> Abrir caja registradora</button>
             {kitchenTicket && (
-              <button style={linkStyle} onClick={() => setShowKitchenPreview(true)}><ChefHat size={20} /> Imprimir comanda de cocina</button>
+              <button style={linkStyle} onClick={() => setShowKitchenPreview(true)}><ChefHat size={20} /> Imprimir comanda</button>
             )}
           </div>
         </div>
