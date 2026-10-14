@@ -136,5 +136,5 @@ export function buildRestaurantSeedVentas(): Venta[] {
       items: [combo(9002, 2)] }),
   ];
   // Una orden cancelada no deja saldo por cobrar.
-  return ventas.map(v => (v.estado === 'cancelada' ? { ...v, saldo: 0 } : v));
+  return ventas.map(v => ({ ...v, modo: 'mesa' as const, ...(v.estado === 'cancelada' ? { saldo: 0 } : {}) }));
 }

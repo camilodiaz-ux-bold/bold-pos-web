@@ -1,9 +1,10 @@
 import type { CompletedSale } from './invoice';
-import type { Venta, VentaPago, EstadoVenta, EstadoDian } from '../types/venta';
+import type { Venta, ModoVenta, VentaPago, EstadoVenta, EstadoDian } from '../types/venta';
 import type { Vertical } from '../vertical';
 
 /** Datos de la venta que no están en CompletedSale (los da quien cobra). */
 export interface VentaContexto {
+  modo?: ModoVenta;
   zona?: string;
   mesa?: string;
   personas?: number;
@@ -39,6 +40,7 @@ export function ventaFromSale(sale: CompletedSale, vertical: Vertical, recibo: s
     emitidaEn: sale.paidAt,
     abiertaEn: ctx.abiertaEn,
     vencimiento: sale.paidAt,
+    modo: ctx.modo,
     zona: ctx.zona,
     mesa: ctx.mesa,
     personas: ctx.personas,
@@ -154,6 +156,7 @@ export interface FiltrosVenta {
   tipoDoc?: 'comprobante' | 'factura' | '';
   vendedor?: string;
   cliente?: string;
+  modo?: ModoVenta | '';
   zona?: string;
   mesa?: string;
   metodoPago?: string;
@@ -174,6 +177,7 @@ export function filterVentas(ventas: Venta[], f: FiltrosVenta): Venta[] {
     (!f.tipoDoc || v.tipoDoc === f.tipoDoc) &&
     (!activo(f.vendedor) || v.vendedor === f.vendedor) &&
     (!activo(f.cliente) || v.cliente === f.cliente) &&
+    (!f.modo || v.modo === f.modo) &&
     (!activo(f.zona) || v.zona === f.zona) &&
     (!activo(f.mesa) || v.mesa === f.mesa) &&
     (!activo(f.metodoPago) || v.pagos.some(p => p.method === f.metodoPago)) &&

@@ -9,6 +9,8 @@
 import type { SaleItem } from '../utils/invoice';
 
 export type TipoDocVenta = 'comprobante' | 'factura';
+/** Restaurantes: cómo se vendió. Mostrador no tiene zona ni mesa. */
+export type ModoVenta = 'mostrador' | 'mesa';
 export type EstadoVenta  = 'pagada' | 'no-pagada' | 'abierta' | 'cancelada';
 export type EstadoDian   = 'aceptada' | 'pendiente';
 
@@ -33,6 +35,8 @@ export interface Venta {
   abiertaEn?: number;
   /** Ventas de contado: igual a emitidaEn. */
   vencimiento: number;
+  /** Restaurantes: 'mostrador' (sin mesa) o 'mesa'. */
+  modo?: ModoVenta;
   zona?: string;
   mesa?: string;
   personas?: number;
