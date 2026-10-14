@@ -761,7 +761,7 @@ export function HomePage() {
                           onClick={resendComanda}
                           style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '4px 0' }}
                         >
-                          <RotateCcw size={13} /> Reenviar comanda
+                          <RotateCcw size={13} /> Imprimir comanda
                         </button>
                       </>
                     )}
