@@ -5,12 +5,15 @@
  * caja registradora son visuales (toast), como el "Enviar" que había antes.
  * Al abrirse, el diálogo de impresión de la factura se dispara solo; el botón
  * "Imprimir factura" queda para reimprimir.
+ * `kitchenTicket` (solo Mostrador de Restaurantes) agrega "Imprimir comanda de cocina",
+ * que abre el preview de la comanda con los ítems de la venta.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Mail, MessageCircle, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { buildInvoiceData, resolveCustomer, type CompletedSale } from '../utils/invoice';
 import { printInvoice } from '../utils/printInvoice';
+import { KitchenTicketPreviewModal } from './KitchenTicketPreviewModal';
 
 const MFONT = 'Montserrat, sans-serif';
 
@@ -24,16 +27,24 @@ const linkStyle: React.CSSProperties = {
   color: 'var(--blue-100)', fontFamily: MFONT, fontSize: 14, fontWeight: 700, textDecoration: 'underline',
 };
 
+const secondaryBtn: React.CSSProperties = {
+  flex: 1, height: 52, borderRadius: 32, border: '1.5px solid var(--coral-100)', background: 'var(--black-0)', color: 'var(--coral-100)',
+  fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+};
+
 interface Props {
   sale: CompletedSale;
   onNewSale: () => void;
+  /** Muestra el link "Imprimir comanda de cocina" (ventas de Mostrador, sin mesa). */
+  kitchenTicket?: boolean;
 }
 
-export function SaleCompletedPanel({ sale, onNewSale }: Props) {
+export function SaleCompletedPanel({ sale, onNewSale, kitchenTicket = false }: Props) {
   const docLabel = sale.tipoDoc === 'comprobante' ? 'Comprobante' : 'Factura';
   const customer = resolveCustomer(sale.cliente);
   const [email, setEmail] = useState(customer.correo);
   const [phone, setPhone] = useState(customer.telefono);
+  const [showKitchenPreview, setShowKitchenPreview] = useState(false);
 
   // Impresión automática al abrir el panel (una sola vez por venta, aun con StrictMode).
   const autoPrinted = useRef(false);
@@ -79,21 +90,44 @@ export function SaleCompletedPanel({ sale, onNewSale }: Props) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 16, padding: 32, flexShrink: 0 }}>
-          <button
-            onClick={() => printInvoice(buildInvoiceData(sale))}
-            style={{ flex: 1, height: 52, borderRadius: 32, border: '1.5px solid var(--coral-100)', background: 'var(--black-0)', color: 'var(--coral-100)', fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
-          >
-            Imprimir {docLabel.toLowerCase()}
-          </button>
+        <div style={{ display: 'flex', flexDirection: kitchenTicket ? 'column' : 'row', gap: 16, padding: 32, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 16, flex: kitchenTicket ? undefined : 1 }}>
+            <button
+              onClick={() => printInvoice(buildInvoiceData(sale))}
+              style={secondaryBtn}
+            >
+              Imprimir {docLabel.toLowerCase()}
+            </button>
+            {kitchenTicket && (
+              <button onClick={() => setShowKitchenPreview(true)} style={secondaryBtn}>
+                Imprimir comanda
+              </button>
+            )}
+          </div>
           <button
             onClick={onNewSale}
-            style={{ flex: 1, height: 52, borderRadius: 32, border: 'none', background: 'var(--coral-100)', color: 'var(--black-0)', fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+            style={{ flex: kitchenTicket ? 'none' : 1, height: 52, borderRadius: 32, border: 'none', background: 'var(--coral-100)', color: 'var(--black-0)', fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
           >
             Nueva venta
           </button>
         </div>
       </aside>
+
+      {kitchenTicket && showKitchenPreview && (
+        <KitchenTicketPreviewModal
+          headerLabel="Orden"
+          headerValue={sale.orderRef}
+          showPersonas={false}
+          staffLabel="Cajero"
+          items={sale.items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, note: i.note, comboComponents: i.comboComponents }))}
+          title="Imprimir comanda de cocina"
+          subtitle="Se imprimirá el siguiente ticket en cocina"
+          actionLabel="Imprimir comanda"
+          zIndex={500}
+          onCancel={() => setShowKitchenPreview(false)}
+          onConfirm={() => { setShowKitchenPreview(false); toast.success('Comanda enviada a imprimir'); }}
+        />
+      )}
     </>
   );
 }
