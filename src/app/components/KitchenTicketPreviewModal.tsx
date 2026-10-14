@@ -57,6 +57,8 @@ export interface KitchenTicketPreviewModalProps {
   adjustmentLines?: string[];
   orderSeq?: number;
   orderVersion?: number;
+  /** Override del z-index (default 90); necesario al abrirlo sobre paneles laterales. */
+  zIndex?: number;
   onCancel:  () => void;
   onConfirm: () => void;
 }
@@ -148,6 +150,7 @@ export function KitchenTicketPreviewModal({
   adjustmentLines,
   orderSeq,
   orderVersion,
+  zIndex,
   onCancel,
   onConfirm,
 }: KitchenTicketPreviewModalProps) {
@@ -171,7 +174,7 @@ export function KitchenTicketPreviewModal({
   const hasNothingNew = !isAdjustMode && isResend && diffItems.length === 0 && modifiedItems.length === 0;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" style={zIndex ? { zIndex } : undefined}>
       {/* Overlay oscuro */}
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
 

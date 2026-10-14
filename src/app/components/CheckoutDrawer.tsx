@@ -60,6 +60,8 @@ export interface CheckoutDrawerProps {
   onConfirmPay: (sale: CompletedSale) => void;
   /** Número de orden para la factura, el mismo de la comanda ("#885"); si falta se deriva del consecutivo. */
   orderRef?: string;
+  /** Oculta el botón "Pre - cuenta" (Venta por Mostrador: no hay mesa que pre-cuentear). */
+  hidePreCuenta?: boolean;
 }
 
 interface PayRow {
@@ -283,7 +285,7 @@ function MethodPanel({ title, onSelect, onClose }: { title: string; onSelect: (m
 
 export function CheckoutDrawer({
   title, subtitle, guests, openedAtTimestamp,
-  items, onClose, onConfirmPay, orderRef,
+  items, onClose, onConfirmPay, orderRef, hidePreCuenta,
 }: CheckoutDrawerProps) {
   const { has } = useVertical();
   const tips = has('propinas');   // Retail no cobra propina
@@ -662,10 +664,12 @@ export function CheckoutDrawer({
                 {openedAtTimestamp  && <InfoRow label="Tiempo en mesa"   value={formatElapsed(openedAtTimestamp)} />}
               </div>
             )}
-            <button onClick={() => toast.info('Documento enviado a impresora')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: 40, borderRadius: 12, background: '#F1F2F6', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: MFONT }}>
-              <Printer size={16} color="#121E6C" /> Pre - cuenta
-            </button>
+            {!hidePreCuenta && (
+              <button onClick={() => toast.info('Documento enviado a impresora')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: 40, borderRadius: 12, background: '#F1F2F6', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#121E6C', fontFamily: MFONT }}>
+                <Printer size={16} color="#121E6C" /> Pre - cuenta
+              </button>
+            )}
           </div>
 
           <HSep />

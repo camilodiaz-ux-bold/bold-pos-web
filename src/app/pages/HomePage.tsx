@@ -377,17 +377,6 @@ export function HomePage() {
     toast.success('Orden confirmada — comanda enviada a cocina');
   };
 
-  // ── Marcar como lista ──────────────────────────────────────────────────────
-
-  const markAsReady = () => {
-    setOrders(prev => prev.map(order => {
-      if (order.id !== activeOrderId) return order;
-      const frozenMs = order.sentToKitchenAt ? Date.now() - order.sentToKitchenAt : 0;
-      return { ...order, status: 'LISTA' as OrderStatus, frozenPreparationMs: frozenMs };
-    }));
-    toast.info('Orden marcada como lista');
-  };
-
   // ── Reenviar comanda ───────────────────────────────────────────────────────
 
   const resendComanda = () => {
@@ -412,6 +401,7 @@ export function HomePage() {
         meta={`${activeOrder.items.length} ítem${activeOrder.items.length !== 1 ? 's' : ''}`}
         items={activeOrder.items}
         orderRef={kitchen ? formatOrderNumber(parseInt(activeOrder.number, 10)) : `#${activeOrder.number}`}
+        hidePreCuenta={kitchen}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
           registrarVenta(sale, kitchen ? { zona: 'Mostrador', abiertaEn: activeOrder.firstComandaSentAt } : {});
@@ -437,7 +427,7 @@ export function HomePage() {
     <>
       {/* Panel "Venta Completada" — "Nueva venta" lo cierra y deja la orden vacía lista para otra venta */}
       {completedSale && (
-        <SaleCompletedPanel sale={completedSale} onNewSale={() => setCompletedSale(null)} />
+        <SaleCompletedPanel sale={completedSale} onNewSale={() => setCompletedSale(null)} kitchenTicket={kitchen} />
       )}
 
       {/* ── Modal: Confirmar eliminación ── */}
@@ -747,31 +737,23 @@ export function HomePage() {
                       </button>
                     )}
 
-                    {/* EN PREPARACIÓN → Marcar como lista + Reenviar comanda */}
-                    {activeOrder.status === 'EN PREPARACIÓN' && (
-                      <>
-                        <button
-                          onClick={markAsReady}
-                          style={{ width: '100%', height: 44, borderRadius: 8, cursor: 'pointer', background: 'none', border: '1.5px solid #E2E4ED', fontSize: 14, fontWeight: 700, color: '#1E1E1E', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                        >
-                          <CheckCircle2 size={16} style={{ color: '#059669' }} /> Marcar como lista
-                        </button>
-                        <button
-                          onClick={resendComanda}
-                          style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '4px 0' }}
-                        >
-                          <RotateCcw size={13} /> Reenviar comanda
-                        </button>
-                      </>
-                    )}
-
-                    {/* LISTA / ENTREGADA → Cobrar (abre CheckoutDrawer) */}
-                    {(activeOrder.status === 'LISTA' || activeOrder.status === 'ENTREGADA' || (!kitchen && activeOrder.status === 'BORRADOR' && activeOrder.items.length > 0)) && (
+                    {/* EN PREPARACIÓN / LISTA / ENTREGADA → Cobrar (abre CheckoutDrawer); sin KDS no hay paso "marcar como lista" */}
+                    {(activeOrder.status === 'EN PREPARACIÓN' || activeOrder.status === 'LISTA' || activeOrder.status === 'ENTREGADA' || (!kitchen && activeOrder.status === 'BORRADOR' && activeOrder.items.length > 0)) && (
                       <button
                         onClick={() => setShowCheckout(true)}
                         style={{ width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer', background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700, fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                       >
                         <CreditCard size={16} /> Cobrar
+                      </button>
+                    )}
+
+                    {/* EN PREPARACIÓN → Imprimir comanda (reenvío de la comanda a cocina) */}
+                    {activeOrder.status === 'EN PREPARACIÓN' && (
+                      <button
+                        onClick={resendComanda}
+                        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '4px 0' }}
+                      >
+                        <RotateCcw size={13} /> Imprimir comanda
                       </button>
                     )}
                   </div>
