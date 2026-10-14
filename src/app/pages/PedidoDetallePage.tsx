@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigate, useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Printer, Send } from 'lucide-react';
+import { ArrowLeft, ChefHat, Printer, Send } from 'lucide-react';
+import { toast } from 'sonner';
 import { useVertical } from '../vertical';
 import { useVentas } from '../store/ventasStore';
 import { VentaBadge } from '../components/ventas/VentaBadge';
@@ -9,6 +10,7 @@ import { dianLabel, estadoLabel, fmtCOP, fmtFechaHora, saleFromVenta, tipoDocLab
 import { buildInvoiceData } from '../utils/invoice';
 import { printInvoice } from '../utils/printInvoice';
 import { comboBreakdown } from '../utils/comboBridge';
+import { KitchenTicketPreviewModal } from '../components/KitchenTicketPreviewModal';
 import type { Venta } from '../types/venta';
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
@@ -91,6 +93,7 @@ export function PedidoDetallePage() {
   const { has, vertical } = useVertical();
   const { getVenta } = useVentas();
   const v = getVenta(id);
+  const [showKitchenPreview, setShowKitchenPreview] = useState(false);
 
   // Ventas es exclusivo de Restaurantes: Retail usa Comprobantes / Facturas de Venta.
   if (!has('ventas')) return <Navigate to="/comprobantes" replace />;
@@ -113,6 +116,7 @@ export function PedidoDetallePage() {
   const est = estadoLabel(v.estado, vertical);
   const dn = dianLabel(v.dian, vertical);
   const isAbierto = v.estado === 'abierta';
+  const isMostrador = v.modo === 'mostrador';
   const showDian = v.tipoDoc === 'factura' && !!dn;
   const sinPagos = v.pagos.length === 0;
   const porPersona = v.pagos.some(p => p.persona);
@@ -166,12 +170,35 @@ export function PedidoDetallePage() {
             Reenviar comanda
           </button>
         ) : (
-          <button style={outlineBtn} onClick={() => printInvoice(buildInvoiceData(saleFromVenta(v)))}>
-            <Printer size={14} color="var(--blue-100)" />
-            {v.tipoDoc === 'factura' ? 'Imprimir Factura Electronica' : 'Imprimir Comprobante'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {isMostrador && (
+              <button style={outlineBtn} onClick={() => setShowKitchenPreview(true)}>
+                <ChefHat size={14} color="var(--blue-100)" />
+                Imprimir comanda
+              </button>
+            )}
+            <button style={outlineBtn} onClick={() => printInvoice(buildInvoiceData(saleFromVenta(v)))}>
+              <Printer size={14} color="var(--blue-100)" />
+              {v.tipoDoc === 'factura' ? 'Imprimir Factura Electronica' : 'Imprimir Comprobante'}
+            </button>
+          </div>
         )}
       </div>
+
+      {isMostrador && showKitchenPreview && (
+        <KitchenTicketPreviewModal
+          headerLabel="Orden"
+          headerValue={v.numero}
+          showPersonas={false}
+          staffLabel="Cajero"
+          items={v.items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, note: i.note, comboComponents: i.comboComponents }))}
+          title="Imprimir comanda de cocina"
+          subtitle="Se imprimirá el siguiente ticket en cocina"
+          actionLabel="Imprimir comanda"
+          onCancel={() => setShowKitchenPreview(false)}
+          onConfirm={() => { setShowKitchenPreview(false); toast.success('Comanda enviada a imprimir'); }}
+        />
+      )}
 
       {/* ── Section 1: Información general ── */}
       <div style={sectionCard}>

@@ -7,8 +7,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useOutletContext } from 'react-router';
 import {
   LayoutGrid, Plus, ChevronLeft, ChevronRight,
-  Trash2, CheckCircle2, Send, CreditCard,
-  MessageSquare, X, RotateCcw, Timer, Pencil, Utensils,
+  Trash2, CheckCircle2, Printer, CreditCard,
+  MessageSquare, X, Timer, Pencil, Utensils,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { MesasView } from '../components/MesasView';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
 import { SaleCompletedPanel } from '../components/SaleCompletedPanel';
+import { KitchenTicketPreviewModal, type TicketItem } from '../components/KitchenTicketPreviewModal';
 import type { CompletedSale } from '../utils/invoice';
 import { nextOrderNumber, formatOrderNumber, getMostradorSlate, replaceMostradorSlateEntry } from '../utils/orderNumber';
 import { MostradorCatalog, type MostradorProduct } from '../components/MostradorCatalog';
@@ -246,6 +247,7 @@ export function HomePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editNoteModal, setEditNoteModal] = useState<{ itemId: string; itemName: string; note: string } | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showKitchenPreview, setShowKitchenPreview] = useState(false);
   const [completedSale, setCompletedSale] = useState<CompletedSale | null>(null);
 
   // Timer tick cada 30 s para actualizar banners EN PREPARACIÓN
@@ -356,39 +358,23 @@ export function HomePage() {
     }));
   };
 
-  // ── Confirmar orden — BORRADOR → EN PREPARACIÓN o LISTA ───────────────────
+  // ── Imprimir comanda — sin KDS no hay "confirmar orden": se imprime desde el carrito ──
 
-  const confirmOrder = () => {
+  const printComanda = () => {
     const now = Date.now();
     setOrders(prev => prev.map(order => {
       if (order.id !== activeOrderId) return order;
-      const nextStatus: OrderStatus = order.requiresPreparation ? 'EN PREPARACIÓN' : 'LISTA';
       return {
         ...order,
-        status:             nextStatus,
         comandaSent:        true,
         hasPendingChanges:  false,
-        sentToKitchenAt:    now,
+        sentToKitchenAt:    order.sentToKitchenAt ?? now,
         firstComandaSentAt: order.firstComandaSentAt ?? now,
-        frozenPreparationMs: order.requiresPreparation ? undefined : 0,
         items: order.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
       };
     }));
-    toast.success('Orden confirmada — comanda enviada a cocina');
-  };
-
-  // ── Reenviar comanda ───────────────────────────────────────────────────────
-
-  const resendComanda = () => {
-    setOrders(prev => prev.map(order => {
-      if (order.id !== activeOrderId) return order;
-      return {
-        ...order,
-        hasPendingChanges: false,
-        items: order.items.map(i => ({ ...i, isSent: true, sentQuantity: i.quantity, sentNote: i.note })),
-      };
-    }));
-    toast.success('Ajustes enviados a cocina');
+    setShowKitchenPreview(false);
+    toast.success('Comanda enviada a imprimir');
   };
 
   if (!activeOrder) return null;
@@ -404,7 +390,7 @@ export function HomePage() {
         hidePreCuenta={kitchen}
         onClose={() => setShowCheckout(false)}
         onConfirmPay={(sale) => {
-          registrarVenta(sale, kitchen ? { zona: 'Mostrador', abiertaEn: activeOrder.firstComandaSentAt } : {});
+          registrarVenta(sale, kitchen ? { modo: 'mostrador', abiertaEn: activeOrder.firstComandaSentAt } : {});
           const nuevoNumero = kitchen ? nextOrderNumber() : null;
           if (nuevoNumero != null && /^[1-7]$/.test(activeOrderId)) {
             replaceMostradorSlateEntry(parseInt(activeOrderId, 10) - 1, nuevoNumero);
@@ -428,6 +414,22 @@ export function HomePage() {
       {/* Panel "Venta Completada" — "Nueva venta" lo cierra y deja la orden vacía lista para otra venta */}
       {completedSale && (
         <SaleCompletedPanel sale={completedSale} onNewSale={() => setCompletedSale(null)} kitchenTicket={kitchen} />
+      )}
+
+      {/* Preview de la comanda de cocina */}
+      {kitchen && showKitchenPreview && (
+        <KitchenTicketPreviewModal
+          headerLabel="Orden"
+          headerValue={formatOrderNumber(parseInt(activeOrder.number, 10))}
+          showPersonas={false}
+          staffLabel="Cajero"
+          items={activeOrder.items as TicketItem[]}
+          title="Imprimir comanda de cocina"
+          subtitle="Se imprimirá el siguiente ticket en cocina"
+          actionLabel="Imprimir comanda"
+          onCancel={() => setShowKitchenPreview(false)}
+          onConfirm={printComanda}
+        />
       )}
 
       {/* ── Modal: Confirmar eliminación ── */}
@@ -727,18 +729,8 @@ export function HomePage() {
                   {/* CTAs por estado */}
                   <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-                    {/* BORRADOR → Confirmar orden (coral, envía a cocina) */}
-                    {kitchen && activeOrder.status === 'BORRADOR' && (
-                      <button
-                        onClick={confirmOrder}
-                        style={{ width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer', background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700, fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                      >
-                        <Send size={16} /> Confirmar orden
-                      </button>
-                    )}
-
-                    {/* EN PREPARACIÓN / LISTA / ENTREGADA → Cobrar (abre CheckoutDrawer); sin KDS no hay paso "marcar como lista" */}
-                    {(activeOrder.status === 'EN PREPARACIÓN' || activeOrder.status === 'LISTA' || activeOrder.status === 'ENTREGADA' || (!kitchen && activeOrder.status === 'BORRADOR' && activeOrder.items.length > 0)) && (
+                    {/* Cobrar (abre CheckoutDrawer): sin KDS no hay paso de confirmar orden */}
+                    {activeOrder.items.length > 0 && (
                       <button
                         onClick={() => setShowCheckout(true)}
                         style={{ width: '100%', height: 44, borderRadius: 8, border: 'none', cursor: 'pointer', background: '#FF2947', color: '#fff', fontSize: 14, fontWeight: 700, fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
@@ -747,13 +739,13 @@ export function HomePage() {
                       </button>
                     )}
 
-                    {/* EN PREPARACIÓN → Imprimir comanda (reenvío de la comanda a cocina) */}
-                    {activeOrder.status === 'EN PREPARACIÓN' && (
+                    {/* Imprimir comanda (solo Restaurantes: abre el preview del ticket de cocina) */}
+                    {kitchen && activeOrder.items.length > 0 && (
                       <button
-                        onClick={resendComanda}
+                        onClick={() => setShowKitchenPreview(true)}
                         style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#121E6C', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '4px 0' }}
                       >
-                        <RotateCcw size={13} /> Imprimir comanda
+                        <Printer size={13} /> Imprimir comanda
                       </button>
                     )}
                   </div>
