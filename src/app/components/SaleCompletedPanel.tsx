@@ -9,7 +9,7 @@
  * que abre el preview de la comanda con los ítems de la venta.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, ChefHat, Mail, MessageCircle, Receipt } from 'lucide-react';
+import { CheckCircle2, Mail, MessageCircle, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { buildInvoiceData, resolveCustomer, type CompletedSale } from '../utils/invoice';
 import { printInvoice } from '../utils/printInvoice';
@@ -25,6 +25,11 @@ const fieldStyle: React.CSSProperties = {
 const linkStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer',
   color: 'var(--blue-100)', fontFamily: MFONT, fontSize: 14, fontWeight: 700, textDecoration: 'underline',
+};
+
+const secondaryBtn: React.CSSProperties = {
+  flex: 1, height: 52, borderRadius: 32, border: '1.5px solid var(--coral-100)', background: 'var(--black-0)', color: 'var(--coral-100)',
+  fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer',
 };
 
 interface Props {
@@ -82,22 +87,26 @@ export function SaleCompletedPanel({ sale, onNewSale, kitchenTicket = false }: P
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
             <button style={linkStyle} onClick={() => toast.info('Buscar contactos de WhatsApp')}><MessageCircle size={20} /> O busca en tus contactos guardados en whatsapp</button>
             <button style={linkStyle} onClick={() => toast.info('Abriendo caja registradora')}><Receipt size={20} /> Abrir caja registradora</button>
-            {kitchenTicket && (
-              <button style={linkStyle} onClick={() => setShowKitchenPreview(true)}><ChefHat size={20} /> Imprimir comanda</button>
-            )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 16, padding: 32, flexShrink: 0 }}>
-          <button
-            onClick={() => printInvoice(buildInvoiceData(sale))}
-            style={{ flex: 1, height: 52, borderRadius: 32, border: '1.5px solid var(--coral-100)', background: 'var(--black-0)', color: 'var(--coral-100)', fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
-          >
-            Imprimir {docLabel.toLowerCase()}
-          </button>
+        <div style={{ display: 'flex', flexDirection: kitchenTicket ? 'column' : 'row', gap: 16, padding: 32, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 16, flex: kitchenTicket ? undefined : 1 }}>
+            <button
+              onClick={() => printInvoice(buildInvoiceData(sale))}
+              style={secondaryBtn}
+            >
+              Imprimir {docLabel.toLowerCase()}
+            </button>
+            {kitchenTicket && (
+              <button onClick={() => setShowKitchenPreview(true)} style={secondaryBtn}>
+                Imprimir comanda
+              </button>
+            )}
+          </div>
           <button
             onClick={onNewSale}
-            style={{ flex: 1, height: 52, borderRadius: 32, border: 'none', background: 'var(--coral-100)', color: 'var(--black-0)', fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+            style={{ flex: kitchenTicket ? 'none' : 1, height: 52, borderRadius: 32, border: 'none', background: 'var(--coral-100)', color: 'var(--black-0)', fontFamily: MFONT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
           >
             Nueva venta
           </button>
