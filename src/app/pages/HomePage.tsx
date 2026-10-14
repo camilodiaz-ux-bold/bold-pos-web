@@ -437,7 +437,7 @@ export function HomePage() {
     <>
       {/* Panel "Venta Completada" — "Nueva venta" lo cierra y deja la orden vacía lista para otra venta */}
       {completedSale && (
-        <SaleCompletedPanel sale={completedSale} onNewSale={() => setCompletedSale(null)} />
+        <SaleCompletedPanel sale={completedSale} onNewSale={() => setCompletedSale(null)} kitchenTicket={kitchen} />
       )}
 
       {/* ── Modal: Confirmar eliminación ── */}
