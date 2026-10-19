@@ -2,15 +2,18 @@
  * RetailDashboard — Inicio (/inicio) de la vertical Retail.
  * ─────────────────────────────────────────────────────────────────────────────
  * Réplica del dashboard del POS Retail real ("Dashboard - Movimientos de Semana"):
- * Utilidad bruta, Flujo de caja, Cuentas por cobrar, Ítems más vendidos y Mejores clientes.
+ * Utilidad bruta, Flujo de caja, Cuentas por cobrar, Ítems más vendidos y Mejores clientes,
+ * más Facturas de compra y Cuentas por pagar (cards a la izquierda, gráfica a la derecha; specs/2026-10-facturas-compra.md §8).
  * La versión de Restaurantes vive en pages/Dashboard.tsx y no se toca.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import React, { useState } from 'react';
-import { RefreshCw, ChevronDown, FileText, Filter, Coins, HandCoins, ShoppingCart, Banknote, Scale, Wallet } from 'lucide-react';
+import { RefreshCw, ChevronDown, FileText, Filter, Coins, HandCoins, ShoppingCart, Banknote, Scale, Wallet, Receipt, DollarSign, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
 import { PrototypeVerticalSwitcher } from '../../vertical';
+import { useFacturasCompra } from '../../store/facturasCompraStore';
+import { FECHA_PROTOTIPO, diffDias, esPendiente, estadoFactura, semanasPorPagar, valorFactura } from '../../utils/facturasCompra';
 import {
   PERIOD_FACTOR, RETAIL_PERIODS, RETAIL_STAT_SECTIONS, RETAIL_TOP_ITEMS, RETAIL_TOP_CLIENTS,
   type RetailPeriod, type RetailStat, type RetailBarDatum,
@@ -154,6 +157,104 @@ function BarCard({ title, toggle, data, factor, height }: {
   );
 }
 
+// ─── Facturas de compra y Cuentas por pagar ───────────────────────────────────
+
+const facturasLabel = (n: number) => `${n} ${n === 1 ? 'factura' : 'facturas'}`;
+
+/** Días que cubre cada período del selector, contados hacia atrás desde la fecha de referencia. */
+const PERIOD_DAYS: Record<RetailPeriod, number> = { 'Día': 1, 'Semana': 7, 'Mes': 30 };
+
+/** Card simple (icono, etiqueta, valor y pie con la cantidad de facturas). */
+function PayableCard({ icon: Icon, label, value, caption, danger }: {
+  icon: React.ElementType; label: string; value: number; caption: string; danger?: boolean;
+}) {
+  return (
+    <div style={{ ...cardStyle, padding: '16px 16px 0', display: 'flex', flexDirection: 'column', minHeight: 127 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <Icon size={44} color="var(--black-40)" strokeWidth={1.2} style={{ flexShrink: 0, opacity: 0.6 }} />
+        <div style={{ textAlign: 'right', minWidth: 0 }}>
+          <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: 'var(--black-100)', lineHeight: '20px' }}>{label}</div>
+          <div style={{ fontFamily: FONT, fontSize: 22, fontWeight: 400, color: danger ? 'var(--coral-100)' : 'var(--black-100)', lineHeight: '32px' }}>
+            {money(value)}
+          </div>
+        </div>
+      </div>
+      <div style={{ marginTop: 'auto', borderTop: '1px solid var(--black-10)', padding: '14px 0', fontFamily: FONT, fontSize: 14, color: 'var(--black-100)' }}>
+        {caption}
+      </div>
+    </div>
+  );
+}
+
+/** Secciones "Facturas de compra" y "Cuentas por pagar" (columna izquierda), derivadas del store de facturas. */
+function ComprasSections({ period }: { period: RetailPeriod }) {
+  const { facturas, settings } = useFacturasCompra();
+  const valor = (list: typeof facturas) => list.reduce((s, f) => s + valorFactura(f, settings.usarImpuestos), 0);
+  // Facturas de compra: emitidas en el período, sin anuladas. Cuentas por pagar: no dependen del período.
+  const enPeriodo = facturas.filter(f => !f.anulacion && diffDias(f.fechaEmision, FECHA_PROTOTIPO) >= 0 && diffDias(f.fechaEmision, FECHA_PROTOTIPO) < PERIOD_DAYS[period]);
+  const credito = enPeriodo.filter(f => f.formaPago === 'Crédito');
+  const contado = enPeriodo.filter(f => f.formaPago === 'Contado');
+  const pendientes = facturas.filter(esPendiente);
+  const vencidas = pendientes.filter(f => estadoFactura(f) === 'Vencido');
+
+  const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 };
+  return (
+    <>
+      <section>
+        <SectionTitle>Facturas de compra</SectionTitle>
+        <div style={grid}>
+          <PayableCard icon={Receipt} label="Facturas De Compra (Crédito)" value={valor(credito)} caption={facturasLabel(credito.length)} />
+          <PayableCard icon={Receipt} label="Facturas De Compra (Contado)" value={valor(contado)} caption={facturasLabel(contado.length)} />
+        </div>
+      </section>
+      <section>
+        <SectionTitle>Cuentas por pagar</SectionTitle>
+        <div style={grid}>
+          <PayableCard icon={DollarSign} label="Total De Cuentas Por Pagar" value={valor(pendientes)} caption={facturasLabel(pendientes.length)} />
+          <PayableCard icon={Search} label="Total De Cuentas Vencidas" value={valor(vencidas)} caption={facturasLabel(vencidas.length)} danger />
+        </div>
+      </section>
+    </>
+  );
+}
+
+/** Gráfica "Cuentas por pagar siguientes semanas" (columna derecha): 4 semanas desde el día siguiente a la fecha de referencia. */
+function CuentasPorPagarChart() {
+  const { facturas, settings } = useFacturasCompra();
+  const semanas = semanasPorPagar(facturas, settings.usarImpuestos);
+  const chartData = semanas.map(w => ({ name: w.etiqueta, value: w.monto, facturas: w.facturas }));
+  const axis = niceAxis(Math.max(...chartData.map(d => d.value)));
+  return (
+    <section>
+      <SectionTitle>Cuentas por pagar</SectionTitle>
+      <div style={{ ...cardStyle, padding: 16 }}>
+        <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: 'var(--blue-100)', marginBottom: 12 }}>
+          Cuentas Por Pagar Siguientes Semanas
+        </div>
+        <div style={{ height: 240 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontFamily: FONT, fill: 'var(--black-60)' }} />
+              <YAxis
+                axisLine={false} tickLine={false} width={64}
+                domain={[0, axis.top]} ticks={axis.ticks}
+                tick={{ fontSize: 11, fontFamily: FONT, fill: 'var(--black-60)' }}
+                tickFormatter={(v: number) => v.toLocaleString('en-US')}
+              />
+              <Tooltip
+                cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                formatter={(v: number, _n: string, item) => [`${money(v)} · ${facturasLabel((item.payload as { facturas: number }).facturas)}`, 'Por pagar']}
+                contentStyle={{ fontFamily: FONT, fontSize: 12, borderRadius: 8 }}
+              />
+              <Bar dataKey="value" fill="var(--blue-100)" radius={0} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Página ───────────────────────────────────────────────────────────────────
 
 export function RetailDashboard() {
@@ -230,6 +331,7 @@ export function RetailDashboard() {
               </div>
             </section>
           ))}
+          <ComprasSections period={period} />
         </div>
 
         <div style={{ flex: '1 1 360px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -249,6 +351,7 @@ export function RetailDashboard() {
               data={RETAIL_TOP_CLIENTS} factor={factor} height={240}
             />
           </section>
+          <CuentasPorPagarChart />
         </div>
       </div>
     </div>

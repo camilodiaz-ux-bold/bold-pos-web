@@ -96,7 +96,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const newSaleMode = has('mesas') ? 'Mesas' : 'Mostrador';
   // Rutas que tienen su propia entrada de menú: mientras estemos en ellas,
   // "Punto de venta" no debe resaltarse aunque activeMode caiga en su default.
-  const OWNED_ROUTES = ['/ventas', '/items', '/comprobantes', '/facturas-venta'];
+  const OWNED_ROUTES = ['/ventas', '/items', '/comprobantes', '/facturas-venta', '/clientes', '/proveedores', '/facturas-compra'];
   const inOwnedRoute = OWNED_ROUTES.some(r => pathname.startsWith(r));
   const inPosView = activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
   const [isExpanded, setIsExpanded] = useState(!inPosView);
@@ -188,6 +188,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       subItems: [
         { id: 'gastos',     label: 'Gastos',            icon: <IcGastos size={16} />,     active: false, onClick: () => toast.info('Gastos') },
         { id: 'docsoporte', label: 'Documento soporte', icon: <IcDocSoporte size={16} />, active: false, onClick: () => toast.info('Documento soporte') },
+        { id: 'facturascompra', label: 'Facturas de compra', icon: <IcFacturas size={16} />, active: pathname.startsWith('/facturas-compra'), onClick: () => navigate('/facturas-compra') },
       ],
     },
     {
@@ -211,8 +212,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       icon: (a, sz = 16) => a
         ? <IcUsuariosFill size={sz} color={C.blue100} />
         : <IcUsuarios size={sz} color={C.black60} />,
-      hasSubmenu: false,
-      onClick: () => toast.info('Contactos'),
+      hasSubmenu: true,
+      subItems: [
+        { id: 'clientes',    label: 'Clientes',    icon: <IcUsuarios size={16} />, active: pathname.startsWith('/clientes'),    onClick: () => navigate('/clientes') },
+        { id: 'proveedores', label: 'Proveedores', icon: <IcUsuarios size={16} />, active: pathname.startsWith('/proveedores'), onClick: () => navigate('/proveedores') },
+      ],
     },
     {
       id: 'reportes',
