@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, RefreshCw, Trash2, X } from 'lucide-react';
 import { useContactos } from '../../store/contactosStore';
+import { useFacturasCompra } from '../../store/facturasCompraStore';
+import { comprasUltimos6Meses, cuentasPorPagar } from '../../utils/facturasCompra';
 import { Toggle } from '../../components/items/Toggle';
 import { ConfirmDeleteModal } from '../../components/items/ConfirmDeleteModal';
 import { VentaBadge } from '../../components/ventas/VentaBadge';
@@ -41,6 +43,7 @@ export function ContactosListPage({ tipo }: { tipo: TipoContacto }) {
   const cfg = CONTACTO_CONFIG[tipo];
   const COLUMNS = columnas(cfg.conCompras);
   const { contactos, toggleActivo, deleteContacto, refresh } = useContactos();
+  const { facturas } = useFacturasCompra();
   const [filtros, setFiltros] = useState<FiltrosContacto>(FILTROS_VACIOS);
   const [aEliminar, setAEliminar] = useState<Contacto | null>(null);
 
@@ -177,8 +180,8 @@ export function ContactosListPage({ tipo }: { tipo: TipoContacto }) {
                   <td style={{ ...tdStyle, fontWeight: 600, paddingRight: 16 }}>{p.nombre}</td>
                   {cfg.conCompras && (
                     <>
-                      <td style={{ ...tdStyle, ...center }}>{p.comprasUltimos6Meses}</td>
-                      <td style={{ ...tdStyle, ...center }}>{p.cuentasPorPagar}</td>
+                      <td style={{ ...tdStyle, ...center }}>{comprasUltimos6Meses(facturas, p.id)}</td>
+                      <td style={{ ...tdStyle, ...center }}>{cuentasPorPagar(facturas, p.id)}</td>
                     </>
                   )}
                   <td style={{ ...tdStyle, ...right }}>{fmtDocumento(p.numeroDocumento)}</td>

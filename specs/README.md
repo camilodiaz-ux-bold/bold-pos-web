@@ -8,6 +8,7 @@ Cada spec tiene su propio campo "Estado" en la tabla de encabezado. Una vez marc
 
 | Fecha | Spec | Estado | Resumen |
 |---|---|---|---|
+| 2026-10 | [2026-10-facturas-compra.md](./2026-10-facturas-compra.md) | Listo para implementación | Core: Facturas de compra (Egresos) con listado, creación por pasos, detalle de 5 variantes y modales (reportar pago, anular, Documento Soporte); Retail: secciones Facturas de compra y Cuentas por pagar en el dashboard. Un solo modelo del que se derivan estados, totales y conteos de Proveedores. Amplía `2026-10-dashboard-retail.md`. |
 | 2026-10 | [2026-10-clientes.md](./2026-10-clientes.md) | Listo para implementación | Core: Clientes (lista, nuevo y perfil) como segunda vista del modelo Contacto, compartiendo store, lista y formulario con Proveedores. Incluye el arreglo del ícono de Contactos. |
 | 2026-10 | [2026-10-proveedores.md](./2026-10-proveedores.md) | Listo para implementación | Core: Proveedores (lista, nuevo y perfil) migrados desde el prototipo `saas-purchasing` como piloto del módulo de compras. Store local, filtros reales, formulario de 4 cards con validación y pestañas en el perfil. Facturas de compra y Clientes quedan para fases siguientes. |
 | 2026-10 | [2026-10-ventas-modo-venta.md](./2026-10-ventas-modo-venta.md) | ✅ Implementado | Restaurantes: `Venta.modo` (`mostrador` \| `mesa`) reemplaza la zona "Mostrador"; Ventas suma la columna y el filtro "Modo de venta" y Zona/Mesa muestran `---` en Mostrador. |

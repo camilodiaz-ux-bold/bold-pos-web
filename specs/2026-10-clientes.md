@@ -32,7 +32,7 @@ No entra: facturas de venta del cliente (las pestañas del perfil quedan vacías
 
 ## 4. Datos
 
-- Clave `localStorage`: `bold-pos:contactos:v1` (reemplaza `bold-pos:proveedores:v1`, que solo existió en el PR del piloto).
+- Clave `localStorage`: `bold-pos:contactos:v2` (reemplaza `bold-pos:proveedores:v1`, que solo existió en el PR del piloto).
 - Los 6 contactos de ejemplo del prototipo se siembran como cliente y proveedor a la vez (en el prototipo ambas listas traen los mismos nombres). Ids `ctc-N`.
 
 ## 5. Criterios de aceptación

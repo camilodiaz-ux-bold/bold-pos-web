@@ -24,20 +24,7 @@ export interface Contacto {
   pais: string;
   ciudad: string;
   direccion: string;
-  /** Datos del propio contacto hasta que existan las facturas de compra reales. */
-  comprasUltimos6Meses: number;
-  cuentasPorPagar: number;
 }
 
-export type ContactoDraft = Omit<Contacto, 'id' | 'comprasUltimos6Meses' | 'cuentasPorPagar'>;
+export type ContactoDraft = Omit<Contacto, 'id'>;
 
-/** Fila de ejemplo de la pestaña "Facturas de compra" del perfil (aún sin módulo real). */
-export interface FacturaCompraDemo {
-  numero: string;
-  inventario: boolean;
-  items: number;
-  total: number;
-  formaPago: 'Contado' | 'Crédito';
-  vencimiento: string | null;
-  estado: 'Pagado' | 'No pagado' | 'Vencido' | 'Anulada';
-}

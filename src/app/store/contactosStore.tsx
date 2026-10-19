@@ -57,7 +57,7 @@ export function ContactosProvider({ children }: { children: React.ReactNode }) {
   const getContacto = useCallback((id: string) => contactos.find(p => p.id === id), [contactos]);
 
   const createContacto = useCallback((draft: ContactoDraft): Contacto => {
-    const nuevo: Contacto = { ...draft, id: `ctc-${Date.now()}`, comprasUltimos6Meses: 0, cuentasPorPagar: 0 };
+    const nuevo: Contacto = { ...draft, id: `ctc-${Date.now()}` };
     commit(prev => [nuevo, ...prev]);
     return nuevo;
   }, [commit]);

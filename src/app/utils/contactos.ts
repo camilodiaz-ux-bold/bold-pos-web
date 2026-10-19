@@ -1,4 +1,4 @@
-import type { Contacto } from '../types/contacto';
+import type { Contacto, ContactoDraft } from '../types/contacto';
 
 /** Solo dígitos — para comparar documentos y teléfonos sin importar el formato. */
 export const soloDigitos = (v: string) => v.replace(/\D/g, '');
@@ -43,3 +43,32 @@ export function filterContactos(lista: Contacto[], f: FiltrosContacto): Contacto
     (f.estado === 'Todos' || (f.estado === 'Activo') === p.activo),
   );
 }
+
+export type ContactoErrors = Partial<Record<'nombre' | 'tipoContacto' | 'correo' | 'tipoPersona' | 'tipoDocumento' | 'numeroDocumento', string>>;
+
+/** Validación de obligatorios del formulario de contacto (specs/2026-10-proveedores.md §6). */
+export function validarContacto(form: ContactoDraft): ContactoErrors {
+  const e: ContactoErrors = {};
+  const req = 'Campo obligatorio';
+  if (!form.nombre.trim()) e.nombre = req;
+  if (!form.esCliente && !form.esProveedor) e.tipoContacto = 'Selecciona al menos un tipo de contacto';
+  if (!form.correo.trim()) e.correo = req;
+  else if (!EMAIL_RE.test(form.correo.trim())) e.correo = 'Ingresa un correo válido';
+  if (!form.tipoPersona) e.tipoPersona = req;
+  if (!form.tipoDocumento) e.tipoDocumento = req;
+  if (!soloDigitos(form.numeroDocumento)) e.numeroDocumento = req;
+  return e;
+}
+
+/** Normaliza un borrador antes de guardarlo. */
+export const normalizarContacto = (form: ContactoDraft): ContactoDraft => ({
+  ...form, nombre: form.nombre.trim(), correo: form.correo.trim(), numeroDocumento: soloDigitos(form.numeroDocumento),
+});
+
+export const emptyContactoDraft = (tipo: 'cliente' | 'proveedor'): ContactoDraft => ({
+  nombre: '', esCliente: tipo === 'cliente', esProveedor: tipo === 'proveedor', activo: true,
+  correo: '', celular: '', telefono1: '', telefono2: '', observaciones: '',
+  tipoPersona: '', tipoDocumento: '', numeroDocumento: '',
+  responsabilidadFiscal: '', regimenFiscal: '', vendedor: '', descuento: '',
+  pais: 'Colombia', ciudad: '', direccion: '',
+});
