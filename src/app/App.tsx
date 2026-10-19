@@ -14,6 +14,9 @@ import { ItemFormPage } from './pages/items/ItemFormPage';
 import { StatusPage } from '../pages/StatusPage';
 import { MakersLanding } from '../pages/MakersLanding';
 import { VerticalProvider, VerticalRoute } from './vertical';
+import { ProveedoresProvider } from './store/proveedoresStore';
+import { ProveedoresListPage } from './pages/proveedores/ProveedoresListPage';
+import { ProveedorFormPage } from './pages/proveedores/ProveedorFormPage';
 import { DocumentosVentaListPage } from './verticals/retail/ingresos/DocumentosVentaListPage';
 import { DocumentoVentaDetallePage } from './verticals/retail/ingresos/DocumentoVentaDetallePage';
 
@@ -33,6 +36,9 @@ const router = createBrowserRouter([
       { path: 'comprobantes/:id',    element: <VerticalRoute module="comprobantes"><DocumentoVentaDetallePage key="comprobante" tipo="comprobante" /></VerticalRoute> },
       { path: 'facturas-venta',      element: <VerticalRoute module="facturas-venta"><DocumentosVentaListPage key="factura" tipo="factura" /></VerticalRoute> },
       { path: 'facturas-venta/:id',  element: <VerticalRoute module="facturas-venta"><DocumentoVentaDetallePage key="factura" tipo="factura" /></VerticalRoute> },
+      { path: 'proveedores', Component: ProveedoresListPage },
+      { path: 'proveedores/nuevo', Component: ProveedorFormPage },
+      { path: 'proveedores/:id/editar', Component: ProveedorFormPage },
       {
         path: 'items',
         Component: ItemsLayout,
@@ -51,7 +57,9 @@ const router = createBrowserRouter([
 export default function App() {
   return (
     <VerticalProvider>
-      <RouterProvider router={router} />
+      <ProveedoresProvider>
+        <RouterProvider router={router} />
+      </ProveedoresProvider>
     </VerticalProvider>
   );
 }
