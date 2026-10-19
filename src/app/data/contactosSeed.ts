@@ -1,6 +1,6 @@
-import type { FacturaCompraDemo, Proveedor } from '../types/proveedor';
+import type { FacturaCompraDemo, Contacto } from '../types/contacto';
 
-export const PROVEEDORES_STORAGE_KEY = 'bold-pos:proveedores:v1';
+export const CONTACTOS_STORAGE_KEY = 'bold-pos:contactos:v1';
 
 export const TIPO_PERSONA_OPCIONES = [
   { value: 'natural', label: 'Persona natural' },
@@ -24,30 +24,30 @@ export const CIUDAD_OPCIONES = toOpciones([
   'Bogotá D.C.', 'Medellín (Antioquia)', 'Cali (Valle del Cauca)', 'Barranquilla (Atlántico)', 'Cartagena (Bolívar)',
 ]);
 
-type SeedBase = Pick<Proveedor, 'id' | 'nombre' | 'correo' | 'numeroDocumento' | 'tipoPersona' | 'tipoDocumento' | 'comprasUltimos6Meses' | 'cuentasPorPagar'>;
+type SeedBase = Pick<Contacto, 'id' | 'nombre' | 'correo' | 'numeroDocumento' | 'tipoPersona' | 'tipoDocumento' | 'comprasUltimos6Meses' | 'cuentasPorPagar'>;
 
-const base: Omit<Proveedor, keyof SeedBase> = {
-  esCliente: false, esProveedor: true, activo: true,
+const base: Omit<Contacto, keyof SeedBase> = {
+  esCliente: true, esProveedor: true, activo: true,
   celular: '', telefono1: '', telefono2: '', observaciones: '',
   responsabilidadFiscal: '', regimenFiscal: '', vendedor: '', descuento: '',
   pais: 'Colombia', ciudad: '', direccion: '',
 };
 
-export function buildSeedProveedores(): Proveedor[] {
+export function buildSeedContactos(): Contacto[] {
   const seed: SeedBase[] = [
-    { id: 'prov-1', nombre: 'Gilma Florez Hernandez', correo: 'florezhernandezgilma@gmail.com', numeroDocumento: '39719859', tipoPersona: 'natural', tipoDocumento: 'cc', comprasUltimos6Meses: 8, cuentasPorPagar: 2 },
-    { id: 'prov-2', nombre: '79304228 - LECHONERÍA EL ESPLENDOR TOLIMENSE', correo: 'elesplendortolimense@gmail.com', numeroDocumento: '79304228', tipoPersona: 'juridica', tipoDocumento: 'nit', comprasUltimos6Meses: 15, cuentasPorPagar: 4 },
-    { id: 'prov-3', nombre: 'Arepas San Martin - ANDRÉS CAMILO MARTIN PALACIO', correo: 'arepassanmartin0516@gmail.com', numeroDocumento: '1077974723', tipoPersona: 'natural', tipoDocumento: 'cc', comprasUltimos6Meses: 3, cuentasPorPagar: 1 },
-    { id: 'prov-4', nombre: 'M6GLU4NXLW - Magic Tour - 21788267', correo: 'guatapemagictour@gmail.com', numeroDocumento: '21788267', tipoPersona: 'natural', tipoDocumento: 'cc', comprasUltimos6Meses: 0, cuentasPorPagar: 0 },
-    { id: 'prov-5', nombre: '1128479906 - Persianas Y Decoración Tommy', correo: 'andresfelo-23@hotmail.com', numeroDocumento: '1128479906', tipoPersona: 'natural', tipoDocumento: 'cc', comprasUltimos6Meses: 6, cuentasPorPagar: 2 },
-    { id: 'prov-6', nombre: 'Fruto de vida SAS - Andres Mauricio Ponce Aguirre', correo: 'andresponce50@gmail.com', numeroDocumento: '80872049', tipoPersona: 'juridica', tipoDocumento: 'nit', comprasUltimos6Meses: 11, cuentasPorPagar: 3 },
+    { id: 'ctc-1', nombre: 'Gilma Florez Hernandez', correo: 'florezhernandezgilma@gmail.com', numeroDocumento: '39719859', tipoPersona: 'natural', tipoDocumento: 'cc', comprasUltimos6Meses: 8, cuentasPorPagar: 2 },
+    { id: 'ctc-2', nombre: '79304228 - LECHONERÍA EL ESPLENDOR TOLIMENSE', correo: 'elesplendortolimense@gmail.com', numeroDocumento: '79304228', tipoPersona: 'juridica', tipoDocumento: 'nit', comprasUltimos6Meses: 15, cuentasPorPagar: 4 },
+    { id: 'ctc-3', nombre: 'Arepas San Martin - ANDRÉS CAMILO MARTIN PALACIO', correo: 'arepassanmartin0516@gmail.com', numeroDocumento: '1077974723', tipoPersona: 'natural', tipoDocumento: 'cc', comprasUltimos6Meses: 3, cuentasPorPagar: 1 },
+    { id: 'ctc-4', nombre: 'M6GLU4NXLW - Magic Tour - 21788267', correo: 'guatapemagictour@gmail.com', numeroDocumento: '21788267', tipoPersona: 'natural', tipoDocumento: 'cc', comprasUltimos6Meses: 0, cuentasPorPagar: 0 },
+    { id: 'ctc-5', nombre: '1128479906 - Persianas Y Decoración Tommy', correo: 'andresfelo-23@hotmail.com', numeroDocumento: '1128479906', tipoPersona: 'natural', tipoDocumento: 'cc', comprasUltimos6Meses: 6, cuentasPorPagar: 2 },
+    { id: 'ctc-6', nombre: 'Fruto de vida SAS - Andres Mauricio Ponce Aguirre', correo: 'andresponce50@gmail.com', numeroDocumento: '80872049', tipoPersona: 'juridica', tipoDocumento: 'nit', comprasUltimos6Meses: 11, cuentasPorPagar: 3 },
   ];
   return seed.map(s => ({ ...base, ...s }));
 }
 
-/** Facturas de ejemplo del perfil de `prov-1` (copiadas del prototipo `saas-purchasing`). */
+/** Facturas de ejemplo del perfil de `ctc-1` (copiadas del prototipo `saas-purchasing`). */
 export const FACTURAS_COMPRA_DEMO: Record<string, FacturaCompraDemo[]> = {
-  'prov-1': [
+  'ctc-1': [
     { numero: 'FC-008', inventario: true, items: 12, total: 1450000, formaPago: 'Contado', vencimiento: null, estado: 'Pagado' },
     { numero: 'FC-007', inventario: true, items: 6, total: 780300, formaPago: 'Crédito', vencimiento: '20/06/2026', estado: 'Vencido' },
     { numero: 'FC-006', inventario: true, items: 15, total: 1120750, formaPago: 'Crédito', vencimiento: '05/08/2026', estado: 'Pagado' },

@@ -37,7 +37,7 @@ No entra (fases siguientes):
 
 `Proveedor`: `id`, `nombre`, `esCliente`, `esProveedor`, `activo`, `correo`, `celular`, `telefono1`, `telefono2`, `observaciones`, `tipoPersona`, `tipoDocumento`, `numeroDocumento`, `responsabilidadFiscal`, `regimenFiscal`, `vendedor`, `descuento`, `pais`, `ciudad`, `direccion`, `comprasUltimos6Meses`, `cuentasPorPagar`.
 
-Clave `localStorage`: `bold-pos:proveedores:v1`. Si cambia el shape se sube la versión.
+Clave `localStorage`: `bold-pos:contactos:v1`. Si cambia el shape se sube la versión.
 
 ## 5. Lista (`/proveedores`)
 

@@ -1,9 +1,9 @@
-/** Proveedor (contacto) — specs/2026-10-proveedores.md §4. */
+/** Contacto (cliente y/o proveedor) — specs/2026-10-proveedores.md §4. */
 
 export type TipoPersona = 'natural' | 'juridica';
 export type TipoDocumento = 'nit' | 'cc' | 'ce';
 
-export interface Proveedor {
+export interface Contacto {
   id: string;
   nombre: string;
   esCliente: boolean;
@@ -24,12 +24,12 @@ export interface Proveedor {
   pais: string;
   ciudad: string;
   direccion: string;
-  /** Datos del propio proveedor hasta que existan las facturas de compra reales. */
+  /** Datos del propio contacto hasta que existan las facturas de compra reales. */
   comprasUltimos6Meses: number;
   cuentasPorPagar: number;
 }
 
-export type ProveedorDraft = Omit<Proveedor, 'id' | 'comprasUltimos6Meses' | 'cuentasPorPagar'>;
+export type ContactoDraft = Omit<Contacto, 'id' | 'comprasUltimos6Meses' | 'cuentasPorPagar'>;
 
 /** Fila de ejemplo de la pestaña "Facturas de compra" del perfil (aún sin módulo real). */
 export interface FacturaCompraDemo {

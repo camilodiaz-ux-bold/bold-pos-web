@@ -1,5 +1,5 @@
 /**
- * ProveedorFormPage — Nuevo contacto / Editar contacto (specs/2026-10-proveedores.md §6).
+ * ContactoFormPage — Nuevo contacto / Editar contacto para clientes y proveedores (specs/2026-10-proveedores.md §6 y 2026-10-clientes.md).
  * Una sola página para ambos modos; el modo se deriva de si la ruta trae :id.
  * Estado y validación con useState, sin librerías de formularios (como ItemFormPage).
  */
@@ -7,29 +7,30 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
-import { useProveedores } from '../../store/proveedoresStore';
-import type { FacturaCompraDemo, Proveedor, ProveedorDraft, TipoDocumento, TipoPersona } from '../../types/proveedor';
+import { useContactos } from '../../store/contactosStore';
+import type { FacturaCompraDemo, Contacto, ContactoDraft, TipoDocumento, TipoPersona } from '../../types/contacto';
 import {
   CIUDAD_OPCIONES, DESCUENTO_OPCIONES, FACTURAS_COMPRA_DEMO, PAIS_OPCIONES, REGIMEN_FISCAL_OPCIONES,
   RESPONSABILIDAD_FISCAL_OPCIONES, TIPO_DOCUMENTO_OPCIONES, TIPO_PERSONA_OPCIONES, VENDEDOR_OPCIONES,
-} from '../../data/proveedoresSeed';
-import { EMAIL_RE, calcularDV, soloDigitos } from '../../utils/proveedores';
+} from '../../data/contactosSeed';
+import { EMAIL_RE, calcularDV, soloDigitos } from '../../utils/contactos';
 import { formatCOP } from '../../utils/format';
 import { FieldLabel, SelectField, TextAreaField, TextField } from '../../components/items/FormField';
 import { Toggle } from '../../components/items/Toggle';
 import { VentaBadge } from '../../components/ventas/VentaBadge';
 import { sectionCard, sectionTitle, tdStyle, thStyle } from '../../components/ventas/ventasStyles';
 import type { BadgeVariant } from '../../utils/ventas';
+import { CONTACTO_CONFIG, type TipoContacto } from './contactosConfig';
 
-const EMPTY_DRAFT: ProveedorDraft = {
-  nombre: '', esCliente: false, esProveedor: true, activo: true,
+const emptyDraft = (tipo: TipoContacto): ContactoDraft => ({
+  nombre: '', esCliente: tipo === 'cliente', esProveedor: tipo === 'proveedor', activo: true,
   correo: '', celular: '', telefono1: '', telefono2: '', observaciones: '',
   tipoPersona: '', tipoDocumento: '', numeroDocumento: '',
   responsabilidadFiscal: '', regimenFiscal: '', vendedor: '', descuento: '',
   pais: 'Colombia', ciudad: '', direccion: '',
-};
+});
 
-function toDraft(p: Proveedor): ProveedorDraft {
+function toDraft(p: Contacto): ContactoDraft {
   const { id, comprasUltimos6Meses, cuentasPorPagar, ...draft } = p;
   void id; void comprasUltimos6Meses; void cuentasPorPagar;
   return draft;
@@ -45,36 +46,31 @@ const ESTADO_BADGE: Record<FacturaCompraDemo['estado'], BadgeVariant> = {
   Pagado: 'success', 'No pagado': 'warning', Vencido: 'error', Anulada: 'info',
 };
 
-const TABS = [
-  { id: 'comprobantes', label: 'Comprobantes' },
-  { id: 'ventas', label: 'Facturas de venta' },
-  { id: 'actividad', label: 'Actividad del contacto' },
-  { id: 'compras', label: 'Facturas de compra' },
-] as const;
-type TabId = typeof TABS[number]['id'];
+type TabId = 'comprobantes' | 'ventas' | 'actividad' | 'compras';
 
 const right: React.CSSProperties = { textAlign: 'right', paddingRight: 16 };
 
-export function ProveedorFormPage() {
+export function ContactoFormPage({ tipo }: { tipo: TipoContacto }) {
   const navigate = useNavigate();
+  const cfg = CONTACTO_CONFIG[tipo];
   const { id } = useParams<{ id?: string }>();
-  const { getProveedor, createProveedor, updateProveedor } = useProveedores();
-  const editing = id ? getProveedor(id) : undefined;
+  const { getContacto, createContacto, updateContacto } = useContactos();
+  const editing = id ? getContacto(id) : undefined;
   const isEdit = !!id;
 
-  const [form, setForm] = useState<ProveedorDraft>(() => (editing ? toDraft(editing) : EMPTY_DRAFT));
+  const [form, setForm] = useState<ContactoDraft>(() => (editing ? toDraft(editing) : emptyDraft(tipo)));
   const [errors, setErrors] = useState<Errors>({});
   const [tab, setTab] = useState<TabId>('comprobantes');
 
   // Un :id inexistente vuelve a la lista (specs §6).
   React.useEffect(() => {
     if (isEdit && !editing) {
-      toast.error('No encontramos ese proveedor');
-      navigate('/proveedores', { replace: true });
+      toast.error(`No encontramos ese ${tipo}`);
+      navigate(cfg.base, { replace: true });
     }
-  }, [isEdit, editing, navigate]);
+  }, [isEdit, editing, navigate, cfg.base, tipo]);
 
-  const set = <K extends keyof ProveedorDraft>(key: K) => (value: ProveedorDraft[K]) => {
+  const set = <K extends keyof ContactoDraft>(key: K) => (value: ContactoDraft[K]) => {
     setForm(f => ({ ...f, [key]: value }));
     setErrors(e => ({ ...e, [key]: undefined, ...(key === 'esCliente' || key === 'esProveedor' ? { tipoContacto: undefined } : {}) }));
   };
@@ -104,20 +100,20 @@ export function ProveedorFormPage() {
       toast.error('Revisa los campos marcados');
       return;
     }
-    const draft: ProveedorDraft = {
+    const draft: ContactoDraft = {
       ...form,
       nombre: form.nombre.trim(),
       correo: form.correo.trim(),
       numeroDocumento: soloDigitos(form.numeroDocumento),
     };
     if (isEdit && id) {
-      updateProveedor(id, draft);
+      updateContacto(id, draft);
       toast.success('Contacto actualizado');
     } else {
-      createProveedor(draft);
+      createContacto(draft);
       toast.success('Contacto creado');
     }
-    navigate('/proveedores');
+    navigate(cfg.base);
   };
 
   const facturas = (id && FACTURAS_COMPRA_DEMO[id]) || [];
@@ -162,8 +158,8 @@ export function ProveedorFormPage() {
       {/* ── Encabezado ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button
-          onClick={() => navigate('/proveedores')}
-          aria-label="Volver a proveedores"
+          onClick={() => navigate(cfg.base)}
+          aria-label={`Volver a ${cfg.titulo.toLowerCase()}`}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 36, height: 36, borderRadius: 8,
@@ -181,7 +177,7 @@ export function ProveedorFormPage() {
           {isEdit ? 'Editar contacto' : 'Nuevo contacto'}
         </p>
         <button
-          onClick={() => navigate('/proveedores')}
+          onClick={() => navigate(cfg.base)}
           style={{
             height: 40, padding: '8px 16px', borderRadius: 12, cursor: 'pointer',
             border: '1.5px solid var(--blue-100)', backgroundColor: 'var(--black-0)', color: 'var(--blue-100)',
@@ -298,7 +294,7 @@ export function ProveedorFormPage() {
       {isEdit && (
         <>
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }} role="tablist">
-            {TABS.map(t => {
+            {cfg.tabs.map(t => {
               const active = tab === t.id;
               return (
                 <button

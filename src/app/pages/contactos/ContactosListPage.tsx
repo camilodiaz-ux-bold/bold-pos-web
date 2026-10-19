@@ -1,17 +1,18 @@
 /**
- * ProveedoresListPage — lista de proveedores (specs/2026-10-proveedores.md §5).
+ * ContactosListPage — lista de proveedores o clientes según `tipo` (specs/2026-10-proveedores.md §5 y 2026-10-clientes.md).
  */
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, RefreshCw, Trash2, X } from 'lucide-react';
-import { useProveedores } from '../../store/proveedoresStore';
+import { useContactos } from '../../store/contactosStore';
 import { Toggle } from '../../components/items/Toggle';
 import { ConfirmDeleteModal } from '../../components/items/ConfirmDeleteModal';
 import { VentaBadge } from '../../components/ventas/VentaBadge';
 import { filterInput, filterGroup, labelStyle, tdStyle, thStyle } from '../../components/ventas/ventasStyles';
-import { FILTROS_VACIOS, filterProveedores, fmtDocumento, type FiltrosProveedor } from '../../utils/proveedores';
-import type { Proveedor } from '../../types/proveedor';
+import { FILTROS_VACIOS, filterContactos, fmtDocumento, type FiltrosContacto } from '../../utils/contactos';
+import type { Contacto } from '../../types/contacto';
+import { CONTACTO_CONFIG, type TipoContacto } from './contactosConfig';
 
 const center: React.CSSProperties = { textAlign: 'center', paddingRight: 16 };
 const right: React.CSSProperties = { textAlign: 'right', paddingRight: 16 };
@@ -22,10 +23,12 @@ const linkButton: React.CSSProperties = {
   fontWeight: 600, color: 'var(--blue-100)',
 };
 
-const COLUMNS = [
+const columnas = (conCompras: boolean) => [
   { label: 'Nombre', width: '300px' },
-  { label: 'Compras últimos 6 meses', width: '140px', center: true },
-  { label: 'Cuentas por pagar', width: '130px', center: true },
+  ...(conCompras ? [
+    { label: 'Compras últimos 6 meses', width: '140px', center: true },
+    { label: 'Cuentas por pagar', width: '130px', center: true },
+  ] : []),
   { label: 'No. documento', width: '140px', right: true },
   { label: 'Correo electrónico', width: '240px' },
   { label: 'Estado', width: '100px' },
@@ -33,19 +36,21 @@ const COLUMNS = [
   { label: '', width: '48px' },
 ];
 
-export function ProveedoresListPage() {
+export function ContactosListPage({ tipo }: { tipo: TipoContacto }) {
   const navigate = useNavigate();
-  const { proveedores, toggleActivo, deleteProveedor, refresh } = useProveedores();
-  const [filtros, setFiltros] = useState<FiltrosProveedor>(FILTROS_VACIOS);
-  const [aEliminar, setAEliminar] = useState<Proveedor | null>(null);
+  const cfg = CONTACTO_CONFIG[tipo];
+  const COLUMNS = columnas(cfg.conCompras);
+  const { contactos, toggleActivo, deleteContacto, refresh } = useContactos();
+  const [filtros, setFiltros] = useState<FiltrosContacto>(FILTROS_VACIOS);
+  const [aEliminar, setAEliminar] = useState<Contacto | null>(null);
 
-  const base = useMemo(() => proveedores.filter(p => p.esProveedor), [proveedores]);
-  const rows = useMemo(() => filterProveedores(base, filtros), [base, filtros]);
+  const base = useMemo(() => contactos.filter(c => c[cfg.flag]), [contactos, cfg.flag]);
+  const rows = useMemo(() => filterContactos(base, filtros), [base, filtros]);
 
-  const set = <K extends keyof FiltrosProveedor>(key: K) => (value: FiltrosProveedor[K]) =>
+  const set = <K extends keyof FiltrosContacto>(key: K) => (value: FiltrosContacto[K]) =>
     setFiltros(f => ({ ...f, [key]: value }));
 
-  const text = (label: string, key: Exclude<keyof FiltrosProveedor, 'estado'>, placeholder: string) => (
+  const text = (label: string, key: Exclude<keyof FiltrosContacto, 'estado'>, placeholder: string) => (
     <div style={filterGroup}>
       <label style={labelStyle}>{label}</label>
       <input type="text" placeholder={placeholder} style={filterInput}
@@ -78,10 +83,10 @@ export function ProveedoresListPage() {
           fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: 20,
           lineHeight: '28px', color: 'var(--black-100)', margin: 0, flex: 1,
         }}>
-          Proveedores
+          {cfg.titulo}
         </p>
         <button
-          onClick={() => toast.info('Importar proveedores: próximamente')}
+          onClick={() => toast.info(`Importar ${cfg.titulo.toLowerCase()}: próximamente`)}
           style={{
             height: 40, padding: '8px 16px', borderRadius: 12, cursor: 'pointer',
             border: '1.5px solid var(--blue-100)', backgroundColor: 'var(--black-0)', color: 'var(--blue-100)',
@@ -92,7 +97,7 @@ export function ProveedoresListPage() {
           Importar
         </button>
         <button
-          onClick={() => navigate('/proveedores/nuevo')}
+          onClick={() => navigate(`${cfg.base}/nuevo`)}
           style={{
             height: 40, padding: '8px 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
             backgroundColor: 'var(--blue-100)', color: 'var(--black-0)',
@@ -101,7 +106,7 @@ export function ProveedoresListPage() {
           }}
         >
           <Plus size={20} color="var(--black-0)" />
-          Nuevo proveedor
+          {cfg.nuevo}
         </button>
       </div>
 
@@ -115,7 +120,7 @@ export function ProveedoresListPage() {
         <div style={filterGroup}>
           <label style={labelStyle}>Estado</label>
           <select style={filterInput} value={filtros.estado}
-            onChange={e => set('estado')(e.target.value as FiltrosProveedor['estado'])}>
+            onChange={e => set('estado')(e.target.value as FiltrosContacto['estado'])}>
             {['Todos', 'Activo', 'Inactivo'].map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
@@ -143,7 +148,7 @@ export function ProveedoresListPage() {
           </div>
         </div>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 1180 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: COLUMNS.reduce((sum, c) => sum + parseInt(c.width, 10), 0) }}>
             <thead>
               <tr>
                 {COLUMNS.map((col, i) => (
@@ -158,20 +163,24 @@ export function ProveedoresListPage() {
               {rows.length === 0 && (
                 <tr>
                   <td colSpan={COLUMNS.length} style={{ ...tdStyle, textAlign: 'center', color: 'var(--black-60)', padding: '32px 0' }}>
-                    No hay proveedores con estos filtros
+                    No hay {cfg.titulo.toLowerCase()} con estos filtros
                   </td>
                 </tr>
               )}
               {rows.map((p, idx) => (
                 <tr
                   key={p.id}
-                  onClick={() => navigate(`/proveedores/${p.id}/editar`)}
+                  onClick={() => navigate(`${cfg.base}/${p.id}/editar`)}
                   style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--black-10)', cursor: 'pointer' }}
                   className="hover:bg-[var(--blue-10)] transition-colors"
                 >
                   <td style={{ ...tdStyle, fontWeight: 600, paddingRight: 16 }}>{p.nombre}</td>
-                  <td style={{ ...tdStyle, ...center }}>{p.comprasUltimos6Meses}</td>
-                  <td style={{ ...tdStyle, ...center }}>{p.cuentasPorPagar}</td>
+                  {cfg.conCompras && (
+                    <>
+                      <td style={{ ...tdStyle, ...center }}>{p.comprasUltimos6Meses}</td>
+                      <td style={{ ...tdStyle, ...center }}>{p.cuentasPorPagar}</td>
+                    </>
+                  )}
                   <td style={{ ...tdStyle, ...right }}>{fmtDocumento(p.numeroDocumento)}</td>
                   <td style={{ ...tdStyle, paddingRight: 16, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.correo}</td>
                   <td style={tdStyle}>
@@ -198,12 +207,14 @@ export function ProveedoresListPage() {
 
       {aEliminar && (
         <ConfirmDeleteModal
-          title="Eliminar proveedor"
-          message={`¿Seguro que quieres eliminar a ${aEliminar.nombre}? Esta acción no se puede deshacer.`}
+          title={`Eliminar ${tipo}`}
+          message={`¿Seguro que quieres eliminar a ${aEliminar.nombre}?${
+            aEliminar.esCliente && aEliminar.esProveedor ? ` También se eliminará como ${tipo === 'cliente' ? 'proveedor' : 'cliente'}.` : ''
+          } Esta acción no se puede deshacer.`}
           onCancel={() => setAEliminar(null)}
           onConfirm={() => {
-            deleteProveedor(aEliminar.id);
-            toast.success('Proveedor eliminado');
+            deleteContacto(aEliminar.id);
+            toast.success(`${tipo === 'cliente' ? 'Cliente' : 'Proveedor'} eliminado`);
             setAEliminar(null);
           }}
         />

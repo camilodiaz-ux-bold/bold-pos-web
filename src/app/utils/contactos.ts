@@ -1,4 +1,4 @@
-import type { Proveedor } from '../types/proveedor';
+import type { Contacto } from '../types/contacto';
 
 /** Solo dígitos — para comparar documentos y teléfonos sin importar el formato. */
 export const soloDigitos = (v: string) => v.replace(/\D/g, '');
@@ -19,18 +19,18 @@ export function calcularDV(nit: string): string {
   return String(r > 1 ? 11 - r : r);
 }
 
-export interface FiltrosProveedor {
+export interface FiltrosContacto {
   nombre: string; documento: string; correo: string; celular: string; telefono: string;
   estado: 'Todos' | 'Activo' | 'Inactivo';
 }
 
-export const FILTROS_VACIOS: FiltrosProveedor = {
+export const FILTROS_VACIOS: FiltrosContacto = {
   nombre: '', documento: '', correo: '', celular: '', telefono: '', estado: 'Todos',
 };
 
 const incluye = (valor: string, buscado: string) => valor.toLowerCase().includes(buscado.trim().toLowerCase());
 
-export function filterProveedores(lista: Proveedor[], f: FiltrosProveedor): Proveedor[] {
+export function filterContactos(lista: Contacto[], f: FiltrosContacto): Contacto[] {
   const doc = soloDigitos(f.documento);
   const cel = soloDigitos(f.celular);
   const tel = soloDigitos(f.telefono);

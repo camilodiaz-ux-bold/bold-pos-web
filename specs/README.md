@@ -8,6 +8,7 @@ Cada spec tiene su propio campo "Estado" en la tabla de encabezado. Una vez marc
 
 | Fecha | Spec | Estado | Resumen |
 |---|---|---|---|
+| 2026-10 | [2026-10-clientes.md](./2026-10-clientes.md) | Listo para implementación | Core: Clientes (lista, nuevo y perfil) como segunda vista del modelo Contacto, compartiendo store, lista y formulario con Proveedores. Incluye el arreglo del ícono de Contactos. |
 | 2026-10 | [2026-10-proveedores.md](./2026-10-proveedores.md) | Listo para implementación | Core: Proveedores (lista, nuevo y perfil) migrados desde el prototipo `saas-purchasing` como piloto del módulo de compras. Store local, filtros reales, formulario de 4 cards con validación y pestañas en el perfil. Facturas de compra y Clientes quedan para fases siguientes. |
 | 2026-10 | [2026-10-ventas-modo-venta.md](./2026-10-ventas-modo-venta.md) | ✅ Implementado | Restaurantes: `Venta.modo` (`mostrador` \| `mesa`) reemplaza la zona "Mostrador"; Ventas suma la columna y el filtro "Modo de venta" y Zona/Mesa muestran `---` en Mostrador. |
 | 2026-10 | [2026-10-reporte-ventas-items.md](./2026-10-reporte-ventas-items.md) | ✅ Implementado | Core: reporte "Ventas por ítems" como réplica del reporte real de Bold POS, con datos de `ventasStore`. Los combos son una fila propia (sin desglose, modelo Fudo) y la columna nueva "Tipo" distingue Ítem de Combo. Columnas Subtotal y Total; botones Generar/Imprimir/Exportar solo visuales. |
