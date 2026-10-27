@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle2, Circle, Info, Plus, RefreshCw, X } from 'lucid
 import { useContactos } from '../../store/contactosStore';
 import { useFacturasCompra } from '../../store/facturasCompraStore';
 import type { FacturaCompra } from '../../types/facturaCompra';
-import { SUCURSALES_COMPRA } from '../../data/facturasCompraSeed';
+import { useAjustes } from '../../store/ajustesStore';
 import {
   BADGE_ESTADO, FILTROS_FACTURA_VACIOS, estadoFactura, filterFacturas, fmtFecha, fmtMonto, ordenarFacturas, valorFactura,
   type FiltrosFactura, type OrdenFacturas,
@@ -38,6 +38,7 @@ export function FacturasCompraListPage() {
   const navigate = useNavigate();
   const { contactos } = useContactos();
   const { facturas, refresh, settings } = useFacturasCompra();
+  const { ajustes } = useAjustes();
   const [filtros, setFiltros] = useState<FiltrosFactura>(FILTROS_FACTURA_VACIOS);
   const [orden, setOrden] = useState<OrdenFacturas>('creacion');
   const [aPagar, setAPagar] = useState<FacturaCompra | null>(null);
@@ -128,7 +129,7 @@ export function FacturasCompraListPage() {
         </div>
         {select('Forma de pago', 'formaPago', 'Todas', ['Contado', 'Crédito'])}
         {select('Estado de pago', 'estado', 'Todos', ['Pagado', 'No pagado', 'Vencido', 'Anulada'])}
-        {select('Sucursal', 'sucursal', 'Todas', SUCURSALES_COMPRA)}
+        {select('Sucursal', 'sucursal', 'Todas', ajustes.sucursales.map(s => s.nombre))}
         <div style={filterGroup}>
           <label style={labelStyle}>Desde</label>
           <input type="date" style={filterInput} value={filtros.desde} onChange={e => set('desde')(e.target.value)} />
@@ -234,7 +235,7 @@ export function FacturasCompraListPage() {
         </div>
       </div>
 
-      <PrototypeComprasTools show={['usarDS', 'stepMode', 'usarImpuestos']} />
+      <PrototypeComprasTools show={['usarDS', 'stepMode']} />
 
       {aPagar && <ReportarPagoModal factura={aPagar} onClose={() => setAPagar(null)} />}
     </div>

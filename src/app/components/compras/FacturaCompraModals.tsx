@@ -7,8 +7,10 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
 import type { FacturaCompra } from '../../types/facturaCompra';
+import { useAjustes } from '../../store/ajustesStore';
 import { useFacturasCompra } from '../../store/facturasCompraStore';
-import { METODOS_PAGO, RESOLUCION_DS, TIPOS_OPERACION_DS, TURNO_ACTUAL } from '../../data/facturasCompraSeed';
+import { metodosHabilitados } from '../../utils/ajustes';
+import { RESOLUCION_DS, TIPOS_OPERACION_DS, TURNO_ACTUAL } from '../../data/facturasCompraSeed';
 import { BADGE_ESTADO, FECHA_PROTOTIPO, estadoFactura, fmtFecha, fmtMonto, valorFactura } from '../../utils/facturasCompra';
 import { FieldLabel, SelectField, TextAreaField } from '../items/FormField';
 import { VentaBadge } from '../ventas/VentaBadge';
@@ -36,6 +38,7 @@ export function InfoModal({ title, destino, onClose }: { title: string; destino:
 
 export function ReportarPagoModal({ factura, onClose }: { factura: FacturaCompra; onClose: () => void }) {
   const { reportarPago, settings } = useFacturasCompra();
+  const { ajustes } = useAjustes();
   const [metodo, setMetodo] = useState('');
   const [asociarTurno, setAsociarTurno] = useState(false);
   const [observacion, setObservacion] = useState('');
@@ -73,7 +76,7 @@ export function ReportarPagoModal({ factura, onClose }: { factura: FacturaCompra
       </div>
       <div style={{ marginBottom: 16 }}>
         <SelectField label="Método de pago" required value={metodo} onChange={v => { setMetodo(v); setError(''); }}
-          options={opciones(METODOS_PAGO)} placeholder="Seleccionar método de pago" error={error} />
+          options={opciones(metodosHabilitados(ajustes))} placeholder="Seleccionar método de pago" error={error} />
       </div>
       <div style={{ marginBottom: 16 }}>
         <FieldLabel>{`¿Deseas asociar este pago al turno No. ${TURNO_ACTUAL}?`}</FieldLabel>

@@ -8,11 +8,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { AlertTriangle, ArrowLeft, Info, Plus, Trash2 } from 'lucide-react';
+import { useAjustes } from '../../store/ajustesStore';
+import { metodosHabilitados } from '../../utils/ajustes';
 import { useContactos } from '../../store/contactosStore';
 import { useFacturasCompra } from '../../store/facturasCompraStore';
 import { useItems } from '../../store/itemsStore';
 import type { ImpuestoCompra, ItemFacturaCompra } from '../../types/facturaCompra';
-import { IMPUESTOS_COMPRA, METODOS_PAGO, RETENCIONES_OPCIONES, SUCURSAL_ACTUAL, TURNO_ACTUAL } from '../../data/facturasCompraSeed';
+import { IMPUESTOS_COMPRA, RETENCIONES_OPCIONES, SUCURSAL_ACTUAL, TURNO_ACTUAL } from '../../data/facturasCompraSeed';
 import { FECHA_PROTOTIPO, calcularTotales, fmtMonto, tasaImpuesto } from '../../utils/facturasCompra';
 import { fmtDocumento } from '../../utils/contactos';
 import { FieldLabel, SelectField, TextAreaField, TextField } from '../../components/items/FormField';
@@ -22,7 +24,6 @@ import { CenterModal, ModalIcon } from '../../components/compras/CenterModal';
 import { SiNo } from '../../components/compras/FacturaCompraModals';
 import { CrearItemDrawer } from '../../components/compras/CrearItemDrawer';
 import { CrearProveedorDrawer } from '../../components/compras/CrearProveedorDrawer';
-import { PrototypeComprasTools } from '../../components/compras/PrototypeComprasTools';
 
 const FONT = "'Montserrat', sans-serif";
 const right: React.CSSProperties = { textAlign: 'right', paddingRight: 16 };
@@ -65,14 +66,15 @@ export function FacturaCompraFormPage() {
   const { contactos } = useContactos();
   const { items: catalogo } = useItems();
   const { createFactura, settings } = useFacturasCompra();
+  const { ajustes } = useAjustes();
   const { usarImpuestos, stepMode } = settings;
 
   const [step, setStep] = useState<1 | 3>(stepMode ? 1 : 3);
   const [numeroProveedor, setNumeroProveedor] = useState('');
   const [fechaEmision, setFechaEmision] = useState(FECHA_PROTOTIPO);
   const [proveedorId, setProveedorId] = useState('');
-  const [afectaInventario, setAfectaInventario] = useState(true);
-  const [formaPago, setFormaPago] = useState<'Crédito' | 'Contado'>('Crédito');
+  const [afectaInventario, setAfectaInventario] = useState(ajustes.facturasCompra.afectaInventario);
+  const [formaPago, setFormaPago] = useState<'Crédito' | 'Contado'>(ajustes.facturasCompra.condicionPago === 'Contado' ? 'Contado' : 'Crédito');
   const [metodoPago, setMetodoPago] = useState('');
   const [asociarTurno, setAsociarTurno] = useState(true);
   const [fechaVencimiento, setFechaVencimiento] = useState('');
@@ -214,7 +216,7 @@ export function FacturaCompraFormPage() {
           <SelectField
             label="Método de pago" required value={metodoPago} placeholder="Seleccionar método de pago" error={errors.metodoPago}
             onChange={v => { setMetodoPago(v); setErrors(e => ({ ...e, metodoPago: undefined })); }}
-            options={METODOS_PAGO.map(m => ({ value: m, label: m }))}
+            options={metodosHabilitados(ajustes).map(m => ({ value: m, label: m }))}
           />
           <div>
             <FieldLabel>{`Asociar al turno No. ${TURNO_ACTUAL}`}</FieldLabel>
@@ -388,7 +390,6 @@ export function FacturaCompraFormPage() {
           <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
               <TextAreaField label="Observaciones de la factura" value={observaciones} onChange={setObservaciones} placeholder="Escribe aquí tus observaciones" rows={5} />
-              <PrototypeComprasTools show={['usarImpuestos']} />
             </div>
             <div style={{ width: 280, flexShrink: 0 }}>
               <div style={{ height: 25 }} />

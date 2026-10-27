@@ -96,7 +96,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const newSaleMode = has('mesas') ? 'Mesas' : 'Mostrador';
   // Rutas que tienen su propia entrada de menú: mientras estemos en ellas,
   // "Punto de venta" no debe resaltarse aunque activeMode caiga en su default.
-  const OWNED_ROUTES = ['/ventas', '/items', '/comprobantes', '/facturas-venta', '/clientes', '/proveedores', '/facturas-compra'];
+  const OWNED_ROUTES = ['/ventas', '/items', '/comprobantes', '/facturas-venta', '/clientes', '/proveedores', '/facturas-compra', '/ajustes'];
   const inOwnedRoute = OWNED_ROUTES.some(r => pathname.startsWith(r));
   const inPosView = activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
   const [isExpanded, setIsExpanded] = useState(!inPosView);
@@ -234,7 +234,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
         ? <IcAjustesFill size={sz} color={C.blue100} />
         : <IcAjustes size={sz} color={C.black60} />,
       hasSubmenu: false,
-      onClick: () => toast.info('Ajustes'),
+      onClick: () => (has('ajustes') ? navigate('/ajustes') : toast.info('Ajustes')),
     },
     {
       id: 'chat',
@@ -258,6 +258,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
     if (item.id === 'inicio')       return activeMode === 'Inicio';
     if (item.id === 'puntodeventa') return (activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos') && !inOwnedRoute;
     if (item.id === 'reportes')     return activeMode === 'Reportes';
+    if (item.id === 'ajustes')      return pathname.startsWith('/ajustes');
     if (item.id === 'ingresos')     return item.subItems?.some(sub => sub.active) ?? false;
     // Generic: parent is active when any child is active
     if (item.subItems)              return item.subItems.some(sub => sub.active);

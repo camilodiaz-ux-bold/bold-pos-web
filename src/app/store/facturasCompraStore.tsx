@@ -4,11 +4,14 @@
  * Mismo patrón que itemsStore/contactosStore: hidratación en el initializer de useState,
  * persistencia en localStorage en cada mutación, createContext + hook que lanza fuera del provider.
  * Incluye los ajustes de las "herramientas del prototipo" (§9), compartidos entre pantallas.
+ * `usarImpuestos` ya no es una herramienta del prototipo: viene de Ajustes → Facturas de compra (specs/2026-10-ajustes.md §5).
  */
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import type { AnulacionFacturaCompra, FacturaCompra, FacturaCompraDraft, PagoFacturaCompra } from '../types/facturaCompra';
 import { FACTURAS_STORAGE_KEY, USUARIO_DEMO, buildSeedFacturas } from '../data/facturasCompraSeed';
-import { ahoraPrototipo, siguienteNumero } from '../utils/facturasCompra';
+import { ahoraPrototipo, numeroFactura, siguienteNumero } from '../utils/facturasCompra';
+import { sucursalPrincipal } from '../utils/ajustes';
+import { useAjustes } from './ajustesStore';
 
 const SETTINGS_KEY = 'bold-pos:compras-settings:v1';
 
@@ -67,7 +70,14 @@ const FacturasCompraContext = createContext<FacturasCompraContextValue | null>(n
 
 export function FacturasCompraProvider({ children }: { children: React.ReactNode }) {
   const [facturas, setFacturas] = useState<FacturaCompra[]>(loadFacturas);
-  const [settings, setSettings] = useState<ComprasSettings>(loadSettings);
+  const { ajustes, setFacturasCompra, updateAjustes } = useAjustes();
+  const ajustesRef = useRef(ajustes);
+  ajustesRef.current = ajustes;
+  const [tools, setTools] = useState<ComprasSettings>(loadSettings);
+  const settings = useMemo<ComprasSettings>(
+    () => ({ ...tools, usarImpuestos: ajustes.facturasCompra.usarImpuestos }),
+    [tools, ajustes.facturasCompra.usarImpuestos],
+  );
 
   const commit = useCallback((updater: (prev: FacturaCompra[]) => FacturaCompra[]) => {
     setFacturas(prev => {
@@ -81,16 +91,28 @@ export function FacturasCompraProvider({ children }: { children: React.ReactNode
 
   const createFactura = useCallback((draft: FacturaCompraDraft): FacturaCompra => {
     let created!: FacturaCompra;
+    // Ajustes → Numeración: si el usuario fijó el "siguiente número de factura de compra", se usa y luego avanza.
+    const principal = sucursalPrincipal(ajustesRef.current);
+    const fijado = ajustesRef.current.numeracionNoElectronica[principal.id]?.facturaCompra ?? null;
     commit(prev => {
-      const numero = siguienteNumero(prev);
+      const numero = fijado !== null ? numeroFactura(fijado) : siguienteNumero(prev);
       created = {
         ...draft, id: `fc-${Date.now()}`, numero, fechaRegistro: ahoraPrototipo(),
         ds: null, pago: null, anulacion: null,
       };
       return [created, ...prev];
     });
+    if (fijado !== null) {
+      updateAjustes(prev => ({
+        ...prev,
+        numeracionNoElectronica: {
+          ...prev.numeracionNoElectronica,
+          [principal.id]: { ...prev.numeracionNoElectronica[principal.id], facturaCompra: fijado + 1 },
+        },
+      }));
+    }
     return created;
-  }, [commit]);
+  }, [commit, updateAjustes]);
 
   const reportarPago = useCallback((id: string, pago: Omit<PagoFacturaCompra, 'fecha' | 'reportadoPor'>) => {
     commit(prev => prev.map(f => (f.id === id ? { ...f, pago: { ...pago, fecha: ahoraPrototipo(), reportadoPor: USUARIO_DEMO } } : f)));
@@ -110,7 +132,11 @@ export function FacturasCompraProvider({ children }: { children: React.ReactNode
   const refresh = useCallback(() => setFacturas(loadFacturas()), []);
 
   const setSetting = useCallback(<K extends keyof ComprasSettings>(key: K, value: ComprasSettings[K]) => {
-    setSettings(prev => {
+    if (key === 'usarImpuestos') {
+      setFacturasCompra({ usarImpuestos: value as boolean });
+      return;
+    }
+    setTools(prev => {
       const next = { ...prev, [key]: value };
       try {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
@@ -119,7 +145,7 @@ export function FacturasCompraProvider({ children }: { children: React.ReactNode
       }
       return next;
     });
-  }, []);
+  }, [setFacturasCompra]);
 
   return (
     <FacturasCompraContext.Provider value={{ facturas, getFactura, createFactura, reportarPago, anularFactura, convertirEnDS, refresh, settings, setSetting }}>

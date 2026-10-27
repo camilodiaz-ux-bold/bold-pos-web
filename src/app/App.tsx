@@ -14,6 +14,7 @@ import { ItemFormPage } from './pages/items/ItemFormPage';
 import { StatusPage } from '../pages/StatusPage';
 import { MakersLanding } from '../pages/MakersLanding';
 import { VerticalProvider, VerticalRoute } from './vertical';
+import { AjustesProvider } from './store/ajustesStore';
 import { ContactosProvider } from './store/contactosStore';
 import { FacturasCompraProvider } from './store/facturasCompraStore';
 import { FacturasCompraListPage } from './pages/compras/FacturasCompraListPage';
@@ -23,6 +24,9 @@ import { ContactosListPage } from './pages/contactos/ContactosListPage';
 import { ContactoFormPage } from './pages/contactos/ContactoFormPage';
 import { DocumentosVentaListPage } from './verticals/retail/ingresos/DocumentosVentaListPage';
 import { DocumentoVentaDetallePage } from './verticals/retail/ingresos/DocumentoVentaDetallePage';
+import { AjustesPage } from './verticals/retail/ajustes/AjustesPage';
+import { PerfilPage } from './verticals/retail/ajustes/PerfilPage';
+import { ReporteRetailPage } from './verticals/retail/reportes/ReporteRetailPage';
 
 const router = createBrowserRouter([
   {
@@ -32,6 +36,7 @@ const router = createBrowserRouter([
       { index: true, Component: HomePage },
       { path: 'reportes', Component: ReportesPage },
       { path: 'reportes/restaurantes/:id', Component: ReporteDetalleRoute },
+      { path: 'reportes/retail/:id', element: <VerticalRoute module="reportes-retail"><ReporteRetailPage /></VerticalRoute> },
       { path: 'inicio', Component: Dashboard },
       { path: 'turnos', Component: TurnosPage },
       { path: 'ventas', Component: VentasPage },
@@ -40,6 +45,8 @@ const router = createBrowserRouter([
       { path: 'comprobantes/:id',    element: <VerticalRoute module="comprobantes"><DocumentoVentaDetallePage key="comprobante" tipo="comprobante" /></VerticalRoute> },
       { path: 'facturas-venta',      element: <VerticalRoute module="facturas-venta"><DocumentosVentaListPage key="factura" tipo="factura" /></VerticalRoute> },
       { path: 'facturas-venta/:id',  element: <VerticalRoute module="facturas-venta"><DocumentoVentaDetallePage key="factura" tipo="factura" /></VerticalRoute> },
+      { path: 'ajustes',               element: <VerticalRoute module="ajustes"><AjustesPage /></VerticalRoute> },
+      { path: 'ajustes/perfil',        element: <VerticalRoute module="ajustes"><PerfilPage /></VerticalRoute> },
       { path: 'facturas-compra',        Component: FacturasCompraListPage },
       { path: 'facturas-compra/nueva',  Component: FacturaCompraFormPage },
       { path: 'facturas-compra/:id',    Component: FacturaCompraDetallePage },
@@ -67,11 +74,13 @@ const router = createBrowserRouter([
 export default function App() {
   return (
     <VerticalProvider>
-      <ContactosProvider>
-        <FacturasCompraProvider>
-          <RouterProvider router={router} />
-        </FacturasCompraProvider>
-      </ContactosProvider>
+      <AjustesProvider>
+        <ContactosProvider>
+          <FacturasCompraProvider>
+            <RouterProvider router={router} />
+          </FacturasCompraProvider>
+        </ContactosProvider>
+      </AjustesProvider>
     </VerticalProvider>
   );
 }
