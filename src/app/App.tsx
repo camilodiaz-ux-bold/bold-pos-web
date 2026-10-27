@@ -26,6 +26,7 @@ import { DocumentosVentaListPage } from './verticals/retail/ingresos/DocumentosV
 import { DocumentoVentaDetallePage } from './verticals/retail/ingresos/DocumentoVentaDetallePage';
 import { AjustesPage } from './verticals/retail/ajustes/AjustesPage';
 import { PerfilPage } from './verticals/retail/ajustes/PerfilPage';
+import { ReporteRetailPage } from './verticals/retail/reportes/ReporteRetailPage';
 
 const router = createBrowserRouter([
   {
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
       { index: true, Component: HomePage },
       { path: 'reportes', Component: ReportesPage },
       { path: 'reportes/restaurantes/:id', Component: ReporteDetalleRoute },
+      { path: 'reportes/retail/:id', element: <VerticalRoute module="reportes-retail"><ReporteRetailPage /></VerticalRoute> },
       { path: 'inicio', Component: Dashboard },
       { path: 'turnos', Component: TurnosPage },
       { path: 'ventas', Component: VentasPage },
