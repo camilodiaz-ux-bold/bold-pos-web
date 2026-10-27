@@ -106,9 +106,15 @@ export function ordenarFacturas(lista: FacturaCompra[], modo: OrdenFacturas): Fa
   });
 }
 
+/** Consecutivo numérico que sigue al mayor de la lista. */
+export function siguienteSecuencia(lista: FacturaCompra[]): number {
+  return lista.reduce((m, f) => Math.max(m, seq(f)), 0) + 1;
+}
+
+export const numeroFactura = (n: number): string => `FC-${String(n).padStart(3, '0')}`;
+
 export function siguienteNumero(lista: FacturaCompra[]): string {
-  const max = lista.reduce((m, f) => Math.max(m, seq(f)), 0);
-  return `FC-${String(max + 1).padStart(3, '0')}`;
+  return numeroFactura(siguienteSecuencia(lista));
 }
 
 // ─── Filtros ─────────────────────────────────────────────────────────────────

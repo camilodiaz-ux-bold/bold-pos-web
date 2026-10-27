@@ -31,6 +31,8 @@ const EXCLUSIVE_MODULES = {
   comprobantes: ['retail'],
   'facturas-venta': ['retail'],
   cotizaciones: ['retail'],
+  ajustes: ['retail'],
+  'reportes-retail': ['retail'],
 } as const satisfies Record<string, readonly Vertical[]>;
 
 export type ExclusiveModuleId = keyof typeof EXCLUSIVE_MODULES;

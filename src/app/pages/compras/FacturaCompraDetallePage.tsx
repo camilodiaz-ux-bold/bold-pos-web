@@ -268,7 +268,7 @@ export function FacturaCompraDetallePage() {
         </div>
       </div>
 
-      <PrototypeComprasTools show={['usarImpuestos', 'usarDS']} />
+      <PrototypeComprasTools show={['usarDS']} />
 
       {modal === 'pago' && <ReportarPagoModal factura={f} onClose={() => setModal(null)} />}
       {modal === 'anular' && <AnularModal factura={f} onClose={() => setModal(null)} />}
