@@ -1,5 +1,5 @@
 /**
- * ComboComponentsCard — card "Componentes del combo" del formulario de ítem.
+ * ComboComponentsCard — card "Ítems del combo" del formulario de ítem (pestaña Combo).
  * Hermana estructural de DisponibilidadCard: 100% controlada (todo el estado
  * vive en el FormState de ItemFormPage), salvo el texto del buscador local.
  *
@@ -8,7 +8,7 @@
  * specs/2026-09-combos.md §5.2.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Minus, Plus, X, ChevronDown } from 'lucide-react';
+import { Minus, Plus, Trash2, ChevronDown } from 'lucide-react';
 import type { ItemComboComponente } from '../../types/item';
 import { useCatalog, useVertical } from '../../vertical';
 import { componentKey, isCustomComponentItem } from '../../utils/comboBridge';
@@ -21,8 +21,8 @@ interface ComboComponentsCardProps {
   /** `key` = variantId ?? String(productId). */
   onChangeCantidad: (key: string, cantidad: number) => void;
   onRemove: (key: string) => void;
-  precioTotal: number;
-  error?: string;
+  /** "+ Crear nuevo ítem" del desplegable — abre el drawer de creación de ítem. */
+  onCreateItem: () => void;
 }
 
 /** Máximo de resultados del buscador (con o sin texto). */
@@ -39,13 +39,42 @@ interface Opt {
   itemId?: string;
 }
 
+/** Nombre, precio y variante de un componente agregado + suma de los ítems (la comparte la card de precio). */
+export function useComboResolver() {
+  const { items } = useItems();
+  const { allProducts: ALL_CATALOG_PRODUCTS, productVariants } = useCatalog();
+  const { has } = useVertical();
+  const variantsOf = (productId: number) => (has('variantes') ? productVariants[productId] : undefined);
+  const resolve = (c: ItemComboComponente) => {
+    if (c.itemId) {
+      const it = items.find(i => i.id === c.itemId);
+      return { name: it?.nombre, price: it?.precioTotal ?? 0, pv: undefined, v: undefined };
+    }
+    const p = ALL_CATALOG_PRODUCTS.find(x => x.id === c.productId);
+    const pv = c.productId !== undefined ? variantsOf(c.productId) : undefined;
+    const v = c.variantId ? pv?.variantes.find(x => x.id === c.variantId) : undefined;
+    return { name: p?.name, price: v?.price ?? p?.price ?? 0, pv, v };
+  };
+  const sumOf = (componentes: ItemComboComponente[]) =>
+    componentes.reduce((acc, c) => acc + resolve(c).price * c.cantidad, 0);
+  // Costo de un componente: el del Item propio, o el del Item sembrado del producto del catálogo
+  // (una variante usa el costo de su producto, que no tiene costo propio).
+  const costOf = (c: ItemComboComponente) => {
+    if (c.itemId) return items.find(i => i.id === c.itemId)?.costo ?? 0;
+    const seed = items.find(i => i.catalogProductId === c.productId || i.id === `seed-${c.productId}`);
+    return seed?.costo ?? 0;
+  };
+  const costSumOf = (componentes: ItemComboComponente[]) =>
+    componentes.reduce((acc, c) => acc + costOf(c) * c.cantidad, 0);
+  return { resolve, sumOf, costSumOf };
+}
+
 export function ComboComponentsCard({
   componentes,
   onAdd,
   onChangeCantidad,
   onRemove,
-  precioTotal,
-  error,
+  onCreateItem,
 }: ComboComponentsCardProps) {
   const [query, setQuery] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -109,46 +138,42 @@ export function ComboComponentsCard({
     };
   }, [open]);
 
-  // Nombre, precio y variante de un componente ya agregado.
-  const resolve = (c: ItemComboComponente) => {
-    if (c.itemId) {
-      const it = items.find(i => i.id === c.itemId);
-      return { name: it?.nombre, price: it?.precioTotal ?? 0, pv: undefined, v: undefined };
-    }
-    const p = ALL_CATALOG_PRODUCTS.find(x => x.id === c.productId);
-    const pv = c.productId !== undefined ? variantsOf(c.productId) : undefined;
-    const v = c.variantId ? pv?.variantes.find(x => x.id === c.variantId) : undefined;
-    return { name: p?.name, price: v?.price ?? p?.price ?? 0, pv, v };
-  };
-  const sumaIndividual = componentes.reduce((acc, c) => acc + resolve(c).price * c.cantidad, 0);
-  const ahorro = sumaIndividual - precioTotal;
+  const { resolve, sumOf } = useComboResolver();
+  const sumaIndividual = sumOf(componentes);
 
   return (
     <div style={{ backgroundColor: 'var(--black-0)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Componentes del combo</h3>
+      <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Ítems del combo</h3>
 
       {/* Buscador */}
       <div ref={searchRef}>
-        <FieldLabel required>Agregar productos</FieldLabel>
+        <FieldLabel required>Ítems incluidos</FieldLabel>
         <div style={{ position: 'relative' }}>
-          <Search size={16} color="var(--black-40)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <ChevronDown size={18} color="var(--blue-100)" style={{ position: 'absolute', right: 12, top: '50%', transform: `translateY(-50%) rotate(${open ? 180 : 0}deg)`, pointerEvents: 'none' }} />
           <input
             type="text"
             value={query}
             onChange={e => { setQuery(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)}
-            placeholder="Busca un producto del catálogo"
+            placeholder="Busca un ítem por nombre"
             className="merlin-input-filled"
-            style={{ paddingLeft: 36 }}
+            style={{ paddingRight: 40 }}
           />
         </div>
+        <p style={{ fontSize: 12, color: 'var(--black-40)', margin: '6px 0 0' }}>Agrega mínimo 2 ítems.</p>
         {results.length > 0 && (
           <div style={{ marginTop: 8, border: '1px solid var(--black-10)', borderRadius: 8, maxHeight: 360, overflowY: 'auto' }}>
-            {!hasQuery && (
-              <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: 'var(--black-60)', borderBottom: '1px solid var(--black-10)' }}>
-                Últimos productos guardados
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => { closeSearch(); onCreateItem(); }}
+              style={{
+                width: '100%', textAlign: 'left', padding: '10px 12px', background: 'none', border: 'none',
+                borderBottom: '1px solid var(--black-10)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                color: 'var(--blue-100)', textDecoration: 'underline', fontFamily: "'Montserrat', sans-serif",
+              }}
+            >
+              + Crear nuevo ítem
+            </button>
             {results.map(o => {
               const pv = o.productId !== undefined ? variantsOf(o.productId) : undefined;
               const rowStyle: React.CSSProperties = {
@@ -159,8 +184,10 @@ export function ComboComponentsCard({
               if (!pv) {
                 return (
                   <button key={o.key} type="button" onClick={() => { onAdd({ productId: o.productId, itemId: o.itemId }); closeSearch(); }} style={rowStyle}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--black-100)' }}>{o.name}</span>
-                    <span style={{ fontSize: 12, color: 'var(--black-40)' }}>${o.price.toLocaleString('es-CO')}</span>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--black-100)' }}>{o.name}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--blue-100)' }}>${o.price.toLocaleString('es-CO')}</span>
+                    </span>
                   </button>
                 );
               }
@@ -213,9 +240,6 @@ export function ComboComponentsCard({
 
       {/* Lista de seleccionados */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {componentes.length === 0 && (
-          <p style={{ fontSize: 13, color: 'var(--black-40)', margin: 0 }}>Aún no agregaste ningún producto.</p>
-        )}
         {componentes.map(c => {
           const { name, price, pv, v } = resolve(c);
           const falta = !!pv && !v;
@@ -240,7 +264,7 @@ export function ComboComponentsCard({
                     {falta && (
                       <div style={{ fontSize: 12, color: 'var(--coral-100)' }}>Selecciona una variante (quita y vuelve a agregar)</div>
                     )}
-                    <div style={{ fontSize: 12, color: 'var(--black-40)' }}>${price.toLocaleString('es-CO')} c/u</div>
+                    <div style={{ fontSize: 12, color: 'var(--black-40)' }}>${price.toLocaleString('es-CO')} ( {c.cantidad} un )</div>
                   </>
                 ) : (
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black-40)', fontStyle: 'italic' }}>
@@ -272,23 +296,21 @@ export function ComboComponentsCard({
               <button
                 type="button"
                 onClick={() => onRemove(key)}
-                aria-label="Quitar componente"
+                aria-label="Quitar ítem"
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--black-40)', flexShrink: 0 }}
               >
-                <X size={16} />
+                <Trash2 size={18} />
               </button>
             </div>
           );
         })}
       </div>
 
-      {error && <p style={{ fontSize: 12, color: 'var(--coral-100)', margin: 0 }}>{error}</p>}
-
-      {/* Línea de referencia — informativo, no afecta el precio guardado */}
+      {/* Suma de los ítems — informativo, no afecta el precio guardado */}
       {componentes.length > 0 && (
-        <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16, fontSize: 12, color: 'var(--black-60)' }}>
-          Suma individual: ${sumaIndividual.toLocaleString('es-CO')}
-          {ahorro > 0 && <> — Ahorra ${ahorro.toLocaleString('es-CO')} vs. comprar por separado</>}
+        <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: 'var(--black-100)' }}>
+          <span>Suma de los ítems</span>
+          <span>${sumaIndividual.toLocaleString('es-CO')}</span>
         </div>
       )}
     </div>

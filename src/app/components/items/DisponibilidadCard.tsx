@@ -4,7 +4,7 @@
  * sucursal marcada (solo si el toggle está ON) + total.
  *
  * Para un combo (existenciasDisabled=true), el toggle de existencias se
- * deshabilita pero las sucursales siguen siendo seleccionables — un combo
+ * oculta pero las sucursales siguen siendo seleccionables — un combo
  * puede estar activo en unas sucursales y no en otras, aunque no maneje
  * un número de existencia propio.
  */
@@ -23,8 +23,8 @@ interface DisponibilidadCardProps {
   onChangeExistencia: (id: SucursalId, raw: string) => void;
   unidadLabel: string;
   sucursalesError?: string;
-  /** Un combo no maneja existencias propias — deshabilita el toggle sin ocultar
-   * la sección de sucursales, que sigue siendo editable (ver specs/2026-09-combos-disponibilidad.md). */
+  /** Un combo no maneja existencias propias — oculta el toggle pero deja la sección
+   * de sucursales editable (specs/2026-09-combos-disponibilidad.md, specs/2026-10-items-crear-tabs.md). */
   existenciasDisabled?: boolean;
 }
 
@@ -47,21 +47,21 @@ export function DisponibilidadCard({
     <div style={{ backgroundColor: 'var(--black-0)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Disponibilidad</h3>
 
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Toggle checked={manejaExistencias} onChange={onToggleManeja} ariaLabel="Ítem con existencias" disabled={existenciasDisabled} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: existenciasDisabled ? 'var(--black-40)' : 'var(--black-100)' }}>
-            Ítem con existencias ({unidadLabel})
-          </span>
+      {!existenciasDisabled && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Toggle checked={manejaExistencias} onChange={onToggleManeja} ariaLabel="Ítem con existencias" />
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>
+              Ítem con existencias ({unidadLabel})
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--black-40)', margin: '6px 0 0' }}>
+            Al activar, puedes agregar la disponibilidad del ítem por sucursal.
+          </p>
         </div>
-        <p style={{ fontSize: 12, color: 'var(--black-40)', margin: '6px 0 0' }}>
-          {existenciasDisabled
-            ? 'Un combo no maneja existencias propias — su disponibilidad depende de sus componentes.'
-            : 'Al activar, puedes agregar la disponibilidad del item por sucursal.'}
-        </p>
-      </div>
+      )}
 
-      <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16 }}>
+      <div style={existenciasDisabled ? undefined : { borderTop: '1px solid var(--black-10)', paddingTop: 16 }}>
         <FieldLabel required>Sucursales con disponibilidad</FieldLabel>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
           {SUCURSALES.map(s => {
