@@ -93,7 +93,7 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
             <th style={{ ...thStyle, width: 110 }}>Referencia</th>
             <th style={{ ...thStyle, width: 100 }}>Precio</th>
             <th style={{ ...thStyle, width: 90 }}>Existencia</th>
-            <th style={{ ...thStyle, width: 120 }}>Tipo</th>
+            <th style={{ ...thStyle, width: 150 }}>Tipo de Item</th>
             <th style={{ ...thStyle, width: 70 }}>Activo</th>
             <th style={{ ...thStyle, width: 70 }} />
           </tr>
@@ -139,15 +139,6 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
                 <td style={{ ...tdStyle, overflow: 'hidden' }}>
                   <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nombre}</span>
-                    {item.esCombo && (
-                      <span style={{
-                        fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 100,
-                        backgroundColor: 'var(--coral-10)', color: 'var(--coral-100)',
-                        flexShrink: 0, lineHeight: '14px',
-                      }}>
-                        Combo
-                      </span>
-                    )}
                   </div>
                   {item.descripcion && (
                     <div style={{
