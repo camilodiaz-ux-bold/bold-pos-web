@@ -8,10 +8,10 @@
  * los propios setters, nunca en un useEffect que observe ambos campos
  * (evita un bucle de escritura mutua).
  */
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
-import { ArrowLeft, ImagePlus, Info } from 'lucide-react';
+import { ArrowLeft, ImagePlus, AlertTriangle } from 'lucide-react';
 import { useItems } from '../../store/itemsStore';
 import type { Item, ItemDraft, ItemComboComponente, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
 import { getImpuesto, getUnidad } from '../../data/itemsCatalogs';
@@ -20,7 +20,8 @@ import { formatCOP, parseCOP } from '../../utils/format';
 import { componentKey } from '../../utils/comboBridge';
 import { TextField, TextAreaField, SelectField } from '../../components/items/FormField';
 import { DisponibilidadCard } from '../../components/items/DisponibilidadCard';
-import { ComboComponentsCard } from '../../components/items/ComboComponentsCard';
+import { ComboComponentsCard, useComboResolver } from '../../components/items/ComboComponentsCard';
+import { CrearItemDrawer } from '../../components/compras/CrearItemDrawer';
 import { ConfirmDeleteModal } from '../../components/items/ConfirmDeleteModal';
 import { Toggle } from '../../components/items/Toggle';
 
@@ -87,6 +88,8 @@ export function ItemFormPage() {
   // toggle se bloquea solo en edición, y solo si el ítem YA era combo al
   // entrar al formulario (uno simple sí se puede marcar como combo, §9).
   const comboLocked = mode === 'edit' && !!existingItem?.esCombo;
+  // Pestañas "Ítem simple" | "Combo" (specs/2026-10-items-crear-tabs.md). En edición de un
+  // combo, "Ítem simple" queda bloqueada (specs/2026-09-combos-conversion-irreversible.md).
 
   // lastEditedPrice: qué campo dispara el recálculo del otro cuando cambia el impuesto.
   const lastEditedPrice = useRef<'base' | 'total'>(mode === 'edit' ? 'total' : 'base');
@@ -95,6 +98,10 @@ export function ItemFormPage() {
     mode === 'edit' && existingItem ? toFormState(existingItem) : EMPTY_FORM);
 
   const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [showCrearItem, setShowCrearItem] = useState(false);
+  const { sumOf, costSumOf } = useComboResolver();
+  // El costo de un combo arranca como la suma de los costos de sus ítems, hasta que el usuario lo edite.
+  const costoTouched = useRef(mode === 'edit');
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -154,7 +161,19 @@ export function ItemFormPage() {
   const unidadLabel = getUnidad(form.unidadId)?.label ?? 'Unidades';
 
   const sucursalesError = form.sucursalIds.length === 0 ? 'Selecciona al menos una sucursal' : undefined;
-  const componentesError = form.esCombo && form.componentes.length < 2 ? 'Agrega al menos 2 componentes' : undefined;
+  const costoSumaItems = form.esCombo ? costSumOf(form.componentes) : 0;
+  useEffect(() => {
+    if (!form.esCombo || costoTouched.current) return;
+    setForm(prev => {
+      const next = costoSumaItems > 0 ? String(costoSumaItems) : '';
+      return prev.costoRaw === next ? prev : { ...prev, costoRaw: next };
+    });
+  }, [form.esCombo, costoSumaItems]);
+
+  const sumaItems = form.esCombo ? sumOf(form.componentes) : 0;
+  const precioTotalNum = parseCOP(form.precioTotalRaw);
+  const diffPrecio = precioTotalNum - sumaItems;
+  const showPrecioAviso = form.esCombo && form.componentes.length > 0 && precioTotalNum > 0 && diffPrecio !== 0;
 
   // Identidad de un componente: la variante si la tiene, si no el producto (Restaurantes, o producto sin variantes).
   const componenteKey = componentKey;
@@ -279,14 +298,42 @@ export function ItemFormPage() {
           <ArrowLeft size={18} color="var(--blue-100)" strokeWidth={1.8} />
         </button>
         <p style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: 20, lineHeight: '28px', color: 'var(--black-100)', margin: 0 }}>
-          {mode === 'edit' ? 'Editar ítem' : 'Crear ítem'}
+          {mode === 'edit' ? 'Editar' : 'Crear'} {form.esCombo ? 'combo' : 'ítem simple'}
         </p>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
           <button className="btn btn-cancel" onClick={handleBack}>Cancelar</button>
           <button className="btn btn-primary" disabled={!isValid} onClick={handleSave}>
-            {mode === 'edit' ? 'Guardar cambios' : 'Crear ítem'}
+            {mode === 'edit' ? 'Guardar cambios' : form.esCombo ? 'Crear combo' : 'Crear ítem'}
           </button>
         </div>
+      </div>
+
+      {/* Tipo de ítem: Ítem simple | Combo */}
+      <div role="tablist" style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--blue-20)' }}>
+        {([['simple', 'Ítem simple', false], ['combo', 'Combo', true]] as const).map(([key, label, isCombo]) => {
+          const active = form.esCombo === isCombo;
+          const disabled = comboLocked && !isCombo;
+          return (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              disabled={disabled}
+              title={disabled ? 'Un combo no se puede convertir en un ítem normal después de creado.' : undefined}
+              onClick={() => { if (!active) setEsCombo(isCombo); }}
+              style={{
+                padding: '10px 24px', background: 'none', border: 'none', marginBottom: -1,
+                borderBottom: active ? '2px solid var(--blue-100)' : '2px solid transparent',
+                fontFamily: "'Montserrat', sans-serif", fontSize: 14, fontWeight: active ? 700 : 500,
+                color: disabled ? 'var(--black-40)' : active ? 'var(--blue-100)' : 'var(--black-60)',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Cuerpo: 2 columnas */}
@@ -302,25 +349,10 @@ export function ItemFormPage() {
             <SelectField
               label="Categoría" required value={form.categoriaId} onChange={v => set('categoriaId', v)}
               options={categoriaOptions} placeholder="Buscar..."
-              action={{ label: 'Agregar', onClick: () => toast.info('Agregar categoría — próximamente') }}
+              action={{ label: 'Agregar categoría', onClick: () => toast.info('Agregar categoría — próximamente') }}
             />
             <TextAreaField label="Descripción" value={form.descripcion} onChange={v => set('descripcion', v)} placeholder="Escribe la descripción del ítem" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <TextField label="Código" value={form.codigo} onChange={v => set('codigo', v)} placeholder="Ingresa el código para el ítem" />
-              <SelectField label="Unidad" required value={form.unidadId} onChange={v => set('unidadId', v as UnidadId)} options={unidadOptions} clearable placeholder="Selecciona una unidad" />
-            </div>
-            <TextField label="Referencia" value={form.referencia} onChange={v => set('referencia', v)} placeholder="Ingresa una referencia" helper="Aparece en el comprobante de venta" />
-            <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Toggle checked={form.esCombo} onChange={setEsCombo} ariaLabel="Es un combo" disabled={comboLocked} />
-                <span style={{ fontSize: 14, fontWeight: 600, color: comboLocked ? 'var(--black-40)' : 'var(--black-100)' }}>Es un combo</span>
-              </div>
-              <p style={{ fontSize: 12, color: 'var(--black-40)', margin: '6px 0 0' }}>
-                {comboLocked
-                  ? 'Un combo no se puede convertir en un ítem normal después de creado.'
-                  : 'Al activar, elige los productos existentes que lo componen abajo.'}
-              </p>
-            </div>
+            <SelectField label="Unidad" required value={form.unidadId} onChange={v => set('unidadId', v as UnidadId)} options={unidadOptions} clearable placeholder="Selecciona una unidad" />
           </div>
 
           {form.esCombo && (
@@ -329,14 +361,13 @@ export function ItemFormPage() {
               onAdd={addComponente}
               onChangeCantidad={changeComponenteCantidad}
               onRemove={removeComponente}
-              precioTotal={parseCOP(form.precioTotalRaw)}
-              error={componentesError}
+              onCreateItem={() => setShowCrearItem(true)}
             />
           )}
 
-          {/* Precio total de venta */}
+          {/* Precio de venta */}
           <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Precio total de venta</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Precio de venta</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr', gap: 12, alignItems: 'end' }}>
               <TextField label="Precio base" required type="number" value={form.precioBaseRaw} onChange={setPrecioBase} placeholder="0" />
               <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--black-40)', paddingBottom: 10 }}>+</span>
@@ -344,12 +375,31 @@ export function ItemFormPage() {
               <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--black-40)', paddingBottom: 10 }}>=</span>
               <TextField label="Precio total de venta" required type="number" value={form.precioTotalRaw} onChange={setPrecioTotal} placeholder="0" />
             </div>
-            <TextField label="Costo" type="number" value={form.costoRaw} onChange={v => set('costoRaw', v)} placeholder="0" helper="Ingresa el valor que te cuesta este ítem" />
-            {form.precioTotalRaw && (
-              <p style={{ fontSize: 12, color: 'var(--black-40)', margin: 0 }}>
-                Precio de venta: {formatCOP(parseCOP(form.precioTotalRaw))}
-              </p>
+            {showPrecioAviso && (
+              <div
+                role="note"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8,
+                  backgroundColor: 'var(--coral-10)', color: 'var(--black-100)', fontSize: 12, lineHeight: '18px',
+                }}
+              >
+                <AlertTriangle size={16} color="var(--coral-100)" style={{ flexShrink: 0 }} />
+                <span style={{ flex: 1 }}>
+                  {diffPrecio < 0
+                    ? `Este precio es ${formatCOP(-diffPrecio)} menor que la suma de los ítems (${formatCOP(sumaItems)}). Venderás el combo con pérdida de ingreso.`
+                    : `Este precio es ${formatCOP(diffPrecio)} mayor que la suma de los ítems (${formatCOP(sumaItems)}). Tus clientes pagarían más que comprándolos por separado.`}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-cancel btn--sm"
+                  onClick={() => setPrecioTotal(String(sumaItems))}
+                  style={{ flexShrink: 0 }}
+                >
+                  Usar {formatCOP(sumaItems)}
+                </button>
+              </div>
             )}
+            <TextField label="Costo" type="number" value={form.costoRaw} onChange={v => { costoTouched.current = true; set('costoRaw', v); }} placeholder="0" helper="Ingresa el valor que te cuesta este ítem" />
             {/* Solo visual por ahora: el toggle no cambia de estado (specs/2026-10-listas-precios-variantes-form.md) */}
             {has('listas-precios') && (
               <div style={{ borderTop: '1px solid var(--black-10)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -359,36 +409,18 @@ export function ItemFormPage() {
             )}
           </div>
 
-          {/* Variantes disponibles — solo visual; un combo no puede tener variantes */}
-          {has('variantes') && (
+          {/* Variantes — solo visual y solo en la pestaña Ítem simple (un combo no tiene variantes) */}
+          {has('variantes') && !form.esCombo && (
             <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Variantes disponibles</h3>
-              {form.esCombo && (
-                <div
-                  role="note"
-                  style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 8,
-                    backgroundColor: 'var(--blue-10)', color: 'var(--black-60)', fontSize: 12, lineHeight: '18px',
-                  }}
-                >
-                  <Info size={16} color="var(--blue-100)" style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span>
-                    Un combo no puede tener variantes: se arma con productos existentes (puedes elegir sus variantes en
-                    "Componentes del combo"). Desactiva "Es un combo" si quieres agregarlas.
-                  </span>
-                </div>
-              )}
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Variantes</h3>
               <div>
                 <button
                   type="button"
-                  disabled={form.esCombo}
-                  title={form.esCombo ? 'Un combo no puede tener variantes' : undefined}
                   onClick={() => toast.info('Variantes — próximamente')}
                   style={{
                     padding: '10px 16px', borderRadius: 8, border: 'none', backgroundColor: 'var(--black-10)',
-                    color: form.esCombo ? 'var(--black-40)' : 'var(--black-100)', fontFamily: "'Montserrat', sans-serif",
-                    fontSize: 14, fontWeight: 700, cursor: form.esCombo ? 'not-allowed' : 'pointer',
-                    opacity: form.esCombo ? 0.6 : 1,
+                    color: 'var(--black-100)', fontFamily: "'Montserrat', sans-serif",
+                    fontSize: 14, fontWeight: 700, cursor: 'pointer',
                   }}
                 >
                   Agregar variante
@@ -418,7 +450,7 @@ export function ItemFormPage() {
               className="btn btn-cancel btn--sm"
               onClick={() => toast.info('Agregar imagen — próximamente')}
             >
-              + Agregar imagen
+              Agregar imagen
             </button>
           </div>
 
@@ -435,8 +467,22 @@ export function ItemFormPage() {
             sucursalesError={sucursalesError}
             existenciasDisabled={form.esCombo}
           />
+
+          {/* Información adicional */}
+          <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Información adicional</h3>
+            <TextField label="Referencia" value={form.referencia} onChange={v => set('referencia', v)} placeholder="Ingresa una referencia" helper="Aparece en el comprobante de venta" />
+            <TextField label="Código" value={form.codigo} onChange={v => set('codigo', v)} placeholder="Ingresa el código para el ítem" />
+          </div>
         </div>
       </div>
+
+      {showCrearItem && (
+        <CrearItemDrawer
+          onClose={() => setShowCrearItem(false)}
+          onCreated={item => { addComponente({ itemId: item.id }); setShowCrearItem(false); }}
+        />
+      )}
 
       {showDiscardModal && (
         <ConfirmDeleteModal
