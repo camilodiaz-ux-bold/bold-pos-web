@@ -21,8 +21,14 @@ import { useVertical, type Vertical } from '../vertical';
 // comboSaleId, specs/2026-09-combos.md §6.1; v2 → v3: combos sembrados con costo,
 // specs/2026-10-reporte-ganancias-items.md §8.3); Retail usa su propia clave (v4 por lo mismo).
 
-function generateAutoCode(): string {
-  return `I-${Date.now()}`;
+/** Código aleatorio de 8 dígitos que no coincide con el de ningún ítem existente. */
+function generateAutoCode(items: Item[]): string {
+  const taken = new Set(items.map(i => i.codigo));
+  let code: string;
+  do {
+    code = String(Math.floor(10_000_000 + Math.random() * 90_000_000));
+  } while (taken.has(code));
+  return code;
 }
 
 /** Próximo id de venta para un combo nuevo — rango reservado ≥ 9000, ver types/item.ts. */
@@ -94,7 +100,7 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
       created = {
         ...draft,
         id,
-        codigo: draft.codigo.trim() || generateAutoCode(),
+        codigo: draft.codigo.trim() || generateAutoCode(prev),
         comboSaleId: draft.esCombo ? nextComboSaleId(prev) : undefined,
         creadoEn: now,
         actualizadoEn: now,
