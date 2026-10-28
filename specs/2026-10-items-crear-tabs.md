@@ -12,7 +12,7 @@
 El formulario de ítem reemplaza el toggle "Es un combo" por dos pestañas bajo el título, y los campos siguen el Figma de Bold POS. El diseño visual (colores, tipografía) sigue siendo el de Merlin del repo.
 
 - Título: "Crear ítem simple" / "Crear combo" (en edición: "Editar …"). Botón principal: "Crear ítem" / "Crear combo" / "Guardar cambios".
-- **Ítem simple**: Información general (Nombre, Categoría + "Agregar categoría", Descripción, Unidad) · Precio de venta (Precio base + Impuesto = Precio total, Costo, Listas de precios solo Retail) · Variantes (solo Retail). Columna derecha: imagen ("Agregar imagen"), Disponibilidad (toggle "Ítem con existencias" + Sucursales) e Información adicional (Código, Referencia).
+- **Ítem simple**: Información general (Nombre, Categoría + "Agregar categoría", Descripción, Unidad) · Precio de venta (Precio base + Impuesto = Precio total, Costo, Listas de precios solo Retail) · Variantes (solo Retail). Columna derecha: imagen ("Agregar imagen"), Disponibilidad (toggle "Ítem con existencias" + Sucursales) e Información adicional (Referencia y, debajo, Código — opcional; si va vacío se genera uno aleatorio único).
 - **Combo**: Información general (mismos campos) · Ítems del combo · Precio de venta · sin Variantes. Disponibilidad solo con Sucursales (sin toggle de existencias).
 - **Unidad** se conserva tal como estaba (obligatoria, en Información general, en ambas pestañas).
 

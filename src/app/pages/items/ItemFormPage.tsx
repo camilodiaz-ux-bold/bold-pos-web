@@ -352,10 +352,7 @@ export function ItemFormPage() {
               action={{ label: 'Agregar categoría', onClick: () => toast.info('Agregar categoría — próximamente') }}
             />
             <TextAreaField label="Descripción" value={form.descripcion} onChange={v => set('descripcion', v)} placeholder="Escribe la descripción del ítem" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <TextField label="Código" value={form.codigo} onChange={v => set('codigo', v)} placeholder="Ingresa el código para el ítem" />
-              <SelectField label="Unidad" required value={form.unidadId} onChange={v => set('unidadId', v as UnidadId)} options={unidadOptions} clearable placeholder="Selecciona una unidad" />
-            </div>
+            <SelectField label="Unidad" required value={form.unidadId} onChange={v => set('unidadId', v as UnidadId)} options={unidadOptions} clearable placeholder="Selecciona una unidad" />
           </div>
 
           {form.esCombo && (
@@ -475,6 +472,7 @@ export function ItemFormPage() {
           <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Información adicional</h3>
             <TextField label="Referencia" value={form.referencia} onChange={v => set('referencia', v)} placeholder="Ingresa una referencia" helper="Aparece en el comprobante de venta" />
+            <TextField label="Código" value={form.codigo} onChange={v => set('codigo', v)} placeholder="Ingresa el código para el ítem" />
           </div>
         </div>
       </div>
