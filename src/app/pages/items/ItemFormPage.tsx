@@ -353,8 +353,8 @@ export function ItemFormPage() {
             />
             <TextAreaField label="Descripción" value={form.descripcion} onChange={v => set('descripcion', v)} placeholder="Escribe la descripción del ítem" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <TextField label="Código" value={form.codigo} onChange={v => set('codigo', v)} placeholder="Ingresa el código para el ítem" />
               <SelectField label="Unidad" required value={form.unidadId} onChange={v => set('unidadId', v as UnidadId)} options={unidadOptions} clearable placeholder="Selecciona una unidad" />
-              <TextField label="Código" value={form.codigo} onChange={v => set('codigo', v)} placeholder="Ingresa el código para el ítem" helper="Si lo dejas en blanco, se genera uno automáticamente" />
             </div>
           </div>
 
