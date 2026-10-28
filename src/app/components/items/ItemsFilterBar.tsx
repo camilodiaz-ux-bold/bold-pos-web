@@ -34,9 +34,9 @@ interface ItemsFilterBarProps {
 }
 
 const TIPO_OPTIONS = [
-  { value: 'inventariable', label: 'Inventariable' },
-  { value: 'no-inventariable', label: 'No inventariable' },
-  { value: 'combo', label: 'Combo' },
+  { value: 'inventariable', label: 'Inventariables' },
+  { value: 'no-inventariable', label: 'No Inventariables' },
+  { value: 'combo', label: 'Combos' },
 ];
 
 const ESTADO_OPTIONS = [
@@ -56,7 +56,7 @@ export function ItemsFilterBar({ filters, setFilter, expanded, onToggleExpanded 
         <div style={{ width: 220 }}>
           <FilterPillSelect
             icon={<Package size={16} color="var(--blue-50)" />}
-            placeholder="Buscar por tipo"
+            placeholder="Buscar por tipo de item"
             value={filters.tipo}
             onChange={v => setFilter('tipo', v as ItemsFilters['tipo'])}
             options={TIPO_OPTIONS}
