@@ -75,9 +75,10 @@ export interface Item {
 // comboSaleId no lo decide quien llena el formulario — lo asigna itemsStore.createItem.
 export type ItemDraft = Omit<Item, 'id' | 'creadoEn' | 'actualizadoEn' | 'comboSaleId'>;
 
-/** Etiqueta derivada de la columna "Tipo" — no es un campo persistido. */
-export function getTipoLabel(item: Pick<Item, 'manejaExistencias'>): 'Inventariable' | 'No inventariable' {
-  return item.manejaExistencias ? 'Inventariable' : 'No inventariable';
+/** Etiqueta derivada de la columna "Tipo de Item" — no es un campo persistido. */
+export function getTipoLabel(item: Pick<Item, 'manejaExistencias' | 'esCombo'>): 'Inventariables' | 'No Inventariables' | 'Combos' {
+  if (item.esCombo) return 'Combos';
+  return item.manejaExistencias ? 'Inventariables' : 'No Inventariables';
 }
 
 /** Suma de existencias entre sucursales — null si el ítem no maneja existencias. */
