@@ -31,10 +31,10 @@ function useListasPrecios(): string[] {
 /** Filas de ítems y categorías, compartidas por Lista de Ítems e Inventarios. */
 function useDatosItems() {
   const { items } = useItems();
-  const { catDefs, productVariants } = useCatalog();
+  const { catDefs } = useCatalog();
   const categoriaDe = useCallback((id: string) => catDefs.find(c => c.id === id)?.name ?? '—', [catDefs]);
   const categorias = useMemo(() => opcionesTodos(catDefs.map(c => c.name)), [catDefs]);
-  return { items, categoriaDe, categorias, productVariants };
+  return { items, categoriaDe, categorias };
 }
 
 // ─── Lista de Ítems ──────────────────────────────────────────────────────────
@@ -48,8 +48,8 @@ export function ReporteListaItems() {
   const r = useFiltrosReporte(ITEMS_INICIAL);
 
   const filas = useMemo(
-    () => (r.aplicados ? filasItems(d.items, d.categoriaDe, d.productVariants, r.aplicados) : []),
-    [r.aplicados, d.items, d.categoriaDe, d.productVariants],
+    () => (r.aplicados ? filasItems(d.items, d.categoriaDe, r.aplicados) : []),
+    [r.aplicados, d.items, d.categoriaDe],
   );
   const conCantidad = filas.filter(f => f.cantidad !== null);
 
@@ -98,8 +98,8 @@ export function ReporteInventarios() {
 
   const filas = useMemo(() => {
     if (!r.aplicados) return [];
-    return filasInventario(filasItems(d.items, d.categoriaDe, d.productVariants, { ...r.aplicados, tipo: 'Todos' }), r.aplicados);
-  }, [r.aplicados, d.items, d.categoriaDe, d.productVariants]);
+    return filasInventario(filasItems(d.items, d.categoriaDe, { ...r.aplicados, tipo: 'Todos' }), r.aplicados);
+  }, [r.aplicados, d.items, d.categoriaDe]);
 
   const columnas: Columna<(typeof filas)[number]>[] = [
     { label: 'Código', render: f => f.codigo },

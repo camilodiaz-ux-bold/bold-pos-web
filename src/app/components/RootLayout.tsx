@@ -23,6 +23,7 @@ import { FavoritesProvider } from '../store/favoritesStore';
 import { NotificationsProvider } from '../store/notificationsStore';
 import { AsyncReportsProvider } from '../store/asyncReportsStore';
 import { ItemsProvider } from '../store/itemsStore';
+import { VariantesProvider } from '../store/variantesStore';
 import { VentasProvider } from '../store/ventasStore';
 import { LoginScreen } from './LoginScreen';
 import { SignupScreen } from './SignupScreen';
@@ -131,6 +132,7 @@ export function RootLayout() {
     <FavoritesProvider key={vertical}>
     <MesasStoreProvider>
     <ItemsProvider key={vertical}>
+    <VariantesProvider>
     <VentasProvider key={vertical}>
     <NotificationsProvider>
     <AsyncReportsProvider>
@@ -226,6 +228,7 @@ export function RootLayout() {
     </AsyncReportsProvider>
     </NotificationsProvider>
     </VentasProvider>
+    </VariantesProvider>
     </ItemsProvider>
     </MesasStoreProvider>
     </FavoritesProvider>

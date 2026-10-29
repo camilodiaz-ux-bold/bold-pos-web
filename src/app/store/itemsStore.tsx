@@ -69,6 +69,8 @@ interface ItemsContextValue {
   updateItem: (id: string, draft: ItemDraft) => void;
   deleteItem: (id: string) => void;
   toggleActivo: (id: string) => void;
+  /** Activa/inactiva una variante del ítem (specs/2026-10-variantes-modelo.md §3). */
+  toggleVarianteActivo: (itemId: string, variantId: string) => void;
   /** Relee localStorage — usado por el botón "Refrescar" del listado. */
   refresh: () => void;
   resetToSeed: () => void;
@@ -136,6 +138,17 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
     ));
   }, [updateItems]);
 
+  const toggleVarianteActivo = useCallback((itemId: string, variantId: string) => {
+    updateItems(prev => prev.map(item => item.id === itemId && item.variantes
+      ? {
+          ...item,
+          variantes: item.variantes.map(v => (v.id === variantId ? { ...v, activo: !v.activo } : v)),
+          actualizadoEn: Date.now(),
+        }
+      : item,
+    ));
+  }, [updateItems]);
+
   const refresh = useCallback(() => {
     updateItems(() => loadItems(vertical));
   }, [updateItems, vertical]);
@@ -145,7 +158,7 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
   }, [updateItems, vertical]);
 
   return (
-    <ItemsContext.Provider value={{ items, getItem, createItem, updateItem, deleteItem, toggleActivo, refresh, resetToSeed }}>
+    <ItemsContext.Provider value={{ items, getItem, createItem, updateItem, deleteItem, toggleActivo, toggleVarianteActivo, refresh, resetToSeed }}>
       {children}
     </ItemsContext.Provider>
   );

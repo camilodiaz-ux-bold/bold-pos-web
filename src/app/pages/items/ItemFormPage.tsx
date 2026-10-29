@@ -13,17 +13,21 @@ import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, ImagePlus, AlertTriangle } from 'lucide-react';
 import { useItems } from '../../store/itemsStore';
-import type { Item, ItemDraft, ItemComboComponente, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
+import { useProductVariants, useVariantesCatalogo } from '../../store/variantesStore';
+import type { Item, ItemDraft, ItemComboComponente, ItemTipoVariante, ItemVariante, SucursalId, UnidadId, ImpuestoId } from '../../types/item';
+import { getVariantes } from '../../types/item';
 import { getImpuesto, getUnidad } from '../../data/itemsCatalogs';
 import { useCatalog, useVertical } from '../../vertical';
 import { formatCOP, parseCOP } from '../../utils/format';
 import { componentKey } from '../../utils/comboBridge';
+import { sincronizarVariantes, type DefaultsVariante } from '../../utils/variantes';
 import { TextField, TextAreaField, SelectField } from '../../components/items/FormField';
 import { DisponibilidadCard } from '../../components/items/DisponibilidadCard';
 import { ComboComponentsCard, useComboResolver } from '../../components/items/ComboComponentsCard';
 import { CrearItemDrawer } from '../../components/compras/CrearItemDrawer';
 import { ConfirmDeleteModal } from '../../components/items/ConfirmDeleteModal';
 import { Toggle } from '../../components/items/Toggle';
+import { VariantesCard } from '../../verticals/retail/items/VariantesCard';
 
 interface FormState {
   nombre: string;
@@ -42,6 +46,11 @@ interface FormState {
   existencias: Partial<Record<SucursalId, string>>;
   esCombo: boolean;
   componentes: ItemComboComponente[];
+  /** Retail: el ítem tiene variantes (card "Variantes disponibles", specs/2026-10-variantes-modelo.md). */
+  conVariantes: boolean;
+  mismoPrecio: boolean;
+  tiposVariante: ItemTipoVariante[];
+  variantes: ItemVariante[];
 }
 
 const EMPTY_FORM: FormState = {
@@ -49,6 +58,7 @@ const EMPTY_FORM: FormState = {
   precioBaseRaw: '', impuestoId: 'iva-19', precioTotalRaw: '', costoRaw: '', imagen: '',
   manejaExistencias: false, sucursalIds: [], existencias: {},
   esCombo: false, componentes: [],
+  conVariantes: false, mismoPrecio: false, tiposVariante: [], variantes: [],
 };
 
 // Única fuente de verdad para "Item → FormState de edición" — usada tanto en el
@@ -72,6 +82,10 @@ function toFormState(item: Item): FormState {
     existencias: Object.fromEntries(item.sucursales.map(s => [s.sucursalId, String(s.existencia)])),
     esCombo: item.esCombo,
     componentes: item.componentes ?? [],
+    conVariantes: !!getVariantes(item),
+    mismoPrecio: item.mismoPrecioVariantes ?? false,
+    tiposVariante: item.tiposVariante ?? [],
+    variantes: item.variantes ?? [],
   };
 }
 
@@ -79,7 +93,9 @@ export function ItemFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const { getItem, createItem, updateItem } = useItems();
-  const { catDefs: CAT_DEFS, unidades: UNIDADES, impuestos: IMPUESTOS, productVariants } = useCatalog();
+  const { catDefs: CAT_DEFS, unidades: UNIDADES, impuestos: IMPUESTOS } = useCatalog();
+  const productVariants = useProductVariants();
+  const { tipos: tiposCatalogo, createTipo } = useVariantesCatalogo();
   const { has } = useVertical();
   const mode: 'create' | 'edit' = id ? 'edit' : 'create';
   const existingItem = id ? getItem(id) : undefined;
@@ -111,27 +127,83 @@ export function ItemFormPage() {
     const rate = getImpuesto(form.impuestoId)?.rate ?? 0;
     const base = parseCOP(raw);
     lastEditedPrice.current = 'base';
-    setForm(prev => ({ ...prev, precioBaseRaw: raw, precioTotalRaw: String(Math.round(base * (1 + rate))) }));
+    const total = Math.round(base * (1 + rate));
+    setForm(prev => ({
+      ...prev, precioBaseRaw: raw, precioTotalRaw: String(total),
+      variantes: prev.conVariantes && prev.mismoPrecio ? prev.variantes.map(v => ({ ...v, precioBase: base, precioTotal: total })) : prev.variantes,
+    }));
   };
 
   const setPrecioTotal = (raw: string) => {
     const rate = getImpuesto(form.impuestoId)?.rate ?? 0;
     const total = parseCOP(raw);
     lastEditedPrice.current = 'total';
-    setForm(prev => ({ ...prev, precioTotalRaw: raw, precioBaseRaw: String(Math.round(total / (1 + rate))) }));
+    const base = Math.round(total / (1 + rate));
+    setForm(prev => ({
+      ...prev, precioTotalRaw: raw, precioBaseRaw: String(base),
+      variantes: prev.conVariantes && prev.mismoPrecio ? prev.variantes.map(v => ({ ...v, precioBase: base, precioTotal: total })) : prev.variantes,
+    }));
   };
 
   const setImpuesto = (impuestoId: string) => {
     const rate = getImpuesto(impuestoId)?.rate ?? 0;
     setForm(prev => {
-      if (lastEditedPrice.current === 'base') {
+      // Con variantes el precio total de cada una se conserva y se recalcula su base (spec variantes §2).
+      const variantes = prev.conVariantes
+        ? prev.variantes.map(v => ({ ...v, precioBase: Math.round(v.precioTotal / (1 + rate)) }))
+        : prev.variantes;
+      if (lastEditedPrice.current === 'base' && !prev.conVariantes) {
         const base = parseCOP(prev.precioBaseRaw);
-        return { ...prev, impuestoId: impuestoId as ImpuestoId, precioTotalRaw: String(Math.round(base * (1 + rate))) };
+        return { ...prev, impuestoId: impuestoId as ImpuestoId, precioTotalRaw: String(Math.round(base * (1 + rate))), variantes };
       }
       const total = parseCOP(prev.precioTotalRaw);
-      return { ...prev, impuestoId: impuestoId as ImpuestoId, precioBaseRaw: String(Math.round(total / (1 + rate))) };
+      return { ...prev, impuestoId: impuestoId as ImpuestoId, precioBaseRaw: String(Math.round(total / (1 + rate))), variantes };
     });
   };
+
+  // ── Variantes (Retail) ──
+  const defaultsVariante = (f: FormState): DefaultsVariante => {
+    const rate = getImpuesto(f.impuestoId)?.rate ?? 0;
+    const ref = f.variantes.find(v => v.activo) ?? f.variantes[0];
+    const total = f.mismoPrecio || !ref ? parseCOP(f.precioTotalRaw) : ref.precioTotal;
+    return {
+      precioBase: Math.round(total / (1 + rate)),
+      precioTotal: total,
+      costo: ref?.costo ?? parseCOP(f.costoRaw),
+      sucursales: f.manejaExistencias ? [{ sucursalId: 'principal', existencia: 0 }] : [],
+    };
+  };
+  const agregarVariantes = () => setForm(prev => ({ ...prev, conVariantes: true, mismoPrecio: false, tiposVariante: [], variantes: [] }));
+  const quitarVariantes = () => setForm(prev => ({ ...prev, conVariantes: false, mismoPrecio: false, tiposVariante: [], variantes: [] }));
+  const setTiposVariante = (tipos: ItemTipoVariante[], reiniciar = false) =>
+    setForm(prev => ({
+      ...prev,
+      tiposVariante: tipos,
+      variantes: tipos.length === 0 ? [] : sincronizarVariantes(prev.variantes, tipos, defaultsVariante(prev), reiniciar),
+    }));
+  const setManejaVariantes = (next: boolean) =>
+    setForm(prev => ({
+      ...prev,
+      manejaExistencias: next,
+      // Al activar, cada variante parte con la sucursal principal para que sea válida.
+      variantes: next ? prev.variantes.map(v => (v.sucursales.length ? v : { ...v, sucursales: [{ sucursalId: 'principal', existencia: 0 }] })) : prev.variantes,
+    }));
+  const toggleMismoPrecio = (next: boolean) =>
+    setForm(prev => {
+      if (!next) return { ...prev, mismoPrecio: false };
+      const rate = getImpuesto(prev.impuestoId)?.rate ?? 0;
+      const ref = prev.variantes.find(v => v.activo) ?? prev.variantes[0];
+      const total = ref?.precioTotal ?? parseCOP(prev.precioTotalRaw);
+      const base = Math.round(total / (1 + rate));
+      return {
+        ...prev, mismoPrecio: true, precioTotalRaw: String(total), precioBaseRaw: String(base),
+        variantes: prev.variantes.map(v => ({ ...v, precioBase: base, precioTotal: total })),
+      };
+    });
+  const toggleVarianteActivo = (vid: string) =>
+    setForm(prev => ({ ...prev, variantes: prev.variantes.map(v => (v.id === vid ? { ...v, activo: !v.activo } : v)) }));
+  const updateVariante = (nueva: ItemVariante) =>
+    setForm(prev => ({ ...prev, variantes: prev.variantes.map(v => (v.id === nueva.id ? nueva : v)) }));
 
   const toggleSucursal = (sucursalId: SucursalId) => {
     setForm(prev => {
@@ -197,6 +269,12 @@ export function ItemFormPage() {
     const precioBase = parseCOP(form.precioBaseRaw);
     if (form.nombre.trim().length < 2) return false;
     if (!form.categoriaId || !form.unidadId || !form.impuestoId) return false;
+    if (form.conVariantes) {
+      // Con variantes el precio, el costo y la existencia viven en cada una (specs/2026-10-variantes-modelo.md §2).
+      const activas = form.variantes.filter(v => v.activo);
+      return form.tiposVariante.length > 0 && activas.length > 0
+        && activas.every(v => v.precioBase > 0 && (!form.manejaExistencias || v.sucursales.length > 0));
+    }
     if (precioBase <= 0) return false;
     // Un combo también exige al menos una sucursal — puede seleccionarlas,
     // solo no puede activar el toggle de existencias (ver setEsCombo).
@@ -227,6 +305,9 @@ export function ItemFormPage() {
 
   const handleSave = () => {
     if (!isValid) return;
+    // Ítem con variantes: el precio y el costo del padre siguen a la primera variante activa; la existencia
+    // vive en cada variante y el ítem no guarda sucursales propias.
+    const varianteRef = form.conVariantes ? (form.variantes.find(v => v.activo) ?? form.variantes[0]) : undefined;
     const draft: ItemDraft = {
       codigo: form.codigo,
       nombre: form.nombre.trim(),
@@ -235,17 +316,22 @@ export function ItemFormPage() {
       categoriaId: form.categoriaId,
       unidadId: form.unidadId as UnidadId,
       impuestoId: form.impuestoId as ImpuestoId,
-      precioBase: parseCOP(form.precioBaseRaw),
-      precioTotal: parseCOP(form.precioTotalRaw),
-      costo: parseCOP(form.costoRaw),
+      precioBase: varianteRef ? varianteRef.precioBase : parseCOP(form.precioBaseRaw),
+      precioTotal: varianteRef ? varianteRef.precioTotal : parseCOP(form.precioTotalRaw),
+      costo: varianteRef ? varianteRef.costo : parseCOP(form.costoRaw),
       // Un combo nunca guarda existencia propia, sin importar el estado del
       // form — red de seguridad además del reset en setEsCombo. Sí conserva
       // sus sucursales seleccionadas (specs/2026-09-combos-disponibilidad.md).
       manejaExistencias: form.esCombo ? false : form.manejaExistencias,
-      sucursales: form.sucursalIds.map(sucursalId => ({
+      sucursales: form.conVariantes ? [] : form.sucursalIds.map(sucursalId => ({
         sucursalId,
         existencia: form.manejaExistencias ? parseInt(form.existencias[sucursalId] ?? '0', 10) || 0 : 0,
       })),
+      tiposVariante: form.conVariantes ? form.tiposVariante : undefined,
+      mismoPrecioVariantes: form.conVariantes ? form.mismoPrecio : undefined,
+      variantes: form.conVariantes
+        ? form.variantes.map(v => ({ ...v, sucursales: form.manejaExistencias ? v.sucursales : [] }))
+        : undefined,
       activo: existingItem?.activo ?? true,
       imagen: form.imagen || undefined,
       esCombo: form.esCombo,
@@ -312,7 +398,7 @@ export function ItemFormPage() {
       <div role="tablist" style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--blue-20)' }}>
         {([['simple', 'Ítem simple', false], ['combo', 'Combo', true]] as const).map(([key, label, isCombo]) => {
           const active = form.esCombo === isCombo;
-          const disabled = comboLocked && !isCombo;
+          const disabled = (comboLocked && !isCombo) || (form.conVariantes && isCombo);
           return (
             <button
               key={key}
@@ -320,7 +406,7 @@ export function ItemFormPage() {
               role="tab"
               aria-selected={active}
               disabled={disabled}
-              title={disabled ? 'Un combo no se puede convertir en un ítem normal después de creado.' : undefined}
+              title={disabled ? (isCombo ? 'Un ítem con variantes no puede ser un combo. Quita las variantes primero.' : 'Un combo no se puede convertir en un ítem normal después de creado.') : undefined}
               onClick={() => { if (!active) setEsCombo(isCombo); }}
               style={{
                 padding: '10px 24px', background: 'none', border: 'none', marginBottom: -1,
@@ -365,7 +451,8 @@ export function ItemFormPage() {
             />
           )}
 
-          {/* Precio de venta */}
+          {/* Precio de venta — con variantes, cada una trae el suyo (card "Variantes disponibles") */}
+          {!form.conVariantes && (
           <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Precio de venta</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr', gap: 12, alignItems: 'end' }}>
@@ -408,15 +495,16 @@ export function ItemFormPage() {
               </div>
             )}
           </div>
+          )}
 
-          {/* Variantes — solo visual y solo en la pestaña Ítem simple (un combo no tiene variantes) */}
-          {has('variantes') && !form.esCombo && (
+          {/* Variantes (Retail) — solo en la pestaña Ítem simple (un combo no tiene variantes) */}
+          {has('variantes') && !form.esCombo && !form.conVariantes && (
             <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Variantes</h3>
               <div>
                 <button
                   type="button"
-                  onClick={() => toast.info('Variantes — próximamente')}
+                  onClick={agregarVariantes}
                   style={{
                     padding: '10px 16px', borderRadius: 8, border: 'none', backgroundColor: 'var(--black-10)',
                     color: 'var(--black-100)', fontFamily: "'Montserrat', sans-serif",
@@ -427,6 +515,32 @@ export function ItemFormPage() {
                 </button>
               </div>
             </div>
+          )}
+          {has('variantes') && !form.esCombo && form.conVariantes && (
+            <VariantesCard
+              tiposCatalogo={tiposCatalogo}
+              tiposVariante={form.tiposVariante}
+              variantes={form.variantes}
+              manejaExistencias={form.manejaExistencias}
+              onToggleManeja={setManejaVariantes}
+              mismoPrecio={form.mismoPrecio}
+              onToggleMismoPrecio={toggleMismoPrecio}
+              precioBaseRaw={form.precioBaseRaw}
+              precioTotalRaw={form.precioTotalRaw}
+              onChangePrecioBase={setPrecioBase}
+              onChangePrecioTotal={setPrecioTotal}
+              impuestoId={form.impuestoId}
+              impuestoOptions={impuestoOptions}
+              impuestoRate={getImpuesto(form.impuestoId)?.rate ?? 0}
+              onChangeImpuesto={setImpuesto}
+              unidadLabel={unidadLabel}
+              itemNombre={form.nombre}
+              onChangeTipos={setTiposVariante}
+              onToggleVarianteActivo={toggleVarianteActivo}
+              onUpdateVariante={updateVariante}
+              onCrearTipo={draft => createTipo(draft)}
+              onQuitarVariantes={quitarVariantes}
+            />
           )}
         </div>
 
@@ -456,6 +570,7 @@ export function ItemFormPage() {
 
           {/* Disponibilidad — un combo no maneja existencias propias, pero sí
               elige en qué sucursales está activo (specs/2026-09-combos-disponibilidad.md) */}
+          {!form.conVariantes && (
           <DisponibilidadCard
             manejaExistencias={form.manejaExistencias}
             onToggleManeja={v => set('manejaExistencias', v)}
@@ -467,6 +582,7 @@ export function ItemFormPage() {
             sucursalesError={sucursalesError}
             existenciasDisabled={form.esCombo}
           />
+          )}
 
           {/* Información adicional */}
           <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>

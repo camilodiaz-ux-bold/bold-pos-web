@@ -6,6 +6,7 @@
  * (ver specs/2026-09-combos.md §5.3).
  */
 import type { Item, ItemComboComponente } from '../types/item';
+import { getVarianteLabel } from '../types/item';
 import type { CatalogProduct } from '../data/productCatalog';
 import { findCatalogProduct, findCatalogVariant } from '../data/verticalCatalog';
 
@@ -39,9 +40,9 @@ export function componentKey(c: ItemComboComponente): string {
   return c.variantId ?? (c.itemId ? `item:${c.itemId}` : String(c.productId));
 }
 
-/** Items del usuario que pueden ser componentes: no combos, activos y no sembrados desde el catálogo. */
+/** Items del usuario que pueden ser componentes: no combos, activos, sin variantes y no sembrados desde el catálogo. */
 export function isCustomComponentItem(i: Item): boolean {
-  return !i.esCombo && i.activo && i.catalogProductId === undefined && !/^seed-\d+$/.test(i.id);
+  return !i.esCombo && i.activo && i.catalogProductId === undefined && !/^seed-\d+$/.test(i.id) && !i.variantes?.length;
 }
 
 /** Nombre de un componente: "Camiseta Básica Algodón — Azul / S" si lleva variante. `items` resuelve los Items propios. */
@@ -49,8 +50,11 @@ function componentName(c: ItemComboComponente, items: Item[]): string {
   if (c.itemId) return items.find(i => i.id === c.itemId)?.nombre ?? 'Producto no encontrado';
   const p = c.productId !== undefined ? findCatalogProduct(c.productId) : undefined;
   if (!p) return 'Producto no encontrado';
-  const v = c.variantId ? findCatalogVariant(p.id, c.variantId) : undefined;
-  return v ? `${p.name} — ${v.label}` : p.name;
+  if (!c.variantId) return p.name;
+  // Las variantes viven en el Item (specs/2026-10-variantes-modelo.md); sin `items` (semillas) se usa la constante de la semilla.
+  const itemVariante = items.find(i => i.catalogProductId === p.id)?.variantes?.find(x => x.id === c.variantId);
+  const label = itemVariante ? getVarianteLabel(itemVariante) : findCatalogVariant(p.id, c.variantId)?.label;
+  return label ? `${p.name} — ${label}` : p.name;
 }
 
 /** "1× Ceviche de Corvina Real · 1× Salmón Escocés · 1× Limonada de Lavanda" */

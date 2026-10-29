@@ -7,6 +7,7 @@
 import { RETAIL_ALL_PRODUCTS } from './productCatalog';
 import type { Item, ItemSucursal } from '../../types/item';
 import { getImpuesto } from '../itemsCatalogs';
+import { buildSeedVariantes } from './variantesCatalogo';
 
 const SEED_COMBOS: Array<Omit<Item, 'creadoEn' | 'actualizadoEn'>> = [
   {
@@ -86,6 +87,8 @@ export function buildRetailSeedItems(now: number = Date.now()): Item[] {
   const simples = RETAIL_ALL_PRODUCTS.map((p, index): Item => {
     const rate = getImpuesto('iva-19')?.rate ?? 0;
     const precioBase = Math.round(p.price / (1 + rate));
+    // Productos con variantes: el ítem las trae con existencia por sucursal (specs/2026-10-variantes-modelo.md).
+    const seedVariantes = buildSeedVariantes(p.id, rate);
     return {
       id: `seed-retail-${p.id}`,
       codigo: String(200001 + index),
@@ -99,7 +102,13 @@ export function buildRetailSeedItems(now: number = Date.now()): Item[] {
       precioTotal: p.price,
       costo: Math.round(precioBase * 0.45),
       manejaExistencias: true,
-      sucursales: buildSucursales(p.id),
+      // Con variantes, la existencia vive en cada variante (Item.sucursales queda vacío).
+      sucursales: seedVariantes ? [] : buildSucursales(p.id),
+      ...(seedVariantes && {
+        tiposVariante: seedVariantes.tiposVariante,
+        mismoPrecioVariantes: false,
+        variantes: seedVariantes.variantes,
+      }),
       activo: !INACTIVE_IDS.has(p.id),
       imagen: p.image,
       catalogProductId: p.id,

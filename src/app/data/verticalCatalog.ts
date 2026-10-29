@@ -16,16 +16,14 @@ import { buildRestaurantSeedVentas } from './ventasSeed';
 import { buildRetailSeedVentas } from './retail/ventasSeed';
 import { RETAIL_CAT_DEFS, RETAIL_CAT_PRODUCTS, RETAIL_ALL_PRODUCTS, RETAIL_FAVORITE_IDS } from './retail/productCatalog';
 import { buildRetailSeedItems } from './retail/itemsSeed';
-import { RETAIL_PRODUCT_VARIANTS, findProductVariant } from './retail/productVariants';
-import type { ProductVariants, ProductVariant } from './retail/productVariants';
+import { findProductVariant } from './retail/productVariants';
+import type { ProductVariant } from './retail/productVariants';
 
 export interface VerticalCatalog {
   catDefs: CatDef[];
   catProducts: Record<string, CatalogProduct[]>;
   allProducts: CatalogProduct[];
   favoriteIds: Set<number>;
-  /** Variantes por productId — vacío en Restaurantes. */
-  productVariants: Record<number, ProductVariants>;
   unidades: UnidadDef[];
   impuestos: ImpuestoDef[];
   /** Clave de localStorage del store de Items — separada por vertical. */
@@ -42,7 +40,6 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     catProducts: CAT_PRODUCTS,
     allProducts: ALL_CATALOG_PRODUCTS,
     favoriteIds: FAVORITE_IDS,
-    productVariants: {},
     unidades: UNIDADES,
     impuestos: IMPUESTOS,
     // Conserva la clave histórica para no perder los ítems ya guardados.
@@ -56,11 +53,10 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     catProducts: RETAIL_CAT_PRODUCTS,
     allProducts: RETAIL_ALL_PRODUCTS,
     favoriteIds: RETAIL_FAVORITE_IDS,
-    productVariants: RETAIL_PRODUCT_VARIANTS,
     // Retail no vende por porciones/botellas ni usa INC.
     unidades: UNIDADES.filter(u => u.id !== 'porciones' && u.id !== 'botellas'),
     impuestos: IMPUESTOS.filter(i => i.id !== 'inc-8'),
-    itemsStorageKey: 'bold-pos:items:retail:v4',
+    itemsStorageKey: 'bold-pos:items:retail:v6',
     buildSeedItems: buildRetailSeedItems,
     ventasStorageKey: 'bold-pos:ventas:retail:v1',
     buildSeedVentas: buildRetailSeedVentas,

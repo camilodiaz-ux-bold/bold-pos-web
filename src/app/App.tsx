@@ -27,6 +27,7 @@ import { DocumentoVentaDetallePage } from './verticals/retail/ingresos/Documento
 import { AjustesPage } from './verticals/retail/ajustes/AjustesPage';
 import { PerfilPage } from './verticals/retail/ajustes/PerfilPage';
 import { ReporteRetailPage } from './verticals/retail/reportes/ReporteRetailPage';
+import { VariantesInventarioPage } from './verticals/retail/items/VariantesInventarioPage';
 
 const router = createBrowserRouter([
   {
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
         Component: ItemsLayout,
         children: [
           { index: true, Component: ListaItemsPage },
+          { path: 'variantes', element: <VerticalRoute module="variantes"><VariantesInventarioPage /></VerticalRoute> },
           { path: 'nuevo', Component: ItemFormPage },
           { path: ':id/editar', Component: ItemFormPage },
         ],
