@@ -6,11 +6,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Pencil, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import type { Item } from '../../types/item';
-import { getTipoLabel, getExistenciaTotal } from '../../types/item';
+import { getTipoLabel, getExistenciaTotal, getExistenciaVariante, getVarianteLabel, getVariantes } from '../../types/item';
 import { formatCOP, formatExistencia } from '../../utils/format';
 import { ItemThumb } from './ItemThumb';
 import { Toggle } from './Toggle';
-import { useCatalog } from '../../vertical';
+import { useVertical } from '../../vertical';
 
 interface ItemsTableProps {
   rows: Item[];
@@ -18,6 +18,10 @@ interface ItemsTableProps {
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: () => void;
   onToggleActivo: (id: string) => void;
+  /** Activa/inactiva una variante (se guarda en el ítem). */
+  onToggleVarianteActivo: (itemId: string, variantId: string) => void;
+  /** Filtro de sucursal activo: las existencias se muestran solo de esa sucursal. */
+  sucursalId?: string;
   onEdit: (id: string) => void;
   onDeleteRequest: (item: Item) => void;
 }
@@ -43,21 +47,14 @@ const thStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAll, onToggleActivo, onEdit, onDeleteRequest }: ItemsTableProps) {
+export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAll, onToggleActivo, onToggleVarianteActivo, sucursalId, onEdit, onDeleteRequest }: ItemsTableProps) {
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
-  const { productVariants } = useCatalog();
-  // Retail: un ítem con variantes es una fila padre expandible (specs/2026-10-items-variantes-lista.md).
-  const variantsOf = (item: Item) =>
-    item.catalogProductId !== undefined ? productVariants[item.catalogProductId]?.variantes : undefined;
+  const { has } = useVertical();
+  // Retail: un ítem con variantes es una fila padre expandible (specs/2026-10-items-variantes-lista.md);
+  // las variantes viven en el ítem (specs/2026-10-variantes-modelo.md).
+  const variantsOf = (item: Item) => (has('variantes') ? getVariantes(item) : undefined);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  // Estado "Activo" de cada variante: solo visual en el prototipo (no se persiste).
-  const [inactiveVariantIds, setInactiveVariantIds] = useState<Set<string>>(new Set());
   const toggleExpanded = (id: string) => setExpandedIds(prev => {
-    const next = new Set(prev);
-    next.has(id) ? next.delete(id) : next.add(id);
-    return next;
-  });
-  const toggleVariantActivo = (id: string) => setInactiveVariantIds(prev => {
     const next = new Set(prev);
     next.has(id) ? next.delete(id) : next.add(id);
     return next;
@@ -102,8 +99,8 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
           {rows.map((item, idx) => {
             const variantes = variantsOf(item);
             const isOpen = !!variantes && expandedIds.has(item.id);
-            // Con variantes, la existencia del padre es la suma de sus variantes.
-            const existencia = variantes ? variantes.reduce((a, v) => a + v.existencia, 0) : getExistenciaTotal(item);
+            // Con variantes, la existencia del padre es la suma de sus variantes activas (de la sucursal filtrada, si hay).
+            const existencia = getExistenciaTotal(item, sucursalId);
             const isLast = idx === rows.length - 1;
             return (
               <React.Fragment key={item.id}>
@@ -193,15 +190,15 @@ export function ItemsTable({ rows, selectedIds, onToggleSelect, onToggleSelectAl
                   <td style={tdStyle}>{v.codigo}</td>
                   <td style={{ ...tdStyle, overflow: 'hidden', fontWeight: 700 }}>
                     <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.nombre} - {v.label}
+                      {item.nombre} - {getVarianteLabel(v)}
                     </span>
                   </td>
                   <td style={tdStyle} />
-                  <td style={tdStyle}>{formatCOP(v.price)}</td>
-                  <td style={tdStyle}>{formatExistencia(v.existencia)}</td>
+                  <td style={tdStyle}>{formatCOP(v.precioTotal)}</td>
+                  <td style={tdStyle}>{formatExistencia(getExistenciaVariante(v, sucursalId))}</td>
                   <td style={tdStyle}>{getTipoLabel(item)}</td>
                   <td style={tdStyle} onClick={e => e.stopPropagation()}>
-                    <Toggle size="sm" checked={!inactiveVariantIds.has(v.id)} onChange={() => toggleVariantActivo(v.id)} ariaLabel={`Activar/desactivar ${item.nombre} - ${v.label}`} />
+                    <Toggle size="sm" checked={v.activo} onChange={() => onToggleVarianteActivo(item.id, v.id)} ariaLabel={`Activar/desactivar ${item.nombre} - ${getVarianteLabel(v)}`} />
                   </td>
                   <td style={tdStyle} onClick={e => e.stopPropagation()}>
                     <button
