@@ -5,10 +5,9 @@
  */
 import type { Contacto } from '../types/contacto';
 import type { Item } from '../types/item';
-import type { ProductVariants } from '../data/retail/productVariants';
 import type { Venta } from '../types/venta';
 import { SUCURSALES } from '../data/itemsCatalogs';
-import { getExistenciaTotal } from '../types/item';
+import { getExistenciaTotal, getExistenciaVariante, getVarianteLabel, getVariantes } from '../types/item';
 import { fmtDocumento } from './contactos';
 import { isoDia } from './ventas';
 
@@ -31,11 +30,10 @@ const tipoItem = (i: Item): TipoItemReporte => (i.esCombo ? 'Combo' : i.manejaEx
 
 /**
  * Una fila por ítem; en Retail, un ítem con variantes se abre en una fila por variante (con su código, costo,
- * precio y existencia). Con filtro de sucursal, los ítems sin variantes muestran solo la existencia de esa
- * sucursal; las variantes no guardan existencia por sucursal y conservan la suma.
+ * precio y existencia). Con filtro de sucursal, cada fila muestra solo la existencia de esa sucursal.
  */
 export function filasItems(
-  items: Item[], categoriaDe: (id: string) => string, variantesDe: Record<number, ProductVariants>, f: FiltrosReporteItemsAdmin,
+  items: Item[], categoriaDe: (id: string) => string, f: FiltrosReporteItemsAdmin,
 ): FilaItem[] {
   const sucursalId = activo(f.sucursal) ? SUCURSALES.find(s => s.label === f.sucursal)?.id : undefined;
   const filas: FilaItem[] = [];
@@ -43,12 +41,17 @@ export function filasItems(
     .filter(i => (!activo(f.estado) || i.activo === (f.estado === 'Activo')) && (!activo(f.tipo) || tipoItem(i) === f.tipo) &&
       (!activo(f.categoria) || categoriaDe(i.categoriaId) === f.categoria))
     .forEach(i => {
-      const variantes = i.catalogProductId !== undefined ? variantesDe[i.catalogProductId]?.variantes : undefined;
+      const variantes = getVariantes(i);
       const base = {
         nombre: i.nombre, descripcion: i.descripcion, referencia: i.referencia, tipo: tipoItem(i), categoria: categoriaDe(i.categoriaId),
       };
-      if (variantes?.length) {
-        variantes.forEach(v => filas.push({ ...base, key: `${i.id}-${v.id}`, codigo: v.codigo, variante: v.label, cantidad: v.existencia, costo: v.costo, precio: v.price }));
+      if (variantes) {
+        variantes
+          .filter(v => v.activo && (!sucursalId || v.sucursales.some(x => x.sucursalId === sucursalId)))
+          .forEach(v => filas.push({
+            ...base, key: `${i.id}-${v.id}`, codigo: v.codigo, variante: getVarianteLabel(v),
+            cantidad: getExistenciaVariante(v, sucursalId), costo: v.costo, precio: v.precioTotal,
+          }));
         return;
       }
       let cantidad = getExistenciaTotal(i);

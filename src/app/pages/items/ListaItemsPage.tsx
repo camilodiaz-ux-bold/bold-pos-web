@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Plus, RefreshCw, Trash2, Package, SearchX } from 'lucide-react';
 import { useItems } from '../../store/itemsStore';
 import type { Item } from '../../types/item';
+import { itemEnSucursal } from '../../types/item';
 import { ItemsFilterBar, EMPTY_FILTERS, type ItemsFilters } from '../../components/items/ItemsFilterBar';
 import { ItemsTable } from '../../components/items/ItemsTable';
 import { ConfirmDeleteModal } from '../../components/items/ConfirmDeleteModal';
@@ -27,7 +28,7 @@ function matchesFilters(item: Item, f: ItemsFilters): boolean {
   if (f.codigo && !normalizeText(item.codigo).includes(normalizeText(f.codigo))) return false;
   if (f.descripcion && !normalizeText(item.descripcion).includes(normalizeText(f.descripcion))) return false;
   if (f.referencia && !normalizeText(item.referencia).includes(normalizeText(f.referencia))) return false;
-  if (f.sucursalId && !item.sucursales.some(s => s.sucursalId === f.sucursalId)) return false;
+  if (f.sucursalId && !itemEnSucursal(item, f.sucursalId)) return false;
   if (f.estado === 'activo' && !item.activo) return false;
   if (f.estado === 'inactivo' && item.activo) return false;
   if (f.unidadId && item.unidadId !== f.unidadId) return false;
@@ -37,7 +38,7 @@ function matchesFilters(item: Item, f: ItemsFilters): boolean {
 
 export function ListaItemsPage() {
   const navigate = useNavigate();
-  const { items, toggleActivo, deleteItem, refresh } = useItems();
+  const { items, toggleActivo, toggleVarianteActivo, deleteItem, refresh } = useItems();
 
   const [filters, setFilters] = useState<ItemsFilters>(EMPTY_FILTERS);
   const [expanded, setExpanded] = useState(false);
@@ -220,6 +221,8 @@ export function ListaItemsPage() {
             onToggleSelect={toggleSelect}
             onToggleSelectAll={toggleSelectAllOnPage}
             onToggleActivo={handleToggleActivo}
+            onToggleVarianteActivo={toggleVarianteActivo}
+            sucursalId={filters.sucursalId || undefined}
             onEdit={id => navigate(`/items/${id}/editar`)}
             onDeleteRequest={setPendingDelete}
           />

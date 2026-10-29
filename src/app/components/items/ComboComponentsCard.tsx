@@ -13,6 +13,7 @@ import type { ItemComboComponente } from '../../types/item';
 import { useCatalog, useVertical } from '../../vertical';
 import { componentKey, isCustomComponentItem } from '../../utils/comboBridge';
 import { useItems } from '../../store/itemsStore';
+import { useProductVariants } from '../../store/variantesStore';
 import { FieldLabel } from './FormField';
 
 interface ComboComponentsCardProps {
@@ -42,7 +43,8 @@ interface Opt {
 /** Nombre, precio y variante de un componente agregado + suma de los ítems (la comparte la card de precio). */
 export function useComboResolver() {
   const { items } = useItems();
-  const { allProducts: ALL_CATALOG_PRODUCTS, productVariants } = useCatalog();
+  const { allProducts: ALL_CATALOG_PRODUCTS } = useCatalog();
+  const productVariants = useProductVariants();
   const { has } = useVertical();
   const variantsOf = (productId: number) => (has('variantes') ? productVariants[productId] : undefined);
   const resolve = (c: ItemComboComponente) => {
@@ -81,7 +83,8 @@ export function ComboComponentsCard({
   const [open, setOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const { items } = useItems();
-  const { allProducts: ALL_CATALOG_PRODUCTS, productVariants } = useCatalog();
+  const { allProducts: ALL_CATALOG_PRODUCTS } = useCatalog();
+  const productVariants = useProductVariants();
   const { has } = useVertical();
   const variantsOf = (productId: number) => (has('variantes') ? productVariants[productId] : undefined);
   const closeSearch = () => { setQuery(''); setOpen(false); setExpandedId(null); };
