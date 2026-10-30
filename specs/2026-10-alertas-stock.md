@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Estado** | Draft |
+| **Estado** | ✅ Implementado |
 | **Vertical** | Core (Retail y Restaurantes) — ver pregunta 1 |
 | **Ruta** | `/items/alertas-stock` y `/items/alertas-stock/actualizacion-masiva` |
-| **Antecedentes** | `2026-10-items-variantes-lista.md`, `2026-10-items-crear-tabs.md` |
+| **Antecedentes** | `2026-10-variantes-modelo.md`, `2026-10-items-variantes-lista.md`, `2026-10-items-crear-tabs.md` |
 
 ## Qué cambia
 
@@ -68,7 +68,7 @@ Pantalla réplica de `pos.stg.bold.co/#/retail/inventory/item/bulk-update` (leí
 Un solo modelo; la lista, el modal y futuros reportes derivan de él.
 
 - `ItemSucursal` suma `stockBajo?: number` y `alerta?: boolean` (default: sin definir / `false`).
-- **Variantes con sucursales**: dependen de `2026-10-variantes-modelo.md` (Draft), que convierte las variantes en parte de `Item` con `sucursales: ItemSucursal[]` y existencia real por sucursal, como el POS real. Alertas de Stock **no** define un modelo propio para ellas: `stockBajo` y `alerta` viven en el `ItemSucursal` de cada variante, igual que en el ítem. Este spec se implementa **después** de la fase 1 de ese spec.
+- **Variantes con sucursales**: dependen de `2026-10-variantes-modelo.md` (✅ Implementado, PR #47 y #48), que convierte las variantes en parte de `Item` con `sucursales: ItemSucursal[]` y existencia real por sucursal, como el POS real. Alertas de Stock **no** define un modelo propio para ellas: `stockBajo` y `alerta` viven en el `ItemSucursal` de cada variante, igual que en el ítem. Esa base ya está en `main`.
 - `itemsStore` expone `setAlertaStock(itemId, { sucursalIds, variantId?, stockBajo?, alerta? })`; `sucursalIds` trae todas las del ítem (o de la variante) en modo "Todas" o una sola con filtro/modal.
 - Persiste con el resto de ítems (clave de ítems existente); borrar esa clave vuelve a la semilla.
 - La semilla no trae alertas definidas, salvo 3 a 4 ítems con alerta activa y existencia por debajo del mínimo para poder ver el resaltado y el orden "Por alerta".

@@ -40,6 +40,22 @@ export function EditarVarianteDrawer({
   const [sucursales, setSucursales] = useState<Record<string, string>>(
     Object.fromEntries(variante.sucursales.map(s => [s.sucursalId, String(s.existencia)])),
   );
+  // Alerta de stock bajo por sucursal (specs/2026-10-alertas-stock-disponibilidad.md §1).
+  const [stockBajo, setStockBajo] = useState<Record<string, string>>(
+    Object.fromEntries(variante.sucursales.filter(s => s.stockBajo !== undefined).map(s => [s.sucursalId, String(s.stockBajo)])),
+  );
+  const [alertas, setAlertas] = useState<Record<string, boolean>>(
+    Object.fromEntries(variante.sucursales.filter(s => s.alerta).map(s => [s.sucursalId, true])),
+  );
+  const cambiarStockBajo = (id: string, raw: string) => {
+    setStockBajo(prev => ({ ...prev, [id]: raw }));
+    if (raw.trim() === '') setAlertas(prev => ({ ...prev, [id]: false }));
+  };
+  const cambiarAlerta = (id: string, activa: boolean) => {
+    setAlertas(prev => ({ ...prev, [id]: activa }));
+    // Activar sin valor lo deja en 0, como en Alertas de Stock.
+    if (activa && (stockBajo[id] ?? '').trim() === '') setStockBajo(prev => ({ ...prev, [id]: '0' }));
+  };
 
   const setBase = (raw: string) => {
     setBaseRaw(raw);
@@ -49,17 +65,22 @@ export function EditarVarianteDrawer({
     setTotalRaw(raw);
     setBaseRaw(String(Math.round(parseCOP(raw) / (1 + impuestoRate))));
   };
-  const toggleSucursal = (id: SucursalId) => setSucursales(prev => {
-    const next = { ...prev };
-    if (id in next) delete next[id];
-    else next[id] = '0';
-    return next;
-  });
+  const toggleSucursal = (id: SucursalId) => {
+    if (id in sucursales) {
+      // Quitar la sucursal descarta también su stock bajo y su alerta.
+      setSucursales(prev => { const n = { ...prev }; delete n[id]; return n; });
+      setStockBajo(prev => { const n = { ...prev }; delete n[id]; return n; });
+      setAlertas(prev => { const n = { ...prev }; delete n[id]; return n; });
+    } else {
+      setSucursales(prev => ({ ...prev, [id]: '0' }));
+    }
+  };
 
   const codigoRepetido = codigo.trim() !== '' && codigo.trim() !== variante.codigo && codigosUsados.has(codigo.trim());
   const sucursalIds = Object.keys(sucursales);
   const existenciasOk = !manejaExistencias || (sucursalIds.length > 0 && sucursalIds.every(id => Number.isInteger(parseInt(sucursales[id], 10))));
-  const canSave = parseCOP(baseRaw) > 0 && !codigoRepetido && existenciasOk;
+  const stockBajoOk = !manejaExistencias || sucursalIds.every(id => { const raw = (stockBajo[id] ?? '').trim(); return raw === '' || /^\d+$/.test(raw); });
+  const canSave = parseCOP(baseRaw) > 0 && !codigoRepetido && existenciasOk && stockBajoOk;
 
   const guardar = () => {
     const usados = new Set(codigosUsados);
@@ -68,7 +89,15 @@ export function EditarVarianteDrawer({
       do { codigoFinal = String(Math.floor(10_000_000 + Math.random() * 90_000_000)); } while (usados.has(codigoFinal));
     }
     const sucursalesFinal: ItemSucursal[] = manejaExistencias
-      ? SUCURSALES.filter(s => s.id in sucursales).map(s => ({ ...(variante.sucursales.find(x => x.sucursalId === s.id) ?? {}), sucursalId: s.id, existencia: parseInt(sucursales[s.id], 10) || 0 }))
+      ? SUCURSALES.filter(s => s.id in sucursales).map((s): ItemSucursal => {
+          const umbral = (stockBajo[s.id] ?? '').trim();
+          return {
+            sucursalId: s.id,
+            existencia: parseInt(sucursales[s.id], 10) || 0,
+            // Sin stock bajo no hay alerta: no se guarda ninguno de los dos.
+            ...(umbral !== '' ? { stockBajo: parseInt(umbral, 10), alerta: !!alertas[s.id] } : {}),
+          };
+        })
       : [];
     onSave({
       ...variante,
@@ -152,6 +181,24 @@ export function EditarVarianteDrawer({
                           type="number" value={sucursales[s.id]} className="merlin-input-filled"
                           onChange={e => setSucursales(prev => ({ ...prev, [s.id]: e.target.value }))}
                         />
+                        <div style={{ marginTop: 12 }}>
+                          <FieldLabel>Stock bajo ({unidadLabel})</FieldLabel>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <input
+                              type="number" min={0} value={stockBajo[s.id] ?? ''} placeholder="Sin definir" className="merlin-input-filled"
+                              aria-label={`Stock bajo en ${s.label}`} style={{ flex: 1, minWidth: 0 }}
+                              onChange={e => cambiarStockBajo(s.id, e.target.value)}
+                            />
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--black-100)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              <input
+                                type="checkbox" checked={!!alertas[s.id]} onChange={e => cambiarAlerta(s.id, e.target.checked)}
+                                aria-label={`Activar alerta de stock bajo en ${s.label}`}
+                                style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--blue-100)' }}
+                              />
+                              Activar alerta
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

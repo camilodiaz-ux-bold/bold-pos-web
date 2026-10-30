@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom';
 import { useNavigate, useLocation } from 'react-router';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
-  UtensilsCrossed, Package, TrendingUp, Download,
+  UtensilsCrossed, Package, TrendingUp, Download, BellRing, PackageMinus,
 } from 'lucide-react';
 import { useNotifications } from '../store/notificationsStore';
+import { HEADER_STOCK_BAJO_EJEMPLO } from '../data/alertasCorreoEjemplo';
 import { useVertical } from '../vertical';
 import {
   IcHome, IcHomeFill,
@@ -200,10 +201,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       },
       hasSubmenu: true,
       subItems: [
-        { id: 'listaitems',   label: 'Lista de Items',          icon: <IcListaItems size={16} />,   active: pathname.startsWith('/items') && !pathname.startsWith('/items/variantes'), onClick: () => navigate('/items') },
+        { id: 'listaitems',   label: 'Lista de Items',          icon: <IcListaItems size={16} />,   active: pathname.startsWith('/items') && !pathname.startsWith('/items/variantes') && !pathname.startsWith('/items/alertas-stock'), onClick: () => navigate('/items') },
         { id: 'ajusteinv',    label: 'Ajuste de inventario',    icon: <IcAjusteInv size={16} />,    active: false, onClick: () => toast.info('Ajuste de inventario') },
         { id: 'flujoinv',     label: 'Flujo de inventario',     icon: <IcFlujoInv size={16} />,     active: false, onClick: () => toast.info('Flujo de inventario') },
         { id: 'variantesinv', moduleId: 'variantes', label: 'Variantes de inventario', icon: <IcVariantesInv size={16} />, active: pathname.startsWith('/items/variantes'), onClick: () => navigate('/items/variantes') },
+        { id: 'alertasstock', label: 'Alertas de Stock', icon: <BellRing size={16} />, active: pathname.startsWith('/items/alertas-stock'), onClick: () => navigate('/items/alertas-stock') },
       ],
     },
     {
@@ -673,6 +675,11 @@ interface TopBarProps {
 export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBarProps) {
   const { notifications, unreadCount, markRead } = useNotifications();
   const { config } = useVertical();
+  const navigate = useNavigate();
+  // Número del ícono de stock bajo: fijo de prototipo, no calculado (specs/2026-10-alertas-stock-header-fijo.md).
+  const itemsEnStockBajo = HEADER_STOCK_BAJO_EJEMPLO;
+  // Tooltip propio: el `title` nativo tarda en salir y aquí debe ser inmediato.
+  const [verTipStock, setVerTipStock] = useState(false);
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
@@ -736,6 +743,46 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
           <span style={{ fontSize: 14, color: '#6B7280', margin: '0 4px' }}>—</span>
           <span style={{ fontSize: 14, color: '#6B7280' }}>{config.plan}</span>
         </div>
+        {itemsEnStockBajo > 0 && (
+          <div style={{ position: 'relative', display: 'flex' }}>
+            <button
+              onClick={() => navigate('/items/alertas-stock')}
+              onMouseEnter={() => setVerTipStock(true)}
+              onMouseLeave={() => setVerTipStock(false)}
+              onFocus={() => setVerTipStock(true)}
+              onBlur={() => setVerTipStock(false)}
+              style={{ position: 'relative', color: '#6B7280', display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer' }}
+              className="hover:text-gray-900 transition-colors"
+              aria-label={`Tienes ítems con alerta de Stock bajo (${itemsEnStockBajo})`}
+            >
+              <PackageMinus size={24} />
+              {/* Hasta 99; desde 100 muestra "99+". Píldora para que quepan dos o tres caracteres. */}
+              <span style={{
+                position: 'absolute', top: -4, right: -6,
+                backgroundColor: 'var(--coral-100)', color: '#fff',
+                fontSize: 10, fontWeight: 700, borderRadius: 999,
+                minWidth: 18, height: 18, padding: '0 4px', boxSizing: 'border-box',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '2px solid white', fontFamily: "'Montserrat', sans-serif",
+              }}>
+                {itemsEnStockBajo > 99 ? '99+' : itemsEnStockBajo}
+              </span>
+            </button>
+            {verTipStock && (
+              <div
+                role="tooltip"
+                style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', right: -8, zIndex: 9000, pointerEvents: 'none',
+                  backgroundColor: 'var(--black-100)', color: '#fff', borderRadius: 8, padding: '6px 10px',
+                  fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', fontFamily: "'Montserrat', sans-serif",
+                }}
+              >
+                <span style={{ position: 'absolute', top: -4, right: 16, width: 8, height: 8, backgroundColor: 'var(--black-100)', transform: 'rotate(45deg)' }} />
+                Tienes ítems con alerta de Stock bajo
+              </div>
+            )}
+          </div>
+        )}
         <button
           ref={bellBtnRef}
           onClick={handleBellClick}

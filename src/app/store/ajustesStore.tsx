@@ -30,6 +30,7 @@ function load(): AjustesState {
         facturasCompra: { ...AJUSTES_DEFAULT.facturasCompra, ...saved.facturasCompra },
         integraciones: { ...AJUSTES_DEFAULT.integraciones, ...saved.integraciones },
         perfil: { ...AJUSTES_DEFAULT.perfil, ...saved.perfil },
+        alertasStockBajo: { ...AJUSTES_DEFAULT.alertasStockBajo, ...saved.alertasStockBajo },
       };
     }
   } catch {

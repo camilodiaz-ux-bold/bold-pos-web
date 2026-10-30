@@ -69,12 +69,26 @@ const NEGATIVE_STOCK: Record<number, { sucursalId: 'principal' | 'secundaria'; e
   244: { sucursalId: 'secundaria', existencia: -2 },
 };
 
+// Alertas de Stock sembradas (specs/2026-10-alertas-stock.md): umbral y alerta activa en ambas sucursales,
+// para poder ver el resaltado y el orden "Por alerta". Existencias: principal = id % 40, secundaria = id % 15.
+const SEED_ALERTAS: Record<number, number> = {
+  222: 5, // principal -4 → disparada
+  244: 5, // principal 4, secundaria -2 → disparada en las dos
+  212: 3, // secundaria 2 → disparada
+  214: 2, // principal 14, secundaria 4 → alerta activa sin disparar
+};
+// Variante con alerta propia: Jean Slim 34 (15 uds → 9 principal / 6 secundaria), umbral 10 → disparada.
+const SEED_ALERTAS_VARIANTE: Record<string, number> = { '221-34': 10 };
+
+const conAlerta = (sucursales: ItemSucursal[], stockBajo: number | undefined): ItemSucursal[] =>
+  stockBajo === undefined ? sucursales : sucursales.map(s => ({ ...s, stockBajo, alerta: true }));
+
 function buildSucursales(productId: number): ItemSucursal[] {
   const forced = NEGATIVE_STOCK[productId];
-  return [
+  return conAlerta([
     { sucursalId: 'principal', existencia: forced?.sucursalId === 'principal' ? forced.existencia : productId % 40 },
     { sucursalId: 'secundaria', existencia: forced?.sucursalId === 'secundaria' ? forced.existencia : productId % 15 },
-  ];
+  ], SEED_ALERTAS[productId]);
 }
 
 export function buildRetailSeedItems(now: number = Date.now()): Item[] {
@@ -107,7 +121,7 @@ export function buildRetailSeedItems(now: number = Date.now()): Item[] {
       ...(seedVariantes && {
         tiposVariante: seedVariantes.tiposVariante,
         mismoPrecioVariantes: false,
-        variantes: seedVariantes.variantes,
+        variantes: seedVariantes.variantes.map(v => ({ ...v, sucursales: conAlerta(v.sucursales, SEED_ALERTAS_VARIANTE[v.id]) })),
       }),
       activo: !INACTIVE_IDS.has(p.id),
       imagen: p.image,
