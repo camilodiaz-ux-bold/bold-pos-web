@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { useNavigate, useLocation } from 'react-router';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
-  UtensilsCrossed, Package, TrendingUp, Download,
+  UtensilsCrossed, Package, TrendingUp, Download, BellRing,
 } from 'lucide-react';
 import { useNotifications } from '../store/notificationsStore';
 import { useVertical } from '../vertical';
@@ -200,10 +200,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       },
       hasSubmenu: true,
       subItems: [
-        { id: 'listaitems',   label: 'Lista de Items',          icon: <IcListaItems size={16} />,   active: pathname.startsWith('/items') && !pathname.startsWith('/items/variantes'), onClick: () => navigate('/items') },
+        { id: 'listaitems',   label: 'Lista de Items',          icon: <IcListaItems size={16} />,   active: pathname.startsWith('/items') && !pathname.startsWith('/items/variantes') && !pathname.startsWith('/items/alertas-stock'), onClick: () => navigate('/items') },
         { id: 'ajusteinv',    label: 'Ajuste de inventario',    icon: <IcAjusteInv size={16} />,    active: false, onClick: () => toast.info('Ajuste de inventario') },
         { id: 'flujoinv',     label: 'Flujo de inventario',     icon: <IcFlujoInv size={16} />,     active: false, onClick: () => toast.info('Flujo de inventario') },
         { id: 'variantesinv', moduleId: 'variantes', label: 'Variantes de inventario', icon: <IcVariantesInv size={16} />, active: pathname.startsWith('/items/variantes'), onClick: () => navigate('/items/variantes') },
+        { id: 'alertasstock', label: 'Alertas de Stock', icon: <BellRing size={16} />, active: pathname.startsWith('/items/alertas-stock'), onClick: () => navigate('/items/alertas-stock') },
       ],
     },
     {

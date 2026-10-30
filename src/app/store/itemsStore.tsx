@@ -12,7 +12,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { Item, ItemDraft } from '../types/item';
+import type { Item, ItemDraft, ItemSucursal } from '../types/item';
 import { getVerticalCatalog } from '../data/verticalCatalog';
 import { useVertical, type Vertical } from '../vertical';
 
@@ -62,6 +62,13 @@ function saveItems(vertical: Vertical, items: Item[]): void {
   }
 }
 
+export interface AlertaStockCambio {
+  sucursalIds: string[];
+  variantId?: string;
+  stockBajo?: number | null;
+  alerta?: boolean;
+}
+
 interface ItemsContextValue {
   items: Item[];
   getItem: (id: string) => Item | undefined;
@@ -71,6 +78,11 @@ interface ItemsContextValue {
   toggleActivo: (id: string) => void;
   /** Activa/inactiva una variante del ítem (specs/2026-10-variantes-modelo.md §3). */
   toggleVarianteActivo: (itemId: string, variantId: string) => void;
+  /**
+   * Alertas de Stock (specs/2026-10-alertas-stock.md): fija `stockBajo` y/o `alerta` en las sucursales dadas del
+   * ítem, o de una de sus variantes. `stockBajo: null` lo borra (y apaga la alerta, que no existe sin umbral).
+   */
+  setAlertaStock: (itemId: string, cambio: AlertaStockCambio) => void;
   /** Relee localStorage — usado por el botón "Refrescar" del listado. */
   refresh: () => void;
   resetToSeed: () => void;
@@ -149,6 +161,32 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
     ));
   }, [updateItems]);
 
+  const setAlertaStock = useCallback((itemId: string, cambio: AlertaStockCambio) => {
+    const aplicar = (sucursales: ItemSucursal[]): ItemSucursal[] => sucursales.map(s => {
+      if (!cambio.sucursalIds.includes(s.sucursalId)) return s;
+      const next: ItemSucursal = { ...s };
+      if (cambio.stockBajo === null) {
+        delete next.stockBajo;
+        next.alerta = false;
+      } else if (cambio.stockBajo !== undefined) {
+        next.stockBajo = cambio.stockBajo;
+      }
+      if (cambio.alerta !== undefined) next.alerta = cambio.alerta && next.stockBajo !== undefined;
+      return next;
+    });
+    updateItems(prev => prev.map(item => {
+      if (item.id !== itemId) return item;
+      if (cambio.variantId) {
+        return {
+          ...item,
+          variantes: item.variantes?.map(v => (v.id === cambio.variantId ? { ...v, sucursales: aplicar(v.sucursales) } : v)),
+          actualizadoEn: Date.now(),
+        };
+      }
+      return { ...item, sucursales: aplicar(item.sucursales), actualizadoEn: Date.now() };
+    }));
+  }, [updateItems]);
+
   const refresh = useCallback(() => {
     updateItems(() => loadItems(vertical));
   }, [updateItems, vertical]);
@@ -158,7 +196,7 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
   }, [updateItems, vertical]);
 
   return (
-    <ItemsContext.Provider value={{ items, getItem, createItem, updateItem, deleteItem, toggleActivo, toggleVarianteActivo, refresh, resetToSeed }}>
+    <ItemsContext.Provider value={{ items, getItem, createItem, updateItem, deleteItem, toggleActivo, toggleVarianteActivo, setAlertaStock, refresh, resetToSeed }}>
       {children}
     </ItemsContext.Provider>
   );
