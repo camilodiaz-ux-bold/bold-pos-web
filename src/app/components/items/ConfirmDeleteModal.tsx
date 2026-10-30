@@ -16,16 +16,18 @@ interface ConfirmDeleteModalProps {
 export function ConfirmDeleteModal({ title, message, confirmLabel = 'Eliminar', onCancel, onConfirm }: ConfirmDeleteModalProps) {
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-[var(--radius-20)] w-full max-w-xs mx-4 p-8">
+      {/* El relleno y el ancho van en línea: las clases `p-8` / `max-w-xs` no se aplican en este contexto
+          y el modal salía sin relleno (specs/2026-10-alertas-stock-disponibilidad.md §3). */}
+      <div className="bg-white rounded-[var(--radius-20)] w-full mx-4" style={{ maxWidth: 400, padding: 32, boxSizing: 'border-box' }}>
         <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--black-100)', margin: '0 0 8px' }}>
           {title}
         </h3>
         <p style={{ fontSize: 14, color: 'var(--black-60)', margin: '0 0 24px' }}>
           {message}
         </p>
-        <div className="flex gap-3">
-          <button onClick={onCancel} className="btn btn-cancel flex-1">Cancelar</button>
-          <button onClick={onConfirm} className="btn btn-danger flex-1" style={{ backgroundColor: 'var(--coral-10)' }}>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={onCancel} className="btn btn-cancel" style={{ flex: 1 }}>Cancelar</button>
+          <button onClick={onConfirm} className="btn btn-danger" style={{ flex: 1, backgroundColor: 'var(--coral-10)' }}>
             {confirmLabel}
           </button>
         </div>

@@ -44,6 +44,9 @@ interface FormState {
   manejaExistencias: boolean;
   sucursalIds: SucursalId[];
   existencias: Partial<Record<SucursalId, string>>;
+  /** Alerta de stock bajo por sucursal (specs/2026-10-alertas-stock-disponibilidad.md §1). */
+  stockBajo: Partial<Record<SucursalId, string>>;
+  alertas: Partial<Record<SucursalId, boolean>>;
   esCombo: boolean;
   componentes: ItemComboComponente[];
   /** Retail: el ítem tiene variantes (card "Variantes disponibles", specs/2026-10-variantes-modelo.md). */
@@ -56,7 +59,7 @@ interface FormState {
 const EMPTY_FORM: FormState = {
   nombre: '', categoriaId: '', descripcion: '', codigo: '', unidadId: '', referencia: '',
   precioBaseRaw: '', impuestoId: 'iva-19', precioTotalRaw: '', costoRaw: '', imagen: '',
-  manejaExistencias: false, sucursalIds: [], existencias: {},
+  manejaExistencias: false, sucursalIds: [], existencias: {}, stockBajo: {}, alertas: {},
   esCombo: false, componentes: [],
   conVariantes: false, mismoPrecio: false, tiposVariante: [], variantes: [],
 };
@@ -80,6 +83,8 @@ function toFormState(item: Item): FormState {
     manejaExistencias: item.manejaExistencias,
     sucursalIds: item.sucursales.map(s => s.sucursalId),
     existencias: Object.fromEntries(item.sucursales.map(s => [s.sucursalId, String(s.existencia)])),
+    stockBajo: Object.fromEntries(item.sucursales.filter(s => s.stockBajo !== undefined).map(s => [s.sucursalId, String(s.stockBajo)])),
+    alertas: Object.fromEntries(item.sucursales.filter(s => s.alerta).map(s => [s.sucursalId, true])),
     esCombo: item.esCombo,
     componentes: item.componentes ?? [],
     conVariantes: !!getVariantes(item),
@@ -210,13 +215,31 @@ export function ItemFormPage() {
       const has = prev.sucursalIds.includes(sucursalId);
       const sucursalIds = has ? prev.sucursalIds.filter(s => s !== sucursalId) : [...prev.sucursalIds, sucursalId];
       const existencias = { ...prev.existencias };
-      if (has) delete existencias[sucursalId];
-      return { ...prev, sucursalIds, existencias };
+      const stockBajo = { ...prev.stockBajo };
+      const alertas = { ...prev.alertas };
+      if (has) { delete existencias[sucursalId]; delete stockBajo[sucursalId]; delete alertas[sucursalId]; }
+      return { ...prev, sucursalIds, existencias, stockBajo, alertas };
     });
   };
 
   const setExistencia = (sucursalId: SucursalId, raw: string) => {
     setForm(prev => ({ ...prev, existencias: { ...prev.existencias, [sucursalId]: raw } }));
+  };
+
+  // Alerta de stock bajo: activar el check sin valor lo deja en 0; borrar el valor apaga la alerta (igual que en Alertas de Stock).
+  const setStockBajo = (sucursalId: SucursalId, raw: string) => {
+    setForm(prev => ({
+      ...prev,
+      stockBajo: { ...prev.stockBajo, [sucursalId]: raw },
+      alertas: raw.trim() === '' ? { ...prev.alertas, [sucursalId]: false } : prev.alertas,
+    }));
+  };
+  const setAlerta = (sucursalId: SucursalId, activa: boolean) => {
+    setForm(prev => ({
+      ...prev,
+      alertas: { ...prev.alertas, [sucursalId]: activa },
+      stockBajo: activa && (prev.stockBajo[sucursalId] ?? '').trim() === '' ? { ...prev.stockBajo, [sucursalId]: '0' } : prev.stockBajo,
+    }));
   };
 
   // Un combo no maneja existencias propias — al marcarlo, se apaga
@@ -226,7 +249,7 @@ export function ItemFormPage() {
   // sucursales y no en otras, aunque no lleve un número de existencia propio.
   const setEsCombo = (next: boolean) => {
     setForm(prev => next
-      ? { ...prev, esCombo: next, manejaExistencias: false, existencias: {} }
+      ? { ...prev, esCombo: next, manejaExistencias: false, existencias: {}, stockBajo: {}, alertas: {} }
       : { ...prev, esCombo: next });
   };
 
@@ -285,6 +308,8 @@ export function ItemFormPage() {
         return raw !== undefined && raw !== '' && Number.isInteger(parseInt(raw, 10));
       });
       if (!allFilled) return false;
+      // El stock bajo es opcional, pero si se escribe debe ser un entero ≥ 0.
+      if (form.sucursalIds.some(sid => { const raw = (form.stockBajo[sid] ?? '').trim(); return raw !== '' && !/^\d+$/.test(raw); })) return false;
     }
     if (form.esCombo) {
       if (form.componentes.length < 2) return false;
@@ -326,6 +351,10 @@ export function ItemFormPage() {
       sucursales: form.conVariantes ? [] : form.sucursalIds.map(sucursalId => ({
         sucursalId,
         existencia: form.manejaExistencias ? parseInt(form.existencias[sucursalId] ?? '0', 10) || 0 : 0,
+        // La alerta solo existe con existencias y con umbral definido; sin valor, no se guarda ninguno.
+        ...(form.manejaExistencias && !form.esCombo && (form.stockBajo[sucursalId] ?? '').trim() !== ''
+          ? { stockBajo: parseInt(form.stockBajo[sucursalId] as string, 10), alerta: !!form.alertas[sucursalId] }
+          : {}),
       })),
       tiposVariante: form.conVariantes ? form.tiposVariante : undefined,
       mismoPrecioVariantes: form.conVariantes ? form.mismoPrecio : undefined,
@@ -578,6 +607,10 @@ export function ItemFormPage() {
             onToggleSucursal={toggleSucursal}
             existencias={form.existencias}
             onChangeExistencia={setExistencia}
+            stockBajo={form.stockBajo}
+            onChangeStockBajo={setStockBajo}
+            alertas={form.alertas}
+            onChangeAlerta={setAlerta}
             unidadLabel={unidadLabel}
             sucursalesError={sucursalesError}
             existenciasDisabled={form.esCombo}

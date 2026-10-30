@@ -13,6 +13,7 @@ import { ListaItemsPage } from './pages/items/ListaItemsPage';
 import { ItemFormPage } from './pages/items/ItemFormPage';
 import { AlertasStockPage } from './pages/items/AlertasStockPage';
 import { ActualizacionMasivaAlertasPage } from './pages/items/ActualizacionMasivaAlertasPage';
+import { PlantillaAlertasPage } from './pages/items/PlantillaAlertasPage';
 import { StatusPage } from '../pages/StatusPage';
 import { MakersLanding } from '../pages/MakersLanding';
 import { VerticalProvider, VerticalRoute } from './vertical';
@@ -67,6 +68,7 @@ const router = createBrowserRouter([
           { path: 'variantes', element: <VerticalRoute module="variantes"><VariantesInventarioPage /></VerticalRoute> },
           { path: 'alertas-stock', Component: AlertasStockPage },
           { path: 'alertas-stock/actualizacion-masiva', Component: ActualizacionMasivaAlertasPage },
+          { path: 'alertas-stock/actualizacion-masiva/plantilla', Component: PlantillaAlertasPage },
           { path: 'nuevo', Component: ItemFormPage },
           { path: ':id/editar', Component: ItemFormPage },
         ],

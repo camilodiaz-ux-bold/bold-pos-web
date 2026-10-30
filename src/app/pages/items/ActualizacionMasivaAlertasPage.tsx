@@ -1,11 +1,10 @@
 /**
  * ActualizacionMasivaAlertasPage — "Edición masiva de ítems", réplica visual de
  * `/#/retail/inventory/item/bulk-update` del POS real (specs/2026-10-alertas-stock.md §4).
- * Solo visual: el botón muestra un toast, no se genera ni se procesa ningún Excel.
+ * "Iniciar edición masiva" lleva al paso de descarga de la plantilla (PlantillaAlertasPage).
  */
 import React from 'react';
 import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
 import { ArrowLeft, Download, FileText, FileUp } from 'lucide-react';
 
 const FONT = "'Montserrat', sans-serif";
@@ -72,7 +71,7 @@ export function ActualizacionMasivaAlertasPage() {
             Ítems
           </span>
           <h2 style={{ margin: '12px 0 0', fontFamily: FONT, fontSize: 28, fontWeight: 700, lineHeight: '36px', color: 'var(--black-0)' }}>
-            Edita de forma masiva los ítems de tu negocio
+            Edita de forma masiva las alertas de stock de tus ítems
           </h2>
         </div>
       </div>
@@ -96,7 +95,7 @@ export function ActualizacionMasivaAlertasPage() {
       </div>
 
       <div>
-        <button className="btn btn-primary" onClick={() => toast.info('Edición masiva — próximamente')}>
+        <button className="btn btn-primary" onClick={() => navigate('/items/alertas-stock/actualizacion-masiva/plantilla')}>
           Iniciar edición masiva
         </button>
       </div>

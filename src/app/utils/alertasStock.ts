@@ -1,5 +1,5 @@
 /**
- * alertasStock.ts — lógica pura de Alertas de Stock (specs/2026-10-alertas-stock.md §1-§2).
+ * alertasStock.ts — lógica pura de Alertas de Stock (specs/2026-10-alertas-stock.md §1-§2 y 2026-10-alertas-stock-ajustes.md).
  * La lista y el modal derivan todo de `ItemSucursal.stockBajo/alerta` (en el ítem o en cada variante).
  */
 import type { Item, ItemSucursal, ItemVariante } from '../types/item';
@@ -14,10 +14,10 @@ export interface ResumenAlerta {
   stockBajo: number | 'sin' | 'varios';
   /** true / false, o 'mixto' si hay de las dos. */
   alerta: boolean | 'mixto';
-  /** Todas las sucursales en alcance tienen umbral → se puede activar la alerta. */
-  alertable: boolean;
   /** Alguna sucursal con alerta activa y existencia ≤ stock bajo. */
   disparada: boolean;
+  /** Cuántas sucursales en alcance tienen la alerta disparada. */
+  disparadas: number;
   /** Alguna sucursal con la alerta activa. */
   activa: boolean;
 }
@@ -33,14 +33,15 @@ export function resumirAlerta(sucursales: ItemSucursal[], sucursalId?: string): 
     stockBajo = u === undefined ? 'sin' : u;
   }
   const activas = alcance.filter(s => s.alerta);
+  const disparadas = alcance.filter(s => s.alerta && s.stockBajo !== undefined && s.existencia <= s.stockBajo).length;
   const alerta: ResumenAlerta['alerta'] = activas.length === 0 ? false : activas.length === alcance.length ? true : 'mixto';
   return {
     alcance,
     existencia,
     stockBajo,
     alerta,
-    alertable: alcance.length > 0 && alcance.every(s => s.stockBajo !== undefined),
-    disparada: alcance.some(s => s.alerta && s.stockBajo !== undefined && s.existencia <= s.stockBajo),
+    disparada: disparadas > 0,
+    disparadas,
     activa: activas.length > 0,
   };
 }
@@ -68,3 +69,11 @@ export function prioridadAlerta(item: Item, sucursalId?: string): 0 | 1 | 2 {
   if (res.some(r => r.activa)) return 1;
   return 2;
 }
+
+/** Sucursales (ids, sin repetir) en las que alguna unidad del ítem está habilitada — el N de "Todas (N)" de un padre con variantes. */
+export function sucursalesDeVariantes(variantes: ItemVariante[]): string[] {
+  return [...new Set(variantes.flatMap(v => v.sucursales.map(s => s.sucursalId)))];
+}
+
+/** Una existencia negativa va siempre en rojo (además del rojo por alerta disparada). */
+export const existenciaEnRojo = (existencia: number, disparada: boolean): boolean => existencia < 0 || disparada;
