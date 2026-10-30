@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Estado** | Listo para implementación |
+| **Estado** | ✅ Implementado |
 | **Vertical** | Core (Retail y Restaurantes); lo de variantes, solo Retail |
 | **Rutas** | `/items/nuevo`, `/items/:id/editar`, `/items/alertas-stock`, `/items/alertas-stock/actualizacion-masiva` y `/…/plantilla` |
 | **Antecedentes** | `2026-10-alertas-stock.md`, `2026-10-alertas-stock-ajustes.md`, `2026-10-variantes-modelo.md` |
@@ -15,7 +15,7 @@ Siete ajustes: uno nuevo en el formulario de ítem (módulo existente) y seis de
 
 En la card **Disponibilidad** del formulario (`DisponibilidadCard`), cuando el ítem es inventariable (toggle "Ítem con existencias" activo) y una sucursal está marcada, bajo su input "Existencias (Unidades)" se agregan:
 
-- **Stock bajo** (input numérico, entero ≥ 0, opcional) y, debajo, un **check "Activar alerta de stock bajo"**.
+- **Stock bajo** (input numérico, entero ≥ 0, opcional) con un **check "Activar alerta"** a su derecha, en la misma línea (para ahorrar espacio).
 - Activar el check con el stock bajo vacío lo deja en **0**, como en Alertas de Stock; desactivarlo conserva el valor; borrar el valor apaga la alerta.
 - Es una sola configuración por sucursal marcada: cada sucursal con su propio stock bajo y su propio check. Se guarda con "Guardar cambios" del ítem (es parte del formulario, no guarda al instante).
 - No aparece para combos (no manejan existencias propias) ni cuando el toggle de existencias está apagado.

@@ -136,6 +136,15 @@ export interface ListaPrecios {
 
 export interface CategoriaItem { id: string; nombre: string; descripcion: string; padreId: string | null }
 
+/** Frecuencia del correo de alertas de stock bajo (specs/2026-10-alertas-stock-correo-config.md §2). */
+export type FrecuenciaAlertasStock = 'no-enviar' | 'primero-de-mes' | 'lunes' | 'lunes-a-viernes';
+
+export interface AlertasStockBajoConfig {
+  /** Hasta 3 correos además del correo del negocio (Perfil). */
+  correosAdicionales: string[];
+  frecuencia: FrecuenciaAlertasStock;
+}
+
 export interface AjustesState {
   pos: ConfigPOS;
   facturasCompra: ConfigFacturasCompra;
@@ -154,4 +163,5 @@ export interface AjustesState {
   usuarios: UsuarioAjustes[];
   listasPrecios: ListaPrecios[];
   categoriasItems: CategoriaItem[];
+  alertasStockBajo: AlertasStockBajoConfig;
 }

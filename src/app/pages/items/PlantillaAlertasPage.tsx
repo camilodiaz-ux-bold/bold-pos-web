@@ -1,9 +1,9 @@
 /**
  * PlantillaAlertasPage — paso "Descarga la plantilla" de la Actualización masiva de Alertas de Stock, réplica del paso que sigue
  * a "Iniciar edición masiva" en el POS real (specs/2026-10-alertas-stock-ajustes.md §6.2). La tarjeta de descarga abre
- * el modal de descarga; "Ya tengo la plantilla actualizada" es solo visual.
+ * el modal de descarga; "Ya tengo la plantilla actualizada" abre el selector de archivos (no se sube nada).
  */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, Download, FileDown, FileSpreadsheet, X } from 'lucide-react';
@@ -19,6 +19,7 @@ const iconBtn: React.CSSProperties = {
 export function PlantillaAlertasPage() {
   const navigate = useNavigate();
   const [modal, setModal] = useState(false);
+  const archivoRef = useRef<HTMLInputElement>(null);
 
   return (
     <div style={{ flex: 1, backgroundColor: 'var(--blue-10)', overflowY: 'auto', padding: 24 }}>
@@ -31,7 +32,7 @@ export function PlantillaAlertasPage() {
           >
             <ArrowLeft size={18} color="var(--blue-100)" strokeWidth={1.8} />
           </button>
-          <p style={{ margin: 0, fontFamily: FONT, fontWeight: 700, fontSize: 14, color: 'var(--blue-100)' }}>Edición masiva de ítems</p>
+          <p style={{ margin: 0, fontFamily: FONT, fontWeight: 700, fontSize: 14, color: 'var(--blue-100)' }}>Edición masiva de alertas de stock</p>
           <button
             type="button" aria-label="Cerrar" onClick={() => navigate('/items/alertas-stock')}
             style={iconBtn} className="hover:bg-[var(--blue-10)] transition-colors"
@@ -70,9 +71,21 @@ export function PlantillaAlertasPage() {
             <Download size={20} color="var(--blue-100)" style={{ flexShrink: 0 }} />
           </button>
 
+          {/* Solo abre el selector de archivos: no se lee, procesa ni sube nada (spec alertas-stock-disponibilidad §6). */}
+          <input
+            ref={archivoRef}
+            type="file"
+            accept=".xlsx,.xls"
+            aria-label="Seleccionar plantilla actualizada"
+            style={{ display: 'none' }}
+            onChange={e => {
+              if (e.target.files?.length) toast.info('Carga de la plantilla — próximamente');
+              e.target.value = '';
+            }}
+          />
           <button
             type="button"
-            onClick={() => toast.info('Carga de la plantilla — próximamente')}
+            onClick={() => archivoRef.current?.click()}
             style={{ marginTop: 28, background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: 'var(--coral-100)' }}
           >
             Ya tengo la plantilla actualizada

@@ -101,7 +101,7 @@ export function DescargarPlantillaModal({ onClose }: Props) {
             <p style={groupTitle}>Contenido</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <Radio name="contenido" checked={contenido === 'todo'} onChange={() => setContenido('todo')} label="Todos los ítems" />
-              <Radio name="contenido" checked={contenido === 'alertas'} onChange={() => setContenido('alertas')} label="Solo los que hoy tienen alerta de stock activa" />
+              <Radio name="contenido" checked={contenido === 'alertas'} onChange={() => setContenido('alertas')} label="Solo los que tienen alerta de stock activa" />
             </div>
           </div>
 

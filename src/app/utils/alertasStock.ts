@@ -62,12 +62,21 @@ export function unidadesDe(item: Item, sucursalId?: string): ItemSucursal[][] {
   return [item.sucursales];
 }
 
-/** 0 = alguna unidad con alerta disparada, 1 = con alerta activa, 2 = sin alertas activas. */
-export function prioridadAlerta(item: Item, sucursalId?: string): 0 | 1 | 2 {
-  const res = unidadesDe(item, sucursalId).map(u => resumirAlerta(u, sucursalId));
-  if (res.some(r => r.disparada)) return 0;
-  if (res.some(r => r.activa)) return 1;
-  return 2;
+/**
+ * Criticidad de una unidad (ítem simple o variante) para el orden "Por alerta" (specs/2026-10-alertas-stock-disponibilidad.md §4):
+ * con alerta activa es `existencia − stock bajo`; sin ella, solo la existencia. Entre sucursales se toma la más crítica
+ * (la de menor valor). Mientras más bajo, más crítico; negativo = ya disparada. No se muestra.
+ */
+export function criticidadUnidad(sucursales: ItemSucursal[], sucursalId?: string): number {
+  const alcance = sucursalId ? sucursales.filter(s => s.sucursalId === sucursalId) : sucursales;
+  if (alcance.length === 0) return Number.POSITIVE_INFINITY;
+  return Math.min(...alcance.map(s => (s.alerta && s.stockBajo !== undefined ? s.existencia - s.stockBajo : s.existencia)));
+}
+
+/** Criticidad de un ítem: la de su unidad más crítica (con variantes, la variante más crítica). */
+export function criticidadItem(item: Item, sucursalId?: string): number {
+  const unidades = unidadesDe(item, sucursalId);
+  return unidades.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...unidades.map(u => criticidadUnidad(u, sucursalId)));
 }
 
 /** Sucursales (ids, sin repetir) en las que alguna unidad del ítem está habilitada — el N de "Todas (N)" de un padre con variantes. */
@@ -77,3 +86,11 @@ export function sucursalesDeVariantes(variantes: ItemVariante[]): string[] {
 
 /** Una existencia negativa va siempre en rojo (además del rojo por alerta disparada). */
 export const existenciaEnRojo = (existencia: number, disparada: boolean): boolean => existencia < 0 || disparada;
+
+/**
+ * Cuántos ítems están en stock bajo (specs/2026-10-alertas-stock-header.md): ítems alertables con la alerta activa y existencia
+ * ≤ stock bajo en alguna sucursal o, con variantes, en alguna de ellas. Un ítem cuenta una vez. Es el número del ícono del header.
+ */
+export function contarItemsEnStockBajo(items: Item[]): number {
+  return items.filter(item => esAlertable(item) && unidadesDe(item).some(u => resumirAlerta(u).disparada)).length;
+}

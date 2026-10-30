@@ -183,19 +183,21 @@ export function EditarVarianteDrawer({
                         />
                         <div style={{ marginTop: 12 }}>
                           <FieldLabel>Stock bajo ({unidadLabel})</FieldLabel>
-                          <input
-                            type="number" min={0} value={stockBajo[s.id] ?? ''} placeholder="Sin definir" className="merlin-input-filled"
-                            aria-label={`Stock bajo en ${s.label}`}
-                            onChange={e => cambiarStockBajo(s.id, e.target.value)}
-                          />
-                          <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, cursor: 'pointer', fontSize: 13, color: 'var(--black-100)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <input
-                              type="checkbox" checked={!!alertas[s.id]} onChange={e => cambiarAlerta(s.id, e.target.checked)}
-                              aria-label={`Activar alerta de stock bajo en ${s.label}`}
-                              style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--blue-100)' }}
+                              type="number" min={0} value={stockBajo[s.id] ?? ''} placeholder="Sin definir" className="merlin-input-filled"
+                              aria-label={`Stock bajo en ${s.label}`} style={{ flex: 1, minWidth: 0 }}
+                              onChange={e => cambiarStockBajo(s.id, e.target.value)}
                             />
-                            Activar alerta de stock bajo
-                          </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--black-100)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              <input
+                                type="checkbox" checked={!!alertas[s.id]} onChange={e => cambiarAlerta(s.id, e.target.checked)}
+                                aria-label={`Activar alerta de stock bajo en ${s.label}`}
+                                style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--blue-100)' }}
+                              />
+                              Activar alerta
+                            </label>
+                          </div>
                         </div>
                       </div>
                     )}

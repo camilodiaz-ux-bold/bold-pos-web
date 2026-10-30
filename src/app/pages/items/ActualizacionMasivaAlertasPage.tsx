@@ -1,5 +1,5 @@
 /**
- * ActualizacionMasivaAlertasPage — "Edición masiva de ítems", réplica visual de
+ * ActualizacionMasivaAlertasPage — "Edición masiva de alertas de stock", réplica visual de
  * `/#/retail/inventory/item/bulk-update` del POS real (specs/2026-10-alertas-stock.md §4).
  * "Iniciar edición masiva" lleva al paso de descarga de la plantilla (PlantillaAlertasPage).
  */
@@ -38,7 +38,7 @@ export function ActualizacionMasivaAlertasPage() {
           <ArrowLeft size={18} color="var(--blue-100)" strokeWidth={1.8} />
         </button>
         <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 20, lineHeight: '28px', color: 'var(--blue-100)', margin: 0 }}>
-          Edición masiva de ítems
+          Edición masiva de alertas de stock
         </p>
       </div>
 
@@ -68,7 +68,7 @@ export function ActualizacionMasivaAlertasPage() {
         </div>
         <div style={{ minWidth: 260, flex: 1 }}>
           <span style={{ display: 'inline-block', padding: '3px 12px', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.2)', color: 'var(--black-0)', fontFamily: FONT, fontSize: 12, fontWeight: 600 }}>
-            Ítems
+            Alertas de stock
           </span>
           <h2 style={{ margin: '12px 0 0', fontFamily: FONT, fontSize: 28, fontWeight: 700, lineHeight: '36px', color: 'var(--black-0)' }}>
             Edita de forma masiva las alertas de stock de tus ítems
@@ -78,18 +78,18 @@ export function ActualizacionMasivaAlertasPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <h3 style={{ margin: 0, fontFamily: FONT, fontSize: 14, fontWeight: 700, color: 'var(--black-60)' }}>
-          Edita tus ítems de forma masiva en 2 pasos
+          Edita las alertas de stock de tus ítems en 2 pasos
         </h3>
         <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, display: 'flex', gap: 32, flexWrap: 'wrap' }}>
           <Paso
             icono={<Download size={22} color="var(--blue-100)" />}
-            titulo="Descarga la plantilla y edita tus ítems"
-            texto="Edita los ítems en la plantilla de Excel."
+            titulo="Descarga la plantilla y edita tus alertas de stock"
+            texto="Edita el stock bajo y la alerta en la plantilla de Excel."
           />
           <Paso
             icono={<FileText size={22} color="var(--blue-100)" />}
             titulo="Carga la plantilla"
-            texto="Sube tu archivo de plantilla Excel con los ítems editados."
+            texto="Sube tu archivo de plantilla Excel con las alertas de stock editadas."
           />
         </div>
       </div>

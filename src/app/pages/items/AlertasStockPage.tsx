@@ -13,7 +13,7 @@ import { getVarianteLabel, getVariantes, itemEnSucursal } from '../../types/item
 import { SUCURSALES } from '../../data/itemsCatalogs';
 import { formatExistencia } from '../../utils/format';
 import {
-  esAlertable, existenciaEnRojo, prioridadAlerta, resumirAlerta, sucursalesDeVariantes, unidadesDe, variantesAlertables,
+  criticidadItem, criticidadUnidad, esAlertable, existenciaEnRojo, resumirAlerta, sucursalesDeVariantes, unidadesDe, variantesAlertables,
   type ResumenAlerta,
 } from '../../utils/alertasStock';
 import { useCatalog } from '../../vertical';
@@ -86,6 +86,13 @@ export function AlertasStockPage() {
         const variantes = variantesAlertables(item, suc).filter(v =>
           (padreCoincide || coincide(`${item.nombre} ${getVarianteLabel(v)}`, v.codigo))
           && (!soloAlertas || resumirAlerta(v.sucursales, suc).activa));
+        // Con "Por alerta" las variantes también van de la más crítica a la menos.
+        if (orden === 'alerta') {
+          variantes.sort((x, y) => {
+            const cx = criticidadUnidad(x.sucursales, suc), cy = criticidadUnidad(y.sucursales, suc);
+            return cx !== cy ? (cx < cy ? -1 : 1) : getVarianteLabel(x).localeCompare(getVarianteLabel(y), 'es', { sensitivity: 'base' });
+          });
+        }
         if (variantes.length > 0) out.push({ item, variantes });
       } else {
         if (!coincide(item.nombre, item.codigo)) continue;
@@ -95,8 +102,9 @@ export function AlertasStockPage() {
     }
     return out.sort((a, b) => {
       if (orden === 'alerta') {
-        const d = prioridadAlerta(a.item, suc) - prioridadAlerta(b.item, suc);
-        if (d !== 0) return d;
+        // De lo más crítico a lo menos (existencia − stock bajo; sin alerta, solo la existencia).
+        const ca = criticidadItem(a.item, suc), cb = criticidadItem(b.item, suc);
+        if (ca !== cb) return ca < cb ? -1 : 1;
       }
       return porNombre(a.item, b.item);
     });
@@ -157,7 +165,7 @@ export function AlertasStockPage() {
     const n = r.alcance.length;
     const aviso = !suc && n > 1 ? `Se aplica a las ${n} sucursales` : undefined;
     return (
-      <tr key={u.key} style={{ backgroundColor: u.hijo ? 'var(--blue-10)' : undefined }}>
+      <tr key={u.key} style={{ backgroundColor: u.hijo ? 'color-mix(in srgb, var(--blue-10) 50%, white)' : undefined }}>
         <td style={{ ...tdStyle, width: 36 }} />
         <td style={{ ...tdStyle, width: 120 }}>{u.codigo}</td>
         <td style={{ ...tdStyle, fontWeight: 700, paddingLeft: u.hijo ? 16 : 0 }}>{u.nombre}</td>
@@ -205,7 +213,10 @@ export function AlertasStockPage() {
         <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 20, lineHeight: '28px', color: 'var(--black-100)', margin: 0 }}>
           Alertas de Stock
         </p>
-        <div style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
+          <button className="btn btn-outline-coral" onClick={() => navigate('/items/alertas-stock/ejemplo-correo')}>
+            Ejemplo de correo
+          </button>
           <button className="btn btn-outline-coral" onClick={() => navigate('/items/alertas-stock/actualizacion-masiva')}>
             Actualización masiva
           </button>
@@ -219,7 +230,8 @@ export function AlertasStockPage() {
             icon={<Store size={16} color="var(--blue-50)" />}
             placeholder="Todas las sucursales"
             value={sucursalId}
-            onChange={reset(setSucursalId)}
+            // Sin sucursal no se puede ordenar por alerta (la criticidad es por sucursal): vuelve a Alfabético.
+            onChange={v => { setSucursalId(v); if (!v) setOrden('alfabetico'); setPage(0); }}
             options={SUCURSALES.map(s => ({ value: s.id, label: s.label }))}
           />
         </div>
@@ -248,7 +260,10 @@ export function AlertasStockPage() {
           ariaLabel="Orden"
           value={orden}
           onChange={reset(setOrden)}
-          options={[{ value: 'alfabetico', label: 'Alfabético' }, { value: 'alerta', label: 'Por alerta' }]}
+          options={[
+            { value: 'alfabetico', label: 'Alfabético' },
+            { value: 'alerta', label: 'Por alerta', disabled: !suc, title: 'Filtra por una sucursal para ordenar por alerta' },
+          ]}
         />
         <SegmentedSwitch<Vista>
           ariaLabel="Vista"
