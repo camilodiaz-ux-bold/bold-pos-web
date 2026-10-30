@@ -56,7 +56,7 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     // Retail no vende por porciones/botellas ni usa INC.
     unidades: UNIDADES.filter(u => u.id !== 'porciones' && u.id !== 'botellas'),
     impuestos: IMPUESTOS.filter(i => i.id !== 'inc-8'),
-    itemsStorageKey: 'bold-pos:items:retail:v6',
+    itemsStorageKey: 'bold-pos:items:retail:v7',
     buildSeedItems: buildRetailSeedItems,
     ventasStorageKey: 'bold-pos:ventas:retail:v1',
     buildSeedVentas: buildRetailSeedVentas,
