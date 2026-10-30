@@ -13,12 +13,12 @@ import { getVarianteLabel, getVariantes, itemEnSucursal } from '../../types/item
 import { SUCURSALES } from '../../data/itemsCatalogs';
 import { formatExistencia } from '../../utils/format';
 import {
-  esAlertable, prioridadAlerta, resumirAlerta, unidadesDe, variantesAlertables, type ResumenAlerta,
+  criticidadItem, criticidadUnidad, esAlertable, existenciaEnRojo, resumirAlerta, sucursalesDeVariantes, unidadesDe, variantesAlertables,
+  type ResumenAlerta,
 } from '../../utils/alertasStock';
 import { useCatalog } from '../../vertical';
 import { FilterPillInput, FilterPillSelect } from '../../components/items/FilterPill';
 import { AlertaCheck, SegmentedSwitch, StockBajoInput } from '../../components/items/alertas/AlertaControles';
-import { MenuFila } from '../../components/items/alertas/MenuFila';
 import { VerSucursalesModal } from '../../components/items/alertas/VerSucursalesModal';
 
 const FONT = "'Montserrat', sans-serif";
@@ -39,6 +39,9 @@ const tdStyle: React.CSSProperties = {
   padding: '8px 12px 8px 0', fontFamily: FONT, fontSize: 13, fontWeight: 500, color: 'var(--black-100)',
   borderBottom: '1px solid var(--black-10)', verticalAlign: 'middle',
 };
+
+const numTh: React.CSSProperties = { ...thStyle, textAlign: 'right', paddingRight: 24 };
+const numTd: React.CSSProperties = { ...tdStyle, textAlign: 'right', paddingRight: 24, fontVariantNumeric: 'tabular-nums' };
 
 /** Una fila de la lista: un ítem simple, una variante o el padre de sus variantes (sin controles). */
 interface Unidad {
@@ -83,6 +86,13 @@ export function AlertasStockPage() {
         const variantes = variantesAlertables(item, suc).filter(v =>
           (padreCoincide || coincide(`${item.nombre} ${getVarianteLabel(v)}`, v.codigo))
           && (!soloAlertas || resumirAlerta(v.sucursales, suc).activa));
+        // Con "Por alerta" las variantes también van de la más crítica a la menos.
+        if (orden === 'alerta') {
+          variantes.sort((x, y) => {
+            const cx = criticidadUnidad(x.sucursales, suc), cy = criticidadUnidad(y.sucursales, suc);
+            return cx !== cy ? (cx < cy ? -1 : 1) : getVarianteLabel(x).localeCompare(getVarianteLabel(y), 'es', { sensitivity: 'base' });
+          });
+        }
         if (variantes.length > 0) out.push({ item, variantes });
       } else {
         if (!coincide(item.nombre, item.codigo)) continue;
@@ -92,8 +102,9 @@ export function AlertasStockPage() {
     }
     return out.sort((a, b) => {
       if (orden === 'alerta') {
-        const d = prioridadAlerta(a.item, suc) - prioridadAlerta(b.item, suc);
-        if (d !== 0) return d;
+        // De lo más crítico a lo menos (existencia − stock bajo; sin alerta, solo la existencia).
+        const ca = criticidadItem(a.item, suc), cb = criticidadItem(b.item, suc);
+        if (ca !== cb) return ca < cb ? -1 : 1;
       }
       return porNombre(a.item, b.item);
     });
@@ -122,24 +133,48 @@ export function AlertasStockPage() {
     const ids = r.alcance.map(s => s.sucursalId);
     setAlertaStock(u.itemId, { sucursalIds: ids, variantId: u.variantId, alerta: activa });
     const verbo = activa ? 'activada' : 'inactivada';
-    toast.success(ids.length > 1 ? `Alerta ${verbo} en las ${ids.length} sucursales de «${u.titulo}»` : `Alerta ${verbo} — «${u.titulo}»`);
+    // Activar sin umbral lo deja en 0 (specs/2026-10-alertas-stock-ajustes.md §2).
+    const aCero = activa && r.alcance.some(s => s.stockBajo === undefined);
+    toast.success(
+      ids.length > 1
+        ? `Alerta ${verbo} en las ${ids.length} sucursales de «${u.titulo}»${aCero ? ' (stock bajo en 0 donde no estaba definido)' : ''}`
+        : `Alerta ${verbo} — «${u.titulo}»${aCero ? ' (stock bajo en 0)' : ''}`,
+    );
+  };
+
+  /** Celda Sucursal: sin filtro, siempre `Todas (N)` (+ punto coral si hay alerta disparada); con filtro, su nombre. */
+  const celdaSucursal = (n: number, disparadas: number) => {
+    if (suc) return nombreSucursal(suc);
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        Todas ({n})
+        {disparadas > 0 && (
+          <span
+            role="img"
+            aria-label="Alerta disparada"
+            title={`Stock en o por debajo del mínimo en ${disparadas} de ${n} sucursal${n === 1 ? '' : 'es'}`}
+            style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--coral-100)', flexShrink: 0 }}
+          />
+        )}
+      </span>
+    );
   };
 
   const renderUnidad = (u: Unidad) => {
     const r = resumirAlerta(u.sucursales, suc);
     const n = r.alcance.length;
-    const multi = !suc && n > 1;
-    const aviso = multi ? `Se aplica a las ${n} sucursales` : undefined;
-    const sucursalTxt = suc ? nombreSucursal(suc) : n > 1 ? `Todas (${n})` : n === 1 ? nombreSucursal(r.alcance[0].sucursalId) : '—';
+    const aviso = !suc && n > 1 ? `Se aplica a las ${n} sucursales` : undefined;
     return (
-      <tr key={u.key} style={{ backgroundColor: u.hijo ? 'var(--blue-10)' : undefined }}>
+      <tr key={u.key} style={{ backgroundColor: u.hijo ? 'color-mix(in srgb, var(--blue-10) 50%, white)' : undefined }}>
         <td style={{ ...tdStyle, width: 36 }} />
         <td style={{ ...tdStyle, width: 120 }}>{u.codigo}</td>
         <td style={{ ...tdStyle, fontWeight: 700, paddingLeft: u.hijo ? 16 : 0 }}>{u.nombre}</td>
-        <td style={{ ...tdStyle, width: 150 }}>{sucursalTxt}</td>
-        <td style={{ ...tdStyle, width: 100, fontWeight: 700, color: r.disparada ? 'var(--coral-100)' : undefined }}>
-          {formatExistencia(r.existencia)}
-        </td>
+        <td style={{ ...tdStyle, width: 150 }}>{celdaSucursal(n, r.disparadas)}</td>
+        {suc && (
+          <td style={{ ...numTd, width: 110, fontWeight: 700, color: existenciaEnRojo(r.existencia, r.disparada) ? 'var(--coral-100)' : undefined }}>
+            {formatExistencia(r.existencia)}
+          </td>
+        )}
         <td style={{ ...tdStyle, width: 150 }}>
           <StockBajoInput
             valor={r.stockBajo}
@@ -151,14 +186,20 @@ export function AlertasStockPage() {
         <td style={{ ...tdStyle, width: 80 }}>
           <AlertaCheck
             valor={r.alerta}
-            disabled={!r.alertable}
             onChange={v => cambiarAlerta(u, r, v)}
-            title={!r.alertable ? 'Define el stock bajo para activar la alerta' : aviso}
+            title={aviso}
             ariaLabel={`Alerta de ${u.titulo}`}
           />
         </td>
-        <td style={{ ...tdStyle, width: 44, paddingRight: 0 }}>
-          <MenuFila ariaLabel={`Más acciones de ${u.titulo}`} onVerSucursales={() => setModal({ itemId: u.itemId, variantId: u.variantId })} />
+        <td style={{ ...tdStyle, width: 120, paddingRight: 0 }}>
+          <button
+            type="button"
+            className="btn btn-cancel btn--sm"
+            aria-label={`Sucursales de ${u.titulo}`}
+            onClick={() => setModal({ itemId: u.itemId, variantId: u.variantId })}
+          >
+            Sucursales
+          </button>
         </td>
       </tr>
     );
@@ -172,7 +213,10 @@ export function AlertasStockPage() {
         <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 20, lineHeight: '28px', color: 'var(--black-100)', margin: 0 }}>
           Alertas de Stock
         </p>
-        <div style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
+          <button className="btn btn-outline-coral" onClick={() => navigate('/items/alertas-stock/ejemplo-correo')}>
+            Ejemplo de correo
+          </button>
           <button className="btn btn-outline-coral" onClick={() => navigate('/items/alertas-stock/actualizacion-masiva')}>
             Actualización masiva
           </button>
@@ -186,7 +230,8 @@ export function AlertasStockPage() {
             icon={<Store size={16} color="var(--blue-50)" />}
             placeholder="Todas las sucursales"
             value={sucursalId}
-            onChange={reset(setSucursalId)}
+            // Sin sucursal no se puede ordenar por alerta (la criticidad es por sucursal): vuelve a Alfabético.
+            onChange={v => { setSucursalId(v); if (!v) setOrden('alfabetico'); setPage(0); }}
             options={SUCURSALES.map(s => ({ value: s.id, label: s.label }))}
           />
         </div>
@@ -215,7 +260,10 @@ export function AlertasStockPage() {
           ariaLabel="Orden"
           value={orden}
           onChange={reset(setOrden)}
-          options={[{ value: 'alfabetico', label: 'Alfabético' }, { value: 'alerta', label: 'Por alerta' }]}
+          options={[
+            { value: 'alfabetico', label: 'Alfabético' },
+            { value: 'alerta', label: 'Por alerta', disabled: !suc, title: 'Filtra por una sucursal para ordenar por alerta' },
+          ]}
         />
         <SegmentedSwitch<Vista>
           ariaLabel="Vista"
@@ -237,7 +285,7 @@ export function AlertasStockPage() {
           <Info size={16} color="var(--blue-100)" style={{ flexShrink: 0, marginTop: 1 }} />
           <span>
             Estás viendo todas las sucursales. El stock bajo y la alerta que cambies se aplicarán a todas las sucursales del ítem.
-            Para definir valores distintos por sucursal, usa ⋮ → Ver sucursales o filtra por sucursal.
+            Para definir valores distintos por sucursal, usa el botón Sucursales o filtra por sucursal.
           </span>
         </div>
       )}
@@ -254,17 +302,17 @@ export function AlertasStockPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 800 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: suc ? 970 : 860 }}>
               <thead>
                 <tr>
                   <th style={{ ...thStyle, width: 36 }} />
                   <th style={{ ...thStyle, width: 120 }}>Código</th>
                   <th style={thStyle}>Nombre</th>
                   <th style={{ ...thStyle, width: 150 }}>Sucursal</th>
-                  <th style={{ ...thStyle, width: 100 }}>Existencia</th>
+                  {suc && <th style={{ ...numTh, width: 110 }}>Existencia</th>}
                   <th style={{ ...thStyle, width: 150 }}>Stock bajo</th>
                   <th style={{ ...thStyle, width: 80 }}>Alerta</th>
-                  <th style={{ ...thStyle, width: 44 }} />
+                  <th style={{ ...thStyle, width: 120 }} />
                 </tr>
               </thead>
               <tbody>
@@ -276,7 +324,12 @@ export function AlertasStockPage() {
                   }
                   const abierto = expandidos.has(item.id);
                   const existencia = variantes.reduce((a, v) => a + resumirAlerta(v.sucursales, suc).existencia, 0);
-                  const disparada = unidadesDe(item, suc).some(u => resumirAlerta(u, suc).disparada);
+                  const resumenes = unidadesDe(item, suc).map(u => resumirAlerta(u, suc));
+                  const disparada = resumenes.some(r => r.disparada);
+                  // Sucursales distintas con alguna variante disparada (no se cuentan dos veces).
+                  const disparadasPadre = new Set(
+                    unidadesDe(item, suc).flatMap(u => u.filter(x => (!suc || x.sucursalId === suc) && x.alerta && x.stockBajo !== undefined && x.existencia <= x.stockBajo).map(x => x.sucursalId)),
+                  ).size;
                   return (
                     <React.Fragment key={item.id}>
                       <tr>
@@ -293,8 +346,12 @@ export function AlertasStockPage() {
                         </td>
                         <td style={tdStyle}>{item.codigo}</td>
                         <td style={{ ...tdStyle, fontWeight: 700 }}>{item.nombre}</td>
-                        <td style={tdStyle}>{suc ? nombreSucursal(suc) : 'Todas'}</td>
-                        <td style={{ ...tdStyle, fontWeight: 700, color: disparada ? 'var(--coral-100)' : undefined }}>{formatExistencia(existencia)}</td>
+                        <td style={tdStyle}>{celdaSucursal(sucursalesDeVariantes(variantes).length, disparadasPadre)}</td>
+                        {suc && (
+                          <td style={{ ...numTd, fontWeight: 700, color: existenciaEnRojo(existencia, disparada) ? 'var(--coral-100)' : undefined }}>
+                            {formatExistencia(existencia)}
+                          </td>
+                        )}
                         <td style={tdStyle} />
                         <td style={tdStyle} />
                         <td style={tdStyle} />

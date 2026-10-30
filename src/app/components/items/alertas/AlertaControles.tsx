@@ -98,7 +98,8 @@ interface SegmentedSwitchProps<T extends string> {
   ariaLabel: string;
   value: T;
   onChange: (v: T) => void;
-  options: { value: T; label: string }[];
+  /** `disabled` bloquea una opción (con `title` como explicación). */
+  options: { value: T; label: string; disabled?: boolean; title?: string }[];
 }
 
 /** Switch de dos opciones (píldora): la activa va rellena. */
@@ -112,11 +113,14 @@ export function SegmentedSwitch<T extends string>({ ariaLabel, value, onChange, 
             key={o.value}
             type="button"
             aria-pressed={active}
-            onClick={() => onChange(o.value)}
+            disabled={o.disabled}
+            title={o.disabled ? o.title : undefined}
+            onClick={() => { if (!o.disabled) onChange(o.value); }}
             style={{
-              padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 12, fontWeight: 600,
+              padding: '6px 14px', borderRadius: 999, border: 'none', cursor: o.disabled ? 'not-allowed' : 'pointer', fontFamily: FONT, fontSize: 12, fontWeight: 600,
               backgroundColor: active ? 'var(--black-0)' : 'transparent',
-              color: active ? 'var(--blue-100)' : 'var(--black-60)',
+              color: active ? 'var(--blue-100)' : o.disabled ? 'var(--black-40)' : 'var(--black-60)',
+              opacity: o.disabled ? 0.6 : 1,
               boxShadow: active ? 'var(--shadow-4, 0 1px 3px rgba(0,0,0,0.12))' : 'none',
             }}
           >

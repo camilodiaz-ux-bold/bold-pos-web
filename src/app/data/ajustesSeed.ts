@@ -143,4 +143,5 @@ export const AJUSTES_DEFAULT: AjustesState = {
     { id: 'ci-6', nombre: 'Accesorios', descripcion: '', padreId: 'ci-0' },
     { id: 'ci-7', nombre: 'Cuidado Personal', descripcion: '', padreId: 'ci-0' },
   ],
+  alertasStockBajo: { correosAdicionales: [], frecuencia: 'lunes' },
 };
