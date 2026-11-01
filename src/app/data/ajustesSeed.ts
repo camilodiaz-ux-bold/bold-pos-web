@@ -1,6 +1,6 @@
 /** Valores iniciales de Ajustes (specs/2026-10-ajustes.md §8). Sin datos reales del staging. */
 import type { AjustesState, MetodoPago, NumeracionNoElectronica, Rol, Sucursal } from '../types/ajustes';
-import { TODOS_LOS_PERMISOS } from './permisosCatalogo';
+import { TODOS_LOS_PERMISOS, conPermisoStockMinimo } from './permisosCatalogo';
 import { METODOS_PAGO, SUCURSALES_COMPRA } from './facturasCompraSeed';
 
 export const AJUSTES_STORAGE_KEY = 'bold-pos:ajustes:v1';
@@ -36,8 +36,8 @@ const PERMISOS_CONTADOR = TODOS_LOS_PERMISOS.filter(id =>
 
 const ROLES: Rol[] = [
   { id: 'rol-admin', nombre: 'Administrador', permisos: TODOS_LOS_PERMISOS },
-  { id: 'rol-vendedor', nombre: 'Vendedor', permisos: PERMISOS_VENDEDOR },
-  { id: 'rol-contador', nombre: 'Contador', permisos: PERMISOS_CONTADOR },
+  { id: 'rol-vendedor', nombre: 'Vendedor', permisos: conPermisoStockMinimo(PERMISOS_VENDEDOR) },
+  { id: 'rol-contador', nombre: 'Contador', permisos: conPermisoStockMinimo(PERMISOS_CONTADOR) },
 ];
 
 export const AJUSTES_DEFAULT: AjustesState = {
@@ -143,5 +143,5 @@ export const AJUSTES_DEFAULT: AjustesState = {
     { id: 'ci-6', nombre: 'Accesorios', descripcion: '', padreId: 'ci-0' },
     { id: 'ci-7', nombre: 'Cuidado Personal', descripcion: '', padreId: 'ci-0' },
   ],
-  alertasStockBajo: { correosAdicionales: [], frecuencia: 'lunes' },
+  alertasStockMinimo: { correosAdicionales: [], frecuencia: 'lunes' },
 };

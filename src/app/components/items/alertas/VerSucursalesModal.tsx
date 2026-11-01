@@ -1,7 +1,7 @@
 /**
  * VerSucursalesModal — modal "Sucursales" de Alertas de Stock (specs/2026-10-alertas-stock.md §3 y
  * 2026-10-alertas-stock-ajustes.md §4): datos del ítem (o de la variante) arriba y una fila por sucursal del comercio con
- * Disponible, existencia, stock bajo y alerta. Es el lugar para definir valores distintos por sucursal: cada fila se
+ * Disponible, existencia, stock mínimo y alerta. Es el lugar para definir valores distintos por sucursal: cada fila se
  * guarda por separado.
  */
 import React, { useEffect, useState } from 'react';
@@ -15,7 +15,7 @@ import { existenciaEnRojo, resumirAlerta } from '../../../utils/alertasStock';
 import { useCatalog } from '../../../vertical';
 import { ItemThumb } from '../ItemThumb';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
-import { AlertaCheck, StockBajoInput } from './AlertaControles';
+import { AlertaCheck, StockMinimoInput } from './AlertaControles';
 
 const FONT = "'Montserrat', sans-serif";
 
@@ -110,7 +110,7 @@ export function VerSucursalesModal({ itemId, variantId, onClose }: Props) {
               <th style={th()}>Sucursal</th>
               <th style={th({ textAlign: 'center' })}>Disponible</th>
               <th style={th({ ...num })}>Existencia</th>
-              <th style={th()}>Stock bajo</th>
+              <th style={th()}>Stock mínimo</th>
               <th style={th()}>Alerta</th>
             </tr>
           </thead>
@@ -139,12 +139,12 @@ export function VerSucursalesModal({ itemId, variantId, onClose }: Props) {
                   </td>
                   <td style={td()}>
                     {s && r ? (
-                      <StockBajoInput
-                        valor={r.stockBajo}
-                        ariaLabel={`Stock bajo en ${nombre}`}
+                      <StockMinimoInput
+                        valor={r.stockMinimo}
+                        ariaLabel={`Stock mínimo en ${nombre}`}
                         onGuardar={v => {
-                          setAlertaStock(itemId, { sucursalIds: [suc.id], variantId, stockBajo: v });
-                          toast.success(`Stock bajo ${v === null ? 'borrado' : 'guardado'} — ${nombre}`);
+                          setAlertaStock(itemId, { sucursalIds: [suc.id], variantId, stockMinimo: v });
+                          toast.success(`Stock mínimo ${v === null ? 'borrado' : 'guardado'} — ${nombre}`);
                         }}
                       />
                     ) : <span style={{ color: 'var(--black-40)' }}>—</span>}
@@ -156,7 +156,7 @@ export function VerSucursalesModal({ itemId, variantId, onClose }: Props) {
                         ariaLabel={`Alerta en ${nombre}`}
                         onChange={v => {
                           setAlertaStock(itemId, { sucursalIds: [suc.id], variantId, alerta: v });
-                          toast.success(`Alerta ${v ? 'activada' : 'inactivada'} — ${nombre}${v && s.stockBajo === undefined ? ' (stock bajo en 0)' : ''}`);
+                          toast.success(`Alerta ${v ? 'activada' : 'inactivada'} — ${nombre}${v && s.stockMinimo === undefined ? ' (stock mínimo en 0)' : ''}`);
                         }}
                       />
                     ) : <span style={{ color: 'var(--black-40)' }}>—</span>}

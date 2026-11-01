@@ -84,7 +84,7 @@ export function ActualizacionMasivaAlertasPage() {
           <Paso
             icono={<Download size={22} color="var(--blue-100)" />}
             titulo="Descarga la plantilla y edita tus alertas de stock"
-            texto="Edita el stock bajo y la alerta en la plantilla de Excel."
+            texto="Edita el stock mínimo y la alerta en la plantilla de Excel."
           />
           <Paso
             icono={<FileText size={22} color="var(--blue-100)" />}

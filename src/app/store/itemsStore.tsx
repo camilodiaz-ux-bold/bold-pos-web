@@ -18,9 +18,9 @@ import { SUCURSALES } from '../data/itemsCatalogs';
 import { useVertical, type Vertical } from '../vertical';
 
 // La clave de localStorage depende de la vertical (data/verticalCatalog.ts):
-// Restaurantes usa 'bold-pos:items:v3' (v1 → v2: Item ganó esCombo/componentes/
+// Restaurantes usa 'bold-pos:items:v4' (v1 → v2: Item ganó esCombo/componentes/
 // comboSaleId, specs/2026-09-combos.md §6.1; v2 → v3: combos sembrados con costo,
-// specs/2026-10-reporte-ganancias-items.md §8.3); Retail usa su propia clave (v4 por lo mismo).
+// specs/2026-10-reporte-ganancias-items.md §8.3; v3 → v4: stockBajo → stockMinimo, specs/2026-11-stock-minimo.md); Retail usa su propia clave (v8 por lo mismo).
 
 /** Código aleatorio de 8 dígitos que no coincide con el de ningún ítem existente. */
 function generateAutoCode(items: Item[]): string {
@@ -66,7 +66,7 @@ function saveItems(vertical: Vertical, items: Item[]): void {
 export interface AlertaStockCambio {
   sucursalIds: string[];
   variantId?: string;
-  stockBajo?: number | null;
+  stockMinimo?: number | null;
   alerta?: boolean;
 }
 
@@ -80,8 +80,8 @@ interface ItemsContextValue {
   /** Activa/inactiva una variante del ítem (specs/2026-10-variantes-modelo.md §3). */
   toggleVarianteActivo: (itemId: string, variantId: string) => void;
   /**
-   * Alertas de Stock (specs/2026-10-alertas-stock.md): fija `stockBajo` y/o `alerta` en las sucursales dadas del
-   * ítem, o de una de sus variantes. `stockBajo: null` lo borra (y apaga la alerta); activar la alerta en una
+   * Alertas de Stock (specs/2026-10-alertas-stock.md): fija `stockMinimo` y/o `alerta` en las sucursales dadas del
+   * ítem, o de una de sus variantes. `stockMinimo: null` lo borra (y apaga la alerta); activar la alerta en una
    * sucursal sin umbral lo deja en 0.
    */
   setAlertaStock: (itemId: string, cambio: AlertaStockCambio) => void;
@@ -172,15 +172,15 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
     const aplicar = (sucursales: ItemSucursal[]): ItemSucursal[] => sucursales.map(s => {
       if (!cambio.sucursalIds.includes(s.sucursalId)) return s;
       const next: ItemSucursal = { ...s };
-      if (cambio.stockBajo === null) {
-        delete next.stockBajo;
+      if (cambio.stockMinimo === null) {
+        delete next.stockMinimo;
         next.alerta = false;
-      } else if (cambio.stockBajo !== undefined) {
-        next.stockBajo = cambio.stockBajo;
+      } else if (cambio.stockMinimo !== undefined) {
+        next.stockMinimo = cambio.stockMinimo;
       }
       if (cambio.alerta !== undefined) {
         // Activar la alerta sin umbral lo deja en 0 (specs/2026-10-alertas-stock-ajustes.md §2).
-        if (cambio.alerta && next.stockBajo === undefined) next.stockBajo = 0;
+        if (cambio.alerta && next.stockMinimo === undefined) next.stockMinimo = 0;
         next.alerta = cambio.alerta;
       }
       return next;

@@ -43,7 +43,7 @@ export function EjemploCorreoAlertasPage() {
   const filas = useMemo(() => filasCorreoEjemplo(allProducts), [allProducts]);
   const restantes = CORREO_TOTAL_ALERTAS - Math.min(CORREO_MAX_FILAS, filas.length);
   const fecha = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
-  const asunto = `Tienes ${CORREO_TOTAL_ALERTAS} ítems con alerta de stock bajo`;
+  const asunto = `Tienes ${CORREO_TOTAL_ALERTAS} ítems con alerta de stock mínimo`;
 
   return (
     <div style={{ flex: 1, backgroundColor: 'var(--blue-10)', overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -84,7 +84,7 @@ export function EjemploCorreoAlertasPage() {
           <div style={{ padding: '32px 32px 28px', fontFamily: FONT, color: 'var(--black-100)' }}>
             <p style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Hola, {comercio}:</p>
             <p style={{ margin: '12px 0 0', fontSize: 14, lineHeight: '22px' }}>
-              Algunos de tus ítems llegaron a su <strong>stock bajo</strong>: la existencia mínima que definiste para cada uno.
+              Algunos de tus ítems llegaron al <strong>stock mínimo</strong> que definiste o quedaron por debajo.
               Te avisamos para que puedas reabastecerlos a tiempo y no perder ventas.
             </p>
 
@@ -98,7 +98,7 @@ export function EjemploCorreoAlertasPage() {
                       <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--black-60)' }}>{f.sucursal}</p>
                       <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--black-60)' }}>
                         Existencia <strong style={{ color: f.existencia <= 0 ? 'var(--coral-100)' : 'var(--black-100)' }}>{formatExistencia(f.existencia)}</strong>
-                        {' · '}Stock bajo <strong style={{ color: 'var(--black-100)' }}>{formatExistencia(f.stockBajo)}</strong>
+                        {' · '}Stock mínimo <strong style={{ color: 'var(--black-100)' }}>{formatExistencia(f.stockMinimo)}</strong>
                       </p>
                     </div>
                     {/* Unidades que faltan para completar el mínimo */}
@@ -126,8 +126,8 @@ export function EjemploCorreoAlertasPage() {
             </div>
 
             <p style={{ margin: '28px 0 0', fontSize: 12, lineHeight: '18px', color: 'var(--black-60)' }}>
-              Recibes este correo porque tienes alertas de stock bajo activas. Puedes cambiar el stock bajo de cada ítem o desactivar la alerta
-              desde Items → Alertas de Stock.
+              Recibes este correo porque tienes alertas de stock mínimo activas. Puedes cambiar el stock mínimo de cada ítem o desactivar la alerta
+              desde Ítems → Alertas de Stock.
             </p>
           </div>
 

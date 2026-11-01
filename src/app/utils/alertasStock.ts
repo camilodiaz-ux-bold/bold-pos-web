@@ -1,6 +1,6 @@
 /**
  * alertasStock.ts — lógica pura de Alertas de Stock (specs/2026-10-alertas-stock.md §1-§2 y 2026-10-alertas-stock-ajustes.md).
- * La lista y el modal derivan todo de `ItemSucursal.stockBajo/alerta` (en el ítem o en cada variante).
+ * La lista y el modal derivan todo de `ItemSucursal.stockMinimo/alerta` (en el ítem o en cada variante).
  */
 import type { Item, ItemSucursal, ItemVariante } from '../types/item';
 import { getVariantes } from '../types/item';
@@ -11,10 +11,10 @@ export interface ResumenAlerta {
   alcance: ItemSucursal[];
   existencia: number;
   /** Número, 'sin' si ninguna lo tiene, o 'varios' si las sucursales difieren. */
-  stockBajo: number | 'sin' | 'varios';
+  stockMinimo: number | 'sin' | 'varios';
   /** true / false, o 'mixto' si hay de las dos. */
   alerta: boolean | 'mixto';
-  /** Alguna sucursal con alerta activa y existencia ≤ stock bajo. */
+  /** Alguna sucursal con alerta activa y existencia ≤ stock mínimo. */
   disparada: boolean;
   /** Cuántas sucursales en alcance tienen la alerta disparada. */
   disparadas: number;
@@ -25,20 +25,20 @@ export interface ResumenAlerta {
 export function resumirAlerta(sucursales: ItemSucursal[], sucursalId?: string): ResumenAlerta {
   const alcance = sucursalId ? sucursales.filter(s => s.sucursalId === sucursalId) : sucursales;
   const existencia = alcance.reduce((a, s) => a + s.existencia, 0);
-  const umbrales = new Set(alcance.map(s => s.stockBajo));
-  let stockBajo: ResumenAlerta['stockBajo'];
-  if (umbrales.size > 1) stockBajo = 'varios';
+  const umbrales = new Set(alcance.map(s => s.stockMinimo));
+  let stockMinimo: ResumenAlerta['stockMinimo'];
+  if (umbrales.size > 1) stockMinimo = 'varios';
   else {
     const [u] = [...umbrales];
-    stockBajo = u === undefined ? 'sin' : u;
+    stockMinimo = u === undefined ? 'sin' : u;
   }
   const activas = alcance.filter(s => s.alerta);
-  const disparadas = alcance.filter(s => s.alerta && s.stockBajo !== undefined && s.existencia <= s.stockBajo).length;
+  const disparadas = alcance.filter(s => s.alerta && s.stockMinimo !== undefined && s.existencia <= s.stockMinimo).length;
   const alerta: ResumenAlerta['alerta'] = activas.length === 0 ? false : activas.length === alcance.length ? true : 'mixto';
   return {
     alcance,
     existencia,
-    stockBajo,
+    stockMinimo,
     alerta,
     disparada: disparadas > 0,
     disparadas,
@@ -64,13 +64,13 @@ export function unidadesDe(item: Item, sucursalId?: string): ItemSucursal[][] {
 
 /**
  * Criticidad de una unidad (ítem simple o variante) para el orden "Por alerta" (specs/2026-10-alertas-stock-disponibilidad.md §4):
- * con alerta activa es `existencia − stock bajo`; sin ella, solo la existencia. Entre sucursales se toma la más crítica
+ * con alerta activa es `existencia − stock mínimo`; sin ella, solo la existencia. Entre sucursales se toma la más crítica
  * (la de menor valor). Mientras más bajo, más crítico; negativo = ya disparada. No se muestra.
  */
 export function criticidadUnidad(sucursales: ItemSucursal[], sucursalId?: string): number {
   const alcance = sucursalId ? sucursales.filter(s => s.sucursalId === sucursalId) : sucursales;
   if (alcance.length === 0) return Number.POSITIVE_INFINITY;
-  return Math.min(...alcance.map(s => (s.alerta && s.stockBajo !== undefined ? s.existencia - s.stockBajo : s.existencia)));
+  return Math.min(...alcance.map(s => (s.alerta && s.stockMinimo !== undefined ? s.existencia - s.stockMinimo : s.existencia)));
 }
 
 /** Criticidad de un ítem: la de su unidad más crítica (con variantes, la variante más crítica). */
@@ -88,9 +88,9 @@ export function sucursalesDeVariantes(variantes: ItemVariante[]): string[] {
 export const existenciaEnRojo = (existencia: number, disparada: boolean): boolean => existencia < 0 || disparada;
 
 /**
- * Cuántos ítems están en stock bajo (specs/2026-10-alertas-stock-header.md): ítems alertables con la alerta activa y existencia
- * ≤ stock bajo en alguna sucursal o, con variantes, en alguna de ellas. Un ítem cuenta una vez. Es el número del ícono del header.
+ * Cuántos ítems están en stock mínimo (specs/2026-10-alertas-stock-header.md): ítems alertables con la alerta activa y existencia
+ * ≤ stock mínimo en alguna sucursal o, con variantes, en alguna de ellas. Un ítem cuenta una vez. Es el número del ícono del header.
  */
-export function contarItemsEnStockBajo(items: Item[]): number {
+export function contarItemsEnStockMinimo(items: Item[]): number {
   return items.filter(item => esAlertable(item) && unidadesDe(item).some(u => resumirAlerta(u).disparada)).length;
 }

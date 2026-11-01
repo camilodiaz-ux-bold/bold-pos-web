@@ -1,7 +1,7 @@
 /**
  * DisponibilidadCard — card "Disponibilidad" del formulario de ítem:
  * toggle de existencias + checkboxes de sucursal + input de existencia por
- * sucursal marcada (solo si el toggle está ON) + stock bajo y alerta por sucursal + total.
+ * sucursal marcada (solo si el toggle está ON) + stock mínimo y alerta por sucursal + total.
  *
  * Para un combo (existenciasDisabled=true), el toggle de existencias se
  * oculta pero las sucursales siguen siendo seleccionables — un combo
@@ -21,9 +21,9 @@ interface DisponibilidadCardProps {
   onToggleSucursal: (id: SucursalId) => void;
   existencias: Partial<Record<SucursalId, string>>;
   onChangeExistencia: (id: SucursalId, raw: string) => void;
-  /** Alerta de stock bajo por sucursal marcada (specs/2026-10-alertas-stock-disponibilidad.md §1). */
-  stockBajo: Partial<Record<SucursalId, string>>;
-  onChangeStockBajo: (id: SucursalId, raw: string) => void;
+  /** Alerta de stock mínimo por sucursal marcada (specs/2026-10-alertas-stock-disponibilidad.md §1). */
+  stockMinimo: Partial<Record<SucursalId, string>>;
+  onChangeStockMinimo: (id: SucursalId, raw: string) => void;
   alertas: Partial<Record<SucursalId, boolean>>;
   onChangeAlerta: (id: SucursalId, activa: boolean) => void;
   unidadLabel: string;
@@ -40,8 +40,8 @@ export function DisponibilidadCard({
   onToggleSucursal,
   existencias,
   onChangeExistencia,
-  stockBajo,
-  onChangeStockBajo,
+  stockMinimo,
+  onChangeStockMinimo,
   alertas,
   onChangeAlerta,
   unidadLabel,
@@ -96,22 +96,22 @@ export function DisponibilidadCard({
                       className="merlin-input-filled"
                     />
                     <div style={{ marginTop: 12 }}>
-                      <FieldLabel>Stock bajo ({unidadLabel})</FieldLabel>
+                      <FieldLabel>Stock mínimo ({unidadLabel})</FieldLabel>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <input
                           type="number"
                           min={0}
-                          aria-label={`Stock bajo en ${s.label}`}
-                          value={stockBajo[s.id] ?? ''}
+                          aria-label={`Stock mínimo en ${s.label}`}
+                          value={stockMinimo[s.id] ?? ''}
                           placeholder="Sin definir"
-                          onChange={e => onChangeStockBajo(s.id, e.target.value)}
+                          onChange={e => onChangeStockMinimo(s.id, e.target.value)}
                           className="merlin-input-filled"
                           style={{ flex: 1, minWidth: 0 }}
                         />
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--black-100)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                           <input
                             type="checkbox"
-                            aria-label={`Activar alerta de stock bajo en ${s.label}`}
+                            aria-label={`Activar alerta de stock mínimo en ${s.label}`}
                             checked={!!alertas[s.id]}
                             onChange={e => onChangeAlerta(s.id, e.target.checked)}
                             style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--blue-100)' }}

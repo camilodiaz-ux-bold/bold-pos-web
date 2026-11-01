@@ -1,6 +1,6 @@
 /**
  * AlertasStockPage — Items → Alertas de Stock (specs/2026-10-alertas-stock.md). Lista compacta de ítems
- * inventariables donde se define el "stock bajo" y se activa la alerta por ítem, variante y sucursal.
+ * inventariables donde se define el "stock mínimo" y se activa la alerta por ítem, variante y sucursal.
  * Sin filtro de sucursal la edición aplica a todas las sucursales de la unidad (con aviso claro).
  */
 import React, { useMemo, useState } from 'react';
@@ -18,7 +18,8 @@ import {
 } from '../../utils/alertasStock';
 import { useCatalog } from '../../vertical';
 import { FilterPillInput, FilterPillSelect } from '../../components/items/FilterPill';
-import { AlertaCheck, SegmentedSwitch, StockBajoInput } from '../../components/items/alertas/AlertaControles';
+import { AlertaCheck, SegmentedSwitch, StockMinimoInput } from '../../components/items/alertas/AlertaControles';
+import { ConfirmDeleteModal } from '../../components/items/ConfirmDeleteModal';
 import { VerSucursalesModal } from '../../components/items/alertas/VerSucursalesModal';
 
 const FONT = "'Montserrat', sans-serif";
@@ -68,6 +69,8 @@ export function AlertasStockPage() {
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);
   const [modal, setModal] = useState<{ itemId: string; variantId?: string } | null>(null);
+  // Confirmación al aplicar a todas las sucursales (specs/2026-11-stock-minimo.md §3): guarda la acción pendiente y el N.
+  const [confirmarTodas, setConfirmarTodas] = useState<{ n: number; aplicar: () => void } | null>(null);
 
   const suc = sucursalId || undefined;
   const reset = <T,>(set: (v: T) => void) => (v: T) => { set(v); setPage(0); };
@@ -102,7 +105,7 @@ export function AlertasStockPage() {
     }
     return out.sort((a, b) => {
       if (orden === 'alerta') {
-        // De lo más crítico a lo menos (existencia − stock bajo; sin alerta, solo la existencia).
+        // De lo más crítico a lo menos (existencia − stock mínimo; sin alerta, solo la existencia).
         const ca = criticidadItem(a.item, suc), cb = criticidadItem(b.item, suc);
         if (ca !== cb) return ca < cb ? -1 : 1;
       }
@@ -122,11 +125,11 @@ export function AlertasStockPage() {
 
   const guardarUmbral = (u: Unidad, r: ResumenAlerta, valor: number | null) => {
     const ids = r.alcance.map(s => s.sucursalId);
-    setAlertaStock(u.itemId, { sucursalIds: ids, variantId: u.variantId, stockBajo: valor });
+    setAlertaStock(u.itemId, { sucursalIds: ids, variantId: u.variantId, stockMinimo: valor });
     toast.success(
       ids.length > 1
-        ? `Stock bajo ${valor === null ? 'borrado' : 'guardado'} en las ${ids.length} sucursales de «${u.titulo}»`
-        : `Stock bajo ${valor === null ? 'borrado' : 'guardado'} — «${u.titulo}»`,
+        ? `Stock mínimo ${valor === null ? 'borrado' : 'guardado'} en las ${ids.length} sucursales de «${u.titulo}»`
+        : `Stock mínimo ${valor === null ? 'borrado' : 'guardado'} — «${u.titulo}»`,
     );
   };
   const cambiarAlerta = (u: Unidad, r: ResumenAlerta, activa: boolean) => {
@@ -134,12 +137,18 @@ export function AlertasStockPage() {
     setAlertaStock(u.itemId, { sucursalIds: ids, variantId: u.variantId, alerta: activa });
     const verbo = activa ? 'activada' : 'inactivada';
     // Activar sin umbral lo deja en 0 (specs/2026-10-alertas-stock-ajustes.md §2).
-    const aCero = activa && r.alcance.some(s => s.stockBajo === undefined);
+    const aCero = activa && r.alcance.some(s => s.stockMinimo === undefined);
     toast.success(
       ids.length > 1
-        ? `Alerta ${verbo} en las ${ids.length} sucursales de «${u.titulo}»${aCero ? ' (stock bajo en 0 donde no estaba definido)' : ''}`
-        : `Alerta ${verbo} — «${u.titulo}»${aCero ? ' (stock bajo en 0)' : ''}`,
+        ? `Alerta ${verbo} en las ${ids.length} sucursales de «${u.titulo}»${aCero ? ' (stock mínimo en 0 donde no estaba definido)' : ''}`
+        : `Alerta ${verbo} — «${u.titulo}»${aCero ? ' (stock mínimo en 0)' : ''}`,
     );
+  };
+
+  /** Sin filtro de sucursal y con más de una sucursal en alcance, pide confirmación antes de aplicar. */
+  const pedirConfirmacion = (n: number, aplicar: () => void) => {
+    if (!suc && n > 1) setConfirmarTodas({ n, aplicar });
+    else aplicar();
   };
 
   /** Celda Sucursal: sin filtro, siempre `Todas (N)` (+ punto coral si hay alerta disparada); con filtro, su nombre. */
@@ -176,17 +185,17 @@ export function AlertasStockPage() {
           </td>
         )}
         <td style={{ ...tdStyle, width: 150 }}>
-          <StockBajoInput
-            valor={r.stockBajo}
-            onGuardar={v => guardarUmbral(u, r, v)}
+          <StockMinimoInput
+            valor={r.stockMinimo}
+            onGuardar={v => pedirConfirmacion(n, () => guardarUmbral(u, r, v))}
             title={aviso}
-            ariaLabel={`Stock bajo de ${u.titulo}`}
+            ariaLabel={`Stock mínimo de ${u.titulo}`}
           />
         </td>
         <td style={{ ...tdStyle, width: 80 }}>
           <AlertaCheck
             valor={r.alerta}
-            onChange={v => cambiarAlerta(u, r, v)}
+            onChange={v => pedirConfirmacion(n, () => cambiarAlerta(u, r, v))}
             title={aviso}
             ariaLabel={`Alerta de ${u.titulo}`}
           />
@@ -211,7 +220,7 @@ export function AlertasStockPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 20, lineHeight: '28px', color: 'var(--black-100)', margin: 0 }}>
-          Alertas de Stock
+          Alertas Stock mínimo
         </p>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
           <button className="btn btn-outline-coral" onClick={() => navigate('/items/alertas-stock/ejemplo-correo')}>
@@ -284,7 +293,7 @@ export function AlertasStockPage() {
         >
           <Info size={16} color="var(--blue-100)" style={{ flexShrink: 0, marginTop: 1 }} />
           <span>
-            Estás viendo todas las sucursales. El stock bajo y la alerta que cambies se aplicarán a todas las sucursales del ítem.
+            Estás viendo todas las sucursales. El stock mínimo y la alerta que cambies se aplicarán a todas las sucursales del ítem.
             Para definir valores distintos por sucursal, usa el botón Sucursales o filtra por sucursal.
           </span>
         </div>
@@ -310,7 +319,7 @@ export function AlertasStockPage() {
                   <th style={thStyle}>Nombre</th>
                   <th style={{ ...thStyle, width: 150 }}>Sucursal</th>
                   {suc && <th style={{ ...numTh, width: 110 }}>Existencia</th>}
-                  <th style={{ ...thStyle, width: 150 }}>Stock bajo</th>
+                  <th style={{ ...thStyle, width: 150 }}>Stock mínimo</th>
                   <th style={{ ...thStyle, width: 80 }}>Alerta</th>
                   <th style={{ ...thStyle, width: 120 }} />
                 </tr>
@@ -328,7 +337,7 @@ export function AlertasStockPage() {
                   const disparada = resumenes.some(r => r.disparada);
                   // Sucursales distintas con alguna variante disparada (no se cuentan dos veces).
                   const disparadasPadre = new Set(
-                    unidadesDe(item, suc).flatMap(u => u.filter(x => (!suc || x.sucursalId === suc) && x.alerta && x.stockBajo !== undefined && x.existencia <= x.stockBajo).map(x => x.sucursalId)),
+                    unidadesDe(item, suc).flatMap(u => u.filter(x => (!suc || x.sucursalId === suc) && x.alerta && x.stockMinimo !== undefined && x.existencia <= x.stockMinimo).map(x => x.sucursalId)),
                   ).size;
                   return (
                     <React.Fragment key={item.id}>
@@ -377,6 +386,16 @@ export function AlertasStockPage() {
         )}
       </div>
 
+      {confirmarTodas && (
+        <ConfirmDeleteModal
+          title="¿Aplicar a todas las sucursales?"
+          message={`El cambio de alerta de Stock mínimo se aplicará a las ${confirmarTodas.n} sucursales.`}
+          confirmLabel="Aplicar"
+          confirmVariant="primary"
+          onCancel={() => setConfirmarTodas(null)}
+          onConfirm={() => { confirmarTodas.aplicar(); setConfirmarTodas(null); }}
+        />
+      )}
       {modal && <VerSucursalesModal itemId={modal.itemId} variantId={modal.variantId} onClose={() => setModal(null)} />}
     </div>
   );

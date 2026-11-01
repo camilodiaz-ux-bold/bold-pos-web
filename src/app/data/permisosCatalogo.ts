@@ -35,6 +35,7 @@ export const PERMISOS_CATALOGO: PermisoSeccion[] = [
         ...vcee('Categorías de ítems'), ...vcee('Ítems'),
         'Modificar Precio en Venta', 'Ver Precio de Costo', 'Usar actualización masiva de ítems', 'Usar ajustes de inventario',
         'Usar flujo de inventario', 'Cambiar fecha de ajuste de inventario', ...vcee('Listas de Precio'), 'Usar Variantes de Ítems',
+        'Gestionar alertas Stock mínimo',
       ]),
     ],
   },
@@ -73,3 +74,10 @@ export const TODOS_LOS_PERMISOS: string[] = PERMISOS_CATALOGO.flatMap(s => s.gru
 
 /** Etiqueta visible del grupo (quita el sufijo interno que evita ids repetidos). */
 export const etiquetaGrupo = (nombre: string): string => nombre.replace(' (reportes)', '');
+
+/**
+ * Permiso "Gestionar alertas Stock mínimo" (specs/2026-11-stock-minimo.md §4). Sin efecto en el prototipo: aparece
+ * siempre activo en todos los roles y no se aplica a ningún control.
+ */
+export const PERMISO_STOCK_MINIMO_ID = 'items.gestionar-alertas-stock-minimo';
+export const conPermisoStockMinimo = (ids: string[]): string[] => (ids.includes(PERMISO_STOCK_MINIMO_ID) ? ids : [...ids, PERMISO_STOCK_MINIMO_ID]);
