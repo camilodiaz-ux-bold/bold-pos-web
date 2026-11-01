@@ -44,8 +44,8 @@ interface FormState {
   manejaExistencias: boolean;
   sucursalIds: SucursalId[];
   existencias: Partial<Record<SucursalId, string>>;
-  /** Alerta de stock bajo por sucursal (specs/2026-10-alertas-stock-disponibilidad.md §1). */
-  stockBajo: Partial<Record<SucursalId, string>>;
+  /** Alerta de stock mínimo por sucursal (specs/2026-10-alertas-stock-disponibilidad.md §1). */
+  stockMinimo: Partial<Record<SucursalId, string>>;
   alertas: Partial<Record<SucursalId, boolean>>;
   esCombo: boolean;
   componentes: ItemComboComponente[];
@@ -59,7 +59,7 @@ interface FormState {
 const EMPTY_FORM: FormState = {
   nombre: '', categoriaId: '', descripcion: '', codigo: '', unidadId: '', referencia: '',
   precioBaseRaw: '', impuestoId: 'iva-19', precioTotalRaw: '', costoRaw: '', imagen: '',
-  manejaExistencias: false, sucursalIds: [], existencias: {}, stockBajo: {}, alertas: {},
+  manejaExistencias: false, sucursalIds: [], existencias: {}, stockMinimo: {}, alertas: {},
   esCombo: false, componentes: [],
   conVariantes: false, mismoPrecio: false, tiposVariante: [], variantes: [],
 };
@@ -83,7 +83,7 @@ function toFormState(item: Item): FormState {
     manejaExistencias: item.manejaExistencias,
     sucursalIds: item.sucursales.map(s => s.sucursalId),
     existencias: Object.fromEntries(item.sucursales.map(s => [s.sucursalId, String(s.existencia)])),
-    stockBajo: Object.fromEntries(item.sucursales.filter(s => s.stockBajo !== undefined).map(s => [s.sucursalId, String(s.stockBajo)])),
+    stockMinimo: Object.fromEntries(item.sucursales.filter(s => s.stockMinimo !== undefined).map(s => [s.sucursalId, String(s.stockMinimo)])),
     alertas: Object.fromEntries(item.sucursales.filter(s => s.alerta).map(s => [s.sucursalId, true])),
     esCombo: item.esCombo,
     componentes: item.componentes ?? [],
@@ -215,10 +215,10 @@ export function ItemFormPage() {
       const has = prev.sucursalIds.includes(sucursalId);
       const sucursalIds = has ? prev.sucursalIds.filter(s => s !== sucursalId) : [...prev.sucursalIds, sucursalId];
       const existencias = { ...prev.existencias };
-      const stockBajo = { ...prev.stockBajo };
+      const stockMinimo = { ...prev.stockMinimo };
       const alertas = { ...prev.alertas };
-      if (has) { delete existencias[sucursalId]; delete stockBajo[sucursalId]; delete alertas[sucursalId]; }
-      return { ...prev, sucursalIds, existencias, stockBajo, alertas };
+      if (has) { delete existencias[sucursalId]; delete stockMinimo[sucursalId]; delete alertas[sucursalId]; }
+      return { ...prev, sucursalIds, existencias, stockMinimo, alertas };
     });
   };
 
@@ -226,11 +226,11 @@ export function ItemFormPage() {
     setForm(prev => ({ ...prev, existencias: { ...prev.existencias, [sucursalId]: raw } }));
   };
 
-  // Alerta de stock bajo: activar el check sin valor lo deja en 0; borrar el valor apaga la alerta (igual que en Alertas de Stock).
-  const setStockBajo = (sucursalId: SucursalId, raw: string) => {
+  // Alerta de stock mínimo: activar el check sin valor lo deja en 0; borrar el valor apaga la alerta (igual que en Alertas de Stock).
+  const setStockMinimo = (sucursalId: SucursalId, raw: string) => {
     setForm(prev => ({
       ...prev,
-      stockBajo: { ...prev.stockBajo, [sucursalId]: raw },
+      stockMinimo: { ...prev.stockMinimo, [sucursalId]: raw },
       alertas: raw.trim() === '' ? { ...prev.alertas, [sucursalId]: false } : prev.alertas,
     }));
   };
@@ -238,7 +238,7 @@ export function ItemFormPage() {
     setForm(prev => ({
       ...prev,
       alertas: { ...prev.alertas, [sucursalId]: activa },
-      stockBajo: activa && (prev.stockBajo[sucursalId] ?? '').trim() === '' ? { ...prev.stockBajo, [sucursalId]: '0' } : prev.stockBajo,
+      stockMinimo: activa && (prev.stockMinimo[sucursalId] ?? '').trim() === '' ? { ...prev.stockMinimo, [sucursalId]: '0' } : prev.stockMinimo,
     }));
   };
 
@@ -249,7 +249,7 @@ export function ItemFormPage() {
   // sucursales y no en otras, aunque no lleve un número de existencia propio.
   const setEsCombo = (next: boolean) => {
     setForm(prev => next
-      ? { ...prev, esCombo: next, manejaExistencias: false, existencias: {}, stockBajo: {}, alertas: {} }
+      ? { ...prev, esCombo: next, manejaExistencias: false, existencias: {}, stockMinimo: {}, alertas: {} }
       : { ...prev, esCombo: next });
   };
 
@@ -308,8 +308,8 @@ export function ItemFormPage() {
         return raw !== undefined && raw !== '' && Number.isInteger(parseInt(raw, 10));
       });
       if (!allFilled) return false;
-      // El stock bajo es opcional, pero si se escribe debe ser un entero ≥ 0.
-      if (form.sucursalIds.some(sid => { const raw = (form.stockBajo[sid] ?? '').trim(); return raw !== '' && !/^\d+$/.test(raw); })) return false;
+      // El stock mínimo es opcional, pero si se escribe debe ser un entero ≥ 0.
+      if (form.sucursalIds.some(sid => { const raw = (form.stockMinimo[sid] ?? '').trim(); return raw !== '' && !/^\d+$/.test(raw); })) return false;
     }
     if (form.esCombo) {
       if (form.componentes.length < 2) return false;
@@ -352,8 +352,8 @@ export function ItemFormPage() {
         sucursalId,
         existencia: form.manejaExistencias ? parseInt(form.existencias[sucursalId] ?? '0', 10) || 0 : 0,
         // La alerta solo existe con existencias y con umbral definido; sin valor, no se guarda ninguno.
-        ...(form.manejaExistencias && !form.esCombo && (form.stockBajo[sucursalId] ?? '').trim() !== ''
-          ? { stockBajo: parseInt(form.stockBajo[sucursalId] as string, 10), alerta: !!form.alertas[sucursalId] }
+        ...(form.manejaExistencias && !form.esCombo && (form.stockMinimo[sucursalId] ?? '').trim() !== ''
+          ? { stockMinimo: parseInt(form.stockMinimo[sucursalId] as string, 10), alerta: !!form.alertas[sucursalId] }
           : {}),
       })),
       tiposVariante: form.conVariantes ? form.tiposVariante : undefined,
@@ -607,8 +607,8 @@ export function ItemFormPage() {
             onToggleSucursal={toggleSucursal}
             existencias={form.existencias}
             onChangeExistencia={setExistencia}
-            stockBajo={form.stockBajo}
-            onChangeStockBajo={setStockBajo}
+            stockMinimo={form.stockMinimo}
+            onChangeStockMinimo={setStockMinimo}
             alertas={form.alertas}
             onChangeAlerta={setAlerta}
             unidadLabel={unidadLabel}

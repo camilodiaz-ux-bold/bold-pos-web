@@ -21,7 +21,7 @@ export interface FilaPlantilla {
   Variante: string;
   Sucursal: string;
   Existencia: number;
-  'Stock bajo': number | '';
+  'Stock mínimo': number | '';
   Alerta: 'Sí' | 'No';
 }
 
@@ -45,7 +45,7 @@ export function filasPlantilla(items: Item[], { sucursalId, soloAlertaActiva }: 
           Variante: u.variante,
           Sucursal: nombreSucursal(s.sucursalId),
           Existencia: s.existencia,
-          'Stock bajo': s.stockBajo ?? '',
+          'Stock mínimo': s.stockMinimo ?? '',
           Alerta: s.alerta ? 'Sí' : 'No',
         });
       }

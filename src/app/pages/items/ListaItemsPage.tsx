@@ -115,6 +115,9 @@ export function ListaItemsPage() {
           Lista de ítems
         </p>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
+          <button className="btn btn-outline-coral" onClick={() => navigate('/items/alertas-stock')}>
+            Gestionar stock mínimo
+          </button>
           <button className="btn btn-outline-coral" onClick={() => toast.info('Actualización masiva — próximamente')}>
             Actualización masiva
           </button>

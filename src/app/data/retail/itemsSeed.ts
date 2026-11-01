@@ -80,8 +80,8 @@ const SEED_ALERTAS: Record<number, number> = {
 // Variante con alerta propia: Jean Slim 34 (15 uds → 9 principal / 6 secundaria), umbral 10 → disparada.
 const SEED_ALERTAS_VARIANTE: Record<string, number> = { '221-34': 10 };
 
-const conAlerta = (sucursales: ItemSucursal[], stockBajo: number | undefined): ItemSucursal[] =>
-  stockBajo === undefined ? sucursales : sucursales.map(s => ({ ...s, stockBajo, alerta: true }));
+const conAlerta = (sucursales: ItemSucursal[], stockMinimo: number | undefined): ItemSucursal[] =>
+  stockMinimo === undefined ? sucursales : sucursales.map(s => ({ ...s, stockMinimo, alerta: true }));
 
 function buildSucursales(productId: number): ItemSucursal[] {
   const forced = NEGATIVE_STOCK[productId];

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useAjustes } from '../../../store/ajustesStore';
 import { Toggle } from '../../../components/items/Toggle';
 import { ConfirmDeleteModal } from '../../../components/items/ConfirmDeleteModal';
-import { PERMISOS_CATALOGO, TODOS_LOS_PERMISOS, etiquetaGrupo } from '../../../data/permisosCatalogo';
+import { PERMISOS_CATALOGO, TODOS_LOS_PERMISOS, conPermisoStockMinimo, etiquetaGrupo } from '../../../data/permisosCatalogo';
 import { EMAIL_RE } from '../../../utils/ajustes';
 import type { Rol, UsuarioAjustes } from '../../../types/ajustes';
 import {
@@ -208,7 +208,7 @@ export function RolesPanel({ onClose }: PanelProps) {
 
   const abrir = (r: Rol | null) => {
     setNombre(r?.nombre ?? '');
-    setPermisos(r?.permisos ?? []);
+    setPermisos(conPermisoStockMinimo(r?.permisos ?? []));
     setListaIds(r ? ajustes.listasPrecios.filter(l => l.rolIds.includes(r.id)).map(l => l.id) : []);
     setError('');
     setEditando({ id: r?.id ?? null });
