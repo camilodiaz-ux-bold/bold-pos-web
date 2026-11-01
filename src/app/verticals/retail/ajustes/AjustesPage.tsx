@@ -18,7 +18,7 @@ import {
   CategoriasGastosPanel, ImpuestosPanel, IntegracionesPanel, MetodosPagoPanel, TiposCosteoPanel,
 } from './PanelesConfig';
 import { HabilitacionDianPanel, NumeracionesPanel } from './PanelesFacturacion';
-import { AlertasStockBajoPanel } from './PanelAlertasStockBajo';
+import { AlertasStockMinimoPanel } from './PanelAlertasStockMinimo';
 import { RolesPanel, UsuariosPanel } from './PanelesAcceso';
 import { CategoriasItemsPanel, ListaPreciosPanel } from './PanelesInventario';
 import { DescuentosPanel, NumeracionNoElectronicaPanel, SucursalesPanel, VendedoresPanel } from './PanelesListas';
@@ -62,7 +62,7 @@ const PANELES: Record<string, React.ComponentType<{ onClose: () => void }>> = {
   integraciones: IntegracionesPanel,
   vendedores: VendedoresPanel,
   'tipos-costeo': TiposCosteoPanel,
-  'alertas-stock-bajo': AlertasStockBajoPanel,
+  'alertas-stock-minimo': AlertasStockMinimoPanel,
 };
 
 const ico = (Icon: LucideIcon) =>
@@ -93,7 +93,7 @@ const INVENTARIOS: Seccion[] = [
   { id: 'tipos-costeo', label: 'Tipos de costeo', icon: ico(Calculator) },
   { id: 'categorias-items', label: 'Categorías de ítems', icon: ico(Tags) },
   { id: 'listas-precios', label: 'Lista de precios', icon: ico(CircleDollarSign) },
-  { id: 'alertas-stock-bajo', label: 'Alertas stock bajo', icon: ico(BellRing) },
+  { id: 'alertas-stock-minimo', label: 'Alertas Stock mínimo', icon: ico(BellRing) },
 ];
 
 function SeccionCard({ titulo, secciones, onAbrir }: { titulo: string; secciones: Seccion[]; onAbrir: (s: Seccion) => void }) {

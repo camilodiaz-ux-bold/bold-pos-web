@@ -40,21 +40,21 @@ export function EditarVarianteDrawer({
   const [sucursales, setSucursales] = useState<Record<string, string>>(
     Object.fromEntries(variante.sucursales.map(s => [s.sucursalId, String(s.existencia)])),
   );
-  // Alerta de stock bajo por sucursal (specs/2026-10-alertas-stock-disponibilidad.md §1).
-  const [stockBajo, setStockBajo] = useState<Record<string, string>>(
-    Object.fromEntries(variante.sucursales.filter(s => s.stockBajo !== undefined).map(s => [s.sucursalId, String(s.stockBajo)])),
+  // Alerta de stock mínimo por sucursal (specs/2026-10-alertas-stock-disponibilidad.md §1).
+  const [stockMinimo, setStockMinimo] = useState<Record<string, string>>(
+    Object.fromEntries(variante.sucursales.filter(s => s.stockMinimo !== undefined).map(s => [s.sucursalId, String(s.stockMinimo)])),
   );
   const [alertas, setAlertas] = useState<Record<string, boolean>>(
     Object.fromEntries(variante.sucursales.filter(s => s.alerta).map(s => [s.sucursalId, true])),
   );
-  const cambiarStockBajo = (id: string, raw: string) => {
-    setStockBajo(prev => ({ ...prev, [id]: raw }));
+  const cambiarStockMinimo = (id: string, raw: string) => {
+    setStockMinimo(prev => ({ ...prev, [id]: raw }));
     if (raw.trim() === '') setAlertas(prev => ({ ...prev, [id]: false }));
   };
   const cambiarAlerta = (id: string, activa: boolean) => {
     setAlertas(prev => ({ ...prev, [id]: activa }));
     // Activar sin valor lo deja en 0, como en Alertas de Stock.
-    if (activa && (stockBajo[id] ?? '').trim() === '') setStockBajo(prev => ({ ...prev, [id]: '0' }));
+    if (activa && (stockMinimo[id] ?? '').trim() === '') setStockMinimo(prev => ({ ...prev, [id]: '0' }));
   };
 
   const setBase = (raw: string) => {
@@ -67,9 +67,9 @@ export function EditarVarianteDrawer({
   };
   const toggleSucursal = (id: SucursalId) => {
     if (id in sucursales) {
-      // Quitar la sucursal descarta también su stock bajo y su alerta.
+      // Quitar la sucursal descarta también su stock mínimo y su alerta.
       setSucursales(prev => { const n = { ...prev }; delete n[id]; return n; });
-      setStockBajo(prev => { const n = { ...prev }; delete n[id]; return n; });
+      setStockMinimo(prev => { const n = { ...prev }; delete n[id]; return n; });
       setAlertas(prev => { const n = { ...prev }; delete n[id]; return n; });
     } else {
       setSucursales(prev => ({ ...prev, [id]: '0' }));
@@ -79,8 +79,8 @@ export function EditarVarianteDrawer({
   const codigoRepetido = codigo.trim() !== '' && codigo.trim() !== variante.codigo && codigosUsados.has(codigo.trim());
   const sucursalIds = Object.keys(sucursales);
   const existenciasOk = !manejaExistencias || (sucursalIds.length > 0 && sucursalIds.every(id => Number.isInteger(parseInt(sucursales[id], 10))));
-  const stockBajoOk = !manejaExistencias || sucursalIds.every(id => { const raw = (stockBajo[id] ?? '').trim(); return raw === '' || /^\d+$/.test(raw); });
-  const canSave = parseCOP(baseRaw) > 0 && !codigoRepetido && existenciasOk && stockBajoOk;
+  const stockMinimoOk = !manejaExistencias || sucursalIds.every(id => { const raw = (stockMinimo[id] ?? '').trim(); return raw === '' || /^\d+$/.test(raw); });
+  const canSave = parseCOP(baseRaw) > 0 && !codigoRepetido && existenciasOk && stockMinimoOk;
 
   const guardar = () => {
     const usados = new Set(codigosUsados);
@@ -90,12 +90,12 @@ export function EditarVarianteDrawer({
     }
     const sucursalesFinal: ItemSucursal[] = manejaExistencias
       ? SUCURSALES.filter(s => s.id in sucursales).map((s): ItemSucursal => {
-          const umbral = (stockBajo[s.id] ?? '').trim();
+          const umbral = (stockMinimo[s.id] ?? '').trim();
           return {
             sucursalId: s.id,
             existencia: parseInt(sucursales[s.id], 10) || 0,
-            // Sin stock bajo no hay alerta: no se guarda ninguno de los dos.
-            ...(umbral !== '' ? { stockBajo: parseInt(umbral, 10), alerta: !!alertas[s.id] } : {}),
+            // Sin stock mínimo no hay alerta: no se guarda ninguno de los dos.
+            ...(umbral !== '' ? { stockMinimo: parseInt(umbral, 10), alerta: !!alertas[s.id] } : {}),
           };
         })
       : [];
@@ -182,17 +182,17 @@ export function EditarVarianteDrawer({
                           onChange={e => setSucursales(prev => ({ ...prev, [s.id]: e.target.value }))}
                         />
                         <div style={{ marginTop: 12 }}>
-                          <FieldLabel>Stock bajo ({unidadLabel})</FieldLabel>
+                          <FieldLabel>Stock mínimo ({unidadLabel})</FieldLabel>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <input
-                              type="number" min={0} value={stockBajo[s.id] ?? ''} placeholder="Sin definir" className="merlin-input-filled"
-                              aria-label={`Stock bajo en ${s.label}`} style={{ flex: 1, minWidth: 0 }}
-                              onChange={e => cambiarStockBajo(s.id, e.target.value)}
+                              type="number" min={0} value={stockMinimo[s.id] ?? ''} placeholder="Sin definir" className="merlin-input-filled"
+                              aria-label={`Stock mínimo en ${s.label}`} style={{ flex: 1, minWidth: 0 }}
+                              onChange={e => cambiarStockMinimo(s.id, e.target.value)}
                             />
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--black-100)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                               <input
                                 type="checkbox" checked={!!alertas[s.id]} onChange={e => cambiarAlerta(s.id, e.target.checked)}
-                                aria-label={`Activar alerta de stock bajo en ${s.label}`}
+                                aria-label={`Activar alerta de stock mínimo en ${s.label}`}
                                 style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--blue-100)' }}
                               />
                               Activar alerta

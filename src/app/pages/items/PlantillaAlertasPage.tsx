@@ -7,6 +7,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, Download, FileDown, FileSpreadsheet, X } from 'lucide-react';
+import { RevisarCargaModal, MUESTRAS_CARGA } from '../../components/items/alertas/RevisarCargaModal';
 import { DescargarPlantillaModal } from '../../components/items/alertas/DescargarPlantillaModal';
 
 const FONT = "'Montserrat', sans-serif";
@@ -20,6 +21,8 @@ export function PlantillaAlertasPage() {
   const navigate = useNavigate();
   const [modal, setModal] = useState(false);
   const archivoRef = useRef<HTMLInputElement>(null);
+  const [muestra, setMuestra] = useState<number | null>(null);
+  const cargas = useRef(0);
 
   return (
     <div style={{ flex: 1, backgroundColor: 'var(--blue-10)', overflowY: 'auto', padding: 24 }}>
@@ -65,13 +68,14 @@ export function PlantillaAlertasPage() {
             <span style={{ flex: 1 }}>
               <span style={{ display: 'block', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: 'var(--black-100)' }}>Plantilla de alertas de stock</span>
               <span style={{ display: 'block', marginTop: 2, fontFamily: FONT, fontSize: 12, color: 'var(--black-60)' }}>
-                Esta plantilla contiene tus ítems con su stock bajo y alerta, listos para ser actualizados.
+                Esta plantilla contiene tus ítems con su stock mínimo y alerta, listos para ser actualizados.
               </span>
             </span>
             <Download size={20} color="var(--blue-100)" style={{ flexShrink: 0 }} />
           </button>
 
-          {/* Solo abre el selector de archivos: no se lee, procesa ni sube nada (spec alertas-stock-disponibilidad §6). */}
+          {/* El archivo no se lee ni se sube: al elegirlo se abre el modal de revisión con resultados de muestra
+              (specs/2026-11-stock-minimo.md §3). */}
           <input
             ref={archivoRef}
             type="file"
@@ -79,7 +83,7 @@ export function PlantillaAlertasPage() {
             aria-label="Seleccionar plantilla actualizada"
             style={{ display: 'none' }}
             onChange={e => {
-              if (e.target.files?.length) toast.info('Carga de la plantilla — próximamente');
+              if (e.target.files?.length) { setMuestra(cargas.current % MUESTRAS_CARGA.length); cargas.current += 1; }
               e.target.value = '';
             }}
           />
@@ -93,6 +97,13 @@ export function PlantillaAlertasPage() {
         </div>
       </div>
 
+      {muestra !== null && (
+        <RevisarCargaModal
+          resultado={MUESTRAS_CARGA[muestra]}
+          onCancel={() => setMuestra(null)}
+          onContinue={() => { setMuestra(null); toast.success('Carga de ejemplo: no se modificó ningún dato'); }}
+        />
+      )}
       {modal && <DescargarPlantillaModal onClose={() => setModal(false)} />}
     </div>
   );

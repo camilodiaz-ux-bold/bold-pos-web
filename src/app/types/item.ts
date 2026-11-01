@@ -20,9 +20,9 @@ export interface ItemSucursal {
   sucursalId: SucursalId;
   /** Puede ser negativa (el POS real permite existencias negativas, ej. -7). */
   existencia: number;
-  /** Alertas de Stock (specs/2026-10-alertas-stock.md): umbral de "stock bajo" de esta sucursal. Sin definir = sin umbral. */
-  stockBajo?: number;
-  /** Alerta activa. Solo tiene sentido con `stockBajo` definido. Default false. */
+  /** Alertas de Stock (specs/2026-10-alertas-stock.md): umbral de "stock mínimo" de esta sucursal. Sin definir = sin umbral. */
+  stockMinimo?: number;
+  /** Alerta activa. Solo tiene sentido con `stockMinimo` definido. Default false. */
   alerta?: boolean;
 }
 

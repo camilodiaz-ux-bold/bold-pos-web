@@ -1,6 +1,6 @@
 /**
- * PanelAlertasStockBajo — Ajustes → Inventarios → "Alertas stock bajo" (specs/2026-10-alertas-stock-correo-config.md §2):
- * a quién y con qué frecuencia se envía el correo de alertas de stock bajo. Solo visual: no se envía ningún correo.
+ * PanelAlertasStockMinimo — Ajustes → Inventarios → "Alertas Stock mínimo" (specs/2026-10-alertas-stock-correo-config.md §2):
+ * a quién y con qué frecuencia se envía el correo de alertas de stock mínimo. Solo visual: no se envía ningún correo.
  */
 import React, { useState } from 'react';
 import { toast } from 'sonner';
@@ -22,11 +22,11 @@ const FRECUENCIAS: Array<{ value: FrecuenciaAlertasStock; titulo: string }> = [
 const labelStyle: React.CSSProperties = { display: 'block', fontFamily: FONT, fontSize: 12, fontWeight: 700, color: 'var(--blue-100)', marginBottom: 6 };
 const errorStyle: React.CSSProperties = { fontFamily: FONT, fontSize: 12, color: 'var(--coral-100)', margin: '4px 0 0' };
 
-export function AlertasStockBajoPanel({ onClose }: { onClose: () => void }) {
+export function AlertasStockMinimoPanel({ onClose }: { onClose: () => void }) {
   const { ajustes, updateAjustes } = useAjustes();
   const correoNegocio = ajustes.perfil.correo;
-  const [correos, setCorreos] = useState<string[]>(ajustes.alertasStockBajo.correosAdicionales);
-  const [frecuencia, setFrecuencia] = useState<FrecuenciaAlertasStock>(ajustes.alertasStockBajo.frecuencia);
+  const [correos, setCorreos] = useState<string[]>(ajustes.alertasStockMinimo.correosAdicionales);
+  const [frecuencia, setFrecuencia] = useState<FrecuenciaAlertasStock>(ajustes.alertasStockMinimo.frecuencia);
 
   const norm = (c: string) => c.trim().toLowerCase();
   const errorDe = (i: number): string | undefined => {
@@ -37,26 +37,26 @@ export function AlertasStockBajoPanel({ onClose }: { onClose: () => void }) {
     return undefined;
   };
   const hayErrores = correos.some((_, i) => errorDe(i) !== undefined);
-  const guardado = ajustes.alertasStockBajo;
+  const guardado = ajustes.alertasStockMinimo;
   const limpios = correos.map(c => c.trim()).filter(Boolean);
   const cambio = frecuencia !== guardado.frecuencia || JSON.stringify(limpios) !== JSON.stringify(guardado.correosAdicionales);
 
   const guardar = () => {
     if (hayErrores) return;
-    updateAjustes(prev => ({ ...prev, alertasStockBajo: { correosAdicionales: limpios, frecuencia } }));
-    toast.success('Alertas de stock bajo guardadas');
+    updateAjustes(prev => ({ ...prev, alertasStockMinimo: { correosAdicionales: limpios, frecuencia } }));
+    toast.success('Alertas de stock mínimo guardadas');
     onClose();
   };
 
   return (
     <SidePanel
-      variant="right" title="Alertas stock bajo" onClose={onClose}
+      variant="right" title="Alertas Stock mínimo" onClose={onClose}
       footer={<FooterDerecho onCancel={onClose} onSave={guardar} saveLabel="Guardar" canSave={!hayErrores && cambio} />}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24, fontFamily: FONT }}>
         <div>
           <p style={{ margin: 0, fontSize: 13, lineHeight: '20px', color: 'var(--black-100)' }}>
-            Recibe por correo un resumen de los ítems que llegaron a su stock bajo, para que puedas reabastecerlos a tiempo.
+            Recibe por correo un resumen de los ítems que llegaron a su stock mínimo, para que puedas reabastecerlos a tiempo.
             Elige a quién se envía y cada cuánto.
           </p>
         </div>
@@ -64,7 +64,7 @@ export function AlertasStockBajoPanel({ onClose }: { onClose: () => void }) {
         <div>
           <span style={labelStyle}>Se enviará a</span>
           <div style={{ padding: '10px 12px', borderRadius: 8, backgroundColor: 'var(--blue-10)', fontSize: 13, color: 'var(--black-100)' }}>{correoNegocio}</div>
-          <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--black-60)' }}>Correo del negocio. Puedes cambiarlo en el perfil.</p>
+          <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--black-60)' }}>Correo del comercio. Puedes cambiarlo en el perfil.</p>
         </div>
 
         <div>
@@ -128,7 +128,7 @@ export function AlertasStockBajoPanel({ onClose }: { onClose: () => void }) {
             })}
           </div>
           {frecuencia === 'no-enviar' && (
-            <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--black-60)' }}>No recibirás correos de alertas de stock bajo.</p>
+            <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--black-60)' }}>No recibirás correos de alertas de stock mínimo.</p>
           )}
         </div>
       </div>

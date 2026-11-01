@@ -6,7 +6,7 @@ import {
   UtensilsCrossed, Package, TrendingUp, Download, BellRing, PackageMinus,
 } from 'lucide-react';
 import { useNotifications } from '../store/notificationsStore';
-import { HEADER_STOCK_BAJO_EJEMPLO } from '../data/alertasCorreoEjemplo';
+import { HEADER_STOCK_MINIMO_EJEMPLO } from '../data/alertasCorreoEjemplo';
 import { useVertical } from '../vertical';
 import {
   IcHome, IcHomeFill,
@@ -205,7 +205,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
         { id: 'ajusteinv',    label: 'Ajuste de inventario',    icon: <IcAjusteInv size={16} />,    active: false, onClick: () => toast.info('Ajuste de inventario') },
         { id: 'flujoinv',     label: 'Flujo de inventario',     icon: <IcFlujoInv size={16} />,     active: false, onClick: () => toast.info('Flujo de inventario') },
         { id: 'variantesinv', moduleId: 'variantes', label: 'Variantes de inventario', icon: <IcVariantesInv size={16} />, active: pathname.startsWith('/items/variantes'), onClick: () => navigate('/items/variantes') },
-        { id: 'alertasstock', label: 'Alertas de Stock', icon: <BellRing size={16} />, active: pathname.startsWith('/items/alertas-stock'), onClick: () => navigate('/items/alertas-stock') },
+        { id: 'alertasstock', label: 'Alertas Stock mínimo', icon: <BellRing size={16} />, active: pathname.startsWith('/items/alertas-stock'), onClick: () => navigate('/items/alertas-stock') },
       ],
     },
     {
@@ -676,8 +676,8 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
   const { notifications, unreadCount, markRead } = useNotifications();
   const { config } = useVertical();
   const navigate = useNavigate();
-  // Número del ícono de stock bajo: fijo de prototipo, no calculado (specs/2026-10-alertas-stock-header-fijo.md).
-  const itemsEnStockBajo = HEADER_STOCK_BAJO_EJEMPLO;
+  // Número del ícono de stock mínimo: fijo de prototipo, no calculado (specs/2026-10-alertas-stock-header-fijo.md).
+  const itemsEnStockMinimo = HEADER_STOCK_MINIMO_EJEMPLO;
   // Tooltip propio: el `title` nativo tarda en salir y aquí debe ser inmediato.
   const [verTipStock, setVerTipStock] = useState(false);
 
@@ -743,7 +743,7 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
           <span style={{ fontSize: 14, color: '#6B7280', margin: '0 4px' }}>—</span>
           <span style={{ fontSize: 14, color: '#6B7280' }}>{config.plan}</span>
         </div>
-        {itemsEnStockBajo > 0 && (
+        {itemsEnStockMinimo > 0 && (
           <div style={{ position: 'relative', display: 'flex' }}>
             <button
               onClick={() => navigate('/items/alertas-stock')}
@@ -753,7 +753,7 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
               onBlur={() => setVerTipStock(false)}
               style={{ position: 'relative', color: '#6B7280', display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer' }}
               className="hover:text-gray-900 transition-colors"
-              aria-label={`Tienes ítems con alerta de Stock bajo (${itemsEnStockBajo})`}
+              aria-label={`Tienes ítems con alerta de Stock mínimo (${itemsEnStockMinimo})`}
             >
               <PackageMinus size={24} />
               {/* Hasta 99; desde 100 muestra "99+". Píldora para que quepan dos o tres caracteres. */}
@@ -765,7 +765,7 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: '2px solid white', fontFamily: "'Montserrat', sans-serif",
               }}>
-                {itemsEnStockBajo > 99 ? '99+' : itemsEnStockBajo}
+                {itemsEnStockMinimo > 99 ? '99+' : itemsEnStockMinimo}
               </span>
             </button>
             {verTipStock && (
@@ -778,7 +778,7 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
                 }}
               >
                 <span style={{ position: 'absolute', top: -4, right: 16, width: 8, height: 8, backgroundColor: 'var(--black-100)', transform: 'rotate(45deg)' }} />
-                Tienes ítems con alerta de Stock bajo
+                Tienes ítems con alerta de Stock mínimo
               </div>
             )}
           </div>

@@ -30,7 +30,8 @@ function load(): AjustesState {
         facturasCompra: { ...AJUSTES_DEFAULT.facturasCompra, ...saved.facturasCompra },
         integraciones: { ...AJUSTES_DEFAULT.integraciones, ...saved.integraciones },
         perfil: { ...AJUSTES_DEFAULT.perfil, ...saved.perfil },
-        alertasStockBajo: { ...AJUSTES_DEFAULT.alertasStockBajo, ...saved.alertasStockBajo },
+        // `alertasStockBajo` es el nombre anterior del campo (specs/2026-11-stock-minimo.md §1).
+        alertasStockMinimo: { ...AJUSTES_DEFAULT.alertasStockMinimo, ...(saved as { alertasStockBajo?: Partial<AjustesState['alertasStockMinimo']> }).alertasStockBajo, ...saved.alertasStockMinimo },
       };
     }
   } catch {

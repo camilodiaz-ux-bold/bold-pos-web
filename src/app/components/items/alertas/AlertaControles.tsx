@@ -1,13 +1,13 @@
 /**
  * AlertaControles — piezas de la lista de Alertas de Stock (specs/2026-10-alertas-stock.md §1):
- * input de "Stock bajo" con chulito para guardar, check de "Alerta" (con estado mixto) y el switch de dos opciones del header.
+ * input de "Stock mínimo" con chulito para guardar, check de "Alerta" (con estado mixto) y el switch de dos opciones del header.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 
 const FONT = "'Montserrat', sans-serif";
 
-interface StockBajoInputProps {
+interface StockMinimoInputProps {
   /** Valor guardado: número, 'sin' (sin definir) o 'varios' (las sucursales difieren). */
   valor: number | 'sin' | 'varios';
   /** `null` borra el umbral. */
@@ -16,7 +16,7 @@ interface StockBajoInputProps {
   ariaLabel: string;
 }
 
-export function StockBajoInput({ valor, onGuardar, title, ariaLabel }: StockBajoInputProps) {
+export function StockMinimoInput({ valor, onGuardar, title, ariaLabel }: StockMinimoInputProps) {
   const guardado = typeof valor === 'number' ? String(valor) : '';
   const [draft, setDraft] = useState(guardado);
   // Si el valor guardado cambia desde fuera (otra fila, el modal), el borrador lo sigue.
@@ -50,7 +50,7 @@ export function StockBajoInput({ valor, onGuardar, title, ariaLabel }: StockBajo
       {sucio && (
         <button
           type="button"
-          aria-label="Guardar stock bajo"
+          aria-label="Guardar stock mínimo"
           disabled={invalido}
           // mouseDown no debe quitar el foco del input: el blur descartaría el borrador antes del clic.
           onMouseDown={e => e.preventDefault()}
