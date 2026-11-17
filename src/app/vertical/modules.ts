@@ -25,6 +25,7 @@ const EXCLUSIVE_MODULES = {
   'reportes-restaurantes': ['restaurantes'],
   propinas: ['restaurantes'],
   ventas: ['restaurantes'],
+  mostrador: ['restaurantes'],
   // Solo Retail
   variantes: ['retail'],
   'listas-precios': ['retail'],
@@ -40,4 +41,22 @@ export type ExclusiveModuleId = keyof typeof EXCLUSIVE_MODULES;
 export function verticalHasModule(vertical: Vertical, moduleId: string): boolean {
   const allowed = (EXCLUSIVE_MODULES as Record<string, readonly Vertical[]>)[moduleId];
   return allowed ? allowed.includes(vertical) : true;
+}
+
+/**
+ * Módulo al que pertenece una ruta (specs/2026-11-menu-lateral-y-selector-vertical.md §4), o null si es core.
+ * Al cambiar de vertical decide si el usuario se queda en la pantalla o va al Inicio.
+ * `/reportes/restaurantes/:id` devuelve null: su guard ya redirige los reportes exclusivos de Restaurantes.
+ */
+export function moduloDeRuta(pathname: string): string | null {
+  const reglas: [string, string][] = [
+    ['/ventas', 'ventas'],
+    ['/comprobantes', 'comprobantes'],
+    ['/facturas-venta', 'facturas-venta'],
+    ['/ajustes', 'ajustes'],
+    ['/items/variantes', 'variantes'],
+    ['/items/devoluciones', 'devoluciones'],
+    ['/reportes/retail', 'reportes-retail'],
+  ];
+  return reglas.find(([prefijo]) => pathname === prefijo || pathname.startsWith(prefijo + '/'))?.[1] ?? null;
 }

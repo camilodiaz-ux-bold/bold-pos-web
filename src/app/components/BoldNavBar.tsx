@@ -2,12 +2,13 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate, useLocation } from 'react-router';
 import {
-  ChevronLeft, ChevronRight, ChevronDown, Plus, Shield, LogOut, Bell, Monitor, MapPin,
+  ChevronLeft, ChevronRight, ChevronDown, Check, Plus, Shield, LogOut, Bell, Monitor, MapPin,
   UtensilsCrossed, Package, TrendingUp, Download, BellRing, PackageMinus,
 } from 'lucide-react';
 import { useNotifications } from '../store/notificationsStore';
 import { HEADER_STOCK_MINIMO_EJEMPLO } from '../data/alertasCorreoEjemplo';
-import { useVertical } from '../vertical';
+import { useVertical, VERTICALS, VERTICAL_LABEL, type Vertical } from '../vertical';
+import { moduloDeRuta, verticalHasModule } from '../vertical/modules';
 import {
   IcHome, IcHomeFill,
   IcMesas, IcTurnos,
@@ -89,6 +90,9 @@ function MostradorIcon({ size = 20 }: { size?: number }) {
 
 // ─── Main NavBar component ────────────────────────────────────────────────────
 
+/** Preferencias del menú lateral: menú abierto y secciones recogidas (todo abierto por defecto). */
+const menuPrefs: { expandido: boolean; secciones: Set<string> } = { expandido: true, secciones: new Set() };
+
 export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -99,24 +103,12 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   // "Punto de venta" no debe resaltarse aunque activeMode caiga en su default.
   const OWNED_ROUTES = ['/ventas', '/items', '/comprobantes', '/facturas-venta', '/clientes', '/proveedores', '/facturas-compra', '/ajustes'];
   const inOwnedRoute = OWNED_ROUTES.some(r => pathname.startsWith(r));
-  const inPosView = activeMode === 'Mesas' || activeMode === 'Mostrador' || activeMode === 'Turnos';
-  const [isExpanded, setIsExpanded] = useState(!inPosView);
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['puntodeventa']));
-
-  // Sync expanded state when navigating between POS ↔ non-POS sections
-  const prevInPosView = useRef(inPosView);
-  useEffect(() => {
-    const wasInPos = prevInPosView.current;
-    prevInPosView.current = inPosView;
-    if (!wasInPos && inPosView) {
-      // entering POS view → collapse
-      setIsExpanded(false);
-    } else if (wasInPos && !inPosView) {
-      // leaving POS view → expand
-      setIsExpanded(true);
-    }
-    // staying within the same zone → user preference preserved
-  }, [inPosView]);
+  // Menú siempre abierto y con todos los submenús desplegados por defecto (specs/2026-11-menu-lateral-y-selector-vertical.md §2).
+  // La preferencia del usuario vive en memoria a nivel de módulo: sobrevive a navegar y a cambiar de vertical
+  // (que remonta el árbol), pero no a recargar la página.
+  const [isExpanded, setIsExpandedState] = useState(menuPrefs.expandido);
+  const [closedSections, setClosedSections] = useState<Set<string>>(() => new Set(menuPrefs.secciones));
+  const setIsExpanded = (v: boolean) => { menuPrefs.expandido = v; setIsExpandedState(v); };
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const itemRefs = useRef<Record<string, number>>({});
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,9 +128,10 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   };
 
   const toggleSection = (id: string) => {
-    setOpenSections(prev => {
+    setClosedSections(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
+      menuPrefs.secciones = next;
       return next;
     });
   };
@@ -549,7 +542,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       }}>
         {menu.map((item, index) => {
           const isActive = isSectionActive(item);
-          const isOpen = openSections.has(item.id);
+          const isOpen = !closedSections.has(item.id);
           const prev = menu[index - 1];
           // Show divider before any category group and before the first standalone item block
           const showDivider = index > 0 && (
@@ -674,8 +667,19 @@ interface TopBarProps {
 
 export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBarProps) {
   const { notifications, unreadCount, markRead } = useNotifications();
-  const { config } = useVertical();
+  const { config, vertical, setVertical } = useVertical();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  // Selector de vertical del prototipo (specs/2026-11-menu-lateral-y-selector-vertical.md §3 y §4):
+  // si la pantalla actual no existe en la otra vertical, se va al Inicio de esa vertical.
+  const elegirVertical = (v: Vertical) => {
+    setShowProfileMenu(false);
+    if (v === vertical) return;
+    setVertical(v);
+    toast.success(`Vertical: ${VERTICAL_LABEL[v]}`);
+    const modulo = moduloDeRuta(pathname);
+    if (modulo && !verticalHasModule(v, modulo)) navigate('/inicio');
+  };
   // Número del ícono de stock mínimo: fijo de prototipo, no calculado (specs/2026-10-alertas-stock-header-fijo.md).
   const itemsEnStockMinimo = HEADER_STOCK_MINIMO_EJEMPLO;
   // Tooltip propio: el `title` nativo tarda en salir y aquí debe ser inmediato.
@@ -854,6 +858,25 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
                 <span style={{ fontSize: 16, fontWeight: 600, color: '#0F1729', textAlign: 'center', lineHeight: 1.3 }}>
                   Ramiro Ramos
                 </span>
+              </div>
+              <div style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+              <div style={{ padding: '10px 8px 4px' }} role="radiogroup" aria-label="Vertical del prototipo">
+                <span style={{ display: 'block', padding: '0 8px 4px', fontSize: 11, fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', color: '#6B7280', fontFamily: FONT }}>
+                  Vertical del prototipo
+                </span>
+                {VERTICALS.map(v => (
+                  <button
+                    key={v} role="radio" aria-checked={v === vertical} onClick={() => elegirVertical(v)}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 8px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left',
+                    }}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <span style={{ fontSize: 14, color: '#0F1729', fontWeight: v === vertical ? 600 : 400, fontFamily: FONT }}>{VERTICAL_LABEL[v]}</span>
+                    {v === vertical && <Check size={16} color={C.blue100} />}
+                  </button>
+                ))}
               </div>
               <div style={{ height: 1, backgroundColor: '#E5E7EB' }} />
               <div style={{ padding: '8px 8px' }}>

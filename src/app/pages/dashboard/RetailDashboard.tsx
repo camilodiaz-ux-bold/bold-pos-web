@@ -11,7 +11,6 @@ import React, { useState } from 'react';
 import { RefreshCw, ChevronDown, FileText, Filter, Coins, HandCoins, ShoppingCart, Banknote, Scale, Wallet, Receipt, DollarSign, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
-import { PrototypeVerticalSwitcher } from '../../vertical';
 import { useFacturasCompra } from '../../store/facturasCompraStore';
 import { FECHA_PROTOTIPO, diffDias, esPendiente, estadoFactura, semanasPorPagar, valorFactura } from '../../utils/facturasCompra';
 import {
@@ -306,7 +305,6 @@ export function RetailDashboard() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <PrototypeVerticalSwitcher />
           <button
             onClick={handleRefresh}
             style={{
