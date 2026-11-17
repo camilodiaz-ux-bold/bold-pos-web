@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { useNavigate, useLocation } from 'react-router';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Check, Plus, Shield, LogOut, Bell, Monitor, MapPin,
-  UtensilsCrossed, Package, TrendingUp, Download, BellRing, PackageMinus,
+  UtensilsCrossed, Package, TrendingUp, Download, BellRing, PackageMinus, Undo2,
 } from 'lucide-react';
 import { useNotifications } from '../store/notificationsStore';
 import { HEADER_STOCK_MINIMO_EJEMPLO } from '../data/alertasCorreoEjemplo';
@@ -194,10 +194,11 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
       },
       hasSubmenu: true,
       subItems: [
-        { id: 'listaitems',   label: 'Lista de Items',          icon: <IcListaItems size={16} />,   active: pathname.startsWith('/items') && !pathname.startsWith('/items/variantes') && !pathname.startsWith('/items/alertas-stock'), onClick: () => navigate('/items') },
+        { id: 'listaitems',   label: 'Lista de Items',          icon: <IcListaItems size={16} />,   active: pathname.startsWith('/items') && !pathname.startsWith('/items/variantes') && !pathname.startsWith('/items/alertas-stock') && !pathname.startsWith('/items/devoluciones'), onClick: () => navigate('/items') },
         { id: 'ajusteinv',    label: 'Ajuste de inventario',    icon: <IcAjusteInv size={16} />,    active: false, onClick: () => toast.info('Ajuste de inventario') },
         { id: 'flujoinv',     label: 'Flujo de inventario',     icon: <IcFlujoInv size={16} />,     active: false, onClick: () => toast.info('Flujo de inventario') },
         { id: 'variantesinv', moduleId: 'variantes', label: 'Variantes de inventario', icon: <IcVariantesInv size={16} />, active: pathname.startsWith('/items/variantes'), onClick: () => navigate('/items/variantes') },
+        { id: 'devoluciones', moduleId: 'devoluciones', label: 'Devoluciones', icon: <Undo2 size={16} />, active: pathname.startsWith('/items/devoluciones'), onClick: () => navigate('/items/devoluciones') },
         { id: 'alertasstock', label: 'Alertas Stock mínimo', icon: <BellRing size={16} />, active: pathname.startsWith('/items/alertas-stock'), onClick: () => navigate('/items/alertas-stock') },
       ],
     },

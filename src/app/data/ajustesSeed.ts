@@ -1,6 +1,7 @@
 /** Valores iniciales de Ajustes (specs/2026-10-ajustes.md §8). Sin datos reales del staging. */
 import type { AjustesState, MetodoPago, NumeracionNoElectronica, Rol, Sucursal } from '../types/ajustes';
 import { TODOS_LOS_PERMISOS, conPermisoStockMinimo } from './permisosCatalogo';
+import type { MotivoDevolucion } from '../types/devolucion';
 import { METODOS_PAGO, SUCURSALES_COMPRA } from './facturasCompraSeed';
 
 export const AJUSTES_STORAGE_KEY = 'bold-pos:ajustes:v1';
@@ -33,6 +34,16 @@ const PERMISOS_VENDEDOR = TODOS_LOS_PERMISOS.filter(id =>
   || ['contactos.ver-contactos', 'contactos.crear-contactos', 'items.ver-items', 'items.modificar-precio-en-venta'].includes(id));
 const PERMISOS_CONTADOR = TODOS_LOS_PERMISOS.filter(id =>
   /^(gastos|ingresos-reportes|documentos-electronicos|administrativos)\./.test(id) || id === 'empresa.ver-ajustes');
+
+/** Motivos precargados de devolución (specs/2026-11-devoluciones.md §7). "Producto defectuoso" es fijo. */
+export const MOTIVOS_DEVOLUCION_INICIALES: MotivoDevolucion[] = [
+  { id: 'mot-1', nombre: 'Producto defectuoso', activo: true, fijo: true },
+  { id: 'mot-2', nombre: 'Producto equivocado', activo: true },
+  { id: 'mot-3', nombre: 'Talla o tamaño incorrecto', activo: true },
+  { id: 'mot-4', nombre: 'Cambio de opinión del cliente', activo: true },
+  { id: 'mot-5', nombre: 'Error en el registro de la venta', activo: true },
+  { id: 'mot-6', nombre: 'Otro', activo: true },
+];
 
 const ROLES: Rol[] = [
   { id: 'rol-admin', nombre: 'Administrador', permisos: TODOS_LOS_PERMISOS },
@@ -144,4 +155,5 @@ export const AJUSTES_DEFAULT: AjustesState = {
     { id: 'ci-7', nombre: 'Cuidado Personal', descripcion: '', padreId: 'ci-0' },
   ],
   alertasStockMinimo: { correosAdicionales: [], frecuencia: 'lunes' },
+  motivosDevolucion: MOTIVOS_DEVOLUCION_INICIALES,
 };

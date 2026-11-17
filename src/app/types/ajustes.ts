@@ -1,4 +1,5 @@
 /** Tipos del módulo Ajustes (specs/2026-10-ajustes.md). */
+import type { MotivoDevolucion } from './devolucion';
 
 export type DocumentoDefecto = 'comprobante' | 'factura';
 export type CondicionPagoPOS = 'Contado' | 'Contado/Crédito';
@@ -164,4 +165,6 @@ export interface AjustesState {
   listasPrecios: ListaPrecios[];
   categoriasItems: CategoriaItem[];
   alertasStockMinimo: AlertasStockMinimoConfig;
+  /** Motivos de devolución (specs/2026-11-devoluciones.md §7). */
+  motivosDevolucion: MotivoDevolucion[];
 }

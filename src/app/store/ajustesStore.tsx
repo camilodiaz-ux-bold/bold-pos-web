@@ -9,6 +9,18 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import type { AjustesState, ConfigFacturasCompra, ConfigPOS } from '../types/ajustes';
 import { AJUSTES_DEFAULT, AJUSTES_STORAGE_KEY, COMPRAS_SETTINGS_LEGACY_KEY } from '../data/ajustesSeed';
+import { PERMISO_DEVOLUCIONES_ID } from '../data/permisosCatalogo';
+
+/** Marca de la migración única que activa "Gestionar Devoluciones" en los roles Admin ya guardados. */
+const PERMISO_DEVOLUCIONES_MIGRADO_KEY = 'bold-pos:permiso-devoluciones-migrado:v1';
+
+function migrarPermisoDevoluciones(roles: AjustesState['roles']): AjustesState['roles'] {
+  try {
+    if (localStorage.getItem(PERMISO_DEVOLUCIONES_MIGRADO_KEY)) return roles;
+    localStorage.setItem(PERMISO_DEVOLUCIONES_MIGRADO_KEY, '1');
+  } catch { return roles; }
+  return roles.map(r => (r.id === 'rol-admin' && !r.permisos.includes(PERMISO_DEVOLUCIONES_ID) ? { ...r, permisos: [...r.permisos, PERMISO_DEVOLUCIONES_ID] } : r));
+}
 
 function save(state: AjustesState): void {
   try {
@@ -31,6 +43,8 @@ function load(): AjustesState {
         integraciones: { ...AJUSTES_DEFAULT.integraciones, ...saved.integraciones },
         perfil: { ...AJUSTES_DEFAULT.perfil, ...saved.perfil },
         // `alertasStockBajo` es el nombre anterior del campo (specs/2026-11-stock-minimo.md §1).
+        roles: migrarPermisoDevoluciones(saved.roles ?? AJUSTES_DEFAULT.roles),
+        // El campo `motivosDevolucion` ausente toma el valor inicial por el spread de AJUSTES_DEFAULT.
         alertasStockMinimo: { ...AJUSTES_DEFAULT.alertasStockMinimo, ...(saved as { alertasStockBajo?: Partial<AjustesState['alertasStockMinimo']> }).alertasStockBajo, ...saved.alertasStockMinimo },
       };
     }

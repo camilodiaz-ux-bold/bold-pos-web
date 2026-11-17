@@ -28,6 +28,7 @@ const EXCLUSIVE_MODULES = {
   mostrador: ['restaurantes'],
   // Solo Retail
   variantes: ['retail'],
+  devoluciones: ['retail'],
   'listas-precios': ['retail'],
   comprobantes: ['retail'],
   'facturas-venta': ['retail'],
