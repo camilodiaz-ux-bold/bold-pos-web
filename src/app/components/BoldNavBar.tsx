@@ -744,7 +744,7 @@ export function BoldTopBar({ activeMode, onModeChange, onLogoutRequest }: TopBar
       {/* ── Right: business info + bell + avatar ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#0F1729' }}>{config.businessName}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#0F1729' }}>{config.businessName} ({VERTICAL_LABEL[vertical]})</span>
           <span style={{ fontSize: 14, color: '#6B7280', margin: '0 4px' }}>—</span>
           <span style={{ fontSize: 14, color: '#6B7280' }}>{config.plan}</span>
         </div>
