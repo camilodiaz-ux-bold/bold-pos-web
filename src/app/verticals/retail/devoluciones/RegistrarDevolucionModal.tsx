@@ -20,9 +20,10 @@ import { getVarianteLabel, getVariantes } from '../../../types/item';
 import { formatCOP } from '../../../utils/format';
 import { fmtFechaHora, SESION_VENTAS } from '../../../utils/ventas';
 import {
-  EFECTIVO_CAJA_EJEMPLO, VALIDACION, coincideBusquedaDocumento, documentoDeCliente, errorJustificacion, itemDeLinea, manejaInventarioEn, mismaSucursal,
+  EFECTIVO_CAJA_EJEMPLO, VALIDACION, desglosarImpuesto, etiquetaImpuesto, impuestoPorTasa, resumirImpuestos, coincideBusquedaDocumento, documentoDeCliente, errorJustificacion, itemDeLinea, manejaInventarioEn, mismaSucursal,
   sucursalDeItems, sucursalesDelUsuario, usuarioSesion, validarDocumento, valorUnitarioPagado,
 } from '../../../utils/devoluciones';
+import { getImpuesto } from '../../../data/itemsCatalogs';
 import { VENTA_EJEMPLO_CONFLICTO } from '../../../data/retail/ventasSeed';
 
 const FONT = "'Montserrat', sans-serif";
@@ -42,6 +43,9 @@ interface Linea {
   /** Máximo a devolver (cantidad vendida); sin tope en Sin Documento. */
   maxCantidad?: number;
   maneja: boolean;
+  /** Impuesto del ítem y su tasa. */
+  impuestoId: string;
+  tasa: number;
   /** Para devolver el stock a una variante concreta (Sin Documento). */
   itemRefId?: string;
   variantId?: string;
@@ -51,11 +55,13 @@ interface Fila { marcado: boolean; cantidad: string; valor: string; valorEditado
 
 const soloDigitos = (s: string) => s.replace(/\D/g, '');
 const num = (s: string) => (s === '' ? 0 : parseInt(s, 10));
+/** Valor digitado con separador de miles ("1250000" → "1.250.000"). */
+const miles = (s: string) => (s === '' ? '' : num(s).toLocaleString('es-CO'));
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const labelStyle: React.CSSProperties = { display: 'block', fontFamily: FONT, fontSize: 13, fontWeight: 600, color: 'var(--black-100)', marginBottom: 6 };
 const errStyle: React.CSSProperties = { fontFamily: FONT, fontSize: 12, color: 'var(--coral-100)', margin: '4px 0 0' };
-const thStyle: React.CSSProperties = { padding: '8px 10px 8px 0', textAlign: 'left', fontFamily: FONT, fontSize: 12, fontWeight: 700, color: 'var(--black-100)', borderBottom: '2px solid var(--black-10)', whiteSpace: 'nowrap' };
+const thStyle: React.CSSProperties = { padding: '8px 10px 8px 0', textAlign: 'left', fontFamily: FONT, fontSize: 12, fontWeight: 700, color: 'var(--black-100)', borderBottom: '2px solid var(--black-10)', whiteSpace: 'normal', lineHeight: '16px', verticalAlign: 'bottom', overflowWrap: 'anywhere' };
 const tdStyle: React.CSSProperties = { padding: '10px 10px 10px 0', fontFamily: FONT, fontSize: 13, fontWeight: 500, color: 'var(--black-100)', verticalAlign: 'top' };
 
 function Banner({ tipo, children }: { tipo: 'error' | 'aviso' | 'info'; children: React.ReactNode }) {
@@ -66,6 +72,17 @@ function Banner({ tipo, children }: { tipo: 'error' | 'aviso' | 'info'; children
     <div role={tipo === 'error' ? 'alert' : 'status'} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 10, backgroundColor: bg, marginTop: 8 }}>
       <Icono size={16} color={color} style={{ flexShrink: 0, marginTop: 1 }} />
       <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 500, color: 'var(--black-100)' }}>{children}</span>
+    </div>
+  );
+}
+
+/** Impuesto del ítem sobre el valor de devolución (que lo incluye): monto y tipo. */
+function CeldaImpuesto({ linea, valor }: { linea: Linea; valor: number | null }) {
+  if (valor === null) return <span style={{ color: 'var(--black-40)' }}>—</span>;
+  return (
+    <div>
+      <div>{formatCOP(desglosarImpuesto(valor, linea.tasa).impuesto)}</div>
+      <div style={{ fontSize: 11, color: 'var(--black-60)' }}>{etiquetaImpuesto(linea.impuestoId)}</div>
     </div>
   );
 }
@@ -86,6 +103,8 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
   const [saliendo, setSaliendo] = useState(false);
   const [tipo, setTipo] = useState<TipoDevolucion>('factura');
   const [busqueda, setBusqueda] = useState('');
+  /** Texto con el que se ejecutó la última búsqueda (se aplica al pulsar "Buscar"; no se filtra mientras se escribe). */
+  const [consulta, setConsulta] = useState('');
   const [venta, setVenta] = useState<Venta | null>(null);
   const [filas, setFilas] = useState<Record<string, Fila>>({});
   const [agregados, setAgregados] = useState<Linea[]>([]);
@@ -99,6 +118,8 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
   const [conflicto, setConflicto] = useState('');
 
   const conDocumento = tipo !== 'sinDocumento';
+  /** Solo la Factura discrimina impuestos: Comprobante y Sin Documento no tienen tratamiento de IVA. */
+  const conImpuesto = tipo === 'factura';
 
   // ── Sucursal del documento (o del usuario, en Sin Documento) ──────────────
   const sucursalId = useMemo(() => {
@@ -110,22 +131,30 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
 
   // ── Paso 1: documentos candidatos ─────────────────────────────────────────
   const candidatos = useMemo(() => {
-    if (!conDocumento || !busqueda.trim()) return [];
+    if (!conDocumento || !consulta) return [];
     return ventas
-      .filter(v => v.tipoDoc === tipo && coincideBusquedaDocumento(v, busqueda, contactos) && sucursalesUsuario.some(s => mismaSucursal(s.nombre, v.sucursal)))
+      .filter(v => v.tipoDoc === tipo && coincideBusquedaDocumento(v, consulta, contactos) && sucursalesUsuario.some(s => mismaSucursal(s.nombre, v.sucursal)))
       .slice(0, 8);
-  }, [ventas, tipo, busqueda, conDocumento, sucursalesUsuario, contactos]);
+  }, [ventas, tipo, consulta, conDocumento, sucursalesUsuario, contactos]);
+
+  const buscar = () => { setConsulta(busqueda.trim()); setVenta(null); };
 
   const validacion = venta ? validarDocumento(venta) : null;
 
   // ── Líneas del documento ──────────────────────────────────────────────────
   const lineasDocumento: Linea[] = useMemo(() => {
     if (!venta) return [];
-    return venta.items.map((it, idx) => ({
-      key: String(idx), itemId: it.id, nombre: it.name, categoriaId: categoriaDe(it.id),
-      unitario: valorUnitarioPagado(it, venta.taxRate), maxCantidad: it.quantity,
-      maneja: manejaInventarioEn(itemDeLinea(items, it), sucursalItems),
-    }));
+    return venta.items.map((it, idx) => {
+      // El impuesto lo trae el ítem; si la línea no corresponde a un ítem del catálogo, se usa el del documento.
+      const propio = itemDeLinea(items, it);
+      const imp = propio ? getImpuesto(propio.impuestoId) : undefined;
+      return {
+        key: String(idx), itemId: it.id, nombre: it.name, categoriaId: categoriaDe(it.id),
+        unitario: valorUnitarioPagado(it, venta.taxRate), maxCantidad: it.quantity,
+        maneja: manejaInventarioEn(propio, sucursalItems),
+        impuestoId: imp?.id ?? impuestoPorTasa(venta.taxRate), tasa: imp?.rate ?? venta.taxRate,
+      };
+    });
   }, [venta, items, sucursalItems, allProducts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const yaDevuelto = (l: Linea) => !!venta && devoluciones.some(d => d.ventaId === venta.id && d.itemId === l.itemId);
@@ -151,9 +180,10 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
         vars.filter(v => v.activo).forEach(v => out.push({
           key: `${i.id}::${v.id}`, itemId: `${i.id}::${v.id}`, nombre: `${i.nombre} - ${getVarianteLabel(v)}`, categoriaId: i.categoriaId,
           unitario: v.precioTotal, maneja: v.sucursales.some(s => s.sucursalId === sucursalItems) && i.manejaExistencias, itemRefId: i.id, variantId: v.id,
+          impuestoId: i.impuestoId, tasa: getImpuesto(i.impuestoId)?.rate ?? 0,
         }));
       } else {
-        out.push({ key: i.id, itemId: i.id, nombre: i.nombre, categoriaId: i.categoriaId, unitario: i.precioTotal, maneja: manejaInventarioEn(i, sucursalItems), itemRefId: i.id });
+        out.push({ key: i.id, itemId: i.id, nombre: i.nombre, categoriaId: i.categoriaId, unitario: i.precioTotal, maneja: manejaInventarioEn(i, sucursalItems), itemRefId: i.id, impuestoId: i.impuestoId, tasa: getImpuesto(i.impuestoId)?.rate ?? 0 });
       }
     });
     return out;
@@ -194,7 +224,8 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
   // ── Paso 3 ────────────────────────────────────────────────────────────────
   const hayInventario = seleccionadas.some(l => l.maneja);
   const motivosActivos = [...ajustes.motivosDevolucion].filter(m => m.activo).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
-  const total = seleccionadas.reduce((s, l) => s + num(datos(l).valor), 0);
+  const resumen = resumirImpuestos(seleccionadas.map(l => ({ impuestoId: l.impuestoId, tasa: l.tasa, valor: num(datos(l).valor) })));
+  const total = resumen.total;
   const errJustificacion = errorJustificacion(justificacion);
   const sinEfectivo = metodoPago === 'Efectivo' && total > EFECTIVO_CAJA_EJEMPLO;
 
@@ -213,7 +244,7 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
           id: `dev-conflicto-${Date.now()}`, numero: siguienteNumero(), fecha: Date.now(), sucursalId, turno: SESION_VENTAS.retail.turno,
           responsable: 'Camila Rojas', tipo, ventaId: venta.id, numeroDocumento: venta.numero, fechaVenta: venta.emitidaEn, valorVenta: venta.total,
           itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: 1, valorDevolucion: l.unitario, metodoPago: 'Efectivo',
-          motivoId: 'mot-4', justificacion: 'Devolución registrada por otro usuario.', ingresaInventario: false, ejemplo: true,
+          motivoId: 'mot-4', justificacion: 'Devolución registrada por otro usuario.', ingresaInventario: false, ...(conImpuesto ? { impuestoId: l.impuestoId, tasaImpuesto: l.tasa } : {}), ejemplo: true,
         }]);
         reiniciarSeleccion();
         return;
@@ -229,7 +260,7 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
       id: `dev-${numero}-${j}-${ahora}`, numero, fecha: ahora, sucursalId, turno: SESION_VENTAS.retail.turno, responsable, tipo,
       ...(venta && conDocumento ? { ventaId: venta.id, numeroDocumento: venta.numero, fechaVenta: venta.emitidaEn, valorVenta: venta.total } : {}),
       itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: num(datos(l).cantidad), valorDevolucion: num(datos(l).valor),
-      metodoPago, motivoId, justificacion: justificacion.trim(), ingresaInventario: ingresa && l.maneja, ...(notaCredito ? { notaCredito } : {}),
+      metodoPago, motivoId, justificacion: justificacion.trim(), ingresaInventario: ingresa && l.maneja, ...(conImpuesto ? { impuestoId: l.impuestoId, tasaImpuesto: l.tasa } : {}), ...(notaCredito ? { notaCredito } : {}),
     }));
     agregar(nuevas);
 
@@ -266,7 +297,7 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
       <div className="fixed inset-0 z-[290] flex items-center justify-center bg-black/40 backdrop-blur-sm">
         <div
           role="dialog" aria-modal="true" aria-label="Registrar Devolución" className="bg-white rounded-[var(--radius-20)] w-full mx-4"
-          style={{ maxWidth: 800, maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
+          style={{ maxWidth: 960, maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 32px 12px' }}>
             <div>
@@ -278,7 +309,7 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
             </button>
           </div>
 
-          <div style={{ padding: '8px 32px 16px', overflowY: 'auto', flex: 1 }}>
+          <div style={{ padding: '8px 32px 16px', overflowY: 'auto', overflowX: 'hidden', flex: 1 }}>
             {conflicto && paso === 'items' && <Banner tipo="error">{conflicto}</Banner>}
 
             {/* ── Paso 1 ── */}
@@ -289,7 +320,7 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
                   {(Object.keys(TIPO_DEVOLUCION_LABEL) as TipoDevolucion[]).map(t => (
                     <button
                       key={t} role="radio" aria-checked={tipo === t}
-                      onClick={() => { setTipo(t); setBusqueda(''); setVenta(null); }}
+                      onClick={() => { setTipo(t); setBusqueda(''); setConsulta(''); setVenta(null); }}
                       style={{
                         padding: '10px 18px', borderRadius: 100, cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 600,
                         border: `1.5px solid ${tipo === t ? 'var(--blue-100)' : 'var(--black-10)'}`,
@@ -304,14 +335,18 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
                 {conDocumento ? (
                   <div style={{ marginTop: 20 }}>
                     <label style={labelStyle}>Número de {tipo === 'factura' ? 'la factura' : 'el comprobante'} o identificación del cliente</label>
-                    <div className="filter-pill" style={{ height: 44 }}>
-                      <Search size={16} color="var(--blue-50)" />
-                      <input
-                        value={busqueda} onChange={e => { setBusqueda(e.target.value); setVenta(null); }} placeholder="Busca por número o identificación del cliente"
-                        style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: FONT, fontSize: 13, fontWeight: 500 }}
-                      />
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <div className="filter-pill" style={{ height: 44, flex: 1 }}>
+                        <Search size={16} color="var(--blue-50)" />
+                        <input
+                          value={busqueda} onChange={e => setBusqueda(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') buscar(); }}
+                          placeholder="Escribe el número o la identificación del cliente"
+                          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: FONT, fontSize: 13, fontWeight: 500 }}
+                        />
+                      </div>
+                      <button className="btn btn-primary" onClick={buscar} disabled={!busqueda.trim()} style={{ height: 44 }}>Buscar</button>
                     </div>
-                    {busqueda.trim() && candidatos.length === 0 && (
+                    {consulta && candidatos.length === 0 && (
                       <p style={{ ...errStyle, color: 'var(--black-60)' }}>No hay resultados para los filtros o la búsqueda.</p>
                     )}
                     {candidatos.length > 0 && (
@@ -342,18 +377,20 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
 
             {/* ── Paso 2: con documento ── */}
             {paso === 'items' && conDocumento && venta && (
-              <div style={{ overflowX: 'auto' }}>
+              <div>
                 <p style={{ fontFamily: FONT, fontSize: 13, color: 'var(--black-60)', margin: '0 0 8px' }}>
                   {TIPO_DEVOLUCION_LABEL[tipo]} <strong>{venta.numero}</strong> · {fmtFechaHora(venta.emitidaEn)}
                 </p>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
                       <th style={{ ...thStyle, width: 28 }} />
                       <th style={thStyle}>Ítem</th>
-                      <th style={{ ...thStyle, width: 90 }}>Cantidad</th>
-                      <th style={{ ...thStyle, width: 130 }}>Valor unitario pagado</th>
-                      <th style={{ ...thStyle, width: 140 }}>Valor de devolución</th>
+                      <th style={{ ...thStyle, width: 74 }}>Cant. vendida</th>
+                      <th style={{ ...thStyle, width: 84 }}>Cant. a devolver</th>
+                      <th style={{ ...thStyle, width: 104 }}>Valor unitario pagado</th>
+                      <th style={{ ...thStyle, width: 130 }}>Valor de devolución</th>
+                      {conImpuesto && <th style={{ ...thStyle, width: 104 }}>Impuesto</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -373,17 +410,19 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
                             {l.nombre}
                             {bloqueado && <span style={{ marginLeft: 8, padding: '2px 8px', borderRadius: 100, backgroundColor: 'var(--black-10)', fontSize: 11, fontWeight: 700 }}>Ya devuelto</span>}
                           </td>
+                          <td style={tdStyle}>{l.maxCantidad}</td>
                           <td style={tdStyle}>
                             <input className="merlin-input-filled" inputMode="numeric" value={f.cantidad} disabled={!f.marcado || bloqueado}
-                              onChange={e => cambiarCantidad(l, e.target.value)} aria-label={`Cantidad de ${l.nombre}`} style={{ width: 70 }} />
+                              onChange={e => cambiarCantidad(l, e.target.value)} aria-label={`Cantidad de ${l.nombre}`} style={{ width: '100%', boxSizing: 'border-box' }} />
                             {intentoItems && f.marcado && err.cantidad && <p style={errStyle}>{err.cantidad}</p>}
                           </td>
                           <td style={tdStyle}>{formatCOP(l.unitario)}</td>
                           <td style={tdStyle}>
-                            <input className="merlin-input-filled" inputMode="numeric" value={f.valor} disabled={!f.marcado || bloqueado}
-                              onChange={e => setFila(l, { valor: soloDigitos(e.target.value), valorEditado: true })} aria-label={`Valor de devolución de ${l.nombre}`} style={{ width: 120 }} />
+                            <input className="merlin-input-filled" inputMode="numeric" value={miles(f.valor)} disabled={!f.marcado || bloqueado}
+                              onChange={e => setFila(l, { valor: soloDigitos(e.target.value), valorEditado: true })} aria-label={`Valor de devolución de ${l.nombre}`} style={{ width: '100%', boxSizing: 'border-box' }} />
                             {intentoItems && f.marcado && err.valor && <p style={errStyle}>{err.valor}</p>}
                           </td>
+                          {conImpuesto && <td style={tdStyle}><CeldaImpuesto linea={l} valor={f.marcado && !bloqueado ? num(f.valor) : null} /></td>}
                         </tr>
                       );
                     })}
@@ -417,13 +456,14 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
                   </ul>
                 )}
                 {agregados.length > 0 && (
-                  <div style={{ overflowX: 'auto', marginTop: 16 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+                  <div style={{ marginTop: 16 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                       <thead>
                         <tr>
                           <th style={thStyle}>Ítem</th>
-                          <th style={{ ...thStyle, width: 90 }}>Cantidad</th>
-                          <th style={{ ...thStyle, width: 140 }}>Valor de devolución</th>
+                          <th style={{ ...thStyle, width: 84 }}>Cantidad</th>
+                          <th style={{ ...thStyle, width: 130 }}>Valor de devolución</th>
+                          {conImpuesto && <th style={{ ...thStyle, width: 104 }}>Impuesto</th>}
                           <th style={{ ...thStyle, width: 36 }} />
                         </tr>
                       </thead>
@@ -436,14 +476,15 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
                               <td style={tdStyle}>{l.nombre}</td>
                               <td style={tdStyle}>
                                 <input className="merlin-input-filled" inputMode="numeric" value={f.cantidad} onChange={e => cambiarCantidad(l, e.target.value)}
-                                  aria-label={`Cantidad de ${l.nombre}`} style={{ width: 70 }} />
+                                  aria-label={`Cantidad de ${l.nombre}`} style={{ width: '100%', boxSizing: 'border-box' }} />
                                 {intentoItems && err.cantidad && <p style={errStyle}>{err.cantidad}</p>}
                               </td>
                               <td style={tdStyle}>
-                                <input className="merlin-input-filled" inputMode="numeric" value={f.valor}
-                                  onChange={e => setFila(l, { valor: soloDigitos(e.target.value), valorEditado: true })} aria-label={`Valor de devolución de ${l.nombre}`} style={{ width: 120 }} />
+                                <input className="merlin-input-filled" inputMode="numeric" value={miles(f.valor)}
+                                  onChange={e => setFila(l, { valor: soloDigitos(e.target.value), valorEditado: true })} aria-label={`Valor de devolución de ${l.nombre}`} style={{ width: '100%', boxSizing: 'border-box' }} />
                                 {intentoItems && err.valor && <p style={errStyle}>{err.valor}</p>}
                               </td>
+                              {conImpuesto && <td style={tdStyle}><CeldaImpuesto linea={l} valor={num(f.valor)} /></td>}
                               <td style={tdStyle}>
                                 <button onClick={() => quitarItem(l)} aria-label={`Quitar ${l.nombre}`} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--black-60)', display: 'flex' }}>
                                   <Trash2 size={16} />
@@ -511,7 +552,17 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 {tipo === 'factura' && <Banner tipo="info">Se creará una nota crédito por el valor de los ítems devueltos.</Banner>}
-                <p style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, margin: 0 }}>Total a devolver: {formatCOP(total)}</p>
+                <div style={{ fontFamily: FONT, fontSize: 13, borderTop: '1px solid var(--black-10)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 320, alignSelf: 'flex-end', width: '100%' }}>
+                  {conImpuesto && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Subtotal</span><span>{formatCOP(resumen.subtotal)}</span></div>
+                      {resumen.impuestos.map(i => (
+                        <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between' }}><span>{i.etiqueta}</span><span>{formatCOP(i.monto)}</span></div>
+                      ))}
+                    </>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14 }}><span>Total a devolver</span><span>{formatCOP(total)}</span></div>
+                </div>
               </div>
             )}
           </div>

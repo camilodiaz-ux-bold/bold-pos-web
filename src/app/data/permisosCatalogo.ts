@@ -82,5 +82,9 @@ export const etiquetaGrupo = (nombre: string): string => nombre.replace(' (repor
 export const PERMISO_STOCK_MINIMO_ID = 'items.gestionar-alertas-stock-minimo';
 export const conPermisoStockMinimo = (ids: string[]): string[] => (ids.includes(PERMISO_STOCK_MINIMO_ID) ? ids : [...ids, PERMISO_STOCK_MINIMO_ID]);
 
-/** Permiso "Gestionar Devoluciones" (specs/2026-11-devoluciones.md §4): solo aplica a crear devoluciones; activo por defecto en los roles Admin. */
+/**
+ * Permiso "Gestionar Devoluciones" (specs/2026-11-devoluciones.md §4 y D5). Sin efecto en el prototipo: aparece siempre
+ * activo en todos los roles y no se aplica a ningún control ("Registrar Devolución" nunca se deshabilita por permiso).
+ */
 export const PERMISO_DEVOLUCIONES_ID = 'items.gestionar-devoluciones';
+export const conPermisoDevoluciones = (ids: string[]): string[] => (ids.includes(PERMISO_DEVOLUCIONES_ID) ? ids : [...ids, PERMISO_DEVOLUCIONES_ID]);

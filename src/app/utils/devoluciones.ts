@@ -3,23 +3,17 @@
  */
 import type { AjustesState, UsuarioAjustes } from '../types/ajustes';
 import type { Devolucion } from '../types/devolucion';
-import { PERMISO_DEVOLUCIONES_ID } from '../data/permisosCatalogo';
 import type { Venta } from '../types/venta';
 import type { SaleItem } from './invoice';
 import type { Item } from '../types/item';
 import { getVariantes } from '../types/item';
 import type { Contacto } from '../types/contacto';
+import { IMPUESTOS, getImpuesto } from '../data/itemsCatalogs';
 import { DOCUMENTO_CLIENTES_EJEMPLO } from '../data/retail/ventasSeed';
 
 /** Usuario de la sesión del prototipo: el principal (Admin). */
 export function usuarioSesion(a: AjustesState): UsuarioAjustes {
   return a.usuarios.find(u => u.principal) ?? a.usuarios[0];
-}
-
-/** "Gestionar Devoluciones" según el rol del usuario de la sesión (specs §4 y D5). */
-export function puedeGestionarDevoluciones(a: AjustesState): boolean {
-  const rol = a.roles.find(r => r.id === usuarioSesion(a)?.rolId);
-  return !!rol?.permisos.includes(PERMISO_DEVOLUCIONES_ID);
 }
 
 /** Sucursales a las que el usuario de la sesión tiene acceso. */
@@ -121,4 +115,38 @@ export function coincideBusquedaDocumento(v: Venta, consulta: string, contactos:
   if (sinTildes(v.numero).includes(q)) return true;
   const digitos = soloDigitos(q);
   return digitos.length > 0 && soloDigitos(documentoDeCliente(v, contactos)).includes(digitos);
+}
+
+// ─── Impuestos (specs/2026-11-devoluciones.md §6) ─────────────────────────────
+
+/** Id de impuesto del catálogo que corresponde a una tasa (0.19 → `iva-19`); `iva-19` si no hay coincidencia. */
+export const impuestoPorTasa = (tasa: number): string => IMPUESTOS.find(i => Math.abs(i.rate - tasa) < 1e-6)?.id ?? 'iva-19';
+
+/** Etiqueta de un impuesto en los totales: "IVA 19.00%", "INC 8.00%" o "IVA Excluido". */
+export function etiquetaImpuesto(id: string): string {
+  const imp = getImpuesto(id);
+  if (!imp || imp.rate === 0) return 'IVA Excluido';
+  return `${id.startsWith('inc') ? 'INC' : 'IVA'} ${(imp.rate * 100).toFixed(2)}%`;
+}
+
+/** El valor de devolución incluye el impuesto del ítem: se separa en base e impuesto. */
+export function desglosarImpuesto(valor: number, tasa: number): { base: number; impuesto: number } {
+  const base = Math.round(valor / (1 + tasa));
+  return { base, impuesto: valor - base };
+}
+
+export interface LineaConImpuesto { impuestoId: string; tasa: number; valor: number }
+
+/** Subtotal, impuestos agrupados por tipo y total de un conjunto de líneas. */
+export function resumirImpuestos(lineas: LineaConImpuesto[]): { subtotal: number; total: number; impuestos: { id: string; etiqueta: string; monto: number }[] } {
+  let subtotal = 0;
+  let total = 0;
+  const porId = new Map<string, number>();
+  lineas.forEach(l => {
+    const { base, impuesto } = desglosarImpuesto(l.valor, l.tasa);
+    subtotal += base;
+    total += l.valor;
+    porId.set(l.impuestoId, (porId.get(l.impuestoId) ?? 0) + impuesto);
+  });
+  return { subtotal, total, impuestos: [...porId.entries()].map(([id, monto]) => ({ id, etiqueta: etiquetaImpuesto(id), monto })) };
 }

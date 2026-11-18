@@ -12,7 +12,7 @@ import type { Devolucion, TipoDevolucion } from '../../../types/devolucion';
 import { TIPO_DEVOLUCION_LABEL } from '../../../types/devolucion';
 import { formatCOP } from '../../../utils/format';
 import { fmtFechaHora, isoDia } from '../../../utils/ventas';
-import { puedeGestionarDevoluciones, sucursalesDelUsuario, usuarioSesion } from '../../../utils/devoluciones';
+import { sucursalesDelUsuario, usuarioSesion } from '../../../utils/devoluciones';
 import { DevolucionDetalleModal } from './DevolucionDetalleModal';
 import { RegistrarDevolucionModal } from './RegistrarDevolucionModal';
 import { AbrirTurnoModal } from './AbrirTurnoModal';
@@ -48,7 +48,6 @@ export function DevolucionesPage() {
   const { devoluciones, filasDe } = useDevoluciones();
   const { catDefs } = useCatalog();
 
-  const puedeGestionar = puedeGestionarDevoluciones(ajustes);
   const sucursalesUsuario = useMemo(() => sucursalesDelUsuario(ajustes), [ajustes]);
   // Con más de una sucursal el default es "todas"; con una sola, esa.
   const sucursalDefault = sucursalesUsuario.length > 1 ? '' : (sucursalesUsuario[0]?.id ?? '');
@@ -86,7 +85,6 @@ export function DevolucionesPage() {
   const safePage = Math.min(page, totalPages - 1);
   const filas = filtradas.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
-  const motivoNombre = (id: string) => ajustes.motivosDevolucion.find(m => m.id === id)?.nombre ?? id;
   const sinRegistros = visibles.length === 0;
 
   // Si la cuenta trabaja con turnos y no hay uno abierto, primero se abre el turno (specs/2026-11-devoluciones.md §6).
@@ -106,7 +104,6 @@ export function DevolucionesPage() {
       <td style={tdStyle}>{TIPO_DEVOLUCION_LABEL[d.tipo]}</td>
       <td style={tdStyle}>{formatCOP(d.valorDevolucion)}</td>
       <td style={tdStyle}>{d.metodoPago}</td>
-      <td style={tdStyle}>{motivoNombre(d.motivoId)}</td>
       <td style={tdStyle}>{d.responsable}</td>
     </tr>
   );
@@ -116,7 +113,7 @@ export function DevolucionesPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 20, lineHeight: '28px', color: 'var(--black-100)', margin: 0 }}>Devoluciones</p>
         <div style={{ marginLeft: 'auto' }}>
-          <button className="btn btn-primary" disabled={!puedeGestionar} onClick={registrar}>Registrar Devolución</button>
+          <button className="btn btn-primary" onClick={registrar}>Registrar Devolución</button>
         </div>
       </div>
 
@@ -181,16 +178,15 @@ export function DevolucionesPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 1030 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 840 }}>
               <thead>
                 <tr>
                   <th style={{ ...thStyle, width: 100 }}>Número</th>
                   <th style={{ ...thStyle, width: 140 }}>Fecha</th>
-                  <th style={{ ...thStyle, width: 220 }}>Producto</th>
+                  <th style={{ ...thStyle, width: 260 }}>Producto</th>
                   <th style={{ ...thStyle, width: 120 }}>Tipo</th>
                   <th style={{ ...thStyle, width: 120 }}>Valor devolución</th>
                   <th style={{ ...thStyle, width: 140 }}>Método de pago</th>
-                  <th style={{ ...thStyle, width: 190 }}>Motivo</th>
                   <th style={{ ...thStyle, width: 130 }}>Responsable</th>
                 </tr>
               </thead>

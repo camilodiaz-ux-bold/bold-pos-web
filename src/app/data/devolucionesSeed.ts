@@ -8,7 +8,7 @@ import type { Venta } from '../types/venta';
 import { buildRetailSeedVentas, VENTA_EJEMPLO_YA_DEVUELTO, VENTAS_EJEMPLO_DEVOLUCION } from './retail/ventasSeed';
 import { RETAIL_ALL_PRODUCTS } from './retail/productCatalog';
 
-export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v1';
+export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v2';
 /** Primer número de devolución de la semilla (Dev-201). */
 export const DEVOLUCION_NUMERO_INICIAL = 201;
 
@@ -48,10 +48,10 @@ export function buildSeedDevoluciones(): Devolucion[] {
   ventas.forEach((v, i) => {
     if (i % 2 !== 0) return;
     const tomar = v.items.length > 1 && i % 4 === 0 ? 2 : 1;
-    const lineas = v.items.slice(0, tomar).map(it => {
+    const lineas = v.items.slice(0, tomar).map((it, j) => {
       const prod = RETAIL_ALL_PRODUCTS.find(p => String(p.id) === it.id);
       const unit = Math.round(it.price * (1 - (it.discount ?? 0) / 100) * (1 + v.taxRate));
-      return { itemId: it.id, nombre: it.name, categoriaId: prod?.catId ?? 'accesorios', cantidad: 1, valor: unit };
+      return { itemId: it.id, nombre: it.name, categoriaId: prod?.catId ?? 'accesorios', cantidad: Math.min(it.quantity, 1 + ((i + j) % 3)), valor: unit };
     });
     const fecha = Math.min(FIN, v.emitidaEn + (1 + Math.floor(rnd() * 9)) * DIA + Math.floor(rnd() * 6) * 3_600_000);
     defs.push({ fecha, tipo: v.tipoDoc, venta: v, lineas });
@@ -78,7 +78,7 @@ export function buildSeedDevoluciones(): Devolucion[] {
       const p = catalogo[Math.floor(rnd() * catalogo.length)];
       if (usados.has(p.id)) continue;
       usados.add(p.id);
-      const cantidad = 1 + Math.floor(rnd() * 2);
+      const cantidad = 1 + Math.floor(rnd() * 4);
       const valor = Math.round((p.price * (0.7 + rnd() * 0.5)) / 100) * 100;
       lineas.push({ itemId: String(p.id), nombre: p.name, categoriaId: p.catId, cantidad, valor });
     }
@@ -101,6 +101,7 @@ export function buildSeedDevoluciones(): Devolucion[] {
         id: `dev-${numero}-${j}`, numero, fecha: d.fecha, sucursalId, turno, responsable, tipo: d.tipo,
         ...(d.venta ? { ventaId: d.venta.id, numeroDocumento: d.venta.numero, fechaVenta: d.venta.emitidaEn, valorVenta: d.venta.total } : {}),
         itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: l.cantidad,
+        ...(d.tipo === 'factura' ? { impuestoId: 'iva-19', tasaImpuesto: 0.19 } : {}),
         valorDevolucion: l.valor * l.cantidad, metodoPago, motivoId, justificacion: JUSTIFICACIONES[motivoId],
         ingresaInventario,
         ...(d.tipo === 'factura' ? { notaCredito: `NCR ${390 + idx}`, estadoDian: idx % 5 === 0 ? 'rechazada' as const : idx % 7 === 0 ? 'pendiente' as const : 'aceptada' as const } : {}),

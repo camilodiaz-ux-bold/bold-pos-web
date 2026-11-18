@@ -12,7 +12,7 @@ import type { Devolucion } from '../../../types/devolucion';
 import { TIPO_DEVOLUCION_LABEL } from '../../../types/devolucion';
 import { formatCOP } from '../../../utils/format';
 import { fmtFechaHora } from '../../../utils/ventas';
-import { rutaDocumento, totalDevolucion } from '../../../utils/devoluciones';
+import { desglosarImpuesto, etiquetaImpuesto, resumirImpuestos, rutaDocumento } from '../../../utils/devoluciones';
 
 const FONT = "'Montserrat', sans-serif";
 
@@ -42,6 +42,8 @@ export function DevolucionDetalleModal({ filas, onClose }: { filas: Devolucion[]
   const { catDefs } = useCatalog();
   const d = filas[0];
   const ruta = rutaDocumento(d);
+  /** Solo la Factura discrimina impuestos. */
+  const conImpuesto = d.tipo === 'factura';
   const motivo = ajustes.motivosDevolucion.find(m => m.id === d.motivoId)?.nombre ?? d.motivoId;
   const sucursal = ajustes.sucursales.find(s => s.id === d.sucursalId)?.nombre ?? d.sucursalId;
   const categoria = (id: string) => catDefs.find(c => c.id === id)?.name ?? '—';
@@ -103,6 +105,7 @@ export function DevolucionDetalleModal({ filas, onClose }: { filas: Devolucion[]
               <th style={th}>Producto</th>
               <th style={th}>Categoría</th>
               <th style={{ ...th, textAlign: 'right' }}>Cantidad</th>
+              {conImpuesto && <th style={{ ...th, textAlign: 'right' }}>Impuesto</th>}
               <th style={{ ...th, textAlign: 'right', paddingRight: 0 }}>Valor devolución</th>
             </tr>
           </thead>
@@ -112,12 +115,18 @@ export function DevolucionDetalleModal({ filas, onClose }: { filas: Devolucion[]
                 <td style={td}>{f.nombre}</td>
                 <td style={td}>{categoria(f.categoriaId)}</td>
                 <td style={{ ...td, textAlign: 'right' }}>{f.cantidad}</td>
+                {conImpuesto && (
+                  <td style={{ ...td, textAlign: 'right' }}>
+                    {formatCOP(desglosarImpuesto(f.valorDevolucion, f.tasaImpuesto ?? 0.19).impuesto)}
+                    <div style={{ fontSize: 11, color: 'var(--black-60)' }}>{etiquetaImpuesto(f.impuestoId ?? 'iva-19')}</div>
+                  </td>
+                )}
                 <td style={{ ...td, textAlign: 'right', paddingRight: 0 }}>{formatCOP(f.valorDevolucion)}</td>
               </tr>
             ))}
             <tr>
-              <td style={{ ...td, fontWeight: 700 }} colSpan={3}>Total</td>
-              <td style={{ ...td, fontWeight: 700, textAlign: 'right', paddingRight: 0 }}>{formatCOP(totalDevolucion(filas))}</td>
+              <td style={{ ...td, fontWeight: 700 }} colSpan={conImpuesto ? 4 : 3}>Total</td>
+              <td style={{ ...td, fontWeight: 700, textAlign: 'right', paddingRight: 0 }}>{formatCOP(resumirImpuestos(filas.map(f => ({ impuestoId: f.impuestoId ?? 'iva-19', tasa: f.tasaImpuesto ?? 0.19, valor: f.valorDevolucion }))).total)}</td>
             </tr>
           </tbody>
         </table>

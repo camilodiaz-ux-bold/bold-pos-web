@@ -125,16 +125,16 @@ function ejemplosDevolucion(comun: { vendedor: string; emitidoPor: string; sucur
   const conPropina = (v: Venta, tip: number): Venta => ({
     ...v, tip, total: v.total + tip, pagos: v.pagos.map((p, i) => (i === 0 ? { ...p, amount: p.amount + tip } : p)),
   });
-  const credito = mk('comprobante', 3764, 8, 10, [item(223, 1), item(214, 1)], CLIENTES.andina, {}, 'no-pagada');
+  const credito = mk('comprobante', 3764, 8, 10, [item(223, 3), item(214, 2)], CLIENTES.andina, {}, 'no-pagada');
 
-  const anulada = mk('comprobante', 3763, 7, 11, [item(212, 1)], CLIENTES.cf, { pagos: [], saldo: 0 }, 'cancelada');
-  const notaTotal = mk('factura', 2400418, 7, 15, [item(224, 1), item(256, 1)], CLIENTES.andina, { notaCreditoTotal: true });
-  const varios = mk('comprobante', 3765, 8, 14, [item(222, 1), item(213, 1)], CLIENTES.daniel);
-  const descuento = mk('factura', 2400419, 8, 16, [item(231, 2, 10), item(225, 1, 10)], CLIENTES.david);
-  const propina = mk('comprobante', 3766, 9, 12, [item(214, 2), item(251, 1)], CLIENTES.cf);
-  const sinInv = mk('factura', 2400420, 9, 13, [{ id: '0', name: 'Ajuste de prenda', price: 4202, quantity: 1 }, item(215, 1)], CLIENTES.daniel);
-  const yaDev = mk('factura', 2400421, 9, 17, [item(242, 1), item(243, 1), item(245, 1)], CLIENTES.andina);
-  const conflicto = mk('comprobante', 3767, 9, 18, [item(216, 1), item(226, 1), item(257, 1)], CLIENTES.david);
+  const anulada = mk('comprobante', 3763, 7, 11, [item(212, 3), item(221, 2)], CLIENTES.cf, { pagos: [], saldo: 0 }, 'cancelada');
+  const notaTotal = mk('factura', 2400418, 7, 15, [item(224, 4), item(256, 2), item(213, 1)], CLIENTES.andina, { notaCreditoTotal: true });
+  const varios = mk('comprobante', 3765, 8, 14, [item(222, 2), item(213, 3), item(211, 2)], CLIENTES.daniel);
+  const descuento = mk('factura', 2400419, 8, 16, [item(231, 3, 10), item(225, 2, 10), item(214, 4)], CLIENTES.david);
+  const propina = mk('comprobante', 3766, 9, 12, [item(214, 2), item(251, 3), item(216, 2)], CLIENTES.cf);
+  const sinInv = mk('factura', 2400420, 9, 13, [{ id: '0', name: 'Ajuste de prenda', price: 4202, quantity: 2 }, item(215, 3), item(245, 2)], CLIENTES.daniel);
+  const yaDev = mk('factura', 2400421, 9, 17, [item(242, 2), item(243, 4), item(245, 3)], CLIENTES.andina);
+  const conflicto = mk('comprobante', 3767, 9, 18, [item(216, 3), item(226, 2), item(257, 5)], CLIENTES.david);
 
   return [
     anulada, notaTotal, credito,

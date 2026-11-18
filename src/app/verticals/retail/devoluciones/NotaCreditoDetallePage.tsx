@@ -12,7 +12,7 @@ import { useDevoluciones } from '../../../store/devolucionesStore';
 import { useVentas } from '../../../store/ventasStore';
 import { useItems } from '../../../store/itemsStore';
 import { mockCufe, fmtCOP } from '../../../utils/ventas';
-import { totalDevolucion } from '../../../utils/devoluciones';
+import { desglosarImpuesto, impuestoPorTasa, resumirImpuestos } from '../../../utils/devoluciones';
 
 const FONT = "'Montserrat', sans-serif";
 const link: React.CSSProperties = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT, fontSize: 13, color: 'var(--coral-100)' };
@@ -43,9 +43,10 @@ export function NotaCreditoDetallePage() {
   const colorEstado = estado === 'aceptada' ? '#1b8959' : estado === 'rechazada' ? 'var(--coral-100)' : 'var(--blue-100)';
   const etiquetaEstado = estado === 'aceptada' ? 'Aceptada' : estado === 'rechazada' ? 'Rechazada' : 'Pendiente';
   const itemDe = (productId: string) => items.find(i => i.catalogProductId !== undefined && String(i.catalogProductId) === productId);
-  const total = totalDevolucion(filas);
-  const subtotal = Math.round(total / (1 + tasa));
-  const iva = total - subtotal;
+  // Cada línea usa el impuesto de su ítem; las devoluciones antiguas sin impuesto usan el del documento.
+  const lineaImp = (f: typeof filas[number]) => ({ impuestoId: f.impuestoId ?? impuestoPorTasa(tasa), tasa: f.tasaImpuesto ?? tasa, valor: f.valorDevolucion });
+  const resumen = resumirImpuestos(filas.map(lineaImp));
+  const total = resumen.total;
   const fecha = new Date(d.fecha);
   const fechaIso = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
 
@@ -99,7 +100,7 @@ export function NotaCreditoDetallePage() {
             </thead>
             <tbody>
               {filas.map(f => {
-                const base = Math.round(f.valorDevolucion / (1 + tasa));
+                const { base } = desglosarImpuesto(f.valorDevolucion, lineaImp(f).tasa);
                 return (
                   <tr key={f.id} style={{ backgroundColor: '#fff', borderTop: '1px solid var(--black-10)' }}>
                     <td style={td}>{f.cantidad}</td>
@@ -125,7 +126,7 @@ export function NotaCreditoDetallePage() {
             <div style={{ backgroundColor: 'var(--blue-10)', borderRadius: 8, padding: 12, fontFamily: FONT, fontSize: 13 }}>{d.justificacion}</div>
           </div>
           <div style={{ fontFamily: FONT, fontSize: 13, minWidth: 220 }}>
-            {[['Subtotal', subtotal], ['Descuento', 0], [tasa > 0 ? `IVA ${(tasa * 100).toFixed(2)}%` : 'IVA Excluido', iva]].map(([l, v]) => (
+            {[['Subtotal', resumen.subtotal], ['Descuento', 0], ...resumen.impuestos.map(i => [i.etiqueta, i.monto])].map(([l, v]) => (
               <div key={l as string} style={{ display: 'flex', justifyContent: 'space-between', gap: 24, lineHeight: '22px' }}><strong>{l}</strong><span>{fmtCOP(v as number)}</span></div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 24, lineHeight: '22px' }}><strong>Total</strong><span>{fmtCOP(total)}</span></div>

@@ -45,7 +45,11 @@ export interface Devolucion {
   nombre: string;
   categoriaId: string;
   cantidad: number;
+  /** Valor de devolución digitado (con impuesto incluido). */
   valorDevolucion: number;
+  /** Impuesto del ítem (`iva-19`, `iva-5`, `inc-8`, `exento`) y su tasa (0.19). Sin definir = IVA 19 %. */
+  impuestoId?: string;
+  tasaImpuesto?: number;
   metodoPago: string;
   motivoId: string;
   justificacion: string;

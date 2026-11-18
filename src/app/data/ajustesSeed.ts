@@ -1,6 +1,6 @@
 /** Valores iniciales de Ajustes (specs/2026-10-ajustes.md §8). Sin datos reales del staging. */
 import type { AjustesState, MetodoPago, NumeracionNoElectronica, Rol, Sucursal } from '../types/ajustes';
-import { TODOS_LOS_PERMISOS, conPermisoStockMinimo } from './permisosCatalogo';
+import { TODOS_LOS_PERMISOS, conPermisoStockMinimo, conPermisoDevoluciones } from './permisosCatalogo';
 import type { MotivoDevolucion } from '../types/devolucion';
 import { METODOS_PAGO, SUCURSALES_COMPRA } from './facturasCompraSeed';
 
@@ -47,8 +47,8 @@ export const MOTIVOS_DEVOLUCION_INICIALES: MotivoDevolucion[] = [
 
 const ROLES: Rol[] = [
   { id: 'rol-admin', nombre: 'Administrador', permisos: TODOS_LOS_PERMISOS },
-  { id: 'rol-vendedor', nombre: 'Vendedor', permisos: conPermisoStockMinimo(PERMISOS_VENDEDOR) },
-  { id: 'rol-contador', nombre: 'Contador', permisos: conPermisoStockMinimo(PERMISOS_CONTADOR) },
+  { id: 'rol-vendedor', nombre: 'Vendedor', permisos: conPermisoDevoluciones(conPermisoStockMinimo(PERMISOS_VENDEDOR)) },
+  { id: 'rol-contador', nombre: 'Contador', permisos: conPermisoDevoluciones(conPermisoStockMinimo(PERMISOS_CONTADOR)) },
 ];
 
 export const AJUSTES_DEFAULT: AjustesState = {
