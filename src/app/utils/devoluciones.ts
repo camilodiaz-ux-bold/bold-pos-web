@@ -83,6 +83,7 @@ export function manejaInventarioEn(item: Item | undefined, sucursalItemsId: stri
 export const VALIDACION = {
   cantidad: 'La cantidad debe ser mayor a cero.',
   valor: 'El valor de devolución debe ser mayor a cero.',
+  valorMayorVenta: 'El valor de devolución no puede ser mayor al valor de venta.',
   motivo: 'Selecciona un motivo.',
   metodo: 'Selecciona un método de pago.',
   justificacionVacia: 'Escribe una justificación.',

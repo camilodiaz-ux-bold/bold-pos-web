@@ -101,7 +101,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
   const newSaleMode = has('mesas') ? 'Mesas' : 'Mostrador';
   // Rutas que tienen su propia entrada de menú: mientras estemos en ellas,
   // "Punto de venta" no debe resaltarse aunque activeMode caiga en su default.
-  const OWNED_ROUTES = ['/ventas', '/items', '/comprobantes', '/facturas-venta', '/clientes', '/proveedores', '/facturas-compra', '/ajustes'];
+  const OWNED_ROUTES = ['/ventas', '/items', '/comprobantes', '/facturas-venta', '/clientes', '/proveedores', '/facturas-compra', '/ajustes', '/notas-credito'];
   const inOwnedRoute = OWNED_ROUTES.some(r => pathname.startsWith(r));
   // Menú siempre abierto y con todos los submenús desplegados por defecto (specs/2026-11-menu-lateral-y-selector-vertical.md §2).
   // La preferencia del usuario vive en memoria a nivel de módulo: sobrevive a navegar y a cambiar de vertical
@@ -168,7 +168,7 @@ export function BoldNavBar({ activeMode, onModeChange }: NavBarProps) {
         { id: 'comprobantes',  label: 'Comprobantes',      icon: <IcComprobantes size={16} />, active: pathname.startsWith('/comprobantes'),   onClick: () => navigate('/comprobantes') },
         { id: 'facturasventa', moduleId: 'facturas-venta', label: 'Facturas de Venta', icon: <IcFacturas size={16} />, active: pathname.startsWith('/facturas-venta'), onClick: () => navigate('/facturas-venta') },
         { id: 'cotizaciones',  label: 'Cotizaciones',      icon: <IcCotizaciones size={16} />, active: false, onClick: () => toast.info('Cotizaciones') },
-        { id: 'notascredito', label: 'Notas crédito',     icon: <IcNotasCredito size={16} />, active: false, onClick: () => toast.info('Notas crédito') },
+        { id: 'notascredito', label: 'Notas crédito',     icon: <IcNotasCredito size={16} />, active: pathname.startsWith('/notas-credito'), onClick: () => (has('devoluciones') ? navigate('/notas-credito') : toast.info('Notas crédito')) },
         { id: 'notasdebito',  label: 'Notas débito',      icon: <IcNotasDebito size={16} />,  active: false, onClick: () => toast.info('Notas débito') },
       ],
     },

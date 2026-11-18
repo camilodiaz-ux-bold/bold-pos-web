@@ -12,6 +12,7 @@ import { useDevoluciones } from '../../../store/devolucionesStore';
 import { useVentas } from '../../../store/ventasStore';
 import { useItems } from '../../../store/itemsStore';
 import { mockCufe, fmtCOP } from '../../../utils/ventas';
+import { ItemsDevueltosSeccion } from './ItemsDevueltosSeccion';
 import { desglosarImpuesto, impuestoPorTasa, resumirImpuestos } from '../../../utils/devoluciones';
 
 const FONT = "'Montserrat', sans-serif";
@@ -88,6 +89,11 @@ export function NotaCreditoDetallePage() {
             <div style={{ fontWeight: 700 }}>{ajustes.perfil.nombre}</div>
             <div>Emitido por: {d.responsable}</div>
           </div>
+        </div>
+
+        {/* Ítems devueltos que dieron origen a esta nota crédito */}
+        <div style={{ marginTop: 18 }}>
+          <ItemsDevueltosSeccion filas={filas} descripcion="Esta nota crédito se generó a partir de esta devolución." />
         </div>
 
         <div style={{ overflowX: 'auto', marginTop: 16 }}>

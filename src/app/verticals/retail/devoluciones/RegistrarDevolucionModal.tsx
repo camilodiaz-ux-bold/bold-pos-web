@@ -205,7 +205,12 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
   // ── Navegación de pasos ───────────────────────────────────────────────────
   const errorFila = (l: Linea): { cantidad?: string; valor?: string } => {
     const f = datos(l);
-    return { cantidad: num(f.cantidad) > 0 ? undefined : VALIDACION.cantidad, valor: num(f.valor) > 0 ? undefined : VALIDACION.valor };
+    // Con documento, el valor a devolver no puede superar el valor de venta (lo pagado por esa cantidad); menor sí se permite.
+    const mayorVenta = conDocumento && num(f.valor) > l.unitario * num(f.cantidad);
+    return {
+      cantidad: num(f.cantidad) > 0 ? undefined : VALIDACION.cantidad,
+      valor: num(f.valor) <= 0 ? VALIDACION.valor : mayorVenta ? VALIDACION.valorMayorVenta : undefined,
+    };
   };
 
   const puedeSiguientePaso1 = !conDocumento || (!!venta && (validacion?.bloqueos.length ?? 0) === 0);
@@ -260,6 +265,7 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
       id: `dev-${numero}-${j}-${ahora}`, numero, fecha: ahora, sucursalId, turno: SESION_VENTAS.retail.turno, responsable, tipo,
       ...(venta && conDocumento ? { ventaId: venta.id, numeroDocumento: venta.numero, fechaVenta: venta.emitidaEn, valorVenta: venta.total } : {}),
       itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: num(datos(l).cantidad), valorDevolucion: num(datos(l).valor),
+      ...(conDocumento ? { valorVentaItem: l.unitario * num(datos(l).cantidad) } : {}),
       metodoPago, motivoId, justificacion: justificacion.trim(), ingresaInventario: ingresa && l.maneja, ...(conImpuesto ? { impuestoId: l.impuestoId, tasaImpuesto: l.tasa } : {}), ...(notaCredito ? { notaCredito } : {}),
     }));
     agregar(nuevas);
@@ -420,7 +426,7 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
                           <td style={tdStyle}>
                             <input className="merlin-input-filled" inputMode="numeric" value={miles(f.valor)} disabled={!f.marcado || bloqueado}
                               onChange={e => setFila(l, { valor: soloDigitos(e.target.value), valorEditado: true })} aria-label={`Valor de devolución de ${l.nombre}`} style={{ width: '100%', boxSizing: 'border-box' }} />
-                            {intentoItems && f.marcado && err.valor && <p style={errStyle}>{err.valor}</p>}
+                            {f.marcado && err.valor && (intentoItems || err.valor === VALIDACION.valorMayorVenta) && <p style={errStyle}>{err.valor}</p>}
                           </td>
                           {conImpuesto && <td style={tdStyle}><CeldaImpuesto linea={l} valor={f.marcado && !bloqueado ? num(f.valor) : null} /></td>}
                         </tr>

@@ -8,7 +8,7 @@ import type { Venta } from '../types/venta';
 import { buildRetailSeedVentas, VENTA_EJEMPLO_YA_DEVUELTO, VENTAS_EJEMPLO_DEVOLUCION } from './retail/ventasSeed';
 import { RETAIL_ALL_PRODUCTS } from './retail/productCatalog';
 
-export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v2';
+export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v4';
 /** Primer número de devolución de la semilla (Dev-201). */
 export const DEVOLUCION_NUMERO_INICIAL = 201;
 
@@ -46,7 +46,8 @@ export function buildSeedDevoluciones(): Devolucion[] {
 
   // Factura / Comprobante: una devolución por cada dos documentos; un ítem por documento (a veces dos). Un ítem se devuelve una sola vez.
   ventas.forEach((v, i) => {
-    if (i % 2 !== 0) return;
+    // Todas las facturas pagadas tienen su devolución (así el listado de notas crédito no queda corto); de los comprobantes, uno de cada dos.
+    if (v.tipoDoc !== 'factura' && i % 2 !== 0) return;
     const tomar = v.items.length > 1 && i % 4 === 0 ? 2 : 1;
     const lineas = v.items.slice(0, tomar).map((it, j) => {
       const prod = RETAIL_ALL_PRODUCTS.find(p => String(p.id) === it.id);
@@ -102,6 +103,7 @@ export function buildSeedDevoluciones(): Devolucion[] {
         ...(d.venta ? { ventaId: d.venta.id, numeroDocumento: d.venta.numero, fechaVenta: d.venta.emitidaEn, valorVenta: d.venta.total } : {}),
         itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: l.cantidad,
         ...(d.tipo === 'factura' ? { impuestoId: 'iva-19', tasaImpuesto: 0.19 } : {}),
+        ...(d.venta ? { valorVentaItem: Math.round(l.valor * l.cantidad) } : {}),
         valorDevolucion: l.valor * l.cantidad, metodoPago, motivoId, justificacion: JUSTIFICACIONES[motivoId],
         ingresaInventario,
         ...(d.tipo === 'factura' ? { notaCredito: `NCR ${390 + idx}`, estadoDian: idx % 5 === 0 ? 'rechazada' as const : idx % 7 === 0 ? 'pendiente' as const : 'aceptada' as const } : {}),
