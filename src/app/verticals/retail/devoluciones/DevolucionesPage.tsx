@@ -17,6 +17,7 @@ import { DevolucionDetalleModal } from './DevolucionDetalleModal';
 import { RegistrarDevolucionModal } from './RegistrarDevolucionModal';
 import { AbrirTurnoModal } from './AbrirTurnoModal';
 import { useTurnoAbierto } from '../../../utils/turno';
+import { PrototypeToolsBar } from '../../../components/PrototypeToolsBar';
 
 const FONT = "'Montserrat', sans-serif";
 const PAGE_SIZE = 50;
@@ -210,14 +211,13 @@ export function DevolucionesPage() {
         )}
       </div>
 
-      {/* Herramienta del prototipo: simular que no hay turno abierto. */}
-      <label
-        title="Control del prototipo: no forma parte del producto"
-        style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', border: '1.5px dashed var(--blue-20)', borderRadius: 12, fontFamily: FONT, fontSize: 12, fontWeight: 600, color: 'var(--black-60)', cursor: 'pointer' }}
-      >
-        <input type="checkbox" checked={!turnoAbierto} onChange={e => setTurnoAbierto(!e.target.checked)} style={{ accentColor: 'var(--blue-100)' }} />
-        Prototipo · Simular que no hay turno abierto
-      </label>
+      {/* Herramienta del prototipo: simular que no hay turno abierto (barra fija abajo). */}
+      <PrototypeToolsBar>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: FONT, fontSize: 12, fontWeight: 600, color: 'var(--black-60)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={!turnoAbierto} onChange={e => setTurnoAbierto(!e.target.checked)} style={{ accentColor: 'var(--blue-100)' }} />
+          Simular que no hay turno abierto
+        </label>
+      </PrototypeToolsBar>
 
       {abriendoTurno && (
         <AbrirTurnoModal sucursal={sucursalesUsuario.find(s => s.id === usuarioSesion(ajustes).sucursalId)?.nombre ?? ''} onCancel={() => setAbriendoTurno(false)} onOpen={() => { setTurnoAbierto(true); setAbriendoTurno(false); setRegistrando(true); }} />

@@ -40,6 +40,7 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 - Reportes: la ruta `/reportes/restaurantes/:id` aloja también reportes core (Ventas Async, Ventas por ítems; Ventas Legacy ya no tiene entrada en el menú); el guard (`ReporteDetalleRoute`) solo redirige los ids exclusivos de Restaurantes.
 - Menú lateral (`BoldNavBar`): abre siempre con todos los submenús desplegados; submenús y menú completo se pueden recoger (preferencia en memoria, `menuPrefs`). "Mostrador" es módulo solo de Restaurantes (en Retail "Nueva venta" abre igual la pantalla de venta). Devoluciones (`/items/devoluciones`): solo Retail.
 - Combos es core (ambas verticales). Propinas, Mesas y reportes de restaurantes: solo Restaurantes. Variantes: solo Retail.
+- **Herramientas del prototipo** (switches, checks o botones de demo que no son del producto): siempre dentro de `components/PrototypeToolsBar.tsx`, que las deja **fijas abajo, centradas y por encima de todo el contenido** (también de los modales). Nunca dentro del flujo de la página. Hoy: "Simular que no hay turno abierto" (Devoluciones) y DS / Step mode (Facturas de compra).
 - Todo spec nuevo declara su campo **Vertical** (`Core | Retail | Restaurantes`).
 
 ## Specs de producto
