@@ -8,8 +8,8 @@ import type { Venta } from '../types/venta';
 import { buildRetailSeedVentas, VENTA_EJEMPLO_YA_DEVUELTO, VENTAS_EJEMPLO_DEVOLUCION } from './retail/ventasSeed';
 import { RETAIL_ALL_PRODUCTS } from './retail/productCatalog';
 
-export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v4';
-/** Primer número de devolución de la semilla (Dev-201). */
+export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v6';
+/** Primer número de devolución de la semilla (201). */
 export const DEVOLUCION_NUMERO_INICIAL = 201;
 
 const RESPONSABLES = ['Wendell Nazar', 'Rafael Arango', 'Camila Rojas', 'Laura Pineda'];
@@ -51,7 +51,7 @@ export function buildSeedDevoluciones(): Devolucion[] {
     const tomar = v.items.length > 1 && i % 4 === 0 ? 2 : 1;
     const lineas = v.items.slice(0, tomar).map((it, j) => {
       const prod = RETAIL_ALL_PRODUCTS.find(p => String(p.id) === it.id);
-      const unit = Math.round(it.price * (1 - (it.discount ?? 0) / 100) * (1 + v.taxRate));
+      const unit = Math.round(it.price * (1 - (it.discount ?? 0) / 100) * (1 + (v.tipoDoc === 'factura' ? v.taxRate : 0)));
       return { itemId: it.id, nombre: it.name, categoriaId: prod?.catId ?? 'accesorios', cantidad: Math.min(it.quantity, 1 + ((i + j) % 3)), valor: unit };
     });
     const fecha = Math.min(FIN, v.emitidaEn + (1 + Math.floor(rnd() * 9)) * DIA + Math.floor(rnd() * 6) * 3_600_000);
@@ -90,7 +90,7 @@ export function buildSeedDevoluciones(): Devolucion[] {
 
   const filas: Devolucion[] = [];
   defs.forEach((d, idx) => {
-    const numero = `Dev-${DEVOLUCION_NUMERO_INICIAL + idx}`;
+    const numero = String(DEVOLUCION_NUMERO_INICIAL + idx);
     const motivoId = MOTIVOS[Math.floor(rnd() * MOTIVOS.length)];
     const metodoPago = d.venta?.pagos[0]?.method ?? METODOS[Math.floor(rnd() * METODOS.length)];
     const responsable = RESPONSABLES[Math.floor(rnd() * RESPONSABLES.length)];

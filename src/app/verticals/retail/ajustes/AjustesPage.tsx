@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
   BadgePercent, BellRing, Calculator, ChevronRight, CircleDollarSign, CircleUser, Coins, CreditCard, FileText,
-  Hash, Info, KeyRound, Plug, Receipt, ShieldCheck, Store, Tags, UserRound, Users, type LucideIcon,
+  Hash, Info, KeyRound, Plug, Receipt, ShieldCheck, Store, Tags, Undo2, UserRound, Users, type LucideIcon,
 } from 'lucide-react';
 import { useAjustes } from '../../../store/ajustesStore';
 import { useContactos } from '../../../store/contactosStore';
@@ -19,6 +19,7 @@ import {
 } from './PanelesConfig';
 import { HabilitacionDianPanel, NumeracionesPanel } from './PanelesFacturacion';
 import { AlertasStockMinimoPanel } from './PanelAlertasStockMinimo';
+import { MotivosDevolucionModal } from './MotivosDevolucionModal';
 import { RolesPanel, UsuariosPanel } from './PanelesAcceso';
 import { CategoriasItemsPanel, ListaPreciosPanel } from './PanelesInventario';
 import { DescuentosPanel, NumeracionNoElectronicaPanel, SucursalesPanel, VendedoresPanel } from './PanelesListas';
@@ -63,6 +64,7 @@ const PANELES: Record<string, React.ComponentType<{ onClose: () => void }>> = {
   vendedores: VendedoresPanel,
   'tipos-costeo': TiposCosteoPanel,
   'alertas-stock-minimo': AlertasStockMinimoPanel,
+  'motivos-devolucion': MotivosDevolucionModal,
 };
 
 const ico = (Icon: LucideIcon) =>
@@ -83,6 +85,7 @@ const OTROS: Seccion[] = [
   { id: 'metodos-pago', label: 'Métodos de pago', icon: ico(CreditCard) },
   { id: 'categorias-gastos', label: 'Categorías de Gastos', icon: ico(Coins) },
   { id: 'integraciones', label: 'Integraciones', icon: ico(Plug) },
+  { id: 'motivos-devolucion', label: 'Motivos de devolución', icon: ico(Undo2) },
 ];
 const ACCESOS: Seccion[] = [
   { id: 'vendedores', label: 'Vendedores', icon: ico(UserRound) },

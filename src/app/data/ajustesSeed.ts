@@ -27,6 +27,8 @@ const SUCURSALES: Sucursal[] = SUCURSALES_COMPRA.map((nombre, i) => ({
 
 export const numeracionInicial = (i: number): NumeracionNoElectronica => ({
   comprobante: 3700 + i * 40, recibo: 8400 + i * 30, gasto: 440 + i * 10, cotizacion: 780 + i * 25, facturaCompra: null,
+  // La semilla de devoluciones llega hasta el 246: cada sucursal arranca por encima y con rangos distintos.
+  devolucion: 247 + i * 100,
 });
 
 const PERMISOS_VENDEDOR = TODOS_LOS_PERMISOS.filter(id =>

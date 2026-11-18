@@ -69,6 +69,8 @@ export interface NumeracionNoElectronica {
   gasto: number;
   cotizacion: number;
   facturaCompra: number | null;
+  /** Siguiente número de devolución de la sucursal (specs/2026-11-devoluciones.md §7). Ausente en ajustes guardados antes de este campo. */
+  devolucion?: number;
 }
 
 // ─── Fase 3: perfil, numeraciones, usuarios, roles, listas y categorías ──────

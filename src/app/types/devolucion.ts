@@ -1,6 +1,6 @@
 /**
  * devolucion.ts — Modelo de Devoluciones (specs/2026-11-devoluciones.md §3).
- * Una fila por ítem devuelto; las filas de una misma devolución comparten `numero` (`Dev-234`).
+ * Una fila por ítem devuelto; las filas de una misma devolución comparten `numero` (`234`, sin prefijo).
  */
 
 export type TipoDevolucion = 'factura' | 'comprobante' | 'sinDocumento';
@@ -22,7 +22,7 @@ export interface MotivoDevolucion {
 export interface Devolucion {
   /** Id único de la fila. */
   id: string;
-  /** 'Dev-234', compartido por las filas de una misma devolución. */
+  /** '234' (solo el número, sin prefijo), compartido por las filas de una misma devolución. */
   numero: string;
   /** Epoch ms del registro. */
   fecha: number;

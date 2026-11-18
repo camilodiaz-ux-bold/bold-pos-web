@@ -88,7 +88,7 @@ function CeldaImpuesto({ linea, valor }: { linea: Linea; valor: number | null })
 }
 
 export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
-  const { ajustes } = useAjustes();
+  const { ajustes, updateAjustes } = useAjustes();
   const { devoluciones, siguienteNumero, siguienteNotaCredito, agregar } = useDevoluciones();
   const { items, ajustarExistencia } = useItems();
   const { ventas } = useVentas();
@@ -150,12 +150,12 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
       const imp = propio ? getImpuesto(propio.impuestoId) : undefined;
       return {
         key: String(idx), itemId: it.id, nombre: it.name, categoriaId: categoriaDe(it.id),
-        unitario: valorUnitarioPagado(it, venta.taxRate), maxCantidad: it.quantity,
+        unitario: valorUnitarioPagado(it, conImpuesto ? venta.taxRate : 0), maxCantidad: it.quantity,
         maneja: manejaInventarioEn(propio, sucursalItems),
         impuestoId: imp?.id ?? impuestoPorTasa(venta.taxRate), tasa: imp?.rate ?? venta.taxRate,
       };
     });
-  }, [venta, items, sucursalItems, allProducts]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [venta, items, sucursalItems, allProducts, conImpuesto]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const yaDevuelto = (l: Linea) => !!venta && devoluciones.some(d => d.ventaId === venta.id && d.itemId === l.itemId);
 
@@ -257,7 +257,18 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
       if (seleccionadas.some(yaDevuelto)) { reiniciarSeleccion(); return; }
     }
 
-    const numero = siguienteNumero();
+    // El número sale del consecutivo de la sucursal (Ajustes → Numeración documentos no electrónicos); si ya existe
+    // una devolución con ese número (p. ej. otra sucursal), se toma el siguiente libre. Luego el consecutivo avanza.
+    const ocupados = new Set(devoluciones.map(d => d.numero));
+    let consecutivo = ajustes.numeracionNoElectronica[sucursalId]?.devolucion ?? Number(siguienteNumero());
+    while (ocupados.has(String(consecutivo))) consecutivo += 1;
+    const numero = String(consecutivo);
+    if (ajustes.numeracionNoElectronica[sucursalId]) {
+      updateAjustes(prev => ({
+        ...prev,
+        numeracionNoElectronica: { ...prev.numeracionNoElectronica, [sucursalId]: { ...prev.numeracionNoElectronica[sucursalId], devolucion: consecutivo + 1 } },
+      }));
+    }
     const notaCredito = tipo === 'factura' ? siguienteNotaCredito() : undefined;
     const ahora = Date.now();
     const ingresa = hayInventario && inventario === 'si';

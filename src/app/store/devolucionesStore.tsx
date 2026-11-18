@@ -21,17 +21,17 @@ function save(filas: Devolucion[]): void {
   try { localStorage.setItem(DEVOLUCIONES_STORAGE_KEY, JSON.stringify(filas)); } catch { /* ignore */ }
 }
 
-/** 'Dev-234' → 234 */
+/** '234' → 234 (también acepta el formato anterior 'Dev-234') */
 export const numeroDeDevolucion = (numero: string): number => parseInt(numero.replace(/\D/g, ''), 10) || 0;
 
 interface DevolucionesCtx {
   /** Más reciente primero (por fecha; a igual fecha, el número más alto). */
   devoluciones: Devolucion[];
-  /** Todas las filas de una misma devolución (`Dev-234`). */
+  /** Todas las filas de una misma devolución (`234`). */
   filasDe: (numero: string) => Devolucion[];
   /** Devoluciones (números distintos) que salieron de un documento. */
   devolucionesDeVenta: (ventaId: string) => Devolucion[];
-  /** Siguiente número `Dev-N`. */
+  /** Siguiente número de devolución (solo el número). */
   siguienteNumero: () => string;
   /** Siguiente número de nota crédito (`NCR 430`). */
   siguienteNotaCredito: () => string;
@@ -55,7 +55,7 @@ export function DevolucionesProvider({ children }: { children: React.ReactNode }
   const devolucionesDeVenta = useCallback((ventaId: string) => raw.filter(d => d.ventaId === ventaId), [raw]);
 
   const siguienteNumero = useCallback(
-    () => `Dev-${Math.max(DEVOLUCION_NUMERO_INICIAL - 1, ...raw.map(d => numeroDeDevolucion(d.numero))) + 1}`,
+    () => String(Math.max(DEVOLUCION_NUMERO_INICIAL - 1, ...raw.map(d => numeroDeDevolucion(d.numero))) + 1),
     [raw],
   );
 

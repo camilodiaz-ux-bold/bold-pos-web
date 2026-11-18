@@ -22,6 +22,10 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 /items → ListaItemsPage
 /items/nuevo → ItemFormPage (crear)
 /items/:id/editar → ItemFormPage (editar)
+/items/devoluciones → DevolucionesPage (Retail; spec `specs/2026-11-devoluciones.md`)
+/notas-credito → NotasCreditoListPage (Retail)
+/notas-credito/:numero → NotaCreditoDetallePage (Retail; `:numero` es el de la devolución)
+/reportes/retail/devoluciones → informe de Devoluciones (Retail)
 
 ## Design System — Merlin
 - Fuente siempre Montserrat

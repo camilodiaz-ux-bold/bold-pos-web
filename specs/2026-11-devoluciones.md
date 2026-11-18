@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Estado** | Listo para implementación (fases 1 y 2 hechas; faltan 3 a 5) |
+| **Estado** | ✅ Implementado |
 | **Vertical** | Retail (Restaurantes no cambia) |
 | **Fuente** | `PRDs/2026-11-17 - Devoluciones/Instrucciones para el prototipo.md` (fuera del repo). Los textos de interfaz son literales de ese archivo. |
 | **Antecedentes** | `2026-10-ajustes` (numeración, roles), `2026-10-reportes-retail`, `2026-11-stock-minimo` (permiso sin efecto, patrón de menú) |
@@ -66,7 +66,7 @@ Fuera de alcance (PRD §9): cambios de producto, devolución a tarjeta, motor de
 
 ## 7. Ajustes
 
-- **Motivos** (Ajustes → Inventarios, panel nuevo): lista alfabética; precargados Producto defectuoso (fijo), Producto equivocado, Talla o tamaño incorrecto, Cambio de opinión del cliente, Error en el registro de la venta, Otro. Crear, editar nombre, activar/inactivar, eliminar solo si no se usó ("Este motivo ya se usó en devoluciones. Puedes inactivarlo."). Nombre 5–25 caracteres; errores "El nombre debe tener entre 5 y 25 caracteres." / "Ya existe un motivo con este nombre."; toasts "Motivo creado correctamente." / "Motivo actualizado correctamente." / "Motivo eliminado correctamente."
+- **Motivos** (Ajustes → Inventarios, panel nuevo): lista alfabética; precargados Producto defectuoso (fijo), Producto equivocado, Talla o tamaño incorrecto, Cambio de opinión del cliente, Error en el registro de la venta, Otro. Crear, editar nombre, activar/inactivar, eliminar solo si no se usó ("Este motivo ya se usó en devoluciones. Puedes inactivarlo."). Nombre 4–25 caracteres (PRD: 5–25; se baja a 4 para que quepa "Otro"); errores "El nombre debe tener entre 4 y 25 caracteres." / "Ya existe un motivo con este nombre."; toasts "Motivo creado correctamente." / "Motivo actualizado correctamente." / "Motivo eliminado correctamente."
 - **Consecutivo**: campo "Siguiente Número de Devolución" en el panel "Numeración documentos no electrónicos" (mismas reglas: por sucursal, entero ≥ 1). Toast "Consecutivo de devoluciones actualizado correctamente." (D9).
 
 ## 8. Cambios en pantallas existentes
@@ -129,3 +129,11 @@ Primero todo lo del módulo; después, los cambios en otras vistas.
 - **Ver de la nota crédito**: sección "Ítems devueltos" encima de la tabla de ítems, con Ítem, Fecha, Valor devolución, Motivo y, al final de cada fila, el enlace "Ver devolución", que abre el mismo modal de detalle de la devolución.
 - La semilla genera una devolución por cada factura pagada (más notas crédito de ejemplo); clave `bold-pos:devoluciones:v4`.
 - **Sección "Ítems devueltos" (fase 5 adelantada)**: tarjeta pastel (fondo `--coral-10`, acento coral a la izquierda, ícono de devolución) con Ítem, Fecha, Valor devolución, Motivo y "Ver devolución" al final de cada fila (abre el modal de detalle de esa devolución). Componente compartido `ItemsDevueltosSeccion`: va encima de la tabla de ítems en el **ver de la nota crédito** y en el **ver de comprobante y de factura** (ambos comparten página); no se dibuja si el documento no tiene devoluciones y el documento no cambia de estado.
+- **Numeración sin prefijo**: el número de la devolución se muestra y se guarda solo como número (`234`, no `Dev-234`) en todo el producto (lista, detalle, búsqueda, ruta `/notas-credito/234`). Cambia lo que decía el PRD. La semilla va de 201 a 246 y la clave sube a `bold-pos:devoluciones:v5`.
+
+## 14. Fases 3 y 4 (Ajustes e informe)
+
+- **Motivos de devolución**: ítem **"Motivos de devolución"** al final de Ajustes → **Otros Ajustes** (el PRD decía sección Inventarios; se ubicó donde se pidió). Abre un **modal** (no un panel lateral) con la lista alfabética, crear, editar el nombre, activar/inactivar y eliminar. "Producto defectuoso" es fijo (con candado: sin editar, inactivar ni eliminar). Nombre de **4 a 25** caracteres (el PRD decía 5 a 25; se baja a 4 para que quepa "Otro") y sin repetir (sin importar mayúsculas ni tildes). Un motivo usado no se elimina: "Este motivo ya se usó en devoluciones. Puedes inactivarlo." Los no usados piden confirmación al eliminar. Toasts del PRD (creado, actualizado —también al activar/inactivar—, eliminado). Sin límite de cantidad. Permiso "Editar Perfil de la Empresa", sin efecto.
+- **Consecutivo**: campo **"Siguiente Número de Devolución"** al final de "Numeración documentos no electrónicos", por sucursal y con la misma lógica del panel (obligatorio, mayor a 0, toast "Numeración actualizada"). Al registrar una devolución, el número sale del consecutivo de su sucursal y el consecutivo avanza; si ya existe una devolución con ese número (otra sucursal), se toma el siguiente libre. La semilla arranca en 247 (+100 por sucursal); en ajustes guardados sin el campo se propone el siguiente número libre.
+- **Informe** (Reportes → Administrativos → "Devoluciones", `/reportes/retail/devoluciones`, ítem al final de la lista): filtros fecha (por defecto últimos 90 días), sucursal (por defecto todas las de acceso) y tipo de documento; cards "Total devoluciones" (cantidad de devoluciones, no de filas) y "Valor total" (suma del valor de devolución de las filas); botones **Generar reporte**, **Limpiar filtros** (vuelve al default y vacía el reporte), **Imprimir** (iframe oculto con los filtros aplicados y las mismas columnas) y **Descargar** (.xlsx real con filtros, resumen y la misma tabla). Columnas: número de devolución, fecha, producto, tipo, número de documento, fecha de venta, valor de venta (del ítem), valor devolución, método de pago, motivo y responsable; en Sin Documento, documento, fecha y valor de venta van con guion. Sin resultados: "No hay resultados para los filtros o la búsqueda." Usa el permiso general de reportes (sin efecto). Los estados de carga y error técnico son los del `ReporteShell` (no tiene estados propios de carga).
+- **Largo del nombre del motivo: 4 a 25** (el PRD decía 5 a 25): el precargado "Otro" tiene 4 caracteres. Error: "El nombre debe tener entre 4 y 25 caracteres."
