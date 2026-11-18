@@ -6,7 +6,7 @@
  */
 import React, { useState } from 'react';
 import { TrendingUp, Receipt, Users, Clock, ChevronDown, ShoppingBag, MapPin, RefreshCw } from 'lucide-react';
-import { useVertical, PrototypeVerticalSwitcher } from '../vertical';
+import { useVertical } from '../vertical';
 import { RetailDashboard } from './dashboard/RetailDashboard';
 import {
   BarChart, Bar, LineChart, Line,
@@ -873,7 +873,6 @@ function RestaurantDashboard() {
             }}>
               {config.businessName}
             </h1>
-            <PrototypeVerticalSwitcher />
           </div>
 
           {/* Row 2: [Channel dropdown + Branch dropdown] ← → [Period tabs] */}

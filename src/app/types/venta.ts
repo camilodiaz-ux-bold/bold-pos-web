@@ -66,4 +66,8 @@ export interface Venta {
   /** Código del recibo de caja ('8428'). */
   recibo: string;
   note: string;
+  /** Solo facturas: el documento ya tiene una nota crédito total (specs/2026-11-devoluciones.md §6). */
+  notaCreditoTotal?: boolean;
+  /** Dato de ejemplo para recorrer los casos de Devoluciones. */
+  ejemplo?: boolean;
 }

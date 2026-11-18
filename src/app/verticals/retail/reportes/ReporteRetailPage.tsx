@@ -13,6 +13,7 @@ import {
 import {
   ReporteCierreCaja, ReporteCierreGerencial, ReporteCotizaciones, ReporteIngresosEgresos, ReporteNotasCredito, ReporteNotasDebito,
 } from './ReportesCaja';
+import { ReporteDevoluciones } from './ReportesDevoluciones';
 import { ReporteCuentasPorCobrar, ReporteInventarios, ReporteListaContactos, ReporteListaItems } from './ReportesAdmin';
 
 const REPORTES: Record<string, React.ComponentType> = {
@@ -32,6 +33,7 @@ const REPORTES: Record<string, React.ComponentType> = {
   'notas-credito': ReporteNotasCredito,
   'notas-debito': ReporteNotasDebito,
   'ingresos-egresos': ReporteIngresosEgresos,
+  devoluciones: ReporteDevoluciones,
   'cierre-caja': ReporteCierreCaja,
   'cierre-caja-gerencial': ReporteCierreGerencial,
 };

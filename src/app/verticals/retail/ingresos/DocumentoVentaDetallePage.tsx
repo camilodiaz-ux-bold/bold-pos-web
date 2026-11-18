@@ -13,6 +13,7 @@ import { printInvoice } from '../../../utils/printInvoice';
 import { comboBreakdown } from '../../../utils/comboBridge';
 import { INVOICE_ISSUER } from '../../../data/invoiceIssuer';
 import { DOC_CONFIG } from './documentosVenta';
+import { ItemsDevueltosDeVenta } from '../devoluciones/ItemsDevueltosSeccion';
 
 // ─── Estilos locales (mismo patrón que PedidoDetallePage) ─────────────────────
 
@@ -184,6 +185,9 @@ export function DocumentoVentaDetallePage({ tipo }: { tipo: TipoDocVenta }) {
           </div>
         )}
       </div>
+
+      {/* ── Devoluciones generadas a partir de este documento ── */}
+      <ItemsDevueltosDeVenta ventaId={v.id} />
 
       {/* ── Ítems ── */}
       <div style={sectionCard}>

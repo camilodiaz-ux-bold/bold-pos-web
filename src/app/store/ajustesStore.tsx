@@ -23,7 +23,7 @@ function load(): AjustesState {
     const raw = localStorage.getItem(AJUSTES_STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw) as Partial<AjustesState>;
-      return {
+      const state: AjustesState = {
         ...AJUSTES_DEFAULT,
         ...saved,
         pos: { ...AJUSTES_DEFAULT.pos, ...saved.pos },
@@ -31,8 +31,13 @@ function load(): AjustesState {
         integraciones: { ...AJUSTES_DEFAULT.integraciones, ...saved.integraciones },
         perfil: { ...AJUSTES_DEFAULT.perfil, ...saved.perfil },
         // `alertasStockBajo` es el nombre anterior del campo (specs/2026-11-stock-minimo.md §1).
+        // El campo `motivosDevolucion` ausente toma el valor inicial por el spread de AJUSTES_DEFAULT.
+        // El motivo precargado se queda como "Otro" (4 caracteres): la regla del nombre del motivo es de 4 a 25 caracteres.
+        // Revierte el renombre intermedio a "Otros".
+        motivosDevolucion: (saved.motivosDevolucion ?? AJUSTES_DEFAULT.motivosDevolucion).map(m => (m.id === 'mot-6' && m.nombre === 'Otros' ? { ...m, nombre: 'Otro' } : m)),
         alertasStockMinimo: { ...AJUSTES_DEFAULT.alertasStockMinimo, ...(saved as { alertasStockBajo?: Partial<AjustesState['alertasStockMinimo']> }).alertasStockBajo, ...saved.alertasStockMinimo },
       };
+      return state;
     }
   } catch {
     /* ignore */

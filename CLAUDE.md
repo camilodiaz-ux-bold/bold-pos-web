@@ -22,6 +22,10 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 /items → ListaItemsPage
 /items/nuevo → ItemFormPage (crear)
 /items/:id/editar → ItemFormPage (editar)
+/items/devoluciones → DevolucionesPage (Retail; spec `specs/2026-11-devoluciones.md`)
+/notas-credito → NotasCreditoListPage (Retail)
+/notas-credito/:numero → NotaCreditoDetallePage (Retail; `:numero` es el de la devolución)
+/reportes/retail/devoluciones → informe de Devoluciones (Retail)
 
 ## Design System — Merlin
 - Fuente siempre Montserrat
@@ -31,14 +35,16 @@ Dashboard administrativo web del sistema Bold POS Restaurantes V1. Está dirigid
 
 ## Verticales (Retail y Restaurantes)
 - El prototipo simula dos verticales de Bold POS: **Retail** (principal) y **Restaurantes** (default). Spec: `specs/2026-10-selector-vertical.md`.
-- Infraestructura en `src/app/vertical/`: `modules.ts` (registro de módulos exclusivos; lo que no figura ahí es core), `verticalConfig.ts` (textos por vertical), `verticalStore.tsx` (`useVertical()` → `vertical`, `setVertical`, `config`, `has(moduleId)`), `VerticalRoute.tsx` (guard), `PrototypeVerticalSwitcher.tsx` (selector).
-- El selector vive **solo en Inicio** y es una herramienta del prototipo. La vertical persiste en `localStorage['bold-pos-vertical']`; `?vertical=retail|restaurantes` en la URL la fija (links de demo).
+- Infraestructura en `src/app/vertical/`: `modules.ts` (registro de módulos exclusivos; lo que no figura ahí es core), `verticalConfig.ts` (textos por vertical), `verticalStore.tsx` (`useVertical()` → `vertical`, `setVertical`, `config`, `has(moduleId)`), `VerticalRoute.tsx` (guard). `modules.ts` también exporta `moduloDeRuta(pathname)` (ruta → módulo, para decidir si se conserva la pantalla al cambiar de vertical).
+- El selector de vertical vive en el **menú del avatar "RA"** (esquina superior derecha, `BoldTopBar`), no en Inicio (spec `specs/2026-11-menu-lateral-y-selector-vertical.md`). Es una herramienta del prototipo. Al cambiar de vertical se queda en la pantalla si su módulo existe en la otra; si no, va a `/inicio`. La barra superior muestra `{negocio} ({vertical})`. La vertical persiste en `localStorage['bold-pos-vertical']`; `?vertical=retail|restaurantes` en la URL la fija (links de demo).
 - Para ocultar o mostrar algo por vertical usar `has('modulo')`, no `vertical === '…'` (salvo textos/íconos). Un módulo nuevo exclusivo se registra primero en `modules.ts`.
 - Features exclusivas de una vertical: `src/app/verticals/retail/…` o `src/app/verticals/restaurantes/…`. Lo core sigue en `pages/` y `components/`.
 - Catálogo y datos por vertical: usar `useCatalog()` (`src/app/vertical/`), no importar `CAT_DEFS`/`CAT_PRODUCTS` directo en componentes que corren en ambas verticales. Datos Retail en `src/app/data/retail/`; `src/app/data/verticalCatalog.ts` los selecciona. Ids de productos: Restaurantes 101-184, Retail 201+ (no deben colisionar).
 - Inicio (`/inicio`) tiene dos versiones: `pages/Dashboard.tsx` (Restaurantes, no tocar al trabajar en Retail) y `pages/dashboard/RetailDashboard.tsx` (Retail). Spec: `specs/2026-10-dashboard-retail.md`.
 - Reportes: la ruta `/reportes/restaurantes/:id` aloja también reportes core (Ventas Async, Ventas por ítems; Ventas Legacy ya no tiene entrada en el menú); el guard (`ReporteDetalleRoute`) solo redirige los ids exclusivos de Restaurantes.
+- Menú lateral (`BoldNavBar`): abre siempre con todos los submenús desplegados; submenús y menú completo se pueden recoger (preferencia en memoria, `menuPrefs`). "Mostrador" es módulo solo de Restaurantes (en Retail "Nueva venta" abre igual la pantalla de venta). Devoluciones (`/items/devoluciones`): solo Retail.
 - Combos es core (ambas verticales). Propinas, Mesas y reportes de restaurantes: solo Restaurantes. Variantes: solo Retail.
+- **Herramientas del prototipo** (switches, checks o botones de demo que no son del producto): siempre dentro de `components/PrototypeToolsBar.tsx`, que las deja **fijas abajo, centradas y por encima de todo el contenido** (también de los modales). Nunca dentro del flujo de la página. Hoy: "Simular que no hay turno abierto" (Devoluciones) y DS / Step mode (Facturas de compra).
 - Todo spec nuevo declara su campo **Vertical** (`Core | Retail | Restaurantes`).
 
 ## Specs de producto

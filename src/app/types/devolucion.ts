@@ -1,0 +1,66 @@
+/**
+ * devolucion.ts — Modelo de Devoluciones (specs/2026-11-devoluciones.md §3).
+ * Una fila por ítem devuelto; las filas de una misma devolución comparten `numero` (`234`, sin prefijo).
+ */
+
+export type TipoDevolucion = 'factura' | 'comprobante' | 'sinDocumento';
+
+export const TIPO_DEVOLUCION_LABEL: Record<TipoDevolucion, string> = {
+  factura: 'Factura',
+  comprobante: 'Comprobante',
+  sinDocumento: 'Sin Documento',
+};
+
+/** Motivo de devolución (Ajustes → Inventarios). El fijo no se puede eliminar ni inactivar. */
+export interface MotivoDevolucion {
+  id: string;
+  nombre: string;
+  activo: boolean;
+  fijo?: boolean;
+}
+
+export interface Devolucion {
+  /** Id único de la fila. */
+  id: string;
+  /** '234' (solo el número, sin prefijo), compartido por las filas de una misma devolución. */
+  numero: string;
+  /** Epoch ms del registro. */
+  fecha: number;
+  /** Id de la sucursal de Ajustes (`suc-1`…). */
+  sucursalId: string;
+  /** Turno actual al registrar. */
+  turno: number;
+  responsable: string;
+  tipo: TipoDevolucion;
+  /** Id interno de la venta (ruta del ver). Vacío en Sin Documento. */
+  ventaId?: string;
+  /** 'SETT 2400411' o '3753'. Vacío en Sin Documento. */
+  numeroDocumento?: string;
+  /** Epoch ms de la venta. Vacío en Sin Documento. */
+  fechaVenta?: number;
+  /** Total de la venta. Vacío en Sin Documento. */
+  valorVenta?: number;
+  /** Id de línea del documento (`SaleItem.id`) o id de producto en Sin Documento. */
+  itemId: string;
+  nombre: string;
+  categoriaId: string;
+  cantidad: number;
+  /** Valor de venta de los ítems devueltos (lo pagado por esa cantidad, con impuesto). Vacío en Sin Documento. */
+  valorVentaItem?: number;
+  /** Valor de devolución digitado (con impuesto incluido). */
+  valorDevolucion: number;
+  /** Impuesto del ítem (`iva-19`, `iva-5`, `inc-8`, `exento`) y su tasa (0.19). Sin definir = IVA 19 %. */
+  impuestoId?: string;
+  tasaImpuesto?: number;
+  metodoPago: string;
+  motivoId: string;
+  justificacion: string;
+  /** Si la devolución ingresó el ítem al inventario. */
+  ingresaInventario: boolean;
+  /** Número de la nota crédito (solo Factura). */
+  notaCredito?: string;
+  /** Estado ante la DIAN de la nota crédito (solo Factura). Sin definir = aceptada. */
+  estadoDian?: 'aceptada' | 'pendiente' | 'rechazada';
+  /** Dato de ejemplo (semilla), no registrado por el usuario. */
+  ejemplo?: boolean;
+}
