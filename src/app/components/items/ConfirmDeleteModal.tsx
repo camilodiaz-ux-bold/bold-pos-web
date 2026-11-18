@@ -9,13 +9,15 @@ interface ConfirmDeleteModalProps {
   title: string;
   message: string;
   confirmLabel?: string;
+  /** Texto del botón que cierra sin confirmar. Default "Cancelar". */
+  cancelLabel?: string;
   /** `primary` para confirmaciones que no borran (p. ej. "Aplicar"). */
   confirmVariant?: 'danger' | 'primary';
   onCancel: () => void;
   onConfirm: () => void;
 }
 
-export function ConfirmDeleteModal({ title, message, confirmLabel = 'Eliminar', confirmVariant = 'danger', onCancel, onConfirm }: ConfirmDeleteModalProps) {
+export function ConfirmDeleteModal({ title, message, confirmLabel = 'Eliminar', cancelLabel = 'Cancelar', confirmVariant = 'danger', onCancel, onConfirm }: ConfirmDeleteModalProps) {
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm">
       {/* El relleno y el ancho van en línea: las clases `p-8` / `max-w-xs` no se aplican en este contexto
@@ -28,7 +30,7 @@ export function ConfirmDeleteModal({ title, message, confirmLabel = 'Eliminar', 
           {message}
         </p>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={onCancel} className="btn btn-cancel" style={{ flex: 1 }}>Cancelar</button>
+          <button onClick={onCancel} className="btn btn-cancel" style={{ flex: 1 }}>{cancelLabel}</button>
           <button
             onClick={onConfirm}
             className={confirmVariant === 'primary' ? 'btn btn-primary' : 'btn btn-danger'}

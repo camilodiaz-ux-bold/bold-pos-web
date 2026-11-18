@@ -199,11 +199,16 @@ interface ReporteShellProps<T> {
   sinImprimir?: boolean;
   /** Contenido propio en lugar de la tabla (Cierres de Caja); solo se muestra una vez generado. */
   cuerpo?: React.ReactNode;
+  /** Acciones reales de IMPRIMIR y EXCEL (por defecto solo avisan "Próximamente"). */
+  onImprimir?: () => void;
+  onExcel?: () => void;
+  /** Texto de la tabla vacía una vez generado. */
+  mensajeVacio?: string;
 }
 
 export function ReporteShell<T>({
   titulo, filtros, generado, actualizadoEn, onGenerar, onLimpiar, tarjetas, columnas, filas, rowKey,
-  generarLabel = 'GENERAR REPORTE', excelLabel = 'GENERAR EXCEL', pie, tituloTabla, sinLimpiar, sinImprimir, cuerpo,
+  generarLabel = 'GENERAR REPORTE', excelLabel = 'GENERAR EXCEL', pie, tituloTabla, sinLimpiar, sinImprimir, cuerpo, onImprimir, onExcel, mensajeVacio = 'No hay datos con estos filtros',
 }: ReporteShellProps<T>) {
   const navigate = useNavigate();
   const [pageSize, setPageSize] = useState(25);
@@ -237,8 +242,8 @@ export function ReporteShell<T>({
       <div style={{ display: 'flex', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
         <Boton label={generarLabel} bg="var(--blue-100)" onClick={onGenerar} />
         {!sinLimpiar && <Boton label="LIMPIAR FILTROS" bg="var(--black-100)" onClick={onLimpiar} />}
-        {!sinImprimir && <Boton label="IMPRIMIR" bg="var(--blue-100)" onClick={() => toast.info('Próximamente')} />}
-        <Boton label={excelLabel} bg="var(--coral-100)" onClick={() => toast.info('Próximamente')} icon={<FileSpreadsheet size={14} />} />
+        {!sinImprimir && <Boton label="IMPRIMIR" bg="var(--blue-100)" onClick={onImprimir ?? (() => toast.info('Próximamente'))} />}
+        <Boton label={excelLabel} bg="var(--coral-100)" onClick={onExcel ?? (() => toast.info('Próximamente'))} icon={<FileSpreadsheet size={14} />} />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
@@ -265,7 +270,7 @@ export function ReporteShell<T>({
             </thead>
             <tbody>
               {generado && visibles.length === 0 && (
-                <tr><td colSpan={columnas.length} style={{ ...td, textAlign: 'center', color: 'var(--black-60)', padding: '32px 0' }}>No hay datos con estos filtros</td></tr>
+                <tr><td colSpan={columnas.length} style={{ ...td, textAlign: 'center', color: 'var(--black-60)', padding: '32px 0' }}>{mensajeVacio}</td></tr>
               )}
               {visibles.map((fila, idx) => (
                 <tr key={rowKey(fila)} style={{ borderBottom: idx === visibles.length - 1 && !pie ? 'none' : '1px solid var(--black-10)' }} className="hover:bg-[var(--blue-10)] transition-colors">

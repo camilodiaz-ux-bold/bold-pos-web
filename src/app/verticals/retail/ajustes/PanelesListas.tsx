@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useAjustes } from '../../../store/ajustesStore';
 import { useFacturasCompra } from '../../../store/facturasCompraStore';
+import { useDevoluciones } from '../../../store/devolucionesStore';
 import { ConfirmDeleteModal } from '../../../components/items/ConfirmDeleteModal';
 import { LIMITE_SUCURSALES, numeracionInicial } from '../../../data/ajustesSeed';
 import { siguienteSecuencia } from '../../../utils/facturasCompra';
@@ -327,20 +328,22 @@ export function SucursalesPanel({ onClose }: PanelProps) {
 
 // ─── Numeración documentos no electrónicos ───────────────────────────────────
 
-type CampoNumeracion = 'comprobante' | 'recibo' | 'gasto' | 'cotizacion' | 'facturaCompra';
+type CampoNumeracion = 'comprobante' | 'recibo' | 'gasto' | 'cotizacion' | 'facturaCompra' | 'devolucion';
 const CAMPOS_NUMERACION: { key: CampoNumeracion; label: string }[] = [
   { key: 'comprobante', label: 'Siguiente Número de Comprobante' },
   { key: 'recibo', label: 'Siguiente Número de Recibo' },
   { key: 'gasto', label: 'Siguiente Número de Gasto' },
   { key: 'cotizacion', label: 'Siguiente Número de Cotización' },
   { key: 'facturaCompra', label: 'Siguiente Número de Factura de compra' },
+  { key: 'devolucion', label: 'Siguiente Número de Devolución' },
 ];
 
 export function NumeracionNoElectronicaPanel({ onClose }: PanelProps) {
   const { ajustes, updateAjustes } = useAjustes();
   const { facturas } = useFacturasCompra();
+  const { siguienteNumero } = useDevoluciones();
   const [sucursalId, setSucursalId] = useState('');
-  const [valores, setValores] = useState<Record<CampoNumeracion, string>>({ comprobante: '', recibo: '', gasto: '', cotizacion: '', facturaCompra: '' });
+  const [valores, setValores] = useState<Record<CampoNumeracion, string>>({ comprobante: '', recibo: '', gasto: '', cotizacion: '', facturaCompra: '', devolucion: '' });
   const [errores, setErrores] = useState<Partial<Record<CampoNumeracion, string>>>({});
 
   const principal = sucursalPrincipal(ajustes);
@@ -353,6 +356,8 @@ export function NumeracionNoElectronicaPanel({ onClose }: PanelProps) {
     setValores({
       comprobante: String(n.comprobante), recibo: String(n.recibo), gasto: String(n.gasto), cotizacion: String(n.cotizacion),
       facturaCompra: String(n.facturaCompra ?? autoFactura(id)),
+      // Ajustes guardados antes de este campo no lo traen: se propone el siguiente número libre.
+      devolucion: String(n.devolucion ?? siguienteNumero()),
     });
     setErrores({});
   };
@@ -370,7 +375,7 @@ export function NumeracionNoElectronicaPanel({ onClose }: PanelProps) {
         ...prev.numeracionNoElectronica,
         [sucursalId]: {
           comprobante: Number(valores.comprobante), recibo: Number(valores.recibo), gasto: Number(valores.gasto),
-          cotizacion: Number(valores.cotizacion),
+          cotizacion: Number(valores.cotizacion), devolucion: Number(valores.devolucion),
           // Si no se tocó el automático, sigue siendo automático.
           facturaCompra: actual.facturaCompra === null && factura === autoFactura(sucursalId) ? null : factura,
         },

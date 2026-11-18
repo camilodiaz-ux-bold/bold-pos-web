@@ -90,6 +90,12 @@ interface ItemsContextValue {
    * Deshabilitar la quita (se pierden su existencia y umbral); habilitar la crea con existencia 0. Siempre queda al menos una.
    */
   setSucursalHabilitada: (itemId: string, cambio: { sucursalId: string; variantId?: string; habilitada: boolean }) => void;
+  /**
+   * Suma (o resta) existencia en una sucursal del ítem, o de una de sus variantes (specs/2026-11-devoluciones.md §6:
+   * una devolución que ingresa al inventario suma stock). Sin `variantId` en un ítem con variantes, se aplica a la
+   * primera variante activa que tenga esa sucursal. No hace nada si el ítem no maneja existencias ahí.
+   */
+  ajustarExistencia: (itemId: string, sucursalId: string, delta: number, variantId?: string) => void;
   /** Relee localStorage — usado por el botón "Refrescar" del listado. */
   refresh: () => void;
   resetToSeed: () => void;
@@ -223,6 +229,22 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [updateItems]);
 
+  const ajustarExistencia = useCallback((itemId: string, sucursalId: string, delta: number, variantId?: string) => {
+    const aplicar = (sucursales: ItemSucursal[]): ItemSucursal[] =>
+      sucursales.map(s => (s.sucursalId === sucursalId ? { ...s, existencia: s.existencia + delta } : s));
+    updateItems(prev => prev.map(item => {
+      if (item.id !== itemId || !item.manejaExistencias) return item;
+      if (item.variantes?.length) {
+        const destino = variantId
+          ? item.variantes.find(v => v.id === variantId)
+          : item.variantes.find(v => v.activo && v.sucursales.some(s => s.sucursalId === sucursalId));
+        if (!destino) return item;
+        return { ...item, variantes: item.variantes.map(v => (v.id === destino.id ? { ...v, sucursales: aplicar(v.sucursales) } : v)), actualizadoEn: Date.now() };
+      }
+      return { ...item, sucursales: aplicar(item.sucursales), actualizadoEn: Date.now() };
+    }));
+  }, [updateItems]);
+
   const refresh = useCallback(() => {
     updateItems(() => loadItems(vertical));
   }, [updateItems, vertical]);
@@ -232,7 +254,7 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
   }, [updateItems, vertical]);
 
   return (
-    <ItemsContext.Provider value={{ items, getItem, createItem, updateItem, deleteItem, toggleActivo, toggleVarianteActivo, setAlertaStock, setSucursalHabilitada, refresh, resetToSeed }}>
+    <ItemsContext.Provider value={{ items, getItem, createItem, updateItem, deleteItem, toggleActivo, toggleVarianteActivo, setAlertaStock, setSucursalHabilitada, ajustarExistencia, refresh, resetToSeed }}>
       {children}
     </ItemsContext.Provider>
   );

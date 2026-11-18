@@ -43,6 +43,7 @@ export const GRUPOS_REPORTES_RETAIL: GrupoReportes[] = [
       { id: 'facturas-compra', label: 'Facturas de Compra', ruta: R('facturas-compra') },
       { id: 'items-comprados', label: 'Ítems Comprados', ruta: R('items-comprados') },
       { id: 'cuentas-pagar', label: 'Cuentas por Pagar', ruta: R('cuentas-pagar') },
+      { id: 'devoluciones', label: 'Devoluciones', ruta: R('devoluciones') },
     ],
   },
 ];

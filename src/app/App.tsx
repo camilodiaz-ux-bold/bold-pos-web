@@ -31,6 +31,9 @@ import { DocumentoVentaDetallePage } from './verticals/retail/ingresos/Documento
 import { AjustesPage } from './verticals/retail/ajustes/AjustesPage';
 import { PerfilPage } from './verticals/retail/ajustes/PerfilPage';
 import { ReporteRetailPage } from './verticals/retail/reportes/ReporteRetailPage';
+import { NotasCreditoListPage } from './verticals/retail/devoluciones/NotasCreditoListPage';
+import { NotaCreditoDetallePage } from './verticals/retail/devoluciones/NotaCreditoDetallePage';
+import { DevolucionesPage } from './verticals/retail/devoluciones/DevolucionesPage';
 import { VariantesInventarioPage } from './verticals/retail/items/VariantesInventarioPage';
 
 const router = createBrowserRouter([
@@ -50,6 +53,8 @@ const router = createBrowserRouter([
       { path: 'comprobantes/:id',    element: <VerticalRoute module="comprobantes"><DocumentoVentaDetallePage key="comprobante" tipo="comprobante" /></VerticalRoute> },
       { path: 'facturas-venta',      element: <VerticalRoute module="facturas-venta"><DocumentosVentaListPage key="factura" tipo="factura" /></VerticalRoute> },
       { path: 'facturas-venta/:id',  element: <VerticalRoute module="facturas-venta"><DocumentoVentaDetallePage key="factura" tipo="factura" /></VerticalRoute> },
+      { path: 'notas-credito',        element: <VerticalRoute module="devoluciones"><NotasCreditoListPage /></VerticalRoute> },
+      { path: 'notas-credito/:numero', element: <VerticalRoute module="devoluciones"><NotaCreditoDetallePage /></VerticalRoute> },
       { path: 'ajustes',               element: <VerticalRoute module="ajustes"><AjustesPage /></VerticalRoute> },
       { path: 'ajustes/perfil',        element: <VerticalRoute module="ajustes"><PerfilPage /></VerticalRoute> },
       { path: 'facturas-compra',        Component: FacturasCompraListPage },
@@ -67,6 +72,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, Component: ListaItemsPage },
           { path: 'variantes', element: <VerticalRoute module="variantes"><VariantesInventarioPage /></VerticalRoute> },
+          { path: 'devoluciones', element: <VerticalRoute module="devoluciones"><DevolucionesPage /></VerticalRoute> },
           { path: 'alertas-stock', Component: AlertasStockPage },
           { path: 'alertas-stock/ejemplo-correo', Component: EjemploCorreoAlertasPage },
           { path: 'alertas-stock/actualizacion-masiva', Component: ActualizacionMasivaAlertasPage },

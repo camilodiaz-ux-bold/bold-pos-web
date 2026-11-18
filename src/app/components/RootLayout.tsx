@@ -25,6 +25,7 @@ import { AsyncReportsProvider } from '../store/asyncReportsStore';
 import { ItemsProvider } from '../store/itemsStore';
 import { VariantesProvider } from '../store/variantesStore';
 import { VentasProvider } from '../store/ventasStore';
+import { DevolucionesProvider } from '../store/devolucionesStore';
 import { LoginScreen } from './LoginScreen';
 import { SignupScreen } from './SignupScreen';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -134,6 +135,7 @@ export function RootLayout() {
     <ItemsProvider key={vertical}>
     <VariantesProvider>
     <VentasProvider key={vertical}>
+    <DevolucionesProvider>
     <NotificationsProvider>
     <AsyncReportsProvider>
     <div className="flex flex-col h-screen w-full bg-[var(--blue-10)] overflow-hidden ">
@@ -227,6 +229,7 @@ export function RootLayout() {
     </div>
     </AsyncReportsProvider>
     </NotificationsProvider>
+    </DevolucionesProvider>
     </VentasProvider>
     </VariantesProvider>
     </ItemsProvider>
