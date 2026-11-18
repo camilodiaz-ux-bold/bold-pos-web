@@ -53,6 +53,14 @@ const CLIENTES = {
   andina: 'Comercial Andina SAS (NIT: 901.555.777)',
 };
 
+/** Identificación de los clientes de ejemplo de las ventas (para buscar documentos por cliente en Devoluciones). */
+export const DOCUMENTO_CLIENTES_EJEMPLO: Record<string, string> = {
+  [CLIENTES.daniel]: '1017234567',
+  [CLIENTES.david]: '79456123',
+  [CLIENTES.cf]: '222222222222',
+  [CLIENTES.andina]: '901555777',
+};
+
 // Comprobantes 3753 → 3762 (el número más alto es el más reciente).
 const COMPROBANTES: Def[] = [
   { mes: 8, dia: 28, h: 10, m: 12, cliente: CLIENTES.cf,     items: [item(211, 2), item(256, 1)] },
@@ -79,6 +87,61 @@ const FACTURAS: Def[] = [
   { mes: 9, dia: 5,  h: 17, m: 10, cliente: CLIENTES.andina, items: [item(245, 2), item(257, 1)], metodo: 'Tarjeta' },
   { mes: 9, dia: 6,  h: 14, m: 45, cliente: CLIENTES.cf,     items: [item(261, 1), item(262, 2)], metodo: 'Nequi' },
 ];
+
+/** Ids de los documentos de ejemplo de Devoluciones (specs/2026-11-devoluciones.md §10, D7). */
+export const VENTA_EJEMPLO_ANULADA = 'c-3763';
+export const VENTA_EJEMPLO_NOTA_CREDITO_TOTAL = 'f-2400418';
+export const VENTA_EJEMPLO_CREDITO = 'c-3764';
+export const VENTA_EJEMPLO_VARIOS_PAGOS = 'c-3765';
+export const VENTA_EJEMPLO_DESCUENTO = 'f-2400419';
+export const VENTA_EJEMPLO_PROPINA = 'c-3766';
+export const VENTA_EJEMPLO_SIN_INVENTARIO = 'f-2400420';
+/** Factura con un ítem ya devuelto (la devolución previa está en la semilla de devoluciones). */
+export const VENTA_EJEMPLO_YA_DEVUELTO = 'f-2400421';
+/** Comprobante cuya primera devolución dispara el conflicto "otro usuario ya devolvió el ítem" (D8). */
+export const VENTA_EJEMPLO_CONFLICTO = 'c-3767';
+export const VENTAS_EJEMPLO_DEVOLUCION = [
+  VENTA_EJEMPLO_ANULADA, VENTA_EJEMPLO_NOTA_CREDITO_TOTAL, VENTA_EJEMPLO_CREDITO, VENTA_EJEMPLO_VARIOS_PAGOS,
+  VENTA_EJEMPLO_DESCUENTO, VENTA_EJEMPLO_PROPINA, VENTA_EJEMPLO_SIN_INVENTARIO, VENTA_EJEMPLO_YA_DEVUELTO, VENTA_EJEMPLO_CONFLICTO,
+];
+
+/**
+ * Documentos de ejemplo para recorrer los bloqueos y avisos de Devoluciones: anulado, con nota crédito total,
+ * a crédito no pagado, varios medios de pago, con descuento, con propina, con un ítem sin inventario y dos
+ * documentos libres (uno con un ítem ya devuelto y otro para el conflicto). Son DATOS DE EJEMPLO.
+ */
+function ejemplosDevolucion(comun: { vendedor: string; emitidoPor: string; sucursal: string; note: string }): Venta[] {
+  const mk = (tipo: 'comprobante' | 'factura', numero: number, d: number, h: number, items: SaleItem[], cliente: string,
+    patch: Partial<Venta> = {}, estado: EstadoVenta = 'pagada'): Venta => {
+    const num = tipo === 'factura' ? `SETT ${numero}` : String(numero);
+    const base = seed({
+      ...comun, id: `${tipo === 'factura' ? 'f' : 'c'}-${numero}`, numero: num, tipoDoc: tipo,
+      resolucion: tipo === 'factura' ? RESOLUCION : '---', recibo: '', emitidaEn: at(9, d, h, 20), turno: 527,
+      cliente, items, estado, ...(tipo === 'factura' ? { dian: 'aceptada' as const, cufe: mockCufe(num) } : {}),
+    });
+    return { ...base, ...patch, ejemplo: true };
+  };
+  const conPagos = (v: Venta, pagos: VentaPago[]): Venta => ({ ...v, pagos });
+  const conPropina = (v: Venta, tip: number): Venta => ({
+    ...v, tip, total: v.total + tip, pagos: v.pagos.map((p, i) => (i === 0 ? { ...p, amount: p.amount + tip } : p)),
+  });
+  const credito = mk('comprobante', 3764, 8, 10, [item(223, 1), item(214, 1)], CLIENTES.andina, {}, 'no-pagada');
+
+  const anulada = mk('comprobante', 3763, 7, 11, [item(212, 1)], CLIENTES.cf, { pagos: [], saldo: 0 }, 'cancelada');
+  const notaTotal = mk('factura', 2400418, 7, 15, [item(224, 1), item(256, 1)], CLIENTES.andina, { notaCreditoTotal: true });
+  const varios = mk('comprobante', 3765, 8, 14, [item(222, 1), item(213, 1)], CLIENTES.daniel);
+  const descuento = mk('factura', 2400419, 8, 16, [item(231, 2, 10), item(225, 1, 10)], CLIENTES.david);
+  const propina = mk('comprobante', 3766, 9, 12, [item(214, 2), item(251, 1)], CLIENTES.cf);
+  const sinInv = mk('factura', 2400420, 9, 13, [{ id: '0', name: 'Ajuste de prenda', price: 4202, quantity: 1 }, item(215, 1)], CLIENTES.daniel);
+  const yaDev = mk('factura', 2400421, 9, 17, [item(242, 1), item(243, 1), item(245, 1)], CLIENTES.andina);
+  const conflicto = mk('comprobante', 3767, 9, 18, [item(216, 1), item(226, 1), item(257, 1)], CLIENTES.david);
+
+  return [
+    anulada, notaTotal, credito,
+    conPagos(varios, [{ method: 'Efectivo', amount: 100000 }, { method: 'Nequi', amount: varios.total - 100000 }]),
+    descuento, conPropina(propina, 8000), sinInv, yaDev, conflicto,
+  ];
+}
 
 export function buildRetailSeedVentas(): Venta[] {
   const comun = { vendedor: 'Wendell Nazar', emitidoPor: 'Wendell Nazar', sucursal: 'Hub Ciudad del Río', note: '' };
@@ -112,7 +175,7 @@ export function buildRetailSeedVentas(): Venta[] {
   });
 
   // Recibos 8410, 8411… en orden cronológico (a más reciente, número más alto).
-  const porFecha = [...todas].sort((a, b) => a.emitidaEn - b.emitidaEn || a.id.localeCompare(b.id));
+  const porFecha = [...todas, ...ejemplosDevolucion(comun)].sort((a, b) => a.emitidaEn - b.emitidaEn || a.id.localeCompare(b.id));
   const recibos = new Map(porFecha.map((v, i) => [v.id, String(8410 + i)]));
-  return todas.map(v => ({ ...v, recibo: recibos.get(v.id)! }));
+  return [...todas, ...ejemplosDevolucion(comun)].map(v => ({ ...v, recibo: recibos.get(v.id)! }));
 }

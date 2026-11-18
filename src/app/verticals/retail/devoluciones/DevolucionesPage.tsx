@@ -3,7 +3,6 @@
  * por ítem devuelto) con filtros, búsqueda, paginación y modal de detalle. Solo Retail.
  */
 import React, { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { CalendarDays, Layers, ListChecks, Search, Store, Tag, Trash2, FileText } from 'lucide-react';
 import { useAjustes } from '../../../store/ajustesStore';
 import { useDevoluciones } from '../../../store/devolucionesStore';
@@ -13,8 +12,11 @@ import type { Devolucion, TipoDevolucion } from '../../../types/devolucion';
 import { TIPO_DEVOLUCION_LABEL } from '../../../types/devolucion';
 import { formatCOP } from '../../../utils/format';
 import { fmtFechaHora, isoDia } from '../../../utils/ventas';
-import { puedeGestionarDevoluciones, sucursalesDelUsuario } from '../../../utils/devoluciones';
+import { puedeGestionarDevoluciones, sucursalesDelUsuario, usuarioSesion } from '../../../utils/devoluciones';
 import { DevolucionDetalleModal } from './DevolucionDetalleModal';
+import { RegistrarDevolucionModal } from './RegistrarDevolucionModal';
+import { AbrirTurnoModal } from './AbrirTurnoModal';
+import { useTurnoAbierto } from '../../../utils/turno';
 
 const FONT = "'Montserrat', sans-serif";
 const PAGE_SIZE = 50;
@@ -55,6 +57,9 @@ export function DevolucionesPage() {
   const [filtros, setFiltros] = useState<Filtros>(filtrosVacios);
   const [page, setPage] = useState(0);
   const [detalle, setDetalle] = useState<string | null>(null);
+  const [registrando, setRegistrando] = useState(false);
+  const [abriendoTurno, setAbriendoTurno] = useState(false);
+  const [turnoAbierto, setTurnoAbierto] = useTurnoAbierto();
 
   const setFiltro = <K extends keyof Filtros>(k: K, v: Filtros[K]) => { setFiltros(p => ({ ...p, [k]: v })); setPage(0); };
   const hayFiltros = (Object.keys(filtros) as (keyof Filtros)[]).some(k => filtros[k] !== filtrosVacios[k]);
@@ -84,7 +89,11 @@ export function DevolucionesPage() {
   const motivoNombre = (id: string) => ajustes.motivosDevolucion.find(m => m.id === id)?.nombre ?? id;
   const sinRegistros = visibles.length === 0;
 
-  const registrar = () => toast.info('Registrar Devolución — próximamente');
+  // Si la cuenta trabaja con turnos y no hay uno abierto, primero se abre el turno (specs/2026-11-devoluciones.md §6).
+  const registrar = () => {
+    if (ajustes.pos.controlTurnos && !turnoAbierto) setAbriendoTurno(true);
+    else setRegistrando(true);
+  };
 
   const filaDe = (d: Devolucion) => (
     <tr
@@ -205,6 +214,19 @@ export function DevolucionesPage() {
         )}
       </div>
 
+      {/* Herramienta del prototipo: simular que no hay turno abierto. */}
+      <label
+        title="Control del prototipo: no forma parte del producto"
+        style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', border: '1.5px dashed var(--blue-20)', borderRadius: 12, fontFamily: FONT, fontSize: 12, fontWeight: 600, color: 'var(--black-60)', cursor: 'pointer' }}
+      >
+        <input type="checkbox" checked={!turnoAbierto} onChange={e => setTurnoAbierto(!e.target.checked)} style={{ accentColor: 'var(--blue-100)' }} />
+        Prototipo · Simular que no hay turno abierto
+      </label>
+
+      {abriendoTurno && (
+        <AbrirTurnoModal sucursal={sucursalesUsuario.find(s => s.id === usuarioSesion(ajustes).sucursalId)?.nombre ?? ''} onCancel={() => setAbriendoTurno(false)} onOpen={() => { setTurnoAbierto(true); setAbriendoTurno(false); setRegistrando(true); }} />
+      )}
+      {registrando && <RegistrarDevolucionModal onClose={() => setRegistrando(false)} />}
       {detalle && <DevolucionDetalleModal filas={filasDe(detalle)} onClose={() => setDetalle(null)} />}
     </div>
   );

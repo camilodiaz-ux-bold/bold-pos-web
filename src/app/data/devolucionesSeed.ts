@@ -5,7 +5,7 @@
  */
 import type { Devolucion, TipoDevolucion } from '../types/devolucion';
 import type { Venta } from '../types/venta';
-import { buildRetailSeedVentas } from './retail/ventasSeed';
+import { buildRetailSeedVentas, VENTA_EJEMPLO_YA_DEVUELTO, VENTAS_EJEMPLO_DEVOLUCION } from './retail/ventasSeed';
 import { RETAIL_ALL_PRODUCTS } from './retail/productCatalog';
 
 export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v1';
@@ -39,7 +39,9 @@ interface Def { fecha: number; tipo: TipoDevolucion; venta?: Venta; lineas: { it
 
 export function buildSeedDevoluciones(): Devolucion[] {
   const rnd = lcg(20261117);
-  const ventas = buildRetailSeedVentas().filter(v => v.estado === 'pagada');
+  const todas = buildRetailSeedVentas();
+  // Los documentos de ejemplo de Devoluciones se dejan limpios, salvo el de "Ya devuelto" (más abajo).
+  const ventas = todas.filter(v => v.estado === 'pagada' && !VENTAS_EJEMPLO_DEVOLUCION.includes(v.id));
   const defs: Def[] = [];
 
   // Factura / Comprobante: una devolución por cada dos documentos; un ítem por documento (a veces dos). Un ítem se devuelve una sola vez.
@@ -54,6 +56,17 @@ export function buildSeedDevoluciones(): Devolucion[] {
     const fecha = Math.min(FIN, v.emitidaEn + (1 + Math.floor(rnd() * 9)) * DIA + Math.floor(rnd() * 6) * 3_600_000);
     defs.push({ fecha, tipo: v.tipoDoc, venta: v, lineas });
   });
+
+  // Documento de ejemplo con un ítem ya devuelto: la primera línea de la factura 2400421.
+  const yaDev = todas.find(v => v.id === VENTA_EJEMPLO_YA_DEVUELTO);
+  if (yaDev) {
+    const it = yaDev.items[0];
+    const prod = RETAIL_ALL_PRODUCTS.find(p => String(p.id) === it.id);
+    defs.push({
+      fecha: Math.min(FIN, yaDev.emitidaEn + 2 * DIA), tipo: 'factura', venta: yaDev,
+      lineas: [{ itemId: it.id, nombre: it.name, categoriaId: prod?.catId ?? 'accesorios', cantidad: 1, valor: Math.round(it.price * (1 + yaDev.taxRate)) }],
+    });
+  }
 
   // Sin Documento: ítems libres del catálogo.
   const catalogo = RETAIL_ALL_PRODUCTS.filter(p => p.catId !== 'combos');
@@ -90,7 +103,7 @@ export function buildSeedDevoluciones(): Devolucion[] {
         itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: l.cantidad,
         valorDevolucion: l.valor * l.cantidad, metodoPago, motivoId, justificacion: JUSTIFICACIONES[motivoId],
         ingresaInventario,
-        ...(d.tipo === 'factura' ? { notaCredito: `NCR ${390 + idx}` } : {}),
+        ...(d.tipo === 'factura' ? { notaCredito: `NCR ${390 + idx}`, estadoDian: idx % 5 === 0 ? 'rechazada' as const : idx % 7 === 0 ? 'pendiente' as const : 'aceptada' as const } : {}),
         ejemplo: true,
       });
     });

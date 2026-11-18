@@ -57,6 +57,7 @@ export function moduloDeRuta(pathname: string): string | null {
     ['/ajustes', 'ajustes'],
     ['/items/variantes', 'variantes'],
     ['/items/devoluciones', 'devoluciones'],
+    ['/notas-credito', 'devoluciones'],
     ['/reportes/retail', 'reportes-retail'],
   ];
   return reglas.find(([prefijo]) => pathname === prefijo || pathname.startsWith(prefijo + '/'))?.[1] ?? null;

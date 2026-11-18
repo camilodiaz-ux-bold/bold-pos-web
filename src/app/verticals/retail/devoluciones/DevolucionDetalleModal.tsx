@@ -5,7 +5,6 @@
  */
 import React from 'react';
 import { X } from 'lucide-react';
-import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
 import { useAjustes } from '../../../store/ajustesStore';
 import { useCatalog } from '../../../vertical';
@@ -87,7 +86,7 @@ export function DevolucionDetalleModal({ filas, onClose }: { filas: Devolucion[]
           {d.tipo === 'factura' && d.notaCredito && (
             <Dato label="Nota crédito">
               {d.notaCredito}{' '}
-              <button style={linkBtn} onClick={() => toast.info('Ver nota crédito — próximamente')}>Ver nota crédito</button>
+              <button style={linkBtn} onClick={() => navigate(`/notas-credito/${d.numero}`)}>Ver nota crédito</button>
             </Dato>
           )}
         </div>

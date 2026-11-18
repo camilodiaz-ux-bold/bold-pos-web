@@ -33,6 +33,10 @@ interface DevolucionesCtx {
   devolucionesDeVenta: (ventaId: string) => Devolucion[];
   /** Siguiente número `Dev-N`. */
   siguienteNumero: () => string;
+  /** Siguiente número de nota crédito (`NCR 430`). */
+  siguienteNotaCredito: () => string;
+  /** Cambia el estado DIAN de la nota crédito de una devolución (reenvío de una nota rechazada). */
+  setEstadoDian: (numero: string, estado: NonNullable<Devolucion['estadoDian']>) => void;
   /** Agrega las filas de una devolución nueva. */
   agregar: (filas: Devolucion[]) => void;
 }
@@ -55,6 +59,19 @@ export function DevolucionesProvider({ children }: { children: React.ReactNode }
     [raw],
   );
 
+  const siguienteNotaCredito = useCallback(() => {
+    const max = Math.max(389, ...raw.map(d => parseInt((d.notaCredito ?? '').replace(/\D/g, ''), 10) || 0));
+    return `NCR ${max + 1}`;
+  }, [raw]);
+
+  const setEstadoDian = useCallback((numero: string, estado: NonNullable<Devolucion['estadoDian']>) => {
+    setRaw(prev => {
+      const next = prev.map(d => (d.numero === numero ? { ...d, estadoDian: estado } : d));
+      save(next);
+      return next;
+    });
+  }, []);
+
   const agregar = useCallback((filas: Devolucion[]) => {
     setRaw(prev => {
       const next = [...prev, ...filas];
@@ -64,7 +81,7 @@ export function DevolucionesProvider({ children }: { children: React.ReactNode }
   }, []);
 
   return (
-    <DevolucionesContext.Provider value={{ devoluciones, filasDe, devolucionesDeVenta, siguienteNumero, agregar }}>
+    <DevolucionesContext.Provider value={{ devoluciones, filasDe, devolucionesDeVenta, siguienteNumero, siguienteNotaCredito, setEstadoDian, agregar }}>
       {children}
     </DevolucionesContext.Provider>
   );

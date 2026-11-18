@@ -53,6 +53,8 @@ export interface Devolucion {
   ingresaInventario: boolean;
   /** Número de la nota crédito (solo Factura). */
   notaCredito?: string;
+  /** Estado ante la DIAN de la nota crédito (solo Factura). Sin definir = aceptada. */
+  estadoDian?: 'aceptada' | 'pendiente' | 'rechazada';
   /** Dato de ejemplo (semilla), no registrado por el usuario. */
   ejemplo?: boolean;
 }

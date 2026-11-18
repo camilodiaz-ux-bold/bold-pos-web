@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Estado** | Listo para implementación (fase 1; pantallazos de D1, D3 y D4 pendientes para la fase 2) |
+| **Estado** | Listo para implementación (fases 1 y 2 hechas; faltan 3 a 5) |
 | **Vertical** | Retail (Restaurantes no cambia) |
 | **Fuente** | `PRDs/2026-11-17 - Devoluciones/Instrucciones para el prototipo.md` (fuera del repo). Los textos de interfaz son literales de ese archivo. |
 | **Antecedentes** | `2026-10-ajustes` (numeración, roles), `2026-10-reportes-retail`, `2026-11-stock-minimo` (permiso sin efecto, patrón de menú) |
@@ -82,10 +82,10 @@ Reportes → Administrativos → **"Devoluciones"** (`/reportes/retail/devolucio
 
 | # | Decisión |
 |---|---|
-| D1 | **Ver de la nota crédito**: se copia del POS real a partir de pantallazos que entrega el usuario. Hasta entonces el botón del detalle queda sin destino. |
+| D1 | **Ver de la nota crédito**: réplica del ver del POS real (`/notas-credito/:numero`, el número es el `Dev-N`). Estados Aceptada / Pendiente / Rechazada con los botones del real (Rechazada: Nuevo y Reenviar; Aceptada: Imprimir, Enviar por correo, Nuevo y Verifica en la DIAN); "Reenviar" la pasa a Aceptada. Código y referencia del ítem como en el real. Hecho en la fase 2. |
 | D2 | **Ir al turno**: siempre abre el mismo turno de ejemplo (el actual del listado de `TurnosPage`), para las devoluciones de ejemplo y las nuevas. Sin ruta por turno ni cambios en sus cifras. |
-| D3 | **Historial de movimientos de inventario**: se copia del POS real a partir de pantallazos. Hasta entonces el ingreso solo suma stock y queda marcado en la devolución. |
-| D4 | **Abrir turno**: se copia del POS real a partir de pantallazos. Incluye el interruptor de prototipo para simular "sin turno abierto". |
+| D3 | **Historial de movimientos de inventario**: en el real es el módulo "Flujo de inventario" (`#/retail/inventory/ledger`), que en el prototipo aún no existe y es un módulo aparte (pendiente). La devolución suma el stock (`itemsStore.ajustarExistencia`) y queda marcada con `ingresaInventario`; el movimiento se verá en Flujo de inventario cuando se construya. |
+| D4 | **Abrir turno**: réplica del panel del real a partir del pantallazo del usuario (panel lateral derecho, "¿Con cuánto efectivo en caja estas abriendo tu turno hoy en {sucursal}?", Cancelar / Abrir turno). Interruptor de prototipo "Simular que no hay turno abierto" al pie de la lista; solo aplica si Ajustes → Configuración POS lleva control de turnos. |
 | D5 | **Usuario sin permiso**: el permiso se lee del rol del usuario de la sesión; se prueba desactivándolo en Ajustes → Roles. |
 | D6 | **"Gestionar cuenta"**: se usa el permiso existente **"Editar Perfil de la Empresa"** (Ajustes → Empresa). Sin efecto visible en el prototipo. |
 | D7 | **Ejemplos**: se crean suficientes facturas y comprobantes de ejemplo (anulado, nota crédito total, a crédito, varios medios, descuento, propina, ítem sin inventario, ítem ya devuelto), marcados como datos de ejemplo, con `notaCreditoTotal` opcional en `Venta`. |
@@ -98,8 +98,8 @@ Reportes → Administrativos → **"Devoluciones"** (`/reportes/retail/devolucio
 Primero todo lo del módulo; después, los cambios en otras vistas.
 
 **Dentro del módulo `/items/devoluciones`**
-1. **Base y lista**: tipos, store (con motivos precargados y semilla sobre las ventas sembradas), permiso "Gestionar Devoluciones", menú y ruta, lista con filtros, búsqueda y paginación, modal de detalle (el botón a la nota crédito depende de D1).
-2. **Registrar devolución**: documentos de ejemplo con los casos del paso 1 (D7), modal por pasos, validaciones, preguntas, justificación, inventario, creación de la nota crédito (D1), confirmación de salida, turno (D4) y conflicto (D8).
+1. **Base y lista** ✅: tipos, store (con motivos precargados y semilla sobre las ventas sembradas), permiso "Gestionar Devoluciones", menú y ruta, lista con filtros, búsqueda y paginación, modal de detalle (el botón a la nota crédito depende de D1).
+2. **Registrar devolución** ✅: documentos de ejemplo con los casos del paso 1 (D7), modal por pasos, validaciones, preguntas, justificación, inventario, creación de la nota crédito (D1), confirmación de salida, turno (D4) y conflicto (D8).
 
 **Después, en otros módulos o vistas** (cada fase se aprueba por aparte)
 3. **Ajustes**: panel de motivos en Inventarios (el módulo ya los lee del store) y campo de consecutivo en "Numeración documentos no electrónicos".
@@ -109,3 +109,13 @@ Primero todo lo del módulo; después, los cambios en otras vistas.
 ## 12. Verificación
 
 `npm run build` y prueba en el navegador de los 11 recorridos del PRD §8. Para volver a la semilla, borrar `bold-pos:devoluciones:v1` y las claves de ajustes e ítems.
+
+## 13. Decisiones de la fase 2 (no estaban en el PRD)
+
+- **Ingreso al inventario**: por defecto "Sí". Aplica solo a los ítems que lo manejan en la sucursal del documento; en un ítem con variantes, sin variante en la línea del documento, suma a la primera variante activa de esa sucursal. Los ítems usan solo `principal`/`secundaria`: `suc-2` → secundaria, el resto → principal.
+- **Cantidad** a devolver: tope = cantidad vendida en la línea (el valor no tiene tope).
+- **Advertencia de efectivo**: solo con método de pago "Efectivo" y total mayor a `EFECTIVO_CAJA_EJEMPLO` ($200.000).
+- **Conflicto (D8)**: la primera vez que se confirma una devolución del comprobante 3767, "otro usuario" ya devolvió el primer ítem; se muestra el error, se vuelve al paso 2 y el ítem queda "Ya devuelto". Marca en `bold-pos:devoluciones-conflicto-demo:v1`.
+- **Datos de ejemplo (D7)**: comprobantes 3763 (anulado), 3764 (a crédito), 3765 (varios medios), 3766 (propina), 3767 (conflicto) y facturas 2400418 (nota crédito total), 2400419 (descuento), 2400420 (ítem sin inventario), 2400421 (ítem ya devuelto). La clave de ventas Retail sube a `bold-pos:ventas:retail:v2`.
+- **Botones del ver de la nota crédito** (Imprimir, Enviar por correo, Nuevo, Verifica en la DIAN): solo visuales, salvo Reenviar. Una nota Pendiente muestra Nuevo y Verifica en la DIAN (el real no se vio en ese estado).
+- **Búsqueda del documento (paso 1)**: por número (parcial) **o por identificación del cliente** (parcial, sin puntos ni guiones). La identificación sale del contacto con ese nombre, de una tabla de clientes de ejemplo (`DOCUMENTO_CLIENTES_EJEMPLO`) o del NIT escrito en el nombre.

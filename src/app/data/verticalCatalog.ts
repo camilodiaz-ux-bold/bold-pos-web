@@ -58,7 +58,7 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     impuestos: IMPUESTOS.filter(i => i.id !== 'inc-8'),
     itemsStorageKey: 'bold-pos:items:retail:v8',
     buildSeedItems: buildRetailSeedItems,
-    ventasStorageKey: 'bold-pos:ventas:retail:v1',
+    ventasStorageKey: 'bold-pos:ventas:retail:v2',
     buildSeedVentas: buildRetailSeedVentas,
   },
 };
