@@ -139,6 +139,13 @@ export function fmtFechaHora(ms: number): string {
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+/** '06/10/2026' (solo la fecha, sin hora). */
+export function fmtFecha(ms: number): string {
+  const d = new Date(ms);
+  const p = (x: number) => String(x).padStart(2, '0');
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
 /** 'yyyy-mm-dd' local, para comparar con <input type="date">. */
 export function isoDia(ms: number): string {
   const d = new Date(ms);

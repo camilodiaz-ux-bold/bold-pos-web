@@ -34,6 +34,9 @@ import { ReporteRetailPage } from './verticals/retail/reportes/ReporteRetailPage
 import { NotasCreditoListPage } from './verticals/retail/devoluciones/NotasCreditoListPage';
 import { NotaCreditoDetallePage } from './verticals/retail/devoluciones/NotaCreditoDetallePage';
 import { DevolucionesPage } from './verticals/retail/devoluciones/DevolucionesPage';
+import { DevolucionDetallePage } from './verticals/retail/devoluciones/DevolucionDetallePage';
+import { NotaCreditoNuevaPage } from './verticals/retail/devoluciones/NotaCreditoNuevaPage';
+import { DevolucionDocumentoPage } from './verticals/retail/devoluciones/DevolucionDocumentoPage';
 import { VariantesInventarioPage } from './verticals/retail/items/VariantesInventarioPage';
 
 const router = createBrowserRouter([
@@ -54,6 +57,9 @@ const router = createBrowserRouter([
       { path: 'facturas-venta',      element: <VerticalRoute module="facturas-venta"><DocumentosVentaListPage key="factura" tipo="factura" /></VerticalRoute> },
       { path: 'facturas-venta/:id',  element: <VerticalRoute module="facturas-venta"><DocumentoVentaDetallePage key="factura" tipo="factura" /></VerticalRoute> },
       { path: 'notas-credito',        element: <VerticalRoute module="devoluciones"><NotasCreditoListPage /></VerticalRoute> },
+      { path: 'notas-credito/nueva',  element: <VerticalRoute module="devoluciones"><NotaCreditoNuevaPage /></VerticalRoute> },
+      { path: 'facturas-venta/:id/devolucion',  element: <VerticalRoute module="devoluciones"><DevolucionDocumentoPage tipo="factura" /></VerticalRoute> },
+      { path: 'comprobantes/:id/devolucion',    element: <VerticalRoute module="devoluciones"><DevolucionDocumentoPage tipo="comprobante" /></VerticalRoute> },
       { path: 'notas-credito/:numero', element: <VerticalRoute module="devoluciones"><NotaCreditoDetallePage /></VerticalRoute> },
       { path: 'ajustes',               element: <VerticalRoute module="ajustes"><AjustesPage /></VerticalRoute> },
       { path: 'ajustes/perfil',        element: <VerticalRoute module="ajustes"><PerfilPage /></VerticalRoute> },
@@ -73,6 +79,7 @@ const router = createBrowserRouter([
           { index: true, Component: ListaItemsPage },
           { path: 'variantes', element: <VerticalRoute module="variantes"><VariantesInventarioPage /></VerticalRoute> },
           { path: 'devoluciones', element: <VerticalRoute module="devoluciones"><DevolucionesPage /></VerticalRoute> },
+          { path: 'devoluciones/:numero', element: <VerticalRoute module="devoluciones"><DevolucionDetallePage /></VerticalRoute> },
           { path: 'alertas-stock', Component: AlertasStockPage },
           { path: 'alertas-stock/ejemplo-correo', Component: EjemploCorreoAlertasPage },
           { path: 'alertas-stock/actualizacion-masiva', Component: ActualizacionMasivaAlertasPage },

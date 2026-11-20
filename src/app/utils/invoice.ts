@@ -150,6 +150,8 @@ export interface InvoiceData {
   meseroLabel: 'Mesero' | 'Vendedor';
   mediosDePago: string;
   cambio: number;
+  /** El documento está anulado (p. ej. por una devolución total): el ticket lo muestra. */
+  anulado?: boolean;
 }
 
 /** Código de ítem mock estable: "I-" + 11 dígitos derivados del id. */

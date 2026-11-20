@@ -1,19 +1,20 @@
 /**
- * DevolucionesPage — Ítems → Devoluciones (specs/2026-11-devoluciones.md §5). Lista de devoluciones (una fila
- * por ítem devuelto) con filtros, búsqueda, paginación y modal de detalle. Solo Retail.
+ * DevolucionesPage — Ítems → Devoluciones (specs/2026-11-devoluciones-v2.md §1). Lista de devoluciones (una fila
+ * por devolución) con filtros, búsqueda, paginación y modal de detalle. Solo Retail.
  */
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { CalendarDays, Layers, ListChecks, Search, Store, Tag, Trash2, FileText } from 'lucide-react';
 import { useAjustes } from '../../../store/ajustesStore';
 import { useDevoluciones } from '../../../store/devolucionesStore';
 import { useCatalog } from '../../../vertical';
 import { FilterPillInput, FilterPillSelect } from '../../../components/items/FilterPill';
-import type { Devolucion, TipoDevolucion } from '../../../types/devolucion';
-import { TIPO_DEVOLUCION_LABEL } from '../../../types/devolucion';
+import type { TipoDevolucion } from '../../../types/devolucion';
+import { ALCANCE_DEVOLUCION_LABEL, TIPO_DEVOLUCION_LABEL } from '../../../types/devolucion';
 import { formatCOP } from '../../../utils/format';
 import { fmtFechaHora, isoDia } from '../../../utils/ventas';
-import { sucursalesDelUsuario, usuarioSesion } from '../../../utils/devoluciones';
-import { DevolucionDetalleModal } from './DevolucionDetalleModal';
+import { agruparDevoluciones, coincideBusquedaDevolucion, itemDeDevolucion, sucursalesDelUsuario, usuarioSesion } from '../../../utils/devoluciones';
+import type { DevolucionAgrupada } from '../../../utils/devoluciones';
 import { RegistrarDevolucionModal } from './RegistrarDevolucionModal';
 import { AbrirTurnoModal } from './AbrirTurnoModal';
 import { useTurnoAbierto } from '../../../utils/turno';
@@ -23,8 +24,6 @@ const FONT = "'Montserrat', sans-serif";
 const PAGE_SIZE = 50;
 
 interface Filtros { sucursalId: string; categoriaId: string; motivoId: string; tipo: '' | TipoDevolucion; desde: string; hasta: string; busqueda: string }
-
-const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const thStyle: React.CSSProperties = {
   padding: '12px 16px 12px 0', textAlign: 'left', fontFamily: FONT, fontWeight: 700, fontSize: 13, lineHeight: '18px',
@@ -46,7 +45,8 @@ function DatePill({ label, value, onChange }: { label: string; value: string; on
 
 export function DevolucionesPage() {
   const { ajustes } = useAjustes();
-  const { devoluciones, filasDe } = useDevoluciones();
+  const navigate = useNavigate();
+  const { devoluciones } = useDevoluciones();
   const { catDefs } = useCatalog();
 
   const sucursalesUsuario = useMemo(() => sucursalesDelUsuario(ajustes), [ajustes]);
@@ -56,7 +56,6 @@ export function DevolucionesPage() {
 
   const [filtros, setFiltros] = useState<Filtros>(filtrosVacios);
   const [page, setPage] = useState(0);
-  const [detalle, setDetalle] = useState<string | null>(null);
   const [registrando, setRegistrando] = useState(false);
   const [abriendoTurno, setAbriendoTurno] = useState(false);
   const [turnoAbierto, setTurnoAbierto] = useTurnoAbierto();
@@ -67,20 +66,18 @@ export function DevolucionesPage() {
   const idsSucursales = useMemo(() => new Set(sucursalesUsuario.map(s => s.id)), [sucursalesUsuario]);
   const visibles = useMemo(() => devoluciones.filter(d => idsSucursales.has(d.sucursalId)), [devoluciones, idsSucursales]);
 
-  const filtradas = useMemo(() => {
-    const q = norm(filtros.busqueda.trim());
-    return visibles.filter(d => {
-      if (filtros.sucursalId && d.sucursalId !== filtros.sucursalId) return false;
-      if (filtros.categoriaId && d.categoriaId !== filtros.categoriaId) return false;
-      if (filtros.motivoId && d.motivoId !== filtros.motivoId) return false;
-      if (filtros.tipo && d.tipo !== filtros.tipo) return false;
-      const dia = isoDia(d.fecha);
-      if (filtros.desde && dia < filtros.desde) return false;
-      if (filtros.hasta && dia > filtros.hasta) return false;
-      if (q && !norm(d.numero).includes(q) && !norm(d.numeroDocumento ?? '').includes(q)) return false;
-      return true;
-    });
-  }, [visibles, filtros]);
+  // Una fila por devolución (las filas con el mismo número). La categoría coincide si algún ítem es de ella.
+  const filtradas = useMemo(() => agruparDevoluciones(visibles).filter(g => {
+    const d = g.base;
+    if (filtros.sucursalId && d.sucursalId !== filtros.sucursalId) return false;
+    if (filtros.categoriaId && !g.filas.some(f => f.categoriaId === filtros.categoriaId)) return false;
+    if (filtros.motivoId && d.motivoId !== filtros.motivoId) return false;
+    if (filtros.tipo && d.tipo !== filtros.tipo) return false;
+    const dia = isoDia(d.fecha);
+    if (filtros.desde && dia < filtros.desde) return false;
+    if (filtros.hasta && dia > filtros.hasta) return false;
+    return coincideBusquedaDevolucion(d, filtros.busqueda);
+  }), [visibles, filtros]);
 
   const totalPages = Math.max(1, Math.ceil(filtradas.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages - 1);
@@ -94,20 +91,21 @@ export function DevolucionesPage() {
     else setRegistrando(true);
   };
 
-  const filaDe = (d: Devolucion) => (
+  const filaDe = (g: DevolucionAgrupada) => { const d = g.base; return (
     <tr
-      key={d.id} onClick={() => setDetalle(d.numero)} style={{ borderBottom: '1px solid var(--black-10)', cursor: 'pointer' }}
+      key={g.numero} onClick={() => navigate(`/items/devoluciones/${d.numero}`)} style={{ borderBottom: '1px solid var(--black-10)', cursor: 'pointer' }}
       className="hover:bg-[var(--blue-10)] transition-colors"
     >
       <td style={{ ...tdStyle, fontWeight: 600 }}>{d.numero}</td>
       <td style={tdStyle}>{fmtFechaHora(d.fecha)}</td>
-      <td style={tdStyle}>{d.nombre}</td>
+      <td style={tdStyle}>{itemDeDevolucion(g)}</td>
       <td style={tdStyle}>{TIPO_DEVOLUCION_LABEL[d.tipo]}</td>
-      <td style={tdStyle}>{formatCOP(d.valorDevolucion)}</td>
+      <td style={tdStyle}>{d.alcance ? ALCANCE_DEVOLUCION_LABEL[d.alcance] : '--'}</td>
+      <td style={tdStyle}>{formatCOP(g.total)}</td>
       <td style={tdStyle}>{d.metodoPago}</td>
       <td style={tdStyle}>{d.responsable}</td>
     </tr>
-  );
+  ); };
 
   return (
     <div style={{ flex: 1, backgroundColor: 'var(--blue-10)', overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -123,7 +121,7 @@ export function DevolucionesPage() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 240 }}>
             <FilterPillInput
-              icon={<Search size={16} color="var(--blue-50)" />} placeholder="Buscar por número de devolución o de documento"
+              icon={<Search size={16} color="var(--blue-50)" />} placeholder="Buscar por número de devolución, de documento o identificación del cliente"
               value={filtros.busqueda} onChange={v => setFiltro('busqueda', v)}
             />
           </div>
@@ -179,13 +177,14 @@ export function DevolucionesPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 840 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 940 }}>
               <thead>
                 <tr>
                   <th style={{ ...thStyle, width: 100 }}>Número</th>
                   <th style={{ ...thStyle, width: 140 }}>Fecha</th>
-                  <th style={{ ...thStyle, width: 260 }}>Producto</th>
+                  <th style={{ ...thStyle, width: 240 }}>Ítem</th>
                   <th style={{ ...thStyle, width: 120 }}>Tipo</th>
+                  <th style={{ ...thStyle, width: 90 }}>Alcance</th>
                   <th style={{ ...thStyle, width: 120 }}>Valor devolución</th>
                   <th style={{ ...thStyle, width: 140 }}>Método de pago</th>
                   <th style={{ ...thStyle, width: 130 }}>Responsable</th>
@@ -223,7 +222,6 @@ export function DevolucionesPage() {
         <AbrirTurnoModal sucursal={sucursalesUsuario.find(s => s.id === usuarioSesion(ajustes).sucursalId)?.nombre ?? ''} onCancel={() => setAbriendoTurno(false)} onOpen={() => { setTurnoAbierto(true); setAbriendoTurno(false); setRegistrando(true); }} />
       )}
       {registrando && <RegistrarDevolucionModal onClose={() => setRegistrando(false)} />}
-      {detalle && <DevolucionDetalleModal filas={filasDe(detalle)} onClose={() => setDetalle(null)} />}
     </div>
   );
 }

@@ -2,11 +2,10 @@
  * NotasCreditoListPage — Ingresos → Notas crédito (`/notas-credito`). Réplica del listado del POS real
  * (pos.stg.bold.co/#/retail/income/credit-note): filtros (código, estado DIAN, fechas, tipo, motivo y cliente), contador
  * "Mostrando X de Y" y una fila por nota con el día grande, número, cliente, fecha de emisión, estado y valor.
- * Las notas salen de las devoluciones de tipo Factura (un solo modelo); clic en una fila abre su ver.
+ * Las notas salen de las devoluciones de tipo Factura y Sin Documento (un solo modelo); clic en una fila abre su ver.
  */
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
 import { CalendarDays } from 'lucide-react';
 import { useAjustes } from '../../../store/ajustesStore';
 import { useDevoluciones } from '../../../store/devolucionesStore';
@@ -31,10 +30,10 @@ const COLOR_ESTADO: Record<EstadoDian, { texto: string; fondo: string }> = {
   pendiente: { texto: 'var(--blue-100)', fondo: 'var(--blue-10)' },
   rechazada: { texto: 'var(--coral-100)', fondo: 'var(--coral-10)' },
 };
-/** Las notas crédito del prototipo salen de una factura, así que todas son "con referencia". */
 const TIPO_CON_REFERENCIA = 'con-referencia';
+const TIPO_SIN_REFERENCIA = 'sin-referencia';
 
-interface NotaCredito { numero: string; devolucion: string; fecha: number; cliente: string; total: number; estado: EstadoDian; motivoId: string }
+interface NotaCredito { sinReferencia: boolean; numero: string; devolucion: string; fecha: number; cliente: string; total: number; estado: EstadoDian; motivoId: string }
 
 const dineroReal = (n: number) => `$ ${Math.round(n).toLocaleString('en-US')}`;
 
@@ -55,15 +54,15 @@ export function NotasCreditoListPage() {
   const [motivo, setMotivo] = useState('');
   const [cliente, setCliente] = useState('');
 
-  // Una nota por devolución de Factura.
+  // Una nota por devolución con nota crédito (Factura: con referencia; Sin Documento: sin referencia).
   const notas: NotaCredito[] = useMemo(() => {
     const porNumero = new Map<string, Devolucion[]>();
-    devoluciones.filter(d => d.tipo === 'factura' && d.notaCredito).forEach(d => porNumero.set(d.numero, [...(porNumero.get(d.numero) ?? []), d]));
+    devoluciones.filter(d => d.notaCredito).forEach(d => porNumero.set(d.numero, [...(porNumero.get(d.numero) ?? []), d]));
     return [...porNumero.values()].map(filas => {
       const d = filas[0];
       const venta = ventas.find(v => v.id === d.ventaId);
       return {
-        numero: d.notaCredito!, devolucion: d.numero, fecha: d.fecha, cliente: venta?.cliente ?? '—',
+        sinReferencia: d.tipo === 'sinDocumento', numero: d.notaCredito!, devolucion: d.numero, fecha: d.fecha, cliente: venta?.cliente ?? d.clienteNombre ?? '—',
         total: totalDevolucion(filas), estado: d.estadoDian ?? 'aceptada', motivoId: d.motivoId,
       };
     }).sort((a, b) => b.fecha - a.fecha);
@@ -77,7 +76,8 @@ export function NotasCreditoListPage() {
     if (estado && n.estado !== estado) return false;
     if (desde && dia < desde) return false;
     if (hasta && dia > hasta) return false;
-    if (tipo && tipo !== TIPO_CON_REFERENCIA) return false;
+    if (tipo === TIPO_CON_REFERENCIA && n.sinReferencia) return false;
+    if (tipo === TIPO_SIN_REFERENCIA && !n.sinReferencia) return false;
     if (motivo && n.motivoId !== motivo) return false;
     if (cliente && n.cliente !== cliente) return false;
     return true;
@@ -88,7 +88,7 @@ export function NotasCreditoListPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 20, lineHeight: '28px', color: 'var(--black-100)', margin: 0 }}>Notas Crédito</p>
         <div style={{ marginLeft: 'auto' }}>
-          <button className="btn btn-primary" onClick={() => toast.info('Nuevo — próximamente')}>Nuevo</button>
+          <button className="btn btn-primary" onClick={() => navigate('/notas-credito/nueva')}>Nuevo</button>
         </div>
       </div>
 
@@ -105,7 +105,7 @@ export function NotasCreditoListPage() {
             style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontFamily: FONT, fontSize: 13, fontWeight: 500 }} />
         </div>
         <FilterPillSelect placeholder="Elige el tipo" value={tipo} onChange={setTipo}
-          options={[{ value: TIPO_CON_REFERENCIA, label: 'Nota crédito con referencia' }, { value: 'sin-referencia', label: 'Nota crédito sin referencia' }]} />
+          options={[{ value: TIPO_CON_REFERENCIA, label: 'Nota crédito con referencia' }, { value: TIPO_SIN_REFERENCIA, label: 'Nota crédito sin referencia' }]} />
         <FilterPillSelect placeholder="Elige un motivo" value={motivo} onChange={setMotivo}
           options={ajustes.motivosDevolucion.map(m => ({ value: m.id, label: m.nombre }))} />
         <FilterPillSelect placeholder="Todos los clientes" value={cliente} onChange={setCliente} options={clientes.map(c => ({ value: c, label: c }))} />
