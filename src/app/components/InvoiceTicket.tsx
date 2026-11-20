@@ -51,6 +51,7 @@ export function InvoiceTicket({ invoice }: { invoice: InvoiceData }) {
       </div>
       <div style={{ ...centered, fontWeight: 700 }}>{esComprobante ? 'Comprobante de Venta' : 'Factura Electrónica de Venta'}</div>
       <div style={{ ...centered, fontWeight: 700 }}>No. {invoice.number}</div>
+      {invoice.anulado && <div style={{ ...centered, fontWeight: 700, fontSize: 14, border: '1.5px solid #000', margin: '4px 18mm', padding: '2px 0' }}>ANULADA</div>}
       <div style={centered}>{INVOICE_ISSUER.razonSocial}</div>
       <div style={centered}>NIT: {INVOICE_ISSUER.nit}</div>
       <div style={centered}>{INVOICE_ISSUER.regimen}</div>

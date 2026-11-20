@@ -12,7 +12,7 @@ import { useDevoluciones } from '../../../store/devolucionesStore';
 import { useVentas } from '../../../store/ventasStore';
 import { useItems } from '../../../store/itemsStore';
 import { mockCufe, fmtCOP } from '../../../utils/ventas';
-import { ItemsDevueltosSeccion } from './ItemsDevueltosSeccion';
+import { DevueltoTotalAviso } from './ItemsDevueltosSeccion';
 import { desglosarImpuesto, impuestoPorTasa, resumirImpuestos } from '../../../utils/devoluciones';
 
 const FONT = "'Montserrat', sans-serif";
@@ -28,11 +28,11 @@ export function NotaCreditoDetallePage() {
   const { numero = '' } = useParams<{ numero: string }>();
   const navigate = useNavigate();
   const { ajustes } = useAjustes();
-  const { filasDe, setEstadoDian } = useDevoluciones();
+  const { filasDe } = useDevoluciones();
   const { items } = useItems();
   const { getVenta } = useVentas();
 
-  const filas = filasDe(numero).filter(f => f.tipo === 'factura' && f.notaCredito);
+  const filas = filasDe(numero).filter(f => f.notaCredito);
   if (filas.length === 0) return <Navigate to="/items/devoluciones" replace />;
 
   const d = filas[0];
@@ -67,20 +67,17 @@ export function NotaCreditoDetallePage() {
           {/* Como en el POS real, los botones dependen del estado ante la DIAN. */}
           {estado === 'aceptada' && <button style={pill} onClick={() => toast.info('Imprimir — próximamente')}>Imprimir</button>}
           {estado === 'aceptada' && <button style={pill} onClick={() => toast.info('Enviar por correo — próximamente')}>Enviar por correo</button>}
-          <button style={pill} onClick={() => toast.info('Nuevo — próximamente')}>Nuevo</button>
-          {estado === 'rechazada' && (
-            <button style={pill} onClick={() => { setEstadoDian(d.numero, 'aceptada'); toast.success('Nota crédito reenviada'); }}>Reenviar</button>
-          )}
+          <button style={pill} onClick={() => navigate('/notas-credito/nueva')}>Nuevo</button>
           {estado !== 'rechazada' && <button style={pill} onClick={() => toast.info('Verifica en la DIAN — próximamente')}>Verifica en la DIAN</button>}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', fontFamily: FONT, fontSize: 13, lineHeight: '20px', color: 'var(--black-100)' }}>
           <div>
             <div>Fecha de emisión: {fechaIso}</div>
-            <div>Cliente: <span style={{ color: 'var(--coral-100)' }}>{venta?.cliente ?? '—'}</span></div>
+            <div>Cliente: <span style={{ color: 'var(--coral-100)' }}>{venta?.cliente ?? d.clienteNombre ?? '—'}</span></div>
             <div>Sucursal: {sucursal}</div>
-            <div>Nota crédito con referencia{' '}
-              {venta ? <button style={link} onClick={() => navigate(`/facturas-venta/${venta.id}`)}>{d.numeroDocumento}</button> : d.numeroDocumento}
+            <div>{d.tipo === 'sinDocumento' ? 'Nota crédito sin referencia' : <>Nota crédito con referencia{' '}
+              {venta ? <button style={link} onClick={() => navigate(`/facturas-venta/${venta.id}`)}>{d.numeroDocumento}</button> : d.numeroDocumento}</>}
             </div>
             <div>Motivo: {motivo}</div>
             <div style={{ wordBreak: 'break-all' }}>Cude: {estado === 'aceptada' ? mockCufe(d.notaCredito ?? '') : ''}</div>
@@ -91,10 +88,12 @@ export function NotaCreditoDetallePage() {
           </div>
         </div>
 
-        {/* Ítems devueltos que dieron origen a esta nota crédito */}
-        <div style={{ marginTop: 18 }}>
-          <ItemsDevueltosSeccion filas={filas} descripcion="Esta nota crédito se generó a partir de esta devolución." />
-        </div>
+        {/* Sin la tarjeta rosada de ítems devueltos: ya está la lista de ítems. Solo el indicador de devolución total. */}
+        {filas.some(f => f.alcance === 'total') && (
+          <div style={{ marginTop: 18 }}>
+            <DevueltoTotalAviso numero={d.numero} />
+          </div>
+        )}
 
         <div style={{ overflowX: 'auto', marginTop: 16 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--blue-10)', minWidth: 640 }}>

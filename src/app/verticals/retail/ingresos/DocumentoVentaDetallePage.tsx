@@ -1,10 +1,13 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { ArrowLeft, Printer, Send, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Ban, Printer, Send, ShieldCheck, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TipoDocVenta } from '../../../types/venta';
 import { useVertical } from '../../../vertical';
-import { useVentas } from '../../../store/ventasStore';
+import { useVentasConDevoluciones } from '../../../utils/ventasConDevoluciones';
+import { useAjustes } from '../../../store/ajustesStore';
+import { useDevoluciones } from '../../../store/devolucionesStore';
+import { estadoDocumentoDevolucion, mismaSucursal, MSG_DIAN_PENDIENTE, usuarioSesion } from '../../../utils/devoluciones';
 import { VentaBadge } from '../../../components/ventas/VentaBadge';
 import { font, sectionCard, sectionTitle } from '../../../components/ventas/ventasStyles';
 import { dianLabel, estadoLabel, fmtCOP, fmtFechaHora, metodoPagoLabel, saleFromVenta } from '../../../utils/ventas';
@@ -13,7 +16,7 @@ import { printInvoice } from '../../../utils/printInvoice';
 import { comboBreakdown } from '../../../utils/comboBridge';
 import { INVOICE_ISSUER } from '../../../data/invoiceIssuer';
 import { DOC_CONFIG } from './documentosVenta';
-import { ItemsDevueltosDeVenta } from '../devoluciones/ItemsDevueltosSeccion';
+import { DevueltoTotalAviso, ItemsDevueltosDeVenta } from '../devoluciones/ItemsDevueltosSeccion';
 
 // ─── Estilos locales (mismo patrón que PedidoDetallePage) ─────────────────────
 
@@ -77,8 +80,10 @@ function AmountRow({ label, value }: { label: string; value: string }) {
 export function DocumentoVentaDetallePage({ tipo }: { tipo: TipoDocVenta }) {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { vertical } = useVertical();
-  const { getVenta } = useVentas();
+  const { vertical, has } = useVertical();
+  const { getVenta } = useVentasConDevoluciones();
+  const { ajustes } = useAjustes();
+  const { devoluciones, pendientes } = useDevoluciones();
   const cfg = DOC_CONFIG[tipo];
   const esFactura = tipo === 'factura';
   const v = getVenta(id);
@@ -100,7 +105,7 @@ export function DocumentoVentaDetallePage({ tipo }: { tipo: TipoDocVenta }) {
 
   const est = estadoLabel(v.estado, vertical);
   const dn = esFactura ? dianLabel(v.dian, vertical) : null;
-  const invoice = buildInvoiceData(saleFromVenta(v));
+  const invoice = { ...buildInvoiceData(saleFromVenta(v)), anulado: v.estado === 'cancelada' };
   const pagado = v.total - v.saldo;
   const totalItems = v.items.reduce((s, i) => s + i.quantity, 0);
   const ivaLabel = `IVA ${Math.round(v.taxRate * 100)}%`;
@@ -110,6 +115,17 @@ export function DocumentoVentaDetallePage({ tipo }: { tipo: TipoDocVenta }) {
     { label: 'Descuento', value: fmtCOP(v.discount) },
     ...(esFactura || v.tax > 0 ? [{ label: ivaLabel, value: fmtCOP(v.tax) }] : []),
   ];
+
+  // ── Devoluciones (specs/2026-11-devoluciones-v2.md §5) ──
+  const estadoDev = estadoDocumentoDevolucion(v, devoluciones, pendientes);
+  const sesionSucursal = ajustes.sucursales.find(s => s.id === usuarioSesion(ajustes).sucursalId);
+  const otraSucursal = !!sesionSucursal && !mismaSucursal(sesionSucursal.nombre, v.sucursal);
+  const devolucionTotal = devoluciones.find(d => d.ventaId === v.id && d.alcance === 'total');
+  const notaPendiente = esFactura && estadoDev.pendiente;
+  // Se ocultan con el documento anulado, con nota crédito total, con todos los ítems devueltos y, en factura, con una nota esperando la DIAN.
+  const puedeDevolver = has('devoluciones') && !otraSucursal && !estadoDev.anulado && !estadoDev.notaTotal && !estadoDev.todosDevueltos && !notaPendiente;
+  const puedeAnular = puedeDevolver && !estadoDev.huboDevolucion;
+  const rutaDevolucion = `${cfg.base}/${v.id}/devolucion`;
 
   const reciboCols = ['Código', 'Estado', 'Total', ...(esFactura ? ['Saldo a favor'] : []), 'Método de pago', 'Fecha'];
 
@@ -157,8 +173,33 @@ export function DocumentoVentaDetallePage({ tipo }: { tipo: TipoDocVenta }) {
               Verificar en la DIAN
             </button>
           )}
+          {puedeDevolver && (
+            <button style={outlineBtn} onClick={() => navigate(rutaDevolucion)}>
+              <Undo2 size={14} color="var(--blue-100)" />
+              Hacer devolución
+            </button>
+          )}
+          {puedeAnular && (
+            <button style={outlineBtn} onClick={() => navigate(`${rutaDevolucion}?alcance=total`)}>
+              <Ban size={14} color="var(--blue-100)" />
+              Anular
+            </button>
+          )}
         </div>
       </div>
+
+      {/* ── Avisos de devolución: otra sucursal, nota pendiente de la DIAN y devolución total ── */}
+      {has('devoluciones') && otraSucursal && (
+        <div role="status" style={{ padding: '10px 14px', borderRadius: 10, backgroundColor: 'var(--feedback-warning-10)', ...font(13, 500, 'var(--black-100)', 20) }}>
+          Este documento es de la sucursal {v.sucursal}. Cambia a esa sucursal para hacer la devolución.
+        </div>
+      )}
+      {has('devoluciones') && notaPendiente && (
+        <div role="status" style={{ padding: '10px 14px', borderRadius: 10, backgroundColor: 'var(--feedback-warning-10)', ...font(13, 500, 'var(--black-100)', 20) }}>
+          {MSG_DIAN_PENDIENTE}
+        </div>
+      )}
+      {devolucionTotal && <DevueltoTotalAviso numero={devolucionTotal.numero} />}
 
       {/* ── Información ── */}
       <div style={sectionCard}>

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Plus } from 'lucide-react';
 import type { TipoDocVenta, EstadoVenta, EstadoDian } from '../../../types/venta';
-import { useVentas } from '../../../store/ventasStore';
+import { useVentasConDevoluciones } from '../../../utils/ventasConDevoluciones';
 import { VentaBadge } from '../../../components/ventas/VentaBadge';
 import { filterInput, filterGroup, labelStyle, tdStyle, thStyle } from '../../../components/ventas/ventasStyles';
 import { dianLabel, estadoLabel, filterVentas, fmtCOP, fmtFechaHora, opciones } from '../../../utils/ventas';
@@ -16,7 +16,7 @@ const right: React.CSSProperties = { textAlign: 'right', paddingRight: 16 };
 
 export function DocumentosVentaListPage({ tipo }: { tipo: TipoDocVenta }) {
   const navigate = useNavigate();
-  const { ventas } = useVentas();
+  const { ventas } = useVentasConDevoluciones();
   const cfg = DOC_CONFIG[tipo];
   const esFactura = tipo === 'factura';
 
