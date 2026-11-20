@@ -61,6 +61,13 @@ export const DOCUMENTO_CLIENTES_EJEMPLO: Record<string, string> = {
   [CLIENTES.andina]: '901555777',
 };
 
+/** Correo de los clientes de ejemplo (precarga el envío del detalle de una devolución; Consumidor final no tiene). */
+export const CORREO_CLIENTES_EJEMPLO: Record<string, string> = {
+  [CLIENTES.daniel]: 'daniel.aycardy@ejemplo.co',
+  [CLIENTES.david]: 'david@ejemplo.co',
+  [CLIENTES.andina]: 'compras@comercialandina.ejemplo.co',
+};
+
 // Comprobantes 3753 → 3762 (el número más alto es el más reciente).
 const COMPROBANTES: Def[] = [
   { mes: 8, dia: 28, h: 10, m: 12, cliente: CLIENTES.cf,     items: [item(211, 2), item(256, 1)] },

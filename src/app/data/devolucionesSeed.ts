@@ -3,12 +3,13 @@
  * se arman de forma determinista sobre las ventas sembradas de Retail (Factura y Comprobante) y sobre
  * el catálogo Retail (Sin Documento), entre el 07/10 y el 16/11 de 2026. Pasan de 50 filas para ver la paginación.
  */
-import type { Devolucion, TipoDevolucion } from '../types/devolucion';
+import type { AlcanceDevolucion, Devolucion, TipoDevolucion } from '../types/devolucion';
+import { documentoDeCliente } from '../utils/devoluciones';
 import type { Venta } from '../types/venta';
 import { buildRetailSeedVentas, VENTA_EJEMPLO_YA_DEVUELTO, VENTAS_EJEMPLO_DEVOLUCION } from './retail/ventasSeed';
 import { RETAIL_ALL_PRODUCTS } from './retail/productCatalog';
 
-export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v6';
+export const DEVOLUCIONES_STORAGE_KEY = 'bold-pos:devoluciones:v8';
 /** Primer número de devolución de la semilla (201). */
 export const DEVOLUCION_NUMERO_INICIAL = 201;
 
@@ -35,7 +36,7 @@ const DIA = 86_400_000;
 const INICIO = new Date(2026, 9, 7, 9, 0).getTime();
 const FIN = new Date(2026, 10, 16, 19, 0).getTime();
 
-interface Def { fecha: number; tipo: TipoDevolucion; venta?: Venta; lineas: { itemId: string; nombre: string; categoriaId: string; cantidad: number; valor: number }[] }
+interface Def { fecha: number; tipo: TipoDevolucion; venta?: Venta; alcance?: AlcanceDevolucion; lineas: { itemId: string; nombre: string; categoriaId: string; cantidad: number; valor: number; cantidadVendida?: number }[] }
 
 export function buildSeedDevoluciones(): Devolucion[] {
   const rnd = lcg(20261117);
@@ -48,14 +49,16 @@ export function buildSeedDevoluciones(): Devolucion[] {
   ventas.forEach((v, i) => {
     // Todas las facturas pagadas tienen su devolución (así el listado de notas crédito no queda corto); de los comprobantes, uno de cada dos.
     if (v.tipoDoc !== 'factura' && i % 2 !== 0) return;
-    const tomar = v.items.length > 1 && i % 4 === 0 ? 2 : 1;
+    // Una de cada seis es total: devuelve todos los ítems con sus cantidades completas.
+    const esTotal = i % 6 === 0;
+    const tomar = esTotal ? v.items.length : v.items.length > 1 && i % 4 === 0 ? 2 : 1;
     const lineas = v.items.slice(0, tomar).map((it, j) => {
       const prod = RETAIL_ALL_PRODUCTS.find(p => String(p.id) === it.id);
       const unit = Math.round(it.price * (1 - (it.discount ?? 0) / 100) * (1 + (v.tipoDoc === 'factura' ? v.taxRate : 0)));
-      return { itemId: it.id, nombre: it.name, categoriaId: prod?.catId ?? 'accesorios', cantidad: Math.min(it.quantity, 1 + ((i + j) % 3)), valor: unit };
+      return { itemId: it.id, nombre: it.name, categoriaId: prod?.catId ?? 'accesorios', cantidad: esTotal ? it.quantity : Math.min(it.quantity, 1 + ((i + j) % 3)), valor: unit, cantidadVendida: it.quantity };
     });
     const fecha = Math.min(FIN, v.emitidaEn + (1 + Math.floor(rnd() * 9)) * DIA + Math.floor(rnd() * 6) * 3_600_000);
-    defs.push({ fecha, tipo: v.tipoDoc, venta: v, lineas });
+    defs.push({ fecha, tipo: v.tipoDoc, venta: v, lineas, alcance: esTotal ? 'total' : 'parcial' });
   });
 
   // Documento de ejemplo con un ítem ya devuelto: la primera línea de la factura 2400421.
@@ -64,8 +67,8 @@ export function buildSeedDevoluciones(): Devolucion[] {
     const it = yaDev.items[0];
     const prod = RETAIL_ALL_PRODUCTS.find(p => String(p.id) === it.id);
     defs.push({
-      fecha: Math.min(FIN, yaDev.emitidaEn + 2 * DIA), tipo: 'factura', venta: yaDev,
-      lineas: [{ itemId: it.id, nombre: it.name, categoriaId: prod?.catId ?? 'accesorios', cantidad: 1, valor: Math.round(it.price * (1 + yaDev.taxRate)) }],
+      fecha: Math.min(FIN, yaDev.emitidaEn + 2 * DIA), tipo: 'factura', venta: yaDev, alcance: 'parcial',
+      lineas: [{ itemId: it.id, nombre: it.name, categoriaId: prod?.catId ?? 'accesorios', cantidad: 1, valor: Math.round(it.price * (1 + yaDev.taxRate)), cantidadVendida: it.quantity }],
     });
   }
 
@@ -103,10 +106,12 @@ export function buildSeedDevoluciones(): Devolucion[] {
         ...(d.venta ? { ventaId: d.venta.id, numeroDocumento: d.venta.numero, fechaVenta: d.venta.emitidaEn, valorVenta: d.venta.total } : {}),
         itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: l.cantidad,
         ...(d.tipo === 'factura' ? { impuestoId: 'iva-19', tasaImpuesto: 0.19 } : {}),
-        ...(d.venta ? { valorVentaItem: Math.round(l.valor * l.cantidad) } : {}),
+        ...(d.venta ? { valorVentaItem: Math.round(l.valor * l.cantidad), cantidadVendida: l.cantidadVendida ?? l.cantidad, valorVentaLinea: Math.round(l.valor * (l.cantidadVendida ?? l.cantidad)) } : {}),
         valorDevolucion: l.valor * l.cantidad, metodoPago, motivoId, justificacion: JUSTIFICACIONES[motivoId],
         ingresaInventario,
-        ...(d.tipo === 'factura' ? { notaCredito: `NCR ${390 + idx}`, estadoDian: idx % 5 === 0 ? 'rechazada' as const : idx % 7 === 0 ? 'pendiente' as const : 'aceptada' as const } : {}),
+        ...(d.tipo === 'factura' ? { notaCredito: `NCR ${390 + idx}`, estadoDian: 'aceptada' as const } : {}),
+        ...(d.alcance ? { alcance: d.alcance } : {}),
+        ...(d.venta ? { clienteNombre: d.venta.cliente.replace(/\s*\(\s*NIT:[^)]*\)/i, '').trim(), clienteDocumento: documentoDeCliente(d.venta, []) || undefined } : {}),
         ejemplo: true,
       });
     });

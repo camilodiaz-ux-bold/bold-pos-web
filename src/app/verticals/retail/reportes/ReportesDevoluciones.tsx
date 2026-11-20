@@ -10,7 +10,7 @@ import { useAjustes } from '../../../store/ajustesStore';
 import { useDevoluciones } from '../../../store/devolucionesStore';
 import type { Devolucion } from '../../../types/devolucion';
 import { TIPO_DEVOLUCION_LABEL } from '../../../types/devolucion';
-import { fmtFechaHora, isoDia } from '../../../utils/ventas';
+import { fmtFecha, isoDia } from '../../../utils/ventas';
 import { sucursalesDelUsuario } from '../../../utils/devoluciones';
 import { imprimirTabla, type ReporteImprimible } from '../../../utils/imprimirTabla';
 import { descargarDevolucionesXlsx } from '../../../utils/generateDevolucionesXlsx';
@@ -57,17 +57,17 @@ export function ReporteDevoluciones() {
 
   // Columnas, en este orden. En Sin Documento, documento, fecha de venta y valor de venta van con guion.
   const textoColumnas = [
-    'Número de devolución', 'Fecha', 'Producto', 'Tipo', 'Número de documento', 'Fecha de venta', 'Valor de venta', 'Valor devolución',
-    'Método de pago', 'Motivo', 'Responsable',
+    'Número de devolución', 'Sucursal', 'Fecha devolución', 'Producto', 'Tipo', 'Número de documento', 'Fecha de venta', 'Valor de venta', 'Valor devolución',
+    'Método de pago', 'Turno', 'Motivo', 'Responsable',
   ];
   const celdas = (d: Devolucion): string[] => [
-    d.numero, fmtFechaHora(d.fecha), d.nombre, TIPO_DEVOLUCION_LABEL[d.tipo],
-    d.numeroDocumento ?? GUION, d.fechaVenta ? fmtFechaHora(d.fechaVenta) : GUION,
+    d.numero, sucursalNombre(d.sucursalId), fmtFecha(d.fecha), d.nombre, TIPO_DEVOLUCION_LABEL[d.tipo],
+    d.numeroDocumento ?? GUION, d.fechaVenta ? fmtFecha(d.fechaVenta) : GUION,
     d.valorVentaItem != null ? fmtDinero(d.valorVentaItem) : GUION, fmtDinero(d.valorDevolucion),
-    d.metodoPago, motivoNombre(d.motivoId), d.responsable,
+    d.metodoPago, String(d.turno), motivoNombre(d.motivoId), d.responsable,
   ];
   const columnas: Columna<Devolucion>[] = textoColumnas.map((label, i) => ({
-    label, render: d => celdas(d)[i], align: i === 6 || i === 7 ? 'right' : 'left',
+    label, render: d => celdas(d)[i], align: i === 7 || i === 8 ? 'right' : 'left',
   }));
 
   // Reporte para imprimir y descargar: mismas columnas y los filtros aplicados.

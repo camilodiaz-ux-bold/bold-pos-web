@@ -26,6 +26,7 @@ import { ItemsProvider } from '../store/itemsStore';
 import { VariantesProvider } from '../store/variantesStore';
 import { VentasProvider } from '../store/ventasStore';
 import { DevolucionesProvider } from '../store/devolucionesStore';
+import { NotasDianResolver } from '../verticals/retail/devoluciones/NotasDianResolver';
 import { LoginScreen } from './LoginScreen';
 import { SignupScreen } from './SignupScreen';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -140,6 +141,7 @@ export function RootLayout() {
     <AsyncReportsProvider>
     <div className="flex flex-col h-screen w-full bg-[var(--blue-10)] overflow-hidden ">
       <Toaster position="top-center" richColors />
+      <NotasDianResolver />
 
       {/* ════════════════════════════════════════════════════
           Modal: Cerrar sesión / Turno abierto

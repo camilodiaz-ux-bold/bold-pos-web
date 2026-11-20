@@ -32,6 +32,11 @@ ${r.resumen.map(f => `<p><strong>${esc(f)}</strong></p>`).join('')}
 <tbody>${r.filas.map(f => `<tr>${f.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>
 </body></html>`;
 
+  imprimirHtml(html);
+}
+
+/** Imprime un documento HTML completo desde un iframe oculto (sin ventanas emergentes). */
+export function imprimirHtml(html: string): void {
   const iframe = document.createElement('iframe');
   iframe.setAttribute('aria-hidden', 'true');
   iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
