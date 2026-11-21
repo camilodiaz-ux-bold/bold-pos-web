@@ -18,6 +18,7 @@ import { IMPUESTOS, getImpuesto } from '../../../data/itemsCatalogs';
 import { getVarianteLabel, getVariantes } from '../../../types/item';
 import type { Devolucion } from '../../../types/devolucion';
 import { isoDia, SESION_VENTAS } from '../../../utils/ventas';
+import { useVertical } from '../../../vertical';
 import { useTurnoAbierto } from '../../../utils/turno';
 import { escribirSimularRechazo, leerSimularRechazo, useSimularRechazo } from '../../../utils/simulacionDian';
 import {
@@ -43,7 +44,6 @@ interface Entrada {
   key: string;
   nombre: string;
   referencia: string;
-  categoriaId: string;
   /** Precio de venta con impuesto. */
   precio: number;
   impuestoId: string;
@@ -58,6 +58,7 @@ interface FilaNota { id: number; entrada: string; cantidad: string; descuento: n
 const valorInicial = (e: Entrada, cantidad: number, descuento: number) => Math.round(e.precio * (1 - descuento / 100)) * cantidad;
 
 export function NotaCreditoNuevaPage() {
+  const { vertical } = useVertical();
   const navigate = useNavigate();
   const [query] = useSearchParams();
   const { ajustes } = useAjustes();
@@ -108,11 +109,11 @@ export function NotaCreditoNuevaPage() {
       const vars = getVariantes(i);
       if (vars) {
         vars.filter(v => v.activo).forEach(v => out.push({
-          key: `${i.id}::${v.id}`, nombre: `${i.nombre} - ${getVarianteLabel(v)}`, referencia: i.referencia, categoriaId: i.categoriaId, precio: v.precioTotal,
+          key: `${i.id}::${v.id}`, nombre: `${i.nombre} - ${getVarianteLabel(v)}`, referencia: i.referencia, precio: v.precioTotal,
           impuestoId: i.impuestoId, maneja: i.manejaExistencias && v.sucursales.some(s => s.sucursalId === sucursalItems), itemRefId: i.id, variantId: v.id,
         }));
       } else {
-        out.push({ key: i.id, nombre: i.nombre, referencia: i.referencia, categoriaId: i.categoriaId, precio: i.precioTotal, impuestoId: i.impuestoId, maneja: manejaInventarioEn(i, sucursalItems), itemRefId: i.id });
+        out.push({ key: i.id, nombre: i.nombre, referencia: i.referencia, precio: i.precioTotal, impuestoId: i.impuestoId, maneja: manejaInventarioEn(i, sucursalItems), itemRefId: i.id });
       }
     });
     return out.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
@@ -185,8 +186,8 @@ export function NotaCreditoNuevaPage() {
     const nuevas: Omit<Devolucion, 'numero' | 'fecha'>[] = validas.map((f, j) => {
       const e = entradaDe(f.entrada)!;
       return {
-        id: `dev-${ahora}-${j}`, sucursalId, turno: SESION_VENTAS.retail.turno, responsable, tipo: 'sinDocumento',
-        itemId: e.key, nombre: e.nombre, categoriaId: e.categoriaId, cantidad: num(f.cantidad), valorDevolucion: efectivo(f),
+        id: `dev-${ahora}-${j}`, sucursalId, turno: SESION_VENTAS[vertical].turno, responsable, tipo: 'sinDocumento',
+        itemId: e.key, nombre: e.nombre, cantidad: num(f.cantidad), valorDevolucion: efectivo(f),
         impuestoId: f.impuestoId, tasaImpuesto: tasaDe(f), metodoPago, motivoId, justificacion: justificacion.trim(),
         ingresaInventario: ingresa && e.maneja, notaCredito, motivoNotaDian: motivoNota, formaPagoNota: formaPago as 'Crédito' | 'Contado',
         clienteNombre: cliente!.nombre, ...(cliente!.numeroDocumento ? { clienteDocumento: cliente!.numeroDocumento } : {}),
@@ -211,7 +212,7 @@ export function NotaCreditoNuevaPage() {
     <div style={{ flex: 1, backgroundColor: 'var(--blue-10)', overflowY: 'auto', padding: 24 }}>
       <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1200, margin: '0 auto 56px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ fontFamily: FONT, fontSize: 22, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Nota Crédito Electrónica</h1>
+          <h1 style={{ fontFamily: FONT, fontSize: 22, fontWeight: 700, color: 'var(--black-100)', margin: 0 }}>Nota Crédito Electrónica (Devolución)</h1>
           <button onClick={() => setSaliendo(true)} aria-label="Cerrar" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', color: 'var(--black-60)' }}><X size={22} /></button>
         </div>
 

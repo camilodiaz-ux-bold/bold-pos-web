@@ -45,7 +45,7 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     // Conserva la clave histórica para no perder los ítems ya guardados.
     itemsStorageKey: 'bold-pos:items:v4',
     buildSeedItems,
-    ventasStorageKey: 'bold-pos:ventas:restaurantes:v4',
+    ventasStorageKey: 'bold-pos:ventas:restaurantes:v5',
     buildSeedVentas: buildRestaurantSeedVentas,
   },
   retail: {
@@ -58,7 +58,7 @@ const CATALOGS: Record<Vertical, VerticalCatalog> = {
     impuestos: IMPUESTOS.filter(i => i.id !== 'inc-8'),
     itemsStorageKey: 'bold-pos:items:retail:v8',
     buildSeedItems: buildRetailSeedItems,
-    ventasStorageKey: 'bold-pos:ventas:retail:v3',
+    ventasStorageKey: 'bold-pos:ventas:retail:v4',
     buildSeedVentas: buildRetailSeedVentas,
   },
 };

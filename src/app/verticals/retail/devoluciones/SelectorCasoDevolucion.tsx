@@ -11,7 +11,7 @@ import type { TipoDevolucion } from '../../../types/devolucion';
 import type { Venta } from '../../../types/venta';
 import { estadoDocumentoDevolucion, mismaSucursal, usuarioSesion } from '../../../utils/devoluciones';
 import {
-  VENTA_EJEMPLO_ANULADA, VENTA_EJEMPLO_CONFLICTO, VENTA_EJEMPLO_CREDITO, VENTA_EJEMPLO_DESCUENTO, VENTA_EJEMPLO_NOTA_CREDITO_TOTAL,
+  VENTA_EJEMPLO_ANULADA, VENTA_EJEMPLO_CONFLICTO, VENTA_EJEMPLO_CREDITO, VENTA_EJEMPLO_DESCUENTO, VENTA_EJEMPLO_FACTURA_CREDITO, VENTA_EJEMPLO_NOTA_CREDITO_TOTAL,
   VENTA_EJEMPLO_SIN_INVENTARIO, VENTA_EJEMPLO_YA_DEVUELTO,
 } from '../../../data/retail/ventasSeed';
 import { useVentasConDevoluciones } from '../../../utils/ventasConDevoluciones';
@@ -35,7 +35,8 @@ const EJEMPLOS: { ventaId: string; tipo: 'factura' | 'comprobante'; label: strin
   { ventaId: VENTA_EJEMPLO_NOTA_CREDITO_TOTAL, tipo: 'factura', label: 'Factura con nota crédito total (bloquea)' },
   { ventaId: VENTA_EJEMPLO_ANULADA, tipo: 'comprobante', label: 'Comprobante anulado (bloquea)' },
   { ventaId: VENTA_EJEMPLO_YA_DEVUELTO, tipo: 'factura', label: 'Factura con un ítem ya devuelto' },
-  { ventaId: VENTA_EJEMPLO_CREDITO, tipo: 'comprobante', label: 'Comprobante a crédito no pagado (avisa)' },
+  { ventaId: VENTA_EJEMPLO_CREDITO, tipo: 'comprobante', label: 'Comprobante a crédito no pagado (bloquea)' },
+  { ventaId: VENTA_EJEMPLO_FACTURA_CREDITO, tipo: 'factura', label: 'Factura a crédito no pagada (bloquea)' },
   { ventaId: VENTA_EJEMPLO_DESCUENTO, tipo: 'factura', label: 'Factura con descuento (avisa)' },
   { ventaId: VENTA_EJEMPLO_SIN_INVENTARIO, tipo: 'factura', label: 'Factura con un ítem sin inventario' },
   { ventaId: VENTA_EJEMPLO_CONFLICTO, tipo: 'comprobante', label: 'Comprobante con conflicto de concurrencia' },

@@ -47,7 +47,6 @@ export interface Devolucion {
   /** Id de línea del documento (`SaleItem.id`) o id de producto en Sin Documento. */
   itemId: string;
   nombre: string;
-  categoriaId: string;
   cantidad: number;
   /** Valor de venta de los ítems devueltos (lo pagado por esa cantidad, con impuesto). Vacío en Sin Documento. */
   valorVentaItem?: number;

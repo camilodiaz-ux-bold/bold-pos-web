@@ -76,9 +76,12 @@ export function NotaCreditoDetallePage() {
             <div>Fecha de emisión: {fechaIso}</div>
             <div>Cliente: <span style={{ color: 'var(--coral-100)' }}>{venta?.cliente ?? d.clienteNombre ?? '—'}</span></div>
             <div>Sucursal: {sucursal}</div>
-            <div>{d.tipo === 'sinDocumento' ? 'Nota crédito sin referencia' : <>Nota crédito con referencia{' '}
-              {venta ? <button style={link} onClick={() => navigate(`/facturas-venta/${venta.id}`)}>{d.numeroDocumento}</button> : d.numeroDocumento}</>}
-            </div>
+            <div>{d.tipo === 'sinDocumento' ? 'Nota crédito sin referencia' : 'Nota crédito con referencia'}</div>
+            {/* Enlaces de referencia (spec v3 §7): el texto es solo el número. Sin Documento no tiene factura. */}
+            {d.tipo === 'factura' && venta && (
+              <div>Factura a la que hace referencia: <button style={link} onClick={() => navigate(`/facturas-venta/${venta.id}`)}>{d.numeroDocumento}</button></div>
+            )}
+            <div>Devolución a la que hace referencia: <button style={link} onClick={() => navigate(`/items/devoluciones/${d.numero}`)}>{d.numero}</button></div>
             <div>Motivo: {motivo}</div>
             <div style={{ wordBreak: 'break-all' }}>Cude: {estado === 'aceptada' ? mockCufe(d.notaCredito ?? '') : ''}</div>
           </div>
@@ -91,7 +94,7 @@ export function NotaCreditoDetallePage() {
         {/* Sin la tarjeta rosada de ítems devueltos: ya está la lista de ítems. Solo el indicador de devolución total. */}
         {filas.some(f => f.alcance === 'total') && (
           <div style={{ marginTop: 18 }}>
-            <DevueltoTotalAviso numero={d.numero} />
+            <DevueltoTotalAviso numero={d.numero} conEnlace={false} />
           </div>
         )}
 

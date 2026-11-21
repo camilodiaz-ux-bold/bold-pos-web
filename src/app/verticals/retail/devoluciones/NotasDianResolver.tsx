@@ -10,6 +10,7 @@ import { useDevoluciones } from '../../../store/devolucionesStore';
 import { useItems } from '../../../store/itemsStore';
 import type { Devolucion } from '../../../types/devolucion';
 import { SESION_VENTAS } from '../../../utils/ventas';
+import { useVertical } from '../../../vertical';
 
 export const MSG_DIAN_RECHAZADA = 'La DIAN rechazó la nota crédito. No se registró la devolución.';
 
@@ -27,6 +28,7 @@ export interface DevolucionAplicable {
  * avanza), egreso, inventario y toast. Lo usan la DIAN simulada (Factura y Sin Documento) y la vista de Comprobante.
  */
 export function useAplicarDevolucion() {
+  const { vertical } = useVertical();
   const { ajustes, updateAjustes } = useAjustes();
   const { devoluciones, siguienteNumero, agregar } = useDevoluciones();
   const { ajustarExistencia } = useItems();
@@ -49,7 +51,7 @@ export function useAplicarDevolucion() {
     agregar(d.filas.map((f, j) => ({
       ...f, numero, fecha: ahora, estadoDian: 'aceptada' as const,
       // Egreso (sin vista, S13): turno abierto al crearse, valor total y método de pago.
-      ...(j === 0 ? { egreso: { turno: SESION_VENTAS.retail.turno, valor: total, metodoPago: f.metodoPago } } : {}),
+      ...(j === 0 ? { egreso: { turno: SESION_VENTAS[vertical].turno, valor: total, metodoPago: f.metodoPago } } : {}),
     })));
     d.inventario.forEach(i => ajustarExistencia(i.itemId, d.sucursalItemsId, i.cantidad, i.variantId));
 
@@ -57,7 +59,7 @@ export function useAplicarDevolucion() {
     toast.success(primera.alcance === 'total'
       ? (primera.tipo === 'comprobante' ? 'Comprobante anulado correctamente.' : 'Factura anulada correctamente.')
       : 'Devolución registrada correctamente.');
-  }, [ajustes, updateAjustes, devoluciones, siguienteNumero, agregar, ajustarExistencia]);
+  }, [ajustes, updateAjustes, devoluciones, siguienteNumero, agregar, ajustarExistencia, vertical]);
 }
 
 export function NotasDianResolver() {
