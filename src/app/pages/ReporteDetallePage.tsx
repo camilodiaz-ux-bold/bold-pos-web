@@ -13,6 +13,7 @@ import { ArrowLeft, RefreshCw, X, ChevronDown, Download } from 'lucide-react';
 import { VentasAsyncReport } from '../components/reportes/VentasAsyncReport';
 import { VentasItemsReport } from '../components/reportes/VentasItemsReport';
 import { GananciasItemsReport } from '../components/reportes/GananciasItemsReport';
+import { ReporteDevoluciones } from '../verticals/retail/reportes/ReportesDevoluciones';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -271,6 +272,8 @@ export function ReporteDetalleRoute() {
   const { id = '' } = useParams<{ id: string }>();
   const { has } = useVertical();
   if (RESTAURANT_ONLY_REPORTS.has(id) && !has('reportes-restaurantes')) return <Navigate to="/inicio" replace />;
+  // Informe de Devoluciones (core, specs/2026-11-devoluciones-v3.md §2): se reutiliza la pantalla del informe de Retail.
+  if (id === 'devoluciones') return <ReporteDevoluciones />;
   return <ReporteDetallePage />;
 }
 

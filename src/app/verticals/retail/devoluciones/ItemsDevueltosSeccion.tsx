@@ -20,7 +20,7 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = { padding: '10px 12px 10px 0', fontFamily: FONT, fontSize: 13, fontWeight: 500, color: 'var(--black-100)', textAlign: 'left' };
 
 /** Indicador de una devolución total (en lugar de la lista de ítems): "Ver devolución" abre su detalle. */
-export function DevueltoTotalAviso({ numero }: { numero: string }) {
+export function DevueltoTotalAviso({ numero, conEnlace = true }: { numero: string; /** Falso en el ver de la nota crédito: solo texto (spec v3 §7). */ conEnlace?: boolean }) {
   const navigate = useNavigate();
   return (
     <section
@@ -29,12 +29,14 @@ export function DevueltoTotalAviso({ numero }: { numero: string }) {
     >
       <Undo2 size={16} color="var(--coral-100)" />
       <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: 'var(--black-100)' }}>Este documento fue devuelto en su totalidad.</span>
-      <button
-        onClick={() => navigate(`/items/devoluciones/${numero}`)}
-        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 600, color: 'var(--coral-100)', textDecoration: 'underline' }}
-      >
-        Ver devolución
-      </button>
+      {conEnlace && (
+        <button
+          onClick={() => navigate(`/items/devoluciones/${numero}`)}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 600, color: 'var(--coral-100)', textDecoration: 'underline' }}
+        >
+          Ver devolución
+        </button>
+      )}
     </section>
   );
 }

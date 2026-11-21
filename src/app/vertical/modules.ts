@@ -18,7 +18,10 @@ export const VERTICAL_LABEL: Record<Vertical, string> = {
   restaurantes: 'Restaurantes',
 };
 
-/** Módulos exclusivos de una vertical. Todo lo que no esté aquí es core. */
+/**
+ * Módulos exclusivos de una vertical. Todo lo que no esté aquí es core.
+ * Devoluciones, Comprobantes y Facturas de venta son core desde specs/2026-11-devoluciones-v3.md (existen en Restaurantes).
+ */
 const EXCLUSIVE_MODULES = {
   // Solo Restaurantes
   mesas: ['restaurantes'],
@@ -28,10 +31,7 @@ const EXCLUSIVE_MODULES = {
   mostrador: ['restaurantes'],
   // Solo Retail
   variantes: ['retail'],
-  devoluciones: ['retail'],
   'listas-precios': ['retail'],
-  comprobantes: ['retail'],
-  'facturas-venta': ['retail'],
   cotizaciones: ['retail'],
   ajustes: ['retail'],
   'reportes-retail': ['retail'],
@@ -59,6 +59,7 @@ export function moduloDeRuta(pathname: string): string | null {
     ['/items/devoluciones', 'devoluciones'],
     ['/notas-credito', 'devoluciones'],
     ['/reportes/retail/devoluciones', 'devoluciones'],
+    ['/reportes/restaurantes/devoluciones', 'devoluciones'],
     ['/reportes/retail', 'reportes-retail'],
   ];
   return reglas.find(([prefijo]) => pathname === prefijo || pathname.startsWith(prefijo + '/'))?.[1] ?? null;

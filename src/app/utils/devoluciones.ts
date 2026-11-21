@@ -35,8 +35,8 @@ export function agruparDevoluciones(filas: Devolucion[]): DevolucionAgrupada[] {
   return [...mapa.entries()].map(([numero, fs]) => ({ numero, filas: fs, base: fs[0], total: totalDevolucion(fs) }));
 }
 
-/** Texto de la columna Ítem: el nombre si la devolución tiene uno solo, "Varios ítems" si tiene varios. */
-export const itemDeDevolucion = (g: Pick<DevolucionAgrupada, 'filas'>): string => (g.filas.length === 1 ? g.filas[0].nombre : 'Varios ítems');
+/** Texto de la columna Ítem: el nombre si la devolución tiene uno solo, "{n} ítems" si tiene varios. */
+export const itemDeDevolucion = (g: Pick<DevolucionAgrupada, 'filas'>): string => (g.filas.length === 1 ? g.filas[0].nombre : `${g.filas.length} ítems`);
 
 /** Cliente de una devolución como "Nombre · identificación" ("--" si no hay). */
 export function clienteDeDevolucion(d: Pick<Devolucion, 'clienteNombre' | 'clienteDocumento'>): string {
@@ -64,7 +64,7 @@ export function rutaDocumento(d: Pick<Devolucion, 'tipo' | 'ventaId'>): string |
 export const MSG_ANULADO = 'Este documento está anulado. No es posible registrar una devolución.';
 export const MSG_NOTA_CREDITO_TOTAL = 'Este documento ya tiene una nota crédito total. No es posible registrar una devolución.';
 export const MSG_DIAN_PENDIENTE = 'Hay una devolución pendiente de aceptación de la DIAN.';
-export const MSG_CREDITO_NO_PAGADO = 'Esta venta es a crédito y aún no ha sido pagada.';
+export const MSG_CREDITO_NO_PAGADO = 'Esta venta es a crédito y aún no se ha completado el pago. No es posible registrar una devolución.';
 export const MSG_DESCUENTO = 'Este documento tiene descuento.';
 export const MSG_TODOS_DEVUELTOS = 'Todos los ítems de este documento ya fueron devueltos.';
 
@@ -113,7 +113,7 @@ export function estadoDocumentoDevolucion(v: Venta, filas: Devolucion[], pendien
 
 export interface ValidacionDocumento { bloqueos: string[]; avisos: string[] }
 
-/** Bloqueos (no dejan confirmar) y avisos (solo informan) de un documento. La venta a crédito no pagada ya no bloquea: solo avisa. */
+/** Bloqueos (no dejan confirmar) y avisos (solo informan) de un documento. La venta a crédito sin el pago completo bloquea (v3). */
 export function validarDocumento(v: Venta, e: EstadoDocumentoDevolucion): ValidacionDocumento {
   const bloqueos: string[] = [];
   const avisos: string[] = [];
@@ -121,7 +121,7 @@ export function validarDocumento(v: Venta, e: EstadoDocumentoDevolucion): Valida
   else if (e.notaTotal) bloqueos.push(MSG_NOTA_CREDITO_TOTAL);
   if (e.pendiente) bloqueos.push(MSG_DIAN_PENDIENTE);
   if (e.todosDevueltos && bloqueos.length === 0) bloqueos.push(MSG_TODOS_DEVUELTOS);
-  if (v.estado === 'no-pagada' || (v.formaPago === 'Crédito' && v.saldo > 0)) avisos.push(MSG_CREDITO_NO_PAGADO);
+  if (v.estado === 'no-pagada' || (v.formaPago === 'Crédito' && v.saldo > 0)) bloqueos.push(MSG_CREDITO_NO_PAGADO);
   if (v.discount > 0 || v.items.some(i => (i.discount ?? 0) > 0)) avisos.push(MSG_DESCUENTO);
   return { bloqueos, avisos };
 }
@@ -138,7 +138,7 @@ export const sucursalDeItems = (sucursalAjustesId: string): string => (sucursalA
 
 /** Ítem del catálogo propio que corresponde a una línea del documento (por el id del producto del catálogo). */
 export const itemDeLinea = (items: Item[], linea: SaleItem): Item | undefined =>
-  items.find(i => i.catalogProductId !== undefined && String(i.catalogProductId) === linea.id);
+  items.find(i => (i.catalogProductId !== undefined && String(i.catalogProductId) === linea.id) || i.id === `seed-${linea.id}`);
 
 /** ¿El ítem maneja inventario en esa sucursal de ítems? Con variantes cuenta si alguna variante la tiene. */
 export function manejaInventarioEn(item: Item | undefined, sucursalItemsId: string): boolean {
@@ -229,7 +229,6 @@ export interface LineaDevolucion {
   itemId: string;
   nombre: string;
   referencia: string;
-  categoriaId: string;
   cantidadVendida: number;
   /** Precio de lista unitario y descuento de línea en % (informativos). */
   precio: number;
@@ -250,7 +249,7 @@ export interface LineaDevolucion {
  * Líneas de un documento. El valor de venta es lo pagado: precio con el descuento de línea, el descuento general
  * prorrateado (supuesto: `Venta.discount` es un monto sobre el subtotal) y, solo en Factura, el impuesto del ítem.
  */
-export function lineasDeDocumento(v: Venta, items: Item[], sucursalItemsId: string, categoriaDe: (productId: string) => string, conImpuesto: boolean): LineaDevolucion[] {
+export function lineasDeDocumento(v: Venta, items: Item[], sucursalItemsId: string, conImpuesto: boolean): LineaDevolucion[] {
   const factor = v.discount > 0 && v.subtotal > 0 ? Math.max(0, 1 - v.discount / v.subtotal) : 1;
   return v.items.map((it, idx) => {
     const propio = itemDeLinea(items, it);
@@ -258,7 +257,7 @@ export function lineasDeDocumento(v: Venta, items: Item[], sucursalItemsId: stri
     const tasa = conImpuesto ? (imp?.rate ?? v.taxRate) : 0;
     const unitario = Math.round(valorUnitarioPagado(it, tasa) * factor);
     return {
-      key: String(idx), itemId: it.id, nombre: it.name, referencia: propio?.referencia ?? '', categoriaId: categoriaDe(it.id),
+      key: String(idx), itemId: it.id, nombre: it.name, referencia: propio?.referencia ?? '',
       cantidadVendida: it.quantity, precio: it.price, descuento: it.discount ?? 0,
       impuestoId: imp?.id ?? impuestoPorTasa(v.taxRate), tasa, unitario, valorVenta: unitario * it.quantity,
       maneja: manejaInventarioEn(propio, sucursalItemsId), ...(propio ? { itemRefId: propio.id } : {}),

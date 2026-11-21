@@ -36,8 +36,7 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
   const { ventas } = useVentas();
   const { contactos } = useContactos();
 
-  const usuario = usuarioSesion(ajustes);
-  const sucursalSesion = ajustes.sucursales.find(s => s.id === usuario.sucursalId);
+  const sucursalSesion = ajustes.sucursales.find(s => s.id === usuarioSesion(ajustes).sucursalId);
 
   const [saliendo, setSaliendo] = useState(false);
   const [tipo, setTipo] = useState<TipoDevolucion>('factura');
@@ -48,7 +47,8 @@ export function RegistrarDevolucionModal({ onClose }: { onClose: () => void }) {
 
   const conDocumento = tipo !== 'sinDocumento';
 
-  // Solo documentos de la sucursal de la sesión, fecha descendente, máximo 20.
+  // Solo documentos de la sucursal de la sesión; dentro de ella, todos los que coinciden (anulados, con nota total, a crédito,
+  // todo devuelto: las validaciones salen en la vista siguiente). Fecha descendente, máximo 20.
   const candidatos = useMemo(() => {
     if (!conDocumento || !consulta) return [];
     return ventas

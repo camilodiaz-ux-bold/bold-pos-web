@@ -136,5 +136,68 @@ export function buildRestaurantSeedVentas(): Venta[] {
       items: [combo(9002, 2)] }),
   ];
   // Una orden cancelada no deja saldo por cobrar.
-  return ventas.map(v => ({ ...v, modo: 'mesa' as const, ...(v.estado === 'cancelada' ? { saldo: 0 } : {}) }));
+  const ordenes = ventas.map(v => ({ ...v, modo: 'mesa' as const, ...(v.estado === 'cancelada' ? { saldo: 0 } : {}) }));
+  return [...ordenes, ...buildRestaurantSeedDocumentos()];
+}
+
+// ─── Comprobantes y facturas de ejemplo para Devoluciones (specs/2026-11-devoluciones-v3.md §2) ──────────────
+// Mismos ids y casos de uso que Retail (retail/ventasSeed.ts), con ítems del catálogo de Restaurantes.
+// La sucursal es la primera de Ajustes (Hub Ciudad del Rio), que es la del usuario de la sesión.
+
+const CLI = {
+  cf: 'Consumidor final',
+  laura: 'Laura Gómez',
+  carlos: 'Carlos Mendoza',
+  andina: 'Comercial Andina SAS (NIT: 901.555.777)',
+};
+
+function itemDescuento(productId: number, quantity: number, discount: number): SaleItem {
+  return { ...item(productId, quantity), discount };
+}
+
+export function buildRestaurantSeedDocumentos(): Venta[] {
+  const comun = { emitidoPor: 'Juan Pérez', vendedor: 'Juan Pérez', sucursal: 'Hub Ciudad del Rio', turno: 527, note: '', recibo: '' };
+  const mk = (tipo: 'comprobante' | 'factura', numero: number, d: number, h: number, m: number, items: SaleItem[], cliente: string,
+    patch: Partial<Venta> = {}, estado: Venta['estado'] = 'pagada', ejemplo = false): Venta => {
+    const num = tipo === 'factura' ? `SETT ${numero}` : String(numero);
+    const base = seed({
+      ...comun, id: `${tipo === 'factura' ? 'f' : 'c'}-${numero}`, numero: num, tipoDoc: tipo,
+      resolucion: tipo === 'factura' ? RESOLUCION : '---', emitidaEn: at(d, h, m),
+      cliente, items, estado, ...(tipo === 'factura' ? { dian: 'aceptada' as const, cufe: mockCufe(num) } : {}),
+    });
+    return { ...base, ...patch, ...(ejemplo ? { ejemplo: true } : {}) };
+  };
+  const ej = (tipo: 'comprobante' | 'factura', numero: number, d: number, h: number, items: SaleItem[], cliente: string, patch: Partial<Venta> = {}, estado: Venta['estado'] = 'pagada') =>
+    mk(tipo, numero, d, h, 20, items, cliente, patch, estado, true);
+
+  const regulares: Venta[] = [
+    mk('comprobante', 3753, 1, 12, 10, [item(111, 1), item(121, 1)], CLI.cf),
+    mk('comprobante', 3754, 2, 13, 30, [item(101, 1), item(131, 2)], CLI.laura),
+    mk('comprobante', 3755, 3, 14, 15, [item(133, 2), item(122, 1)], CLI.cf),
+    mk('comprobante', 3756, 4, 19, 40, [item(112, 1), item(136, 1), item(158, 1)], CLI.andina),
+    mk('comprobante', 3757, 5, 20, 5, [item(116, 1), item(147, 1)], CLI.cf),
+    mk('comprobante', 3758, 5, 21, 10, [item(138, 1), item(124, 1), item(145, 1)], CLI.carlos),
+    mk('factura', 2400410, 1, 14, 30, [item(139, 2), item(128, 1)], CLI.andina),
+    mk('factura', 2400411, 2, 16, 15, [item(106, 1), item(125, 1)], CLI.laura),
+    mk('factura', 2400412, 3, 10, 40, [item(132, 1)], CLI.andina),
+    mk('factura', 2400413, 4, 9, 55, [item(151, 2), item(153, 1)], CLI.carlos),
+    mk('factura', 2400414, 5, 15, 25, [item(142, 2)], CLI.andina),
+    mk('factura', 2400415, 6, 11, 5, [item(104, 1), item(143, 1)], CLI.cf),
+  ];
+
+  const anulada = ej('comprobante', 3763, 7, 11, [item(111, 2), item(121, 2)], CLI.cf, { pagos: [], saldo: 0 }, 'cancelada');
+  const notaTotal = ej('factura', 2400418, 7, 15, [item(133, 2), item(122, 1), item(152, 1)], CLI.andina, { notaCreditoTotal: true });
+  const credito = ej('comprobante', 3764, 8, 10, [item(101, 2), item(131, 1)], CLI.andina, {}, 'no-pagada');
+  const facturaCredito = ej('factura', 2400422, 9, 19, [item(112, 2), item(136, 1)], CLI.laura, { formaPago: 'Crédito' }, 'no-pagada');
+  const varios = ej('comprobante', 3765, 8, 14, [item(138, 2), item(124, 1), item(145, 2)], CLI.carlos);
+  const descuento = ej('factura', 2400419, 8, 16, [itemDescuento(139, 2, 10), itemDescuento(128, 1, 10), item(151, 2)], CLI.laura);
+  const propina = ej('comprobante', 3766, 9, 12, [item(106, 2), item(125, 1), item(153, 2)], CLI.cf);
+  const sinInv = ej('factura', 2400420, 9, 13, [{ id: '0', name: 'Servicio adicional', price: 4202, quantity: 2 }, item(142, 2), item(147, 1)], CLI.carlos);
+  const yaDev = ej('factura', 2400421, 9, 17, [item(104, 2), item(143, 3), item(116, 1)], CLI.andina);
+  const conflicto = ej('comprobante', 3767, 9, 18, [item(103, 2), item(156, 1), item(158, 3)], CLI.laura);
+
+  const conPropina: Venta = { ...propina, tip: 8000, total: propina.total + 8000, pagos: propina.pagos.map((p, i) => (i === 0 ? { ...p, amount: p.amount + 8000 } : p)) };
+  return [
+    ...regulares, anulada, notaTotal, credito, facturaCredito, mixto(varios, 100000), descuento, conPropina, sinInv, yaDev, conflicto,
+  ];
 }

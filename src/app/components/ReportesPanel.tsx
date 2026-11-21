@@ -34,6 +34,7 @@ import {
   Clock,
   Wallet,
   CalendarRange,
+  Undo2,
 } from 'lucide-react';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -64,6 +65,7 @@ const CATEGORIES: ReportCategory[] = [
       { id: 'inventarios',          label: 'Inventarios',              icon: <Package          size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'ingresos-egresos',     label: 'Ingresos y egresos',       icon: <ArrowLeftRight   size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
       { id: 'lista-contactos',      label: 'Lista de contactos',       icon: <Users            size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
+      { id: 'devoluciones',         label: 'Devoluciones',             icon: <Undo2            size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.8} /> },
     ],
   },
   {
@@ -185,6 +187,8 @@ function CategoryCard({ category, isRestaurantes }: { category: ReportCategory; 
             isLast={idx === category.items.length - 1}
             onClick={isRestaurantes
               ? () => navigate('/reportes/restaurantes/' + item.id)
+              : item.id === 'devoluciones'
+                ? () => navigate('/reportes/restaurantes/devoluciones')
               : item.id === 'ventas-async'
                 ? () => navigate('/reportes/restaurantes/rest-ventas-async')
                 : item.id === 'ventas-items'
