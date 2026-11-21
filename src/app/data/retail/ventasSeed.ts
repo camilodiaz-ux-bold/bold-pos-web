@@ -59,6 +59,9 @@ export const DOCUMENTO_CLIENTES_EJEMPLO: Record<string, string> = {
   [CLIENTES.david]: '79456123',
   [CLIENTES.cf]: '222222222222',
   [CLIENTES.andina]: '901555777',
+  // Clientes de los documentos de Restaurantes (specs/2026-11-devoluciones-v3.md §2).
+  'Laura Gómez': '52123456',
+  'Carlos Mendoza': '80987654',
 };
 
 /** Correo de los clientes de ejemplo (precarga el envío del detalle de una devolución; Consumidor final no tiene). */
@@ -66,6 +69,8 @@ export const CORREO_CLIENTES_EJEMPLO: Record<string, string> = {
   [CLIENTES.daniel]: 'daniel.aycardy@ejemplo.co',
   [CLIENTES.david]: 'david@ejemplo.co',
   [CLIENTES.andina]: 'compras@comercialandina.ejemplo.co',
+  'Laura Gómez': 'laura.gomez@ejemplo.co',
+  'Carlos Mendoza': 'carlos.mendoza@ejemplo.co',
 };
 
 // Comprobantes 3753 → 3762 (el número más alto es el más reciente).
@@ -99,6 +104,8 @@ const FACTURAS: Def[] = [
 export const VENTA_EJEMPLO_ANULADA = 'c-3763';
 export const VENTA_EJEMPLO_NOTA_CREDITO_TOTAL = 'f-2400418';
 export const VENTA_EJEMPLO_CREDITO = 'c-3764';
+/** Factura a crédito sin el pago completo (v3: bloquea la devolución). */
+export const VENTA_EJEMPLO_FACTURA_CREDITO = 'f-2400422';
 export const VENTA_EJEMPLO_VARIOS_PAGOS = 'c-3765';
 export const VENTA_EJEMPLO_DESCUENTO = 'f-2400419';
 export const VENTA_EJEMPLO_PROPINA = 'c-3766';
@@ -108,7 +115,7 @@ export const VENTA_EJEMPLO_YA_DEVUELTO = 'f-2400421';
 /** Comprobante cuya primera devolución dispara el conflicto "otro usuario ya devolvió el ítem" (D8). */
 export const VENTA_EJEMPLO_CONFLICTO = 'c-3767';
 export const VENTAS_EJEMPLO_DEVOLUCION = [
-  VENTA_EJEMPLO_ANULADA, VENTA_EJEMPLO_NOTA_CREDITO_TOTAL, VENTA_EJEMPLO_CREDITO, VENTA_EJEMPLO_VARIOS_PAGOS,
+  VENTA_EJEMPLO_ANULADA, VENTA_EJEMPLO_NOTA_CREDITO_TOTAL, VENTA_EJEMPLO_CREDITO, VENTA_EJEMPLO_FACTURA_CREDITO, VENTA_EJEMPLO_VARIOS_PAGOS,
   VENTA_EJEMPLO_DESCUENTO, VENTA_EJEMPLO_PROPINA, VENTA_EJEMPLO_SIN_INVENTARIO, VENTA_EJEMPLO_YA_DEVUELTO, VENTA_EJEMPLO_CONFLICTO,
 ];
 
@@ -134,6 +141,7 @@ function ejemplosDevolucion(comun: { vendedor: string; emitidoPor: string; sucur
   });
   const credito = mk('comprobante', 3764, 8, 10, [item(223, 3), item(214, 2)], CLIENTES.andina, {}, 'no-pagada');
 
+  const facturaCredito = mk('factura', 2400422, 9, 19, [item(233, 2), item(257, 3)], CLIENTES.daniel, { formaPago: 'Crédito' }, 'no-pagada');
   const anulada = mk('comprobante', 3763, 7, 11, [item(212, 3), item(221, 2)], CLIENTES.cf, { pagos: [], saldo: 0 }, 'cancelada');
   const notaTotal = mk('factura', 2400418, 7, 15, [item(224, 4), item(256, 2), item(213, 1)], CLIENTES.andina, { notaCreditoTotal: true });
   const varios = mk('comprobante', 3765, 8, 14, [item(222, 2), item(213, 3), item(211, 2)], CLIENTES.daniel);
@@ -144,7 +152,7 @@ function ejemplosDevolucion(comun: { vendedor: string; emitidoPor: string; sucur
   const conflicto = mk('comprobante', 3767, 9, 18, [item(216, 3), item(226, 2), item(257, 5)], CLIENTES.david);
 
   return [
-    anulada, notaTotal, credito,
+    anulada, notaTotal, credito, facturaCredito,
     conPagos(varios, [{ method: 'Efectivo', amount: 100000 }, { method: 'Nequi', amount: varios.total - 100000 }]),
     descuento, conPropina(propina, 8000), sinInv, yaDev, conflicto,
   ];

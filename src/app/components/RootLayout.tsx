@@ -136,7 +136,7 @@ export function RootLayout() {
     <ItemsProvider key={vertical}>
     <VariantesProvider>
     <VentasProvider key={vertical}>
-    <DevolucionesProvider>
+    <DevolucionesProvider key={vertical}>
     <NotificationsProvider>
     <AsyncReportsProvider>
     <div className="flex flex-col h-screen w-full bg-[var(--blue-10)] overflow-hidden ">

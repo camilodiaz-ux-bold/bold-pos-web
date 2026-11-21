@@ -12,12 +12,12 @@ import { useContactos } from '../../../store/contactosStore';
 import { useDevoluciones } from '../../../store/devolucionesStore';
 import { useItems } from '../../../store/itemsStore';
 import { useVentas } from '../../../store/ventasStore';
-import { useCatalog } from '../../../vertical';
 import { ConfirmDeleteModal } from '../../../components/items/ConfirmDeleteModal';
 import { PrototypeToolsBar } from '../../../components/PrototypeToolsBar';
 import type { AlcanceDevolucion, Devolucion, TipoDevolucion } from '../../../types/devolucion';
 import { formatCOP } from '../../../utils/format';
 import { isoDia, SESION_VENTAS } from '../../../utils/ventas';
+import { useVertical } from '../../../vertical';
 import { useTurnoAbierto } from '../../../utils/turno';
 import { escribirSimularRechazo, leerSimularRechazo, useSimularRechazo } from '../../../utils/simulacionDian';
 import {
@@ -33,8 +33,8 @@ import { Banner, CampoLectura, AvisosSinInventario, DatosDevolucion, FONT, Total
 
 /** Tiempo que la DIAN tarda en responder (simulado). */
 const DIAN_MS = 3000;
-const CONFLICTO_KEY = 'bold-pos:devoluciones-conflicto-demo:v1';
-const conflictoDemoDisparado = (): boolean => { try { return localStorage.getItem(CONFLICTO_KEY) === '1'; } catch { return false; } };
+const conflictoKey = (v: string) => (v === 'retail' ? 'bold-pos:devoluciones-conflicto-demo:v1' : `bold-pos:devoluciones-conflicto-demo:${v}:v1`);
+const conflictoDemoDisparado = (v: string): boolean => { try { return localStorage.getItem(conflictoKey(v)) === '1'; } catch { return false; } };
 export const MSG_CONFLICTO = 'Este ítem ya fue devuelto. Actualiza la información e inténtalo de nuevo.';
 
 interface Fila { marcado: boolean; cantidad: string; valor: string; valorEditado: boolean }
@@ -49,6 +49,7 @@ export function DevolucionDocumentoPage({ tipo }: { tipo: TipoDocumento }) {
 }
 
 function DevolucionDocumentoView({ tipo }: { tipo: TipoDocumento }) {
+  const { vertical } = useVertical();
   const { id = '' } = useParams<{ id: string }>();
   const [query] = useSearchParams();
   const navigate = useNavigate();
@@ -57,7 +58,6 @@ function DevolucionDocumentoView({ tipo }: { tipo: TipoDocumento }) {
   const { devoluciones, pendientes, siguienteNotaCredito, siguienteNumero, emitirNota, agregar } = useDevoluciones();
   const aplicar = useAplicarDevolucion();
   const { items } = useItems();
-  const { allProducts } = useCatalog();
   const { contactos } = useContactos();
   const [turnoAbierto, setTurnoAbierto] = useTurnoAbierto();
   const [simularRechazo, setSimularRechazo] = useSimularRechazo();
@@ -80,8 +80,8 @@ function DevolucionDocumentoView({ tipo }: { tipo: TipoDocumento }) {
   const bloqueado = !venta || (validacion?.bloqueos.length ?? 0) > 0;
 
   const lineas: LineaDevolucion[] = useMemo(
-    () => (venta ? lineasDeDocumento(venta, items, sucursalItems, pid => allProducts.find(p => String(p.id) === pid)?.catId ?? 'accesorios', conImpuesto) : []),
-    [venta, items, sucursalItems, allProducts, conImpuesto],
+    () => (venta ? lineasDeDocumento(venta, items, sucursalItems, conImpuesto) : []),
+    [venta, items, sucursalItems, conImpuesto],
   );
   const yaDevuelto = (l: LineaDevolucion) => !!estado?.itemsDevueltos.has(l.itemId);
 
@@ -147,13 +147,13 @@ function DevolucionDocumentoView({ tipo }: { tipo: TipoDocumento }) {
     if (seleccionadas.some(yaDevuelto)) { setFilas({}); setConflicto(MSG_CONFLICTO); return; }
 
     // Conflicto simulado (S3): en el comprobante de ejemplo, la primera vez "otro usuario" ya devolvió el primer ítem.
-    if (!esFactura && venta.id === VENTA_EJEMPLO_CONFLICTO && !conflictoDemoDisparado()) {
+    if (!esFactura && venta.id === VENTA_EJEMPLO_CONFLICTO && !conflictoDemoDisparado(vertical)) {
       const l = seleccionadas[0];
-      try { localStorage.setItem(CONFLICTO_KEY, '1'); } catch { /* ignore */ }
+      try { localStorage.setItem(conflictoKey(vertical), '1'); } catch { /* ignore */ }
       agregar([{
-        id: `dev-conflicto-${Date.now()}`, numero: siguienteNumero(), fecha: Date.now(), sucursalId, turno: SESION_VENTAS.retail.turno, responsable: 'Camila Rojas',
+        id: `dev-conflicto-${Date.now()}`, numero: siguienteNumero(), fecha: Date.now(), sucursalId, turno: SESION_VENTAS[vertical].turno, responsable: 'Camila Rojas',
         tipo, ventaId: venta.id, numeroDocumento: venta.numero, fechaVenta: venta.emitidaEn, valorVenta: venta.total,
-        itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: 1, valorVentaItem: l.unitario, cantidadVendida: l.cantidadVendida, valorVentaLinea: l.valorVenta, valorDevolucion: l.unitario,
+        itemId: l.itemId, nombre: l.nombre, cantidad: 1, valorVentaItem: l.unitario, cantidadVendida: l.cantidadVendida, valorVentaLinea: l.valorVenta, valorDevolucion: l.unitario,
         metodoPago: 'Efectivo', motivoId: 'mot-4', justificacion: 'Devolución registrada por otro usuario.', ingresaInventario: false,
         alcance: 'parcial', clienteNombre: venta.cliente.replace(/\s*\(\s*NIT:[^)]*\)/i, '').trim(), estadoDian: 'aceptada', ejemplo: true,
       }]);
@@ -169,9 +169,9 @@ function DevolucionDocumentoView({ tipo }: { tipo: TipoDocumento }) {
     const clienteNombre = venta.cliente.replace(/\s*\(\s*NIT:[^)]*\)/i, '').trim();
     const clienteDocumento = documentoDeCliente(venta, contactos) || undefined;
     const nuevas: Omit<Devolucion, 'numero' | 'fecha'>[] = seleccionadas.map((l, j) => ({
-      id: `dev-${ahora}-${j}`, sucursalId, turno: SESION_VENTAS.retail.turno, responsable, tipo,
+      id: `dev-${ahora}-${j}`, sucursalId, turno: SESION_VENTAS[vertical].turno, responsable, tipo,
       ventaId: venta.id, numeroDocumento: venta.numero, fechaVenta: venta.emitidaEn, valorVenta: venta.total,
-      itemId: l.itemId, nombre: l.nombre, categoriaId: l.categoriaId, cantidad: num(datos(l).cantidad),
+      itemId: l.itemId, nombre: l.nombre, cantidad: num(datos(l).cantidad),
       valorVentaItem: l.unitario * num(datos(l).cantidad), cantidadVendida: l.cantidadVendida, valorVentaLinea: l.valorVenta, valorDevolucion: num(datos(l).valor),
       ...(conImpuesto ? { impuestoId: l.impuestoId, tasaImpuesto: l.tasa } : {}),
       metodoPago, motivoId, justificacion: justificacion.trim(), ingresaInventario: ingresa && l.maneja,
@@ -197,7 +197,7 @@ function DevolucionDocumentoView({ tipo }: { tipo: TipoDocumento }) {
     navigate(`/facturas-venta/${venta.id}`);
   };
 
-  const titulo = esFactura ? 'Nota Crédito Electrónica' : 'Devolución (Comprobante)';
+  const titulo = esFactura ? 'Nota Crédito Electrónica (Devolución)' : 'Devolución (Comprobante)';
 
   if (!venta) {
     return (

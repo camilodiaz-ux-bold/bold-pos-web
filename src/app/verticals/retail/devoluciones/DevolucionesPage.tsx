@@ -4,10 +4,9 @@
  */
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { CalendarDays, Layers, ListChecks, Search, Store, Tag, Trash2, FileText } from 'lucide-react';
+import { CalendarDays, Layers, ListChecks, Search, Store, Trash2, FileText } from 'lucide-react';
 import { useAjustes } from '../../../store/ajustesStore';
 import { useDevoluciones } from '../../../store/devolucionesStore';
-import { useCatalog } from '../../../vertical';
 import { FilterPillInput, FilterPillSelect } from '../../../components/items/FilterPill';
 import type { TipoDevolucion } from '../../../types/devolucion';
 import { ALCANCE_DEVOLUCION_LABEL, TIPO_DEVOLUCION_LABEL } from '../../../types/devolucion';
@@ -23,7 +22,7 @@ import { PrototypeToolsBar } from '../../../components/PrototypeToolsBar';
 const FONT = "'Montserrat', sans-serif";
 const PAGE_SIZE = 50;
 
-interface Filtros { sucursalId: string; categoriaId: string; motivoId: string; tipo: '' | TipoDevolucion; desde: string; hasta: string; busqueda: string }
+interface Filtros { sucursalId: string; motivoId: string; tipo: '' | TipoDevolucion; desde: string; hasta: string; busqueda: string }
 
 const thStyle: React.CSSProperties = {
   padding: '12px 16px 12px 0', textAlign: 'left', fontFamily: FONT, fontWeight: 700, fontSize: 13, lineHeight: '18px',
@@ -47,12 +46,11 @@ export function DevolucionesPage() {
   const { ajustes } = useAjustes();
   const navigate = useNavigate();
   const { devoluciones } = useDevoluciones();
-  const { catDefs } = useCatalog();
 
   const sucursalesUsuario = useMemo(() => sucursalesDelUsuario(ajustes), [ajustes]);
   // Con más de una sucursal el default es "todas"; con una sola, esa.
   const sucursalDefault = sucursalesUsuario.length > 1 ? '' : (sucursalesUsuario[0]?.id ?? '');
-  const filtrosVacios: Filtros = { sucursalId: sucursalDefault, categoriaId: '', motivoId: '', tipo: '', desde: '', hasta: '', busqueda: '' };
+  const filtrosVacios: Filtros = { sucursalId: sucursalDefault, motivoId: '', tipo: '', desde: '', hasta: '', busqueda: '' };
 
   const [filtros, setFiltros] = useState<Filtros>(filtrosVacios);
   const [page, setPage] = useState(0);
@@ -66,11 +64,10 @@ export function DevolucionesPage() {
   const idsSucursales = useMemo(() => new Set(sucursalesUsuario.map(s => s.id)), [sucursalesUsuario]);
   const visibles = useMemo(() => devoluciones.filter(d => idsSucursales.has(d.sucursalId)), [devoluciones, idsSucursales]);
 
-  // Una fila por devolución (las filas con el mismo número). La categoría coincide si algún ítem es de ella.
+  // Una fila por devolución (las filas con el mismo número).
   const filtradas = useMemo(() => agruparDevoluciones(visibles).filter(g => {
     const d = g.base;
     if (filtros.sucursalId && d.sucursalId !== filtros.sucursalId) return false;
-    if (filtros.categoriaId && !g.filas.some(f => f.categoriaId === filtros.categoriaId)) return false;
     if (filtros.motivoId && d.motivoId !== filtros.motivoId) return false;
     if (filtros.tipo && d.tipo !== filtros.tipo) return false;
     const dia = isoDia(d.fecha);
@@ -129,12 +126,6 @@ export function DevolucionesPage() {
             <FilterPillSelect
               icon={<Store size={16} color="var(--blue-50)" />} placeholder="Todas las sucursales" value={filtros.sucursalId}
               onChange={v => setFiltro('sucursalId', v)} options={sucursalesUsuario.map(s => ({ value: s.id, label: s.nombre }))}
-            />
-          </div>
-          <div style={{ width: 220 }}>
-            <FilterPillSelect
-              icon={<Tag size={16} color="var(--blue-50)" />} placeholder="Categorías" value={filtros.categoriaId}
-              onChange={v => setFiltro('categoriaId', v)} options={catDefs.filter(c => c.id !== 'combos').map(c => ({ value: c.id, label: c.name }))}
             />
           </div>
         </div>
